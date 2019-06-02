@@ -338,33 +338,7 @@ namespace GMP_System.Controllers
                 await _unitOfWork.ProductionOrders.AddAsync(order);
                 await _unitOfWork.CompleteAsync();
 
-                // [BOM SYNC] Generate unique BOM for this order based on Recipe and PlannedQuantity
-                var recipeBoms = await _unitOfWork.RecipeBoms.Query()
-                    .Where(b => b.RecipeId == order.RecipeId)
-                    .ToListAsync();
-
-                foreach (var rb in recipeBoms)
-                {
-                    // Skip packaging materials in BOM for weight/ratio calculation (though still needed in deduction)
-                    // Wait, the user said Packaging (Hard capsule shell) shouldn't be counted in ratio/mass.
-                    // But they still need to be in the order BOM for tracking/deduction purposes? 
-                    // Actually, the user says "không được tính trong tỉ lệ công thức và cũng không tính cho khối lượng luôn".
-                    // I will still include them in ProductionOrderBoms so we know they are needed, 
-                    // but I'll mark them or the frontend will handle the exclusion.
-                    
-                    var orderBom = new ProductionOrderBom
-                    {
-                        OrderId = order.OrderId,
-                        MaterialId = rb.MaterialId,
-                        UomId = rb.UomId ?? 1, 
-                        WastePercentage = rb.WastePercentage,
-                        RequiredQuantity = CalculateRequiredQuantity(order.PlannedQuantity, rb.Quantity, rb.UomId ?? 1, rb.WastePercentage),
-                        SelectedLotId = rb.MaterialId.HasValue && selectedLotByMaterial.TryGetValue(rb.MaterialId.Value, out var selectedLotId) ? selectedLotId : null,
-                        Note = rb.Note
-                    };
-                    await _unitOfWork.ProductionOrderBoms.AddAsync(orderBom);
-                }
-                await _unitOfWork.CompleteAsync();
+                // [BOM SYNC] moved to batch creation loop below
 
                 // [SNAPSHOT ROUTING] Copy all routing steps from recipe to order
                 var recipeRoutings = await _context.RecipeRoutings
@@ -462,13 +436,14 @@ namespace GMP_System.Controllers
                         decimal unitsPerBatch = Math.Floor(order.PlannedQuantity / numBatches);
                         decimal remainingUnits = order.PlannedQuantity;
 
+                        var createdBatches = new List<ProductionBatch>();
                         for (int i = 0; i < numBatches; i++)
                         {
                             decimal currentBatchUnits = (i == numBatches - 1) ? remainingUnits : unitsPerBatch;
                             remainingUnits -= currentBatchUnits;
 
                             string batchNumber = $"B{order.OrderCode.Substring(3)}-{(i + 1):D2}";
-                            await _unitOfWork.ProductionBatches.AddAsync(new ProductionBatch
+                            var batch = new ProductionBatch
                             {
                                 OrderId = order.OrderId,
                                 BatchNumber = batchNumber,
@@ -476,7 +451,35 @@ namespace GMP_System.Controllers
                                 Status = (i == 0 && order.Status == "In-Process") ? "In-Process" : "Scheduled",
                                 CurrentStep = (i == 0 && order.Status == "In-Process") ? 1 : 0,
                                 ManufactureDate = DateTime.Now
-                            });
+                            };
+                            await _unitOfWork.ProductionBatches.AddAsync(batch);
+                            createdBatches.Add(batch);
+                        }
+                        await _unitOfWork.CompleteAsync();
+
+                        // Generate BOM for each batch
+                        var recipeBoms = await _unitOfWork.RecipeBoms.Query()
+                            .Where(b => b.RecipeId == order.RecipeId)
+                            .ToListAsync();
+
+                        foreach (var batch in createdBatches)
+                        {
+                            foreach (var rb in recipeBoms)
+                            {
+                                var batchBom = new ProductionOrderBom
+                                {
+                                    OrderId = order.OrderId,
+                                    BatchId = batch.BatchId,
+                                    MaterialId = rb.MaterialId,
+                                    UomId = (rb.UomId == 4 || rb.UomId == 8) ? rb.UomId.Value : 1, 
+                                    WastePercentage = rb.WastePercentage,
+                                    RequiredQuantity = CalculateRequiredQuantity(batch.PlannedQuantity ?? 0m, rb.Quantity, rb.UomId ?? 1, rb.WastePercentage),
+                                    SelectedLotId = rb.MaterialId.HasValue && selectedLotByMaterial.TryGetValue(rb.MaterialId.Value, out var selectedLotId) ? selectedLotId : null,
+                                    Note = rb.Note,
+                                    DispensingStatus = "Pending"
+                                };
+                                await _unitOfWork.ProductionOrderBoms.AddAsync(batchBom);
+                            }
                         }
                         await _unitOfWork.CompleteAsync();
                     }

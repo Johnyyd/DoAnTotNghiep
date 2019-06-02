@@ -317,7 +317,7 @@ namespace GMP_System.Controllers
                     .ThenInclude(bom => bom.Material)
                 .Include(b => b.ProductionOrderBoms)
                     .ThenInclude(bom => bom.Uom)
-                .Where(b => (b.Status == "Scheduled" || b.Status == "In-Process") && b.ProductionOrderBoms.Any())
+                .Where(b => b.ProductionOrderBoms.Any())
                 .Select(b => new
                 {
                     b.BatchId,

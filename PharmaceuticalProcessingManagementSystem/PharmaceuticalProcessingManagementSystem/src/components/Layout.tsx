@@ -20,25 +20,25 @@ import { useAuth } from '@/context/AuthContext';
 
 const roleLabels: Record<string, string> = {
   Admin: 'Quản trị viên',
-  QualityControl: 'Kiểm soát chất lượng',
-  Manager: 'Trưởng phòng',
+  QA_QC: 'Kiểm soát chất lượng',
+  ProductionManager: 'Trưởng phòng',
   Operator: 'Nhân viên vận hành',
   WarehouseStaff: 'Nhân viên kho',
 };
 
 const navigation = [
-  { name: 'Bảng Điều Khiển', href: '/dashboard', icon: LayoutDashboard, roles: ['Admin', 'Manager', 'QualityControl', 'Operator', 'WarehouseStaff'] },
-  { name: 'Nguyên Liệu', href: '/materials', icon: Pill, roles: ['Admin', 'Manager', 'QualityControl'] },
-  { name: 'Thành Phẩm', href: '/finished-products', icon: Package, roles: ['Admin', 'Manager', 'QualityControl'] },
-  { name: 'Công Thức', href: '/recipes', icon: ClipboardList, roles: ['Admin', 'Manager'] },
-  { name: 'Lệnh Sản Xuất', href: '/production-orders', icon: Warehouse, roles: ['Admin', 'Manager'] },
-  { name: 'Mẻ Sản Xuất', href: '/batches', icon: Package, roles: ['Admin', 'Manager', 'Operator'] },
-  { name: 'Truy Xuất', href: '/traceability', icon: Search, roles: ['Admin', 'Manager', 'QualityControl'] },
-  { name: 'Theo Dõi Tiến Độ', href: '/manager-operations', icon: FileText, roles: ['Admin', 'Manager'] },
-  { name: 'Thống Kê', href: '/finished-goods-stats', icon: BarChart3, roles: ['Admin', 'Manager'] },
-  { name: 'Thiết Bị', href: '/equipments', icon: Settings, roles: ['Admin', 'Manager'] },
-  { name: 'Khu Sản Xuất', href: '/production-areas', icon: Factory, roles: ['Admin', 'Manager'] },
-  { name: 'Kho', href: '/storage-locations', icon: Warehouse, roles: ['Admin', 'Manager', 'WarehouseStaff', 'QualityControl'] },
+  { name: 'Bảng Điều Khiển', href: '/dashboard', icon: LayoutDashboard, roles: ['Admin', 'ProductionManager', 'QA_QC', 'Operator', 'WarehouseStaff'] },
+  { name: 'Nguyên Liệu', href: '/materials', icon: Pill, roles: ['Admin', 'ProductionManager', 'QA_QC'] },
+  { name: 'Thành Phẩm', href: '/finished-products', icon: Package, roles: ['Admin', 'ProductionManager', 'QA_QC'] },
+  { name: 'Công Thức', href: '/recipes', icon: ClipboardList, roles: ['Admin', 'ProductionManager'] },
+  { name: 'Lệnh Sản Xuất', href: '/production-orders', icon: Warehouse, roles: ['Admin', 'ProductionManager'] },
+  { name: 'Mẻ Sản Xuất', href: '/batches', icon: Package, roles: ['Admin', 'ProductionManager', 'Operator'] },
+  { name: 'Truy Xuất', href: '/traceability', icon: Search, roles: ['Admin', 'ProductionManager', 'QA_QC'] },
+  { name: 'Theo Dõi Tiến Độ', href: '/manager-operations', icon: FileText, roles: ['Admin', 'ProductionManager'] },
+  { name: 'Thống Kê', href: '/finished-goods-stats', icon: BarChart3, roles: ['Admin', 'ProductionManager'] },
+  { name: 'Thiết Bị', href: '/equipments', icon: Settings, roles: ['Admin', 'ProductionManager'] },
+  { name: 'Khu Sản Xuất', href: '/production-areas', icon: Factory, roles: ['Admin', 'ProductionManager'] },
+  { name: 'Kho', href: '/storage-locations', icon: Warehouse, roles: ['Admin', 'ProductionManager', 'WarehouseStaff', 'QA_QC'] },
   { name: 'Tài Khoản', href: '/users', icon: Users, roles: ['Admin'] },
 ];
 
