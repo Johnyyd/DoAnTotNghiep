@@ -1,0 +1,110 @@
+tringuyen@master:/openclaw-app/workspace/DoAnTotNghiep$ ls
+GMP_System LICENSE PharmaceuticalProcessingManagementSystem README.md
+tringuyen@master:/openclaw-app/workspace/DoAnTotNghiep$ git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+nothing to commit, working tree clean
+tringuyen@master:~/openclaw-app/workspace/DoAnTotNghiep$
+
+bạn hãy thiết kế lại README.md trong :~/openclaw-app/workspace/DoAnTotNghiep/README.md theo như mô tả mà tôi cung cấp, sau đó tiếp tục xây dựng trang web/ website
+
+Đề tài: Xây dựng hệ thống quản lý quy trình chế biến thuốc theo tiêu chuẩn GMP-WHO.
+
+Yêu cầu chức năng cốt lõi:
+
+Quản lý dữ liệu nguồn (Master Data): BOM (Bill of Materials - Định mức), Recipe (Công thức), Routing (Lộ trình/Quy trình sản xuất).
+
+Quản lý sản xuất: Lệnh sản xuất (Production Order) và Mẻ sản xuất (Batch).
+
+Kiểm soát vật tư: Cấp phát nguyên liệu theo định mức (tránh thất thoát hoặc sai lệch tỷ lệ).
+
+Theo dõi tiến độ (Tracking): Quản lý trạng thái lệnh (State Management: Draft -> Approved -> In-Process -> Hold -> Completed).
+
+Truy xuất nguồn gốc (Traceability): Từ lô thành phẩm phải tra ngược lại được nguồn gốc nguyên liệu đầu vào (lô nào, nhập từ đâu).
+
+Yêu cầu kỹ thuật:
+
+Ngôn ngữ: Javascript, Typescript (Front-end), C# (Back-end).
+
+Database: SQL Server (dữ liệu quan hệ chặt chẽ) hoặc MongoDB (dữ liệu phi cấu trúc như log, sensor).
+
+Nền tảng: 2 nền tảng (Thường là Web App cho quản lý và Mobile App/Tablet cho công nhân vận hành tại xưởng).
+
+Quy trình được nhắc đến trong ảnh là gì?
+Quy trình trong ảnh mô tả Quy trình Sản xuất Dược phẩm khép kín, cụ thể gồm các bước logic sau:
+Thiết lập công thức (R&D): Trước khi sản xuất, bạn phải có "Công thức gốc" (Recipe) và "Định mức" (BOM - cần bao nhiêu mg hoạt chất A, bao nhiêu tá dược B). Cùng với đó là "Routing" (Các bước thực hiện: Trộn -> Dập viên -> Bao phim -> Đóng vỉ).
+
+Lập kế hoạch & Lệnh sản xuất (Planning): Tạo một "Lệnh sản xuất" dựa trên nhu cầu (ví dụ: sản xuất 1000 hộp thuốc X). Hệ thống sẽ tính toán xem cần bao nhiêu nguyên liệu dựa trên BOM.
+
+Cấp phát nguyên liệu (Dispensing): Kho sẽ xuất nguyên liệu theo đúng định lượng đã tính. Tại đây cần kiểm tra chặt chẽ: Đúng loại, đúng lô, đủ lượng, và nguyên liệu phải "Đạt chuẩn" (QC Passed).
+
+Thực hiện sản xuất (Execution): Công nhân thực hiện từng công đoạn trong Routing. Tại mỗi công đoạn, hệ thống ghi nhận trạng thái (In-Process).
+
+Kiểm soát chất lượng (QC in-process): Ở mỗi bước quan trọng, phải có kiểm tra chất lượng. Nếu đạt mới được qua bước sau.
+
+Hoàn thành & Nhập kho: Khi lệnh hoàn tất (Completed), sản phẩm được đóng gói thành "Lô thành phẩm" và nhập kho.
+
+Tiêu chuẩn GMP-WHO là gì và tầm quan trọng?
+GMP-WHO (Good Manufacturing Practice - World Health Organization) là "Thực hành tốt sản xuất thuốc" theo khuyến cáo của Tổ chức Y tế Thế giới.
+Tầm quan trọng trong quy trình này:
+Trong ngành dược, một sai sót nhỏ (nhầm nguyên liệu, sai hàm lượng) có thể gây nguy hiểm tính mạng. GMP-WHO không chỉ yêu cầu sản phẩm cuối cùng tốt, mà yêu cầu mọi bước trong quá trình tạo ra nó phải được kiểm soát và ghi chép lại.
+
+Yếu tố cốt lõi của GMP ảnh hưởng đến phần mềm:
+
+Mọi thứ phải được ghi lại (Documentation): "Nếu không ghi chép, coi như chưa làm".
+
+Tính toàn vẹn dữ liệu (Data Integrity): Dữ liệu không được phép bị sửa đổi trái phép. Nếu sửa, phải biết ai sửa, sửa lúc nào, giá trị cũ là gì.
+
+Truy xuất nguồn gốc: Phải biết chính xác viên thuốc này được làm từ lô nguyên liệu nào nhập ngày bao nhiêu.
+
+Tiêu chuẩn GMP-WHO ảnh hưởng như thế nào khi code?
+Khi viết code cho hệ thống này, bạn không thể code theo kiểu ứng dụng bán hàng thông thường (CRUD đơn giản). Bạn phải chú trọng các vấn đề sau:
+Audit Trail (Vết kiểm toán):
+
+Ảnh hưởng code: Mọi hành động UPDATE hay DELETE trong database không được xóa vật lý (hard delete). Bạn phải dùng kỹ thuật "Soft Delete" (đánh dấu đã xóa) hoặc lưu lịch sử thay đổi vào bảng Log (Ai làm? Lúc nào? Tại sao sửa?).
+
+State Machine (Máy trạng thái) chặt chẽ:
+
+Ảnh hưởng code: Bạn không thể cho phép người dùng nhảy cóc trạng thái tùy tiện. Ví dụ: Không thể chuyển từ Draft sang In-Process nếu chưa qua Approved. Code phải có logic chặn (Validation) cực kỳ chặt ở Back-end.
+
+Quản lý BOM & Đệ quy:
+
+Ảnh hưởng code: Cấu trúc BOM có thể nhiều cấp (Thành phẩm <- Bán thành phẩm <- Nguyên liệu). Bạn cần thiết kế Database (SQL Server) khéo léo để truy vấn đệ quy hoặc dùng Graph Lookup (MongoDB) để tính toán nguyên liệu.
+
+Khóa dữ liệu (Locking):
+
+Ảnh hưởng code: Khi một Lệnh sản xuất đã Approved, công thức (Recipe) gắn liền với nó không được phép thay đổi nữa, dù công thức gốc trong hệ thống có cập nhật phiên bản mới. Bạn phải lưu "Snapshot" (bản sao) của công thức vào lệnh sản xuất.
+
+Phương pháp tiếp cận đề tài (Gợi ý triển khai)
+Đây là lộ trình gợi ý để bạn đạt điểm cao với đề tài này:
+Bước 1: Thiết kế Cơ sở dữ liệu (Quan trọng nhất)
+Tập trung vào các bảng/collection chính:
+
+Materials: Nguyên liệu (Quản lý theo Lô/Batch).
+
+Recipes / BOM: Công thức (Lưu ý quan hệ cha-con).
+
+ProductionOrders: Lệnh sản xuất.
+
+ProductionBatch: Mẻ sản xuất (Một lệnh có thể chia thành nhiều mẻ).
+
+ProcessLogs: Nhật ký sản xuất (Lưu audit trail).
+
+Bước 2: Kiến trúc hệ thống
+
+Backend (C# .NET Core/Web API): Xử lý logic nghiệp vụ phức tạp, tính toán tồn kho, kiểm soát trạng thái. Áp dụng kiến trúc DDD (Domain-Driven Design) để tách biệt logic nghiệp vụ GMP ra khỏi logic giao diện.
+
+Frontend (ReactJS/VueJS + Typescript):
+
+Web Admin: Cho quản lý tạo công thức, duyệt lệnh.
+
+Mobile App/Tablet: Cho công nhân thao tác tại xưởng (Bấm nút "Bắt đầu trộn", "Kết thúc trộn", nhập số liệu thực tế).
+
+Bước 3: Chức năng điểm nhấn (Nên làm)
+
+Digital Signature (Chữ ký điện tử): Khi duyệt lệnh (Approved), yêu cầu người dùng nhập lại mật khẩu hoặc xác thực 2 bước để mô phỏng chữ ký điện tử (yêu cầu bắt buộc của GMP).
+
+Cảnh báo sai số: Khi công nhân nhập lượng nguyên liệu thực tế, nếu sai lệch quá ±5% so với định mức, hệ thống phải cảnh báo và yêu cầu giải trình.
+
+Báo cáo truy xuất: Nhập mã lô thành phẩm -> Hiển thị cây phả hệ toàn bộ nguyên liệu đã dùng.
