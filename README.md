@@ -1,5 +1,10 @@
 # Hệ Thống Quản Lý Quy Trình Chế Biến Thuốc - GMP-WHO
 
+[![GitHub stars](https://img.shields.io/github/stars/Johnyyd/ecommerce-huit?style=social)](https://github.com/Johnyyd/DoAnTotNghiep)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![SQL Server](https://img.shields.io/badge/Database-Microsoft%20SQL%20Server-0078F6?logo=microsoft-sql-server)](https://www.microsoft.com/en-us/sql-server)
+[![.NET](https://img.shields.io/badge/Backend-ASP.NET%20Core-512BD4?logo=dotnet)](https://dotnet.microsoft.com)
+
 **Đề tài:** Xây dựng hệ thống quản lý quy trình chế biến thuốc theo tiêu chuẩn GMP-WHO
 
 ## 📋 Tổng Quan Dự Án
