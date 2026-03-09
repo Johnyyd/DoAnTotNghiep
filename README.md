@@ -54,16 +54,16 @@ Draft → Approved → In-Process → Hold → Completed
 ### Kiến Trúc Hệ Thống
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     WEB ADMIN (Quản lý)                   │
-│              React / Vue + TypeScript                     │
+│                     WEB ADMIN (Quản lý)                     │
+│              React / Vue + TypeScript                       │
 ├─────────────────────────────────────────────────────────────┤
-│                     MOBILE APP (Công nhân)               │
-│              React Native / Flutter                       │
+│                     MOBILE APP (Công nhân)                  │
+│              React Native / Flutter                         │
 ├─────────────────────────────────────────────────────────────┤
-│                 BACKEND API (C# .NET)                    │
-│         Domain-Driven Design (DDD) + Clean Architecture  │
+│                 BACKEND API (C# .NET)                       │
+│         Domain-Driven Design (DDD) + Clean Architecture     │
 ├─────────────────────────────────────────────────────────────┤
-│      SQL Server (Primary)  │  MongoDB (Logs/Sensor)      │
+│      SQL Server (Primary)  │  MongoDB (Logs/Sensor)         │
 └─────────────────────────────────────────────────────────────┘
 ```
 
