@@ -1,0 +1,363 @@
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+
+namespace GMP_System.Entities;
+
+public partial class GmpContext : DbContext
+{
+    public GmpContext()
+    {
+    }
+
+    public GmpContext(DbContextOptions<GmpContext> options)
+        : base(options)
+    {
+    }
+
+    public virtual DbSet<AppUser> AppUsers { get; set; }
+
+    public virtual DbSet<BatchProcessLog> BatchProcessLogs { get; set; }
+
+    public virtual DbSet<Equipment> Equipments { get; set; }
+
+    public virtual DbSet<InventoryLot> InventoryLots { get; set; }
+
+    public virtual DbSet<Material> Materials { get; set; }
+
+    public virtual DbSet<MaterialUsage> MaterialUsages { get; set; }
+
+    public virtual DbSet<ProductionBatch> ProductionBatches { get; set; }
+
+    public virtual DbSet<ProductionOrder> ProductionOrders { get; set; }
+
+    public virtual DbSet<Recipe> Recipes { get; set; }
+
+    public virtual DbSet<RecipeBom> RecipeBoms { get; set; }
+
+    public virtual DbSet<RecipeRouting> RecipeRoutings { get; set; }
+
+    public virtual DbSet<SystemAuditLog> SystemAuditLogs { get; set; }
+
+    public virtual DbSet<UnitOfMeasure> UnitOfMeasures { get; set; }
+
+    public virtual DbSet<UomConversion> UomConversions { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=PharmaceuticalProcessingManagementSystem;Trusted_Connection=True;TrustServerCertificate=True");
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AppUser>(entity =>
+        {
+            entity.HasKey(e => e.UserId).HasName("PK__AppUsers__1788CCAC14F8EE93");
+
+            entity.HasIndex(e => e.Username, "UQ__AppUsers__536C85E4B8A21C8B").IsUnique();
+
+            entity.Property(e => e.UserId).HasColumnName("UserID");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.FullName).HasMaxLength(100);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.Role).HasMaxLength(20);
+            entity.Property(e => e.Username)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<BatchProcessLog>(entity =>
+        {
+            entity.HasKey(e => e.LogId).HasName("PK__BatchPro__5E5499A811E7D688");
+
+            entity.ToTable(tb => tb.HasTrigger("trg_Check_Equipment_Status"));
+
+            entity.Property(e => e.LogId).HasColumnName("LogID");
+            entity.Property(e => e.BatchId).HasColumnName("BatchID");
+            entity.Property(e => e.EquipmentId).HasColumnName("EquipmentID");
+            entity.Property(e => e.OperatorId).HasColumnName("OperatorID");
+            entity.Property(e => e.ParametersData).HasColumnType("json");
+            entity.Property(e => e.ResultStatus).HasMaxLength(50);
+            entity.Property(e => e.RoutingId).HasColumnName("RoutingID");
+
+            entity.HasOne(d => d.Batch).WithMany(p => p.BatchProcessLogs)
+                .HasForeignKey(d => d.BatchId)
+                .HasConstraintName("FK__BatchProc__Batch__7C4F7684");
+
+            entity.HasOne(d => d.Equipment).WithMany(p => p.BatchProcessLogs)
+                .HasForeignKey(d => d.EquipmentId)
+                .HasConstraintName("FK__BatchProc__Equip__7E37BEF6");
+
+            entity.HasOne(d => d.Routing).WithMany(p => p.BatchProcessLogs)
+                .HasForeignKey(d => d.RoutingId)
+                .HasConstraintName("FK__BatchProc__Routi__7D439ABD");
+        });
+
+        modelBuilder.Entity<Equipment>(entity =>
+        {
+            entity.HasKey(e => e.EquipmentId).HasName("PK__Equipmen__34474599F11FEE84");
+
+            entity.HasIndex(e => e.EquipmentCode, "UQ__Equipmen__09E4417E23FBF8F4").IsUnique();
+
+            entity.Property(e => e.EquipmentId).HasColumnName("EquipmentID");
+            entity.Property(e => e.EquipmentCode)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.EquipmentName).HasMaxLength(200);
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .HasDefaultValue("Ready");
+        });
+
+        modelBuilder.Entity<InventoryLot>(entity =>
+        {
+            entity.HasKey(e => e.LotId).HasName("PK__Inventor__4160EF4DD676A0B9");
+
+            entity.Property(e => e.LotId).HasColumnName("LotID");
+            entity.Property(e => e.LotNumber)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.MaterialId).HasColumnName("MaterialID");
+            entity.Property(e => e.Qcstatus)
+                .HasMaxLength(50)
+                .HasDefaultValue("Quarantine")
+                .HasColumnName("QCStatus");
+            entity.Property(e => e.QuantityCurrent).HasColumnType("decimal(18, 4)");
+
+            entity.HasOne(d => d.Material).WithMany(p => p.InventoryLots)
+                .HasForeignKey(d => d.MaterialId)
+                .HasConstraintName("FK__Inventory__Mater__02084FDA");
+        });
+
+        modelBuilder.Entity<Material>(entity =>
+        {
+            entity.HasKey(e => e.MaterialId).HasName("PK__Material__C50613177C517D7B");
+
+            entity.HasIndex(e => e.MaterialCode, "UQ__Material__170C54BAB161407D").IsUnique();
+
+            entity.Property(e => e.MaterialId).HasColumnName("MaterialID");
+            entity.Property(e => e.BaseUomId).HasColumnName("BaseUomID");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.MaterialCode)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.MaterialName).HasMaxLength(200);
+            entity.Property(e => e.Type).HasMaxLength(50);
+
+            entity.HasOne(d => d.BaseUom).WithMany(p => p.Materials)
+                .HasForeignKey(d => d.BaseUomId)
+                .HasConstraintName("FK__Materials__BaseU__4E88ABD4");
+        });
+
+        modelBuilder.Entity<MaterialUsage>(entity =>
+        {
+            entity.HasKey(e => e.UsageId).HasName("PK__Material__29B197C0A60A3ED1");
+
+            entity.ToTable("MaterialUsage", tb =>
+                {
+                    tb.HasTrigger("trg_Check_Material_QC");
+                    tb.HasTrigger("trg_Validate_Material_Usage");
+                });
+
+            entity.Property(e => e.UsageId).HasColumnName("UsageID");
+            entity.Property(e => e.ActualAmount).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.BatchId).HasColumnName("BatchID");
+            entity.Property(e => e.InventoryLotId).HasColumnName("InventoryLotID");
+            entity.Property(e => e.Note).HasMaxLength(200);
+            entity.Property(e => e.PlannedAmount).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.Timestamp).HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(d => d.Batch).WithMany(p => p.MaterialUsages)
+                .HasForeignKey(d => d.BatchId)
+                .HasConstraintName("FK__MaterialU__Batch__05D8E0BE");
+
+            entity.HasOne(d => d.DispensedByNavigation).WithMany(p => p.MaterialUsages)
+                .HasForeignKey(d => d.DispensedBy)
+                .HasConstraintName("FK_Usage_User");
+
+            entity.HasOne(d => d.InventoryLot).WithMany(p => p.MaterialUsages)
+                .HasForeignKey(d => d.InventoryLotId)
+                .HasConstraintName("FK__MaterialU__Inven__06CD04F7");
+        });
+
+        modelBuilder.Entity<ProductionBatch>(entity =>
+        {
+            entity.HasKey(e => e.BatchId).HasName("PK__Producti__5D55CE38408FD6AE");
+
+            entity.HasIndex(e => e.BatchNumber, "UQ__Producti__F869ED6D7BFC6457").IsUnique();
+
+            entity.Property(e => e.BatchId).HasColumnName("BatchID");
+            entity.Property(e => e.BatchNumber)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.CurrentStep).HasDefaultValue(0);
+            entity.Property(e => e.ManufactureDate).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.OrderId).HasColumnName("OrderID");
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .HasDefaultValue("Queued");
+
+            entity.HasOne(d => d.Order).WithMany(p => p.ProductionBatches)
+                .HasForeignKey(d => d.OrderId)
+                .HasConstraintName("FK__Productio__Order__76969D2E");
+        });
+
+        modelBuilder.Entity<ProductionOrder>(entity =>
+        {
+            entity.HasKey(e => e.OrderId).HasName("PK__Producti__C3905BAF770F7793");
+
+            entity.HasIndex(e => e.OrderCode, "UQ__Producti__999B5229EBD49113").IsUnique();
+
+            entity.Property(e => e.OrderId).HasColumnName("OrderID");
+            entity.Property(e => e.ActualQuantity).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.OrderCode)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.PlannedQuantity).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.RecipeId).HasColumnName("RecipeID");
+            entity.Property(e => e.Status).HasMaxLength(50);
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.ProductionOrders)
+                .HasForeignKey(d => d.CreatedBy)
+                .HasConstraintName("FK_Orders_User");
+
+            entity.HasOne(d => d.Recipe).WithMany(p => p.ProductionOrders)
+                .HasForeignKey(d => d.RecipeId)
+                .HasConstraintName("FK__Productio__Recip__70DDC3D8");
+        });
+
+        modelBuilder.Entity<Recipe>(entity =>
+        {
+            entity.HasKey(e => e.RecipeId).HasName("PK__Recipes__FDD988D03D4E35FD");
+
+            entity.ToTable(tb =>
+                {
+                    tb.HasTrigger("trg_Prevent_Edit_Approved_Recipe");
+                    tb.HasTrigger("trg_Recipes_Audit");
+                });
+
+            entity.HasIndex(e => new { e.MaterialId, e.VersionNumber }, "UQ_Recipe_Version").IsUnique();
+
+            entity.Property(e => e.RecipeId).HasColumnName("RecipeID");
+            entity.Property(e => e.BatchSize).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.MaterialId).HasColumnName("MaterialID");
+            entity.Property(e => e.Status).HasMaxLength(50);
+
+            entity.HasOne(d => d.ApprovedByNavigation).WithMany(p => p.Recipes)
+                .HasForeignKey(d => d.ApprovedBy)
+                .HasConstraintName("FK_Recipes_User");
+
+            entity.HasOne(d => d.Material).WithMany(p => p.Recipes)
+                .HasForeignKey(d => d.MaterialId)
+                .HasConstraintName("FK__Recipes__Materia__628FA481");
+        });
+
+        modelBuilder.Entity<RecipeBom>(entity =>
+        {
+            entity.HasKey(e => e.BomId).HasName("PK__RecipeBO__7D5F6A17C1D35BE0");
+
+            entity.ToTable("RecipeBOM");
+
+            entity.Property(e => e.BomId).HasColumnName("BomID");
+            entity.Property(e => e.MaterialId).HasColumnName("MaterialID");
+            entity.Property(e => e.Note).HasMaxLength(200);
+            entity.Property(e => e.Quantity).HasColumnType("decimal(18, 6)");
+            entity.Property(e => e.RecipeId).HasColumnName("RecipeID");
+            entity.Property(e => e.UomId).HasColumnName("UomID");
+            entity.Property(e => e.WastePercentage)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(5, 2)");
+
+            entity.HasOne(d => d.Material).WithMany(p => p.RecipeBoms)
+                .HasForeignKey(d => d.MaterialId)
+                .HasConstraintName("FK__RecipeBOM__Mater__6754599E");
+
+            entity.HasOne(d => d.Recipe).WithMany(p => p.RecipeBoms)
+                .HasForeignKey(d => d.RecipeId)
+                .HasConstraintName("FK__RecipeBOM__Recip__66603565");
+
+            entity.HasOne(d => d.Uom).WithMany(p => p.RecipeBoms)
+                .HasForeignKey(d => d.UomId)
+                .HasConstraintName("FK__RecipeBOM__UomID__68487DD7");
+        });
+
+        modelBuilder.Entity<RecipeRouting>(entity =>
+        {
+            entity.HasKey(e => e.RoutingId).HasName("PK__RecipeRo__A763F8A8F9EEA6DD");
+
+            entity.ToTable("RecipeRouting");
+
+            entity.Property(e => e.RoutingId).HasColumnName("RoutingID");
+            entity.Property(e => e.DefaultEquipmentId).HasColumnName("DefaultEquipmentID");
+            entity.Property(e => e.RecipeId).HasColumnName("RecipeID");
+            entity.Property(e => e.StepName).HasMaxLength(200);
+
+            entity.HasOne(d => d.DefaultEquipment).WithMany(p => p.RecipeRoutings)
+                .HasForeignKey(d => d.DefaultEquipmentId)
+                .HasConstraintName("FK__RecipeRou__Defau__6D0D32F4");
+
+            entity.HasOne(d => d.Recipe).WithMany(p => p.RecipeRoutings)
+                .HasForeignKey(d => d.RecipeId)
+                .HasConstraintName("FK__RecipeRou__Recip__6C190EBB");
+        });
+
+        modelBuilder.Entity<SystemAuditLog>(entity =>
+        {
+            entity.HasKey(e => e.AuditId).HasName("PK__SystemAu__A17F23B88B95E69A");
+
+            entity.ToTable("SystemAuditLog");
+
+            entity.Property(e => e.AuditId).HasColumnName("AuditID");
+            entity.Property(e => e.Action).HasMaxLength(10);
+            entity.Property(e => e.ChangedDate).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.RecordId)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("RecordID");
+            entity.Property(e => e.TableName)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+
+            entity.HasOne(d => d.ChangedByNavigation).WithMany(p => p.SystemAuditLogs)
+                .HasForeignKey(d => d.ChangedBy)
+                .HasConstraintName("FK_Audit_User");
+        });
+
+        modelBuilder.Entity<UnitOfMeasure>(entity =>
+        {
+            entity.HasKey(e => e.UomId).HasName("PK__UnitOfMe__F6F8D59EA16C24B6");
+
+            entity.ToTable("UnitOfMeasure");
+
+            entity.Property(e => e.UomId).HasColumnName("UomID");
+            entity.Property(e => e.Description).HasMaxLength(200);
+            entity.Property(e => e.UomName).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<UomConversion>(entity =>
+        {
+            entity.HasKey(e => e.ConversionId).HasName("PK__UomConve__A7A07F935A520669");
+
+            entity.HasIndex(e => new { e.FromUomId, e.ToUomId }, "UQ_Conversion").IsUnique();
+
+            entity.Property(e => e.ConversionId).HasColumnName("ConversionID");
+            entity.Property(e => e.Factor).HasColumnType("decimal(18, 6)");
+            entity.Property(e => e.FromUomId).HasColumnName("FromUomID");
+            entity.Property(e => e.ToUomId).HasColumnName("ToUomID");
+
+            entity.HasOne(d => d.FromUom).WithMany(p => p.UomConversionFromUoms)
+                .HasForeignKey(d => d.FromUomId)
+                .HasConstraintName("FK__UomConver__FromU__5DCAEF64");
+
+            entity.HasOne(d => d.ToUom).WithMany(p => p.UomConversionToUoms)
+                .HasForeignKey(d => d.ToUomId)
+                .HasConstraintName("FK__UomConver__ToUom__5EBF139D");
+        });
+
+        OnModelCreatingPartial(modelBuilder);
+    }
+
+    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+}

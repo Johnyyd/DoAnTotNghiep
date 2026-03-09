@@ -1,0 +1,408 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\LUUDULIEU\\GMP_System\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\gmp_system.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\gmp_system.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\repositories\\unitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\repositories\\unitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\interceptors\\auditloginterceptor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\interceptors\\auditloginterceptor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\controllers\\materialscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\controllers\\materialscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\controllers\\systemauditlogscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\controllers\\systemauditlogscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\interfaces\\iunitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\interfaces\\iunitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\entities\\systemauditlog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\entities\\systemauditlog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\controllers\\productionorderscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\controllers\\productionorderscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\controllers\\recipescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\controllers\\recipescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\entities\\recipe.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\entities\\recipe.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\entities\\productionbatch.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\entities\\productionbatch.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\entities\\gmpcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\entities\\gmpcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\controllers\\productionbatchescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\controllers\\productionbatchescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\entities\\materialusage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\entities\\materialusage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\entities\\inventorylot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\entities\\inventorylot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\controllers\\materialusagescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\controllers\\materialusagescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\controllers\\inventorylotscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\controllers\\inventorylotscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\controllers\\batchprocesslogscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\controllers\\batchprocesslogscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\repositories\\genericrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\repositories\\genericrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\interfaces\\igenericrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\interfaces\\igenericrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\gmp_system.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\gmp_system.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|c:\\luudulieu\\gmp_system\\gmp_system\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{54B1F67B-F6F9-B9C8-C771-E4EBE1D10B2C}|GMP_System\\GMP_System.csproj|solutionrelative:gmp_system\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "GMP_System.http",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\GMP_System.http",
+              "RelativeDocumentMoniker": "GMP_System\\GMP_System.http",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\GMP_System.http",
+              "RelativeToolTip": "GMP_System\\GMP_System.http",
+              "ViewState": "AgIAAL0AAAAAAAAAAAAcwMYAAAAeAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003502|",
+              "WhenOpened": "2026-02-04T15:59:18.019Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "AuditLogInterceptor.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Interceptors\\AuditLogInterceptor.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Interceptors\\AuditLogInterceptor.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Interceptors\\AuditLogInterceptor.cs",
+              "RelativeToolTip": "GMP_System\\Interceptors\\AuditLogInterceptor.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAswCUAAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-07T11:28:21.579Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "ProductionOrdersController.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\ProductionOrdersController.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Controllers\\ProductionOrdersController.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\ProductionOrdersController.cs",
+              "RelativeToolTip": "GMP_System\\Controllers\\ProductionOrdersController.cs",
+              "ViewState": "AgIAACoAAAAAAAAAAAAswDMAAABKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-06T23:34:32.315Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "UnitOfWork.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Repositories\\UnitOfWork.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Repositories\\UnitOfWork.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Repositories\\UnitOfWork.cs",
+              "RelativeToolTip": "GMP_System\\Repositories\\UnitOfWork.cs",
+              "ViewState": "AgIAAB4AAAAAAAAAAAApwCUAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-04T15:30:51.125Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "MaterialsController.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\MaterialsController.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Controllers\\MaterialsController.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\MaterialsController.cs",
+              "RelativeToolTip": "GMP_System\\Controllers\\MaterialsController.cs",
+              "ViewState": "AgIAADgAAAAAAAAAAAAswEYAAABNAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-04T15:40:18.33Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "SystemAuditLogsController.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\SystemAuditLogsController.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Controllers\\SystemAuditLogsController.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\SystemAuditLogsController.cs",
+              "RelativeToolTip": "GMP_System\\Controllers\\SystemAuditLogsController.cs",
+              "ViewState": "AgIAABUAAAAAAAAAAAAowB4AAABCAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-07T11:30:14.696Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Recipe.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Entities\\Recipe.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Entities\\Recipe.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Entities\\Recipe.cs",
+              "RelativeToolTip": "GMP_System\\Entities\\Recipe.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAIwBUAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-07T05:44:12.718Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "SystemAuditLog.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Entities\\SystemAuditLog.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Entities\\SystemAuditLog.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Entities\\SystemAuditLog.cs",
+              "RelativeToolTip": "GMP_System\\Entities\\SystemAuditLog.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-07T01:08:54.35Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Program.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Program.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Program.cs",
+              "RelativeToolTip": "GMP_System\\Program.cs",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAswBgAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-04T15:31:38.057Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "IUnitOfWork.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Interfaces\\IUnitOfWork.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Interfaces\\IUnitOfWork.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Interfaces\\IUnitOfWork.cs",
+              "RelativeToolTip": "GMP_System\\Interfaces\\IUnitOfWork.cs",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAgwA8AAABDAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-04T15:30:07.308Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "ProductionBatch.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Entities\\ProductionBatch.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Entities\\ProductionBatch.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Entities\\ProductionBatch.cs",
+              "RelativeToolTip": "GMP_System\\Entities\\ProductionBatch.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAxwA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-07T00:59:26.14Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "RecipesController.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\RecipesController.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Controllers\\RecipesController.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\RecipesController.cs",
+              "RelativeToolTip": "GMP_System\\Controllers\\RecipesController.cs",
+              "ViewState": "AgIAABsAAAAAAAAAAAAowCoAAAAaAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-04T15:56:59.305Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "ProductionBatchesController.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\ProductionBatchesController.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Controllers\\ProductionBatchesController.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\ProductionBatchesController.cs",
+              "RelativeToolTip": "GMP_System\\Controllers\\ProductionBatchesController.cs",
+              "ViewState": "AgIAAFwAAAAAAAAAAAAIwGUAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-07T00:55:20.215Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "GmpContext.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Entities\\GmpContext.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Entities\\GmpContext.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Entities\\GmpContext.cs",
+              "RelativeToolTip": "GMP_System\\Entities\\GmpContext.cs",
+              "ViewState": "AgIAAF0AAAAAAAAAAAAgwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-07T05:55:10.558Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "MaterialUsagesController.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\MaterialUsagesController.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Controllers\\MaterialUsagesController.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\MaterialUsagesController.cs",
+              "RelativeToolTip": "GMP_System\\Controllers\\MaterialUsagesController.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAkwDkAAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-07T03:08:20.936Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "MaterialUsage.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Entities\\MaterialUsage.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Entities\\MaterialUsage.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Entities\\MaterialUsage.cs",
+              "RelativeToolTip": "GMP_System\\Entities\\MaterialUsage.cs",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAxwA8AAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-07T03:03:39.845Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "InventoryLot.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Entities\\InventoryLot.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Entities\\InventoryLot.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Entities\\InventoryLot.cs",
+              "RelativeToolTip": "GMP_System\\Entities\\InventoryLot.cs",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAIwBQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-07T01:28:11.008Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "InventoryLotsController.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\InventoryLotsController.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Controllers\\InventoryLotsController.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\InventoryLotsController.cs",
+              "RelativeToolTip": "GMP_System\\Controllers\\InventoryLotsController.cs",
+              "ViewState": "AgIAACAAAAAAAAAAAAAkwCoAAAA6AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-07T03:07:18.153Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "BatchProcessLogsController.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\BatchProcessLogsController.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Controllers\\BatchProcessLogsController.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Controllers\\BatchProcessLogsController.cs",
+              "RelativeToolTip": "GMP_System\\Controllers\\BatchProcessLogsController.cs",
+              "ViewState": "AgIAADYAAAAAAAAAAAAmwEEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-07T01:17:38.256Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "GenericRepository.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Repositories\\GenericRepository.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Repositories\\GenericRepository.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Repositories\\GenericRepository.cs",
+              "RelativeToolTip": "GMP_System\\Repositories\\GenericRepository.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAAwCsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-04T15:29:20.23Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "IGenericRepository.cs",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Interfaces\\IGenericRepository.cs",
+              "RelativeDocumentMoniker": "GMP_System\\Interfaces\\IGenericRepository.cs",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\Interfaces\\IGenericRepository.cs",
+              "RelativeToolTip": "GMP_System\\Interfaces\\IGenericRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-04T15:28:30.534Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "GMP_System.csproj",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\GMP_System.csproj",
+              "RelativeDocumentMoniker": "GMP_System\\GMP_System.csproj",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\GMP_System.csproj",
+              "RelativeToolTip": "GMP_System\\GMP_System.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-02-04T15:27:30.531Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\appsettings.json",
+              "RelativeDocumentMoniker": "GMP_System\\appsettings.json",
+              "ToolTip": "C:\\LUUDULIEU\\GMP_System\\GMP_System\\appsettings.json",
+              "RelativeToolTip": "GMP_System\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-02-04T15:25:00.275Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
