@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  gmp-sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: gmp-sqlserver
+    networks:
+      - gmp-network
+    ports:
+      - "1434:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=GMP_Strong@Passw0rd123
+    volumes:
+      - ./DATABASE:/var/opt/mssql/backup:ro
+      - gmp-sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "GMP_Strong@Passw0rd123", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  # Backend API (.NET)
+  gmp-api:
+    build:
+      context: ./GMP_System/GMP_System
+      dockerfile: Dockerfile
+    container_name: gmp-api
+    networks:
+      - gmp-network
+    ports:
+      - "5001:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=gmp-sqlserver;Database=GMP_WHO_DB;User Id=sa;Password=GMP_Strong@Passw0rd123;TrustServerCertificate=true
+      - Jwt__Key=GMP_WHO_Default_Secret_Key_Minimum_32_Characters_Long_123456789
+    depends_on:
+      gmp-sqlserver:
+        condition: service_healthy
+    volumes:
+      - ./DATABASE:/app/DATABASE:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    # Database initialization is handled by EF Core on startup
+
+  # Frontend Admin (React + Nginx)
+  gmp-frontend:
+    build:
+      context: ./PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://gmp-api:5000
+    container_name: gmp-frontend
+    networks:
+      - gmp-network
+    ports:
+      - "8080:80"
+    environment:
+      - VITE_API_URL=http://gmp-api:5000
+    depends_on:
+      - gmp-api
+    restart: unless-stopped
+
+networks:
+  gmp-network:
+    driver: bridge
+    name: gmp-network
+
+volumes:
+  gmp-sqlserver-data:
