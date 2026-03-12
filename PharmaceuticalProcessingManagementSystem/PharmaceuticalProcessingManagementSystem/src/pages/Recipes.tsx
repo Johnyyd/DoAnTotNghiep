@@ -12,7 +12,9 @@ export default function Recipes() {
     queryFn: () => recipesApi.getAll(),
   });
 
-  const recipesList = (recipes as any)?.data || [];
+  // API can return either array directly or { data: array }
+  const recipesList = Array.isArray(recipes) ? recipes : (recipes as any)?.data || [];
+
   const filteredRecipes = recipesList.filter((recipe: any) => {
     const matchesSearch = recipe.recipeCode?.toLowerCase().includes(search.toLowerCase()) ||
                          recipe.recipeName?.toLowerCase().includes(search.toLowerCase());

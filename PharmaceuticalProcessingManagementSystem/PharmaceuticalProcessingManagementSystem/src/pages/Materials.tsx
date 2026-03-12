@@ -17,8 +17,8 @@ export default function Materials() {
     queryFn: () => materialsApi.getAll(),
   });
 
-  // API returns { success, data, message, errors }
-  const materialsData = (materials as any)?.data ?? [];
+  // API can return either array directly or { data: array }
+  const materialsData = Array.isArray(materials) ? materials : (materials as any)?.data ?? [];
 
   const createMutation = useMutation({
     mutationFn: materialsApi.create,
