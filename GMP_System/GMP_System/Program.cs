@@ -89,6 +89,7 @@ using (var scope = app.Services.CreateScope())
             CreatedAt = DateTime.Now
         };
         db.Materials.AddRange(material1, material2, material3);
+        db.SaveChanges(); // Save materials to get IDs
 
         var recipe1 = new Recipe
         {
