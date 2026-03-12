@@ -57,14 +57,14 @@ services:
       context: ./PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=http://gmp-api:5000
+        - VITE_API_URL=/api
     container_name: gmp-frontend
     networks:
       - gmp-network
     ports:
       - "8080:80"
     environment:
-      - VITE_API_URL=http://gmp-api:5000
+      - VITE_API_URL=/api
     depends_on:
       - gmp-api
     restart: unless-stopped

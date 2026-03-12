@@ -17,6 +17,9 @@ export default function Materials() {
     queryFn: () => materialsApi.getAll(),
   });
 
+  // API returns { success, data, message, errors }
+  const materialsData = (materials as any)?.data ?? [];
+
   const createMutation = useMutation({
     mutationFn: materialsApi.create,
     onSuccess: () => {
@@ -44,7 +47,7 @@ export default function Materials() {
     },
   });
 
-  const materialsList = ((materials as any) ?? []).filter((m: Material) =>
+  const materialsList = (materialsData as Material[]).filter((m: Material) =>
     m.materialName.toLowerCase().includes(search.toLowerCase()) ||
     m.materialCode.toLowerCase().includes(search.toLowerCase())
   ) || [];
