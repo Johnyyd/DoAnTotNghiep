@@ -1,4 +1,3 @@
-﻿
 using GMP_System.Entities;
 using GMP_System.Interfaces;
 using GMP_System.Repositories;
@@ -15,6 +14,21 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
     });
+
+// CORS policy - allow frontend to access API
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins(
+                    "http://localhost:8080",
+                    "http://100.89.137.3:8080"
+                )
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+        });
+});
 
 // 1. Đăng ký Database Context
 builder.Services.AddDbContext<GmpContext>((sp, options) =>
@@ -43,6 +57,7 @@ if (app.Environment.IsDevelopment())
     app.MapGet("/health", () => Results.Json(new { status = "healthy", timestamp = DateTime.UtcNow }));
 }
 
+app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();

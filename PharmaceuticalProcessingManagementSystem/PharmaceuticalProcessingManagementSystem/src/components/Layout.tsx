@@ -7,7 +7,11 @@ import {
   Search,
   Activity,
   Menu,
-  X
+  X,
+  Bell,
+  User,
+  LogOut,
+  Settings
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -24,43 +28,49 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gmp-background flex">
-      {/* Mobile sidebar overlay */}
+    <div className="min-h-screen bg-neutral-50 flex">
+      {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 lg:hidden"
+          className="fixed inset-0 bg-neutral-800 bg-opacity-50 z-40 lg:hidden transition-opacity"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-surface border-r border-neutral-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gmp-primary">GMP-WHO</h1>
+        {/* Logo */}
+        <div className="flex items-center justify-between h-16 px-6 border-b border-neutral-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">GMP</span>
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-primary-700">GMP-WHO</h1>
+              <p className="text-xs text-neutral-500 -mt-1">Pharmaceutical</p>
+            </div>
+          </div>
           <button
-            className="lg:hidden"
+            className="lg:hidden p-1 rounded-lg hover:bg-neutral-100"
             onClick={() => setSidebarOpen(false)}
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5 text-neutral-600" />
           </button>
         </div>
 
-        <nav className="mt-6 px-4">
+        {/* Navigation */}
+        <nav className="mt-6 px-3 space-y-1">
           {navigation.map((item) => (
             <NavLink
               key={item.name}
               to={item.href}
               onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
-                `flex items-center px-4 py-3 mb-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-gmp-primary text-white'
-                    : 'text-gray-700 hover:bg-gmp-background hover:text-gmp-primary'
-                }`
+                `nav-item group ${isActive ? 'nav-item-active' : ''}`
               }
             >
               <item.icon className="w-5 h-5 mr-3" />
@@ -69,36 +79,66 @@ export default function Layout() {
           ))}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-          <div className="text-xs text-gray-500 text-center">
-            © 2025 GMP-WHO System<br />
-            Version 1.0.0
+        {/* User section */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-200">
+          <div className="flex items-center space-x-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center">
+              <User className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-neutral-900 truncate">Admin</p>
+              <p className="text-xs text-neutral-500 truncate">Administrator</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button className="flex items-center justify-center px-3 py-2 text-sm text-neutral-600 bg-neutral-100 rounded-lg hover:bg-neutral-200 transition-colors">
+              <Settings className="w-4 h-4 mr-2" />
+              Cài đặt
+            </button>
+            <button className="flex items-center justify-center px-3 py-2 text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+              <LogOut className="w-4 h-4 mr-2" />
+              Đăng xuất
+            </button>
           </div>
         </div>
-      </div>
+      </aside>
 
       {/* Main content */}
-      <div className="flex-1 lg:ml-64">
-        {/* Top bar */}
-        <header className="bg-white shadow-sm border-b border-gray-200 h-16 flex items-center px-6">
+      <div className="flex-1 lg:ml-72">
+        {/* Top header */}
+        <header className="bg-surface border-b border-neutral-200 h-16 flex items-center px-6 sticky top-0 z-30">
           <button
-            className="lg:hidden mr-4"
+            className="lg:hidden p-2 rounded-lg hover:bg-neutral-100 mr-4"
             onClick={() => setSidebarOpen(true)}
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-6 h-6 text-neutral-700" />
           </button>
+
+          {/* Breadcrumb / Page title */}
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-gray-900">Pharmaceutical Processing Management</h2>
+            <h2 className="text-lg font-semibold text-neutral-900">
+              Pharmaceutical Processing Management
+            </h2>
           </div>
+
+          {/* Header actions */}
           <div className="flex items-center space-x-4">
-            <div className="text-sm text-gray-600">
-              Admin
+            {/* Notifications */}
+            <button className="relative p-2 rounded-lg hover:bg-neutral-100 transition-colors">
+              <Bell className="w-5 h-5 text-neutral-600" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+
+            {/* Quick status indicator */}
+            <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 bg-secondary-50 border border-secondary-200 rounded-lg">
+              <div className="w-2 h-2 bg-secondary-500 rounded-full animate-pulse" />
+              <span className="text-sm font-medium text-secondary-700">Healthy</span>
             </div>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="p-6">
+        <main className="p-6 lg:p-8">
           <Outlet />
         </main>
       </div>

@@ -175,7 +175,7 @@ export const auditApi = {
 
 // ============== HEALTH & SYSTEM ==============
 export const systemApi = {
-  health: () => api.get<ApiResponse<{ status: string; timestamp: string; version: string }>>('/health'),
+  health: () => api.get<{ status: string; timestamp: string; version?: string }>('/health'),
 };
 
 export default api;

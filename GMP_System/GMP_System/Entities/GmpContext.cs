@@ -74,7 +74,7 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.BatchId).HasColumnName("BatchID");
             entity.Property(e => e.EquipmentId).HasColumnName("EquipmentID");
             entity.Property(e => e.OperatorId).HasColumnName("OperatorID");
-            entity.Property(e => e.ParametersData).HasColumnType("json");
+            entity.Property(e => e.ParametersData).HasColumnType("nvarchar(max)");
             entity.Property(e => e.ResultStatus).HasMaxLength(50);
             entity.Property(e => e.RoutingId).HasColumnName("RoutingID");
 
