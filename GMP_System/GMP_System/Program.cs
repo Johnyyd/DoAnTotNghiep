@@ -52,9 +52,9 @@ using (var scope = app.Services.CreateScope())
     // Seed data if empty
     if (!db.Materials.Any())
     {
-        var unit1 = new UnitOfMeasure { Code = "KG", Name = "Kilogram", Description = "Kilogram" };
-        var unit2 = new UnitOfMeasure { Code = "G", Name = "Gram", Description = "Gram" };
-        var unit3 = new UnitOfMeasure { Code = "TAB", Name = "Tablet", Description = "Tablet" };
+        var unit1 = new UnitOfMeasure { UomName = "Kilogram", Description = "Kilogram" };
+        var unit2 = new UnitOfMeasure { UomName = "Gram", Description = "Gram" };
+        var unit3 = new UnitOfMeasure { UomName = "Tablet", Description = "Tablet" };
         db.UnitOfMeasures.AddRange(unit1, unit2, unit3);
         db.SaveChanges();
 
@@ -63,7 +63,7 @@ using (var scope = app.Services.CreateScope())
             MaterialCode = "MAT-001",
             MaterialName = "Paracetamol 500mg",
             Type = "RawMaterial",
-            BaseUomId = unit3.UnitId,
+            BaseUomId = unit3.UomId,
             IsActive = true,
             Description = "Active ingredient for pain relief",
             CreatedAt = DateTime.Now
@@ -73,7 +73,7 @@ using (var scope = app.Services.CreateScope())
             MaterialCode = "MAT-002",
             MaterialName = "Microcrystalline Cellulose",
             Type = "RawMaterial",
-            BaseUomId = unit1.UnitId,
+            BaseUomId = unit1.UomId,
             IsActive = true,
             Description = "Excipient binder",
             CreatedAt = DateTime.Now
@@ -83,9 +83,9 @@ using (var scope = app.Services.CreateScope())
             MaterialCode = "MAT-003",
             MaterialName = "Para Film",
             Type = "Packaging",
-            BaseUomId = unit2.UnitId,
+            BaseUomId = unit2.UomId,
             IsActive = true,
-            Description = "Packaging film for blisters",
+            Description = "Packaging film for blister packs",
             CreatedAt = DateTime.Now
         };
         db.Materials.AddRange(material1, material2, material3);
@@ -111,7 +111,7 @@ using (var scope = app.Services.CreateScope())
                 RecipeId = recipe1.RecipeId,
                 MaterialId = material2.MaterialId,
                 Quantity = 0.5m,
-                UomId = unit1.UnitId
+                UomId = unit1.UomId
             });
         }
 
