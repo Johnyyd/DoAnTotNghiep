@@ -142,7 +142,7 @@ using (var scope = app.Services.CreateScope())
         db.InventoryLots.AddRange(lot1, lot2);
         db.SaveChanges();
 
-        // Seed Production Order and Batch
+        // Seed Production Order
         var order1 = new ProductionOrder
         {
             OrderCode = "PO-001",
@@ -152,12 +152,12 @@ using (var scope = app.Services.CreateScope())
             Status = "Completed",
             CreatedAt = DateTime.Now,
             StartDate = DateTime.Now.AddDays(-7),
-            EndDate = DateTime.Now.AddDays(-6),
-            Note = "Test order for traceability"
+            EndDate = DateTime.Now.AddDays(-6)
         };
         db.ProductionOrders.Add(order1);
         db.SaveChanges();
 
+        // Seed Production Batch
         var batch1 = new ProductionBatch
         {
             OrderId = order1.OrderId,
