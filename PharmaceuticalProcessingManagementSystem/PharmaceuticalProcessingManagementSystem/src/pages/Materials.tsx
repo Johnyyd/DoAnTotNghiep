@@ -47,10 +47,13 @@ export default function Materials() {
     },
   });
 
-  const materialsList = (materialsData as Material[]).filter((m: Material) =>
-    m.materialName.toLowerCase().includes(search.toLowerCase()) ||
-    m.materialCode.toLowerCase().includes(search.toLowerCase())
-  ) || [];
+  const materialsList = (materialsData as Material[]).filter((m: Material) => {
+    // Guard against undefined/null material entries
+    if (!m) return false;
+    const name = m.materialName?.toLowerCase() || '';
+    const code = m.materialCode?.toLowerCase() || '';
+    return name.includes(search.toLowerCase()) || code.includes(search.toLowerCase());
+  }) || [];
   const filteredMaterials: Material[] = materialsList;
 
   const openCreateModal = () => {

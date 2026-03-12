@@ -16,8 +16,9 @@ export default function Recipes() {
   const recipesList = Array.isArray(recipes) ? recipes : (recipes as any)?.data || [];
 
   const filteredRecipes = recipesList.filter((recipe: any) => {
-    const matchesSearch = recipe.recipeCode?.toLowerCase().includes(search.toLowerCase()) ||
-                         recipe.recipeName?.toLowerCase().includes(search.toLowerCase());
+    if (!recipe) return false;
+    const matchesSearch = (recipe.recipeCode?.toLowerCase() || '').includes(search.toLowerCase()) ||
+                         (recipe.recipeName?.toLowerCase() || '').includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || recipe.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
