@@ -89,7 +89,7 @@ using (var scope = app.Services.CreateScope())
             CreatedAt = DateTime.Now
         };
         db.Materials.AddRange(material1, material2, material3);
-        db.SaveChanges(); // Save materials to get IDs
+        db.SaveChanges();
 
         var recipe1 = new Recipe
         {
@@ -105,16 +105,87 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
 
         // Add recipe BOM
-        if (recipe1.RecipeId > 0)
+        db.RecipeBoms.Add(new RecipeBom
         {
-            db.RecipeBoms.Add(new RecipeBom
-            {
-                RecipeId = recipe1.RecipeId,
-                MaterialId = material2.MaterialId,
-                Quantity = 0.5m,
-                UomId = unit1.UomId
-            });
-        }
+            RecipeId = recipe1.RecipeId,
+            MaterialId = material2.MaterialId,
+            Quantity = 0.5m,
+            UomId = unit1.UomId
+        });
+        db.RecipeBoms.Add(new RecipeBom
+        {
+            RecipeId = recipe1.RecipeId,
+            MaterialId = material3.MaterialId,
+            Quantity = 0.1m,
+            UomId = unit2.UomId
+        });
+
+        // Seed Inventory Lots (for materials 2 and 3)
+        var lot1 = new InventoryLot
+        {
+            MaterialId = material2.MaterialId,
+            LotNumber = "LOT-MCC-001",
+            QuantityCurrent = 100,
+            ManufactureDate = DateTime.Now.AddMonths(-1),
+            ExpiryDate = DateTime.Now.AddMonths(11),
+            Qcstatus = "Released"
+        };
+        var lot2 = new InventoryLot
+        {
+            MaterialId = material3.MaterialId,
+            LotNumber = "LOT-FILM-001",
+            QuantityCurrent = 500,
+            ManufactureDate = DateTime.Now.AddMonths(-2),
+            ExpiryDate = DateTime.Now.AddMonths(10),
+            Qcstatus = "Released"
+        };
+        db.InventoryLots.AddRange(lot1, lot2);
+        db.SaveChanges();
+
+        // Seed Production Order and Batch
+        var order1 = new ProductionOrder
+        {
+            OrderCode = "PO-001",
+            RecipeId = recipe1.RecipeId,
+            PlannedQuantity = 1000,
+            ActualQuantity = 980,
+            Status = "Completed",
+            CreatedAt = DateTime.Now,
+            StartDate = DateTime.Now.AddDays(-7),
+            EndDate = DateTime.Now.AddDays(-6),
+            Note = "Test order for traceability"
+        };
+        db.ProductionOrders.Add(order1);
+        db.SaveChanges();
+
+        var batch1 = new ProductionBatch
+        {
+            OrderId = order1.OrderId,
+            BatchNumber = "BATCH-PCM-001",
+            ManufactureDate = DateTime.Now.AddDays(-7),
+            EndTime = DateTime.Now.AddDays(-6),
+            Status = "Completed"
+        };
+        db.ProductionBatches.Add(batch1);
+        db.SaveChanges();
+
+        // Seed Material Usages linking batch and lots
+        db.MaterialUsages.Add(new MaterialUsage
+        {
+            BatchId = batch1.BatchId,
+            InventoryLotId = lot1.LotId,
+            ActualAmount = 50,
+            Timestamp = DateTime.Now.AddDays(-7),
+            Note = "Used in batch BATCH-PCM-001"
+        });
+        db.MaterialUsages.Add(new MaterialUsage
+        {
+            BatchId = batch1.BatchId,
+            InventoryLotId = lot2.LotId,
+            ActualAmount = 100,
+            Timestamp = DateTime.Now.AddDays(-7),
+            Note = "Used in batch BATCH-PCM-001"
+        });
 
         db.SaveChanges();
     }
