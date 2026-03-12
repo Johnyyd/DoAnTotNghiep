@@ -15,7 +15,9 @@ import type {
   PaginationParams
 } from '@/types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+// Use relative URL to leverage nginx proxy in production
+// In development, VITE_API_URL should be set to /api or http://localhost:5001
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
