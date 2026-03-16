@@ -47,10 +47,19 @@ export interface Recipe {
   recipeCode: string;
   recipeName: string;
   version: string;
-  status: 'Draft' | 'Approved' | 'Deprecated';
+  versionNumber?: number; // Added from API
+  batchSize?: number; // Added from API
+  status: 'Draft' | 'Approved' | 'InProcess' | 'Hold' | 'Completed' | 'Deprecated';
   approvedBy?: number;
   approvedDate?: string;
   createdAt: string;
+  effectiveDate?: string;
+  note?: string;
+  materialId: number;
+  material?: Material;
+  recipeBoms?: RecipeBOM[];
+  recipeRoutings?: RecipeRouting[];
+  productionOrders?: ProductionOrder[];
 }
 
 export interface RecipeBOM {

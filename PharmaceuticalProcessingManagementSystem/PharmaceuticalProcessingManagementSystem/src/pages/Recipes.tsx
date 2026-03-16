@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { recipesApi } from '@/services/api';
+import { Recipe } from '@/types';
 import { ClipboardList, Plus, Search, MoreVertical, Eye, Edit, Lock, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function Recipes() {
@@ -13,9 +14,29 @@ export default function Recipes() {
   });
 
   // API can return either array directly or { data: array }
-  const recipesList = Array.isArray(recipes) ? recipes : (recipes as any)?.data || [];
+  const recipesData = Array.isArray(recipes) ? recipes : (recipes as any)?.data || [];
 
-  const filteredRecipes = recipesList.filter((recipe: any) => {
+  // Map API data to match frontend Recipe type
+  const normalizedRecipes: Recipe[] = recipesData.map((r: any) => ({
+    recipeId: r.RecipeId,
+    recipeCode: r.RecipeCode,
+    recipeName: r.RecipeName,
+    materialId: r.MaterialId,
+    batchSize: r.BatchSize,
+    status: r.Status,
+    versionNumber: r.VersionNumber,
+    createdAt: r.CreatedAt,
+    effectiveDate: r.EffectiveDate,
+    note: r.Note,
+    approvedBy: r.ApprovedBy,
+    approvedDate: r.ApprovedDate,
+    material: r.Material,
+    productionOrders: r.ProductionOrders || [],
+    recipeBoms: r.RecipeBoms || [],
+    recipeRoutings: r.RecipeRoutings || [],
+  }));
+
+  const filteredRecipes = normalizedRecipes.filter((recipe: Recipe) => {
     if (!recipe) return false;
     const matchesSearch = (recipe.recipeCode?.toLowerCase() || '').includes(search.toLowerCase()) ||
                          (recipe.recipeName?.toLowerCase() || '').includes(search.toLowerCase());
@@ -62,7 +83,7 @@ export default function Recipes() {
         };
       default:
         return { 
-          label: status, 
+          label: status || 'Không xác định', 
           badgeClass: 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-neutral-50 text-neutral-700 border border-neutral-200',
           icon: Clock,
           iconBg: 'bg-neutral-100 text-neutral-600'
@@ -70,10 +91,19 @@ export default function Recipes() {
     }
   };
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '-';
+    try {
+      return new Date(dateString).toLocaleDateString('vi-VN');
+    } catch {
+      return 'Invalid Date';
+    }
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900">Quản Lý Công Thức & BOM</h1>
           <p className="text-neutral-500 mt-1">Tạo, quản lý và duyệt công thức sản xuất theo GMP</p>
@@ -84,22 +114,22 @@ export default function Recipes() {
         </button>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Tổng công thức', value: recipesList.length, bg: 'bg-primary-50', iconBg: 'bg-primary-100 text-primary-600' },
-          { label: 'Nháp', value: recipesList.filter((r: any) => r.status === 'Draft').length, bg: 'bg-accent-50', iconBg: 'bg-accent-100 text-accent-600' },
-          { label: 'Đã duyệt', value: recipesList.filter((r: any) => r.status === 'Approved').length, bg: 'bg-primary-50', iconBg: 'bg-primary-100 text-primary-600' },
-          { label: 'Đang hoạt động', value: recipesList.filter((r: any) => r.status === 'InProcess').length, bg: 'bg-secondary-50', iconBg: 'bg-secondary-100 text-secondary-600' },
-        ].map((stat) => (
-          <div key={stat.label} className="card p-4">
+          { label: 'Tổng công thức', value: filteredRecipes.length, bg: 'bg-primary-50', iconBg: 'bg-primary-100 text-primary-600' },
+          { label: 'Nháp', value: filteredRecipes.filter(c => c.status === 'Draft').length, bg: 'bg-accent-50', iconBg: 'bg-accent-100 text-accent-600' },
+          { label: 'Đã duyệt', value: filteredRecipes.filter(c => c.status === 'Approved').length, bg: 'bg-primary-50', iconBg: 'bg-primary-100 text-primary-600' },
+          { label: 'Đang hoạt động', value: filteredRecipes.filter(c => c.status === 'InProcess').length, bg: 'bg-secondary-50', iconBg: 'bg-secondary-100 text-secondary-600' },
+        ].map((stat, idx) => (
+          <div key={idx} className={`card p-4`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-neutral-500">{stat.label}</p>
                 <p className="text-2xl font-bold text-neutral-900 mt-1">{stat.value}</p>
               </div>
-              <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
-                <ClipboardList className={`w-5 h-5 ${stat.iconBg.split(' ')[1]}`} />
+              <div className={`p-3 rounded-xl ${stat.bg}`}>
+                <ClipboardList className={`w-6 h-6 ${stat.iconBg.split(' ')[1]}`} />
               </div>
             </div>
           </div>
@@ -136,7 +166,7 @@ export default function Recipes() {
         </div>
       </div>
 
-      {/* Recipes Grid */}
+      {/* Recipe Grid */}
       {isLoading ? (
         <div className="flex items-center justify-center p-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -149,15 +179,14 @@ export default function Recipes() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredRecipes.map((recipe: any) => {
+          {filteredRecipes.map((recipe) => {
             const statusInfo = getStatusInfo(recipe.status);
-            const StatusIcon = statusInfo.icon;
             return (
               <div key={recipe.recipeId} className="card group hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <div className={`p-2 rounded-lg ${statusInfo.iconBg}`}>
-                      <ClipboardList className="w-5 h-5 text-primary-600" />
+                      <statusInfo.icon className="w-5 h-5 text-primary-600" />
                     </div>
                     <div>
                       <p className="font-mono text-sm text-primary-600">{recipe.recipeCode}</p>
@@ -168,20 +197,19 @@ export default function Recipes() {
                     <MoreVertical className="w-4 h-4 text-neutral-500" />
                   </button>
                 </div>
-
                 <div className="space-y-3 mb-4">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-neutral-500">Version</span>
-                    <span className="font-medium">v{recipe.version || 1}</span>
+                    <span className="font-medium">v{recipe.versionNumber || 1}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-neutral-500">Batch Size</span>
-                    <span className="font-medium">{recipe.batchSize || '-'}</span>
+                    <span className="font-medium">{recipe.batchSize?.toLocaleString() || '-'}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-neutral-500">Trạng thái</span>
                     <span className={statusInfo.badgeClass}>
-                      <StatusIcon className="w-3 h-3 mr-1" />
+                      <statusInfo.icon className="w-3 h-3 mr-1" />
                       {statusInfo.label}
                     </span>
                   </div>
@@ -192,10 +220,9 @@ export default function Recipes() {
                     </div>
                   )}
                 </div>
-
                 <div className="pt-4 border-t border-neutral-200 flex items-center justify-between">
                   <div className="text-xs text-neutral-500">
-                    Tạo: {new Date(recipe.createdAt).toLocaleDateString('vi-VN')}
+                    Tạo: {formatDate(recipe.createdAt)}
                   </div>
                   <div className="flex items-center space-x-2">
                     <button className="btn-ghost text-sm flex items-center">
@@ -221,7 +248,7 @@ export default function Recipes() {
         </div>
       )}
 
-      {/* GMP Info Banner */}
+      {/* Info Box */}
       <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-xl p-6 border border-primary-100">
         <div className="flex items-start space-x-4">
           <div className="p-2 bg-primary-100 rounded-lg">

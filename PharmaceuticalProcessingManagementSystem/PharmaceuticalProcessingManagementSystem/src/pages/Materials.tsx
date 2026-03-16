@@ -20,6 +20,23 @@ export default function Materials() {
   // API can return either array directly or { data: array }
   const materialsData = Array.isArray(materials) ? materials : (materials as any)?.data ?? [];
 
+  // Map API data to match frontend Material type (convert property names)
+  const normalizedMaterials: Material[] = materialsData.map((m: any) => ({
+    materialId: m.MaterialId,
+    materialCode: m.MaterialCode,
+    materialName: m.MaterialName,
+    type: m.Type,
+    baseUomId: m.BaseUomId,
+    baseUomName: m.BaseUom?.UomName || '-', // TODO: fetch unit name via API
+    isActive: m.IsActive,
+    description: m.Description,
+    createdAt: m.CreatedAt,
+    updatedAt: m.UpdatedAt,
+    inventoryLots: m.InventoryLots || [],
+    recipeBoms: m.RecipeBoms || [],
+    recipes: m.Recipes || [],
+  }));
+
   const createMutation = useMutation({
     mutationFn: materialsApi.create,
     onSuccess: () => {
@@ -47,7 +64,7 @@ export default function Materials() {
     },
   });
 
-  const materialsList = (materialsData as Material[]).filter((m: Material) => {
+  const materialsList = normalizedMaterials.filter((m: Material) => {
     // Guard against undefined/null material entries
     if (!m) return false;
     const name = m.materialName?.toLowerCase() || '';
@@ -78,20 +95,37 @@ export default function Materials() {
   };
 
   const getTypeLabel = (type: string) => {
-    const labels: Record<string, { label: string; color: string }> = {
+    const map: Record<string, { label: string; color: string }> = {
       RawMaterial: { label: 'Nguyên liệu', color: 'bg-blue-100 text-blue-700' },
       Packaging: { label: 'Bao bì', color: 'bg-purple-100 text-purple-700' },
       FinishedGood: { label: 'Thành phẩm', color: 'bg-green-100 text-green-700' },
       Intermediate: { label: 'Bán thành phẩm', color: 'bg-orange-100 text-orange-700' },
     };
-    return labels[type] || { label: type, color: 'bg-neutral-100 text-neutral-700' };
+    return map[type] || { label: type || 'Không xác định', color: 'bg-neutral-100 text-neutral-700' };
   };
 
-  const getStatusBadge = (isActive: boolean) => (
-    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-      {isActive ? 'Hoạt động' : 'Ngưng'}
-    </span>
-  );
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '-';
+    try {
+      return new Date(dateString).toLocaleDateString('vi-VN');
+    } catch {
+      return 'Invalid Date';
+    }
+  };
+
+  const getStatusColor = (isActive: boolean) => {
+    return isActive
+      ? 'bg-green-100 text-green-700'
+      : 'bg-red-100 text-red-700';
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -101,16 +135,13 @@ export default function Materials() {
           <h1 className="text-2xl font-bold text-neutral-900">Quản Lý Nguyên Liệu & Thành Phẩm</h1>
           <p className="text-neutral-500 mt-1">Quản lý kho, theo dõi chất lượng và truy xuất nguồn gốc</p>
         </div>
-        <button
-          onClick={openCreateModal}
-          className="btn-primary flex items-center"
-        >
+        <button onClick={openCreateModal} className="btn-primary flex items-center">
           <Plus className="w-5 h-5 mr-2" />
           Thêm mới
         </button>
       </div>
 
-      {/* Filters & Search */}
+      {/* Filters */}
       <div className="card">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
@@ -128,8 +159,6 @@ export default function Materials() {
             Bộ lọc
           </button>
         </div>
-
-        {/* Stats */}
         <div className="mt-6 flex items-center space-x-6 text-sm">
           <div className="flex items-center space-x-2">
             <span className="text-neutral-500">Tổng:</span>
@@ -172,65 +201,56 @@ export default function Materials() {
                 </tr>
               </thead>
               <tbody>
-                {filteredMaterials.map((material) => {
-                  const typeInfo = getTypeLabel(material.type);
-                  return (
-                    <tr key={material.materialId}>
-                      <td>
-                        <code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">
-                          {material.materialCode}
-                        </code>
-                      </td>
-                      <td className="font-medium text-neutral-900">{material.materialName}</td>
-                      <td>
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${typeInfo.color}`}>
-                          {typeInfo.label}
-                        </span>
-                      </td>
-                      <td className="text-neutral-600">{material.baseUomName || '-'}</td>
-                      <td>{getStatusBadge(material.isActive)}</td>
-                      <td className="text-neutral-500 text-sm">
-                        {new Date(material.createdAt).toLocaleDateString('vi-VN')}
-                      </td>
-                      <td className="text-right">
-                        <div className="relative">
-                          <button
-                            onClick={() => setShowActions(showActions === material.materialId ? null : material.materialId)}
-                            className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
-                          >
-                            <MoreVertical className="w-4 h-4 text-neutral-500" />
-                          </button>
-                          {showActions === material.materialId && (
-                            <div className="absolute right-0 mt-2 w-48 bg-surface rounded-xl shadow-lg border border-neutral-200 py-2 z-10">
-                              <button
-                                onClick={() => {
-                                  openEditModal(material);
-                                  setShowActions(null);
-                                }}
-                                className="w-full flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
-                              >
-                                <Edit2 className="w-4 h-4 mr-3" />
-                                Chỉnh sửa
-                              </button>
-                              <button
-                                onClick={() => {
-                                  if (confirm('Xóa nguyên liệu này?')) {
-                                    deleteMutation.mutate(material.materialId);
-                                  }
-                                  setShowActions(null);
-                                }}
-                                className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                              >
-                                <Trash2 className="w-4 h-4 mr-3" />
-                                Xóa
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {filteredMaterials.map((material) => (
+                  <tr key={material.materialId}>
+                    <td>
+                      <code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">
+                        {material.materialCode}
+                      </code>
+                    </td>
+                    <td className="font-medium text-neutral-900">{material.materialName}</td>
+                    <td>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getTypeLabel(material.type).color}`}>
+                        {getTypeLabel(material.type).label}
+                      </span>
+                    </td>
+                    <td className="text-neutral-600">{material.baseUomName}</td>
+                    <td>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(material.isActive)}`}>
+                        {material.isActive ? 'Hoạt động' : 'Ngưng'}
+                      </span>
+                    </td>
+                    <td className="text-neutral-500 text-sm">{formatDate(material.createdAt)}</td>
+                    <td className="text-right">
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowActions(showActions === material.materialId ? null : material.materialId)}
+                          className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
+                        >
+                          <MoreVertical className="w-4 h-4 text-neutral-500" />
+                        </button>
+                        {showActions === material.materialId && (
+                          <div className="absolute right-0 mt-2 w-48 bg-surface rounded-xl shadow-lg border border-neutral-200 py-2 z-10">
+                            <button
+                              onClick={() => { openEditModal(material); setShowActions(null); }}
+                              className="w-full flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
+                            >
+                              <Edit2 className="w-4 h-4 mr-3" />
+                              Chỉnh sửa
+                            </button>
+                            <button
+                              onClick={() => { if (confirm('Xóa nguyên liệu này?')) deleteMutation.mutate(material.materialId); setShowActions(null); }}
+                              className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 className="w-4 h-4 mr-3" />
+                              Xóa
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -246,13 +266,9 @@ export default function Materials() {
                 <h2 className="text-xl font-bold text-neutral-900">
                   {editingMaterial ? 'Chỉnh sửa nguyên liệu' : 'Thêm nguyên liệu mới'}
                 </h2>
-                <button onClick={() => setShowModal(false)} className="text-neutral-400 hover:text-neutral-600">
-                  <span className="sr-only">Đóng</span>
-                  &times;
-                </button>
+                <button onClick={() => setShowModal(false)} className="text-neutral-400 hover:text-neutral-600 text-2xl">&times;</button>
               </div>
             </div>
-
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -282,7 +298,7 @@ export default function Materials() {
                   <select
                     required
                     value={formData.type || ''}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value as 'RawMaterial' | 'Packaging' | 'FinishedGood' | 'Intermediate' })}
                     className="input"
                   >
                     <option value="">Chọn loại</option>
@@ -301,10 +317,10 @@ export default function Materials() {
                     className="input"
                   >
                     <option value="">Chọn đơn vị</option>
-                    <option value="1">Kilogram (kg)</option>
-                    <option value="2">Gram (g)</option>
-                    <option value="3">Viên (tablet)</option>
-                    <option value="4">Lít (L)</option>
+                    <option value={1}>Kilogram (kg)</option>
+                    <option value={2}>Gram (g)</option>
+                    <option value={3}>Viên (tablet)</option>
+                    <option value={4}>Lít (L)</option>
                   </select>
                 </div>
                 <div className="md:col-span-2">
@@ -329,24 +345,14 @@ export default function Materials() {
                   </label>
                 </div>
               </div>
-
               <div className="flex justify-end space-x-3 pt-4 border-t border-neutral-200">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="btn-ghost"
-                >
-                  Hủy
-                </button>
+                <button type="button" onClick={() => setShowModal(false)} className="btn-ghost">Hủy</button>
                 <button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
                   className="btn-primary"
                 >
-                  {createMutation.isPending || updateMutation.isPending ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  ) : null}
-                  {editingMaterial ? 'Cập nhật' : 'Tạo mới'}
+                  {createMutation.isPending || updateMutation.isPending ? 'Đang lưu...' : (editingMaterial ? 'Cập nhật' : 'Tạo mới')}
                 </button>
               </div>
             </form>
