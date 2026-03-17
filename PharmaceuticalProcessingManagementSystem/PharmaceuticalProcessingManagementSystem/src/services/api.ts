@@ -167,6 +167,22 @@ export const inventoryApi = {
     api.get<ApiResponse<any>>(`/traceability/forward/${rawMaterialBatchNumber}`),
 };
 
+export const appUsersApi = {
+  getAll: (params?: { role?: string; isActive?: boolean }) =>
+    api.get<ApiResponse<any[]>>('/app-users', { params }),
+  create: (data: any) => api.post<ApiResponse<any>>('/app-users', data),
+  update: (id: number, data: any) => api.put<ApiResponse<any>>(`/app-users/${id}`, data),
+  delete: (id: number) => api.delete<ApiResponse<any>>(`/app-users/${id}`),
+};
+
+export const equipmentsApi = {
+  getAll: (params?: { status?: string; keyword?: string }) =>
+    api.get<ApiResponse<any[]>>('/equipments', { params }),
+  create: (data: any) => api.post<ApiResponse<any>>('/equipments', data),
+  update: (id: number, data: any) => api.put<ApiResponse<any>>(`/equipments/${id}`, data),
+  delete: (id: number) => api.delete<ApiResponse<any>>(`/equipments/${id}`),
+};
+
 // ============== AUDIT LOGS ==============
 export const auditApi = {
   getAll: (params?: { entityType?: string; entityId?: number; limit?: number }) =>

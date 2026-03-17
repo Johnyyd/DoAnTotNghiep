@@ -1,161 +1,202 @@
-// Placeholder - Full traceability report implementation
 import { useState } from 'react';
-import { Search } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { inventoryApi } from '@/services/api';
+import { Search, Info, Package, FileText, CheckCircle, XCircle } from 'lucide-react';
 
 export default function Traceability() {
-  const [batchNumber, setBatchNumber] = useState('');
-  const [result, setResult] = useState<any>(null);
+  const [batchNumberInput, setBatchNumberInput] = useState('');
+  const [searchBatch, setSearchBatch] = useState<string | null>(null);
+
+  const { data: traceData, isLoading, isError, error } = useQuery({
+    queryKey: ['traceability', searchBatch],
+    queryFn: () => inventoryApi.traceBackward(searchBatch!),
+    enabled: !!searchBatch, // Only run the query when searchBatch has a value
+    retry: false, // Don't retry on 404
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock result - will call API /traceability/backward/:batchNumber
-    setResult({
-      batchNumber,
-      finishedGood: {
-        name: 'Paracetamol 500mg Box',
-        batchNumber,
-        producedDate: '2025-03-08',
-        quantity: 10000,
-      },
-      rawMaterials: [
-        {
-          name: 'Paracetamol API',
-          batchNumber: 'BATCH-API-2025-001',
-          quantity: 5000000,
-          supplier: 'API Supplier Co.',
-          qcStatus: 'Passed',
-        },
-        {
-          name: 'Microcrystalline Cellulose',
-          batchNumber: 'BATCH-EXC-2025-001',
-          quantity: 1500000,
-          supplier: 'Excipient Corp',
-          qcStatus: 'Passed',
-        },
-      ],
-    });
+    if (batchNumberInput.trim()) {
+      setSearchBatch(batchNumberInput.trim());
+    }
   };
+
+  // @ts-ignore
+  const result: any = traceData?.data || traceData; // Extract the actual data payload
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Truy Xuất Nguồn Gốc</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Truy Xuất Nguồn Gốc (Traceability)</h1>
+          <p className="text-neutral-500 mt-1">Truy xuất ngược từ Mẻ Thành Phẩm ra các Nguyên Liệu cấu thành</p>
+        </div>
       </div>
 
       {/* Search form */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="card">
         <form onSubmit={handleSearch} className="flex gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Nhập mã lô thành phẩm (ví dụ: FG-BATCH-001)..."
-              value={batchNumber}
-              onChange={(e) => setBatchNumber(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gmp-primary focus:border-transparent"
+              placeholder="Nhập mã lô thành phẩm (ví dụ: FB-001)..."
+              value={batchNumberInput}
+              onChange={(e) => setBatchNumberInput(e.target.value)}
+              className="input pl-10"
+              required
             />
           </div>
           <button
             type="submit"
-            className="px-6 py-3 bg-gmp-primary text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            disabled={isLoading}
+            className="btn-primary"
           >
-            Truy xuất
+            {isLoading ? 'Đang truy xuất...' : 'Truy xuất'}
           </button>
         </form>
       </div>
 
-      {/* Result */}
-      {result && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Kết quả truy xuất cho lô: <span className="text-gmp-primary">{result.batchNumber}</span>
-            </h2>
+      {/* States: Loading, Error, Empty, Success */}
+      {isLoading && (
+        <div className="flex items-center justify-center p-12 card text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-neutral-500">Đang phân tích chuỗi dữ liệu truy xuất...</p>
+        </div>
+      )}
 
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <div className="bg-gmp-background rounded-lg p-4">
-                <h3 className="font-medium text-gray-900 mb-2">Thành phẩm</h3>
-                <div className="space-y-2 text-sm">
-                  <p><span className="font-medium">Tên:</span> {result.finishedGood.name}</p>
-                  <p><span className="font-medium">Lô:</span> {result.finishedGood.batchNumber}</p>
-                  <p><span className="font-medium">Ngày sản xuất:</span> {result.finishedGood.producedDate}</p>
-                  <p><span className="font-medium">Số lượng:</span> {result.finishedGood.quantity.toLocaleString()}</p>
+      {isError && (
+        <div className="card border-red-200 bg-red-50 text-red-700">
+          <div className="flex items-center mb-2">
+            <XCircle className="w-5 h-5 mr-2" />
+            <h3 className="font-bold">Lỗi Truy Xuất</h3>
+          </div>
+          <p>{(error as Error).message || 'Không tìm thấy thông tin truy xuất cho mã lô này.'}</p>
+        </div>
+      )}
+
+      {!isLoading && !isError && searchBatch && !result && (
+        <div className="card text-center py-12">
+          <Info className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
+          <p className="text-neutral-500">Không có dữ liệu cho mã lô <strong>{searchBatch}</strong></p>
+        </div>
+      )}
+
+      {/* Result UI */}
+      {!isLoading && !isError && result && (
+        <div className="space-y-6">
+          <div className="card border-primary-100 overflow-hidden">
+            <div className="bg-primary-50 px-6 py-4 border-b border-primary-100 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-primary-900">
+                Lô Thành Phẩm: <span className="text-primary-600 ml-2">{result.finishedGoodBatchNumber}</span>
+              </h2>
+              <div className="px-3 py-1 bg-white rounded-full text-sm font-medium text-primary-700 shadow-sm">
+                Tìm thấy {result.rawMaterials?.length || 0} nguyên liệu
+              </div>
+            </div>
+
+            <div className="p-6">
+              {/* Product Info Summary */}
+              <div className="flex items-start space-x-4 mb-8 bg-neutral-50 p-4 rounded-xl">
+                <div className="p-3 bg-white rounded-lg shadow-sm">
+                  <Package className="w-6 h-6 text-primary-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-neutral-900">{result.productName || 'Tên Sản Phẩm Đang Cập Nhật'}</h3>
+                  <div className="flex items-center mt-2 space-x-6 text-sm text-neutral-600">
+                    <span><strong>Order ID:</strong> {result.productionOrderId || '-'}</span>
+                    <span><strong>Số lượng sx:</strong> {result.quantityProduced?.toLocaleString() || '-'}</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div>
-              <h3 className="font-medium text-gray-900 mb-3">Nguyên liệu đầu vào</h3>
-              <div className="space-y-3">
-                {result.rawMaterials.map((mat: any, idx: number) => (
-                  <div key={idx} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-gray-900">{mat.name}</h4>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        mat.qcStatus === 'Passed'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        QC: {mat.qcStatus}
-                      </span>
+              {/* Raw Materials Tree */}
+              <div>
+                <h3 className="font-bold text-neutral-900 mb-4 flex items-center">
+                  <FileText className="w-5 h-5 mr-2 text-primary-600" />
+                  Nguyên Liệu Đầu Vào (Truy xuất ngược)
+                </h3>
+                
+                <div className="space-y-4 relative border-l-2 border-primary-100 ml-3 pl-6">
+                  {result.rawMaterials && result.rawMaterials.length > 0 ? (
+                    result.rawMaterials.map((mat: any, idx: number) => (
+                      <div key={idx} className="relative">
+                        {/* Connecting Line Dot */}
+                        <div className="absolute -left-[29px] top-4 w-3 h-3 bg-white border-2 border-primary-500 rounded-full" />
+                        
+                        <div className="bg-white border border-neutral-200 hover:border-primary-300 transition-colors rounded-xl p-4 shadow-sm">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-semibold text-neutral-900">
+                              {mat.materialName} <span className="text-neutral-400 font-normal text-sm">({mat.materialCode})</span>
+                            </h4>
+                            <span className="inline-flex items-center px-2 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full">
+                              <CheckCircle className="w-3 h-3 mr-1" /> OK
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <p className="text-neutral-500 mb-1">Lot / Batch (NCC)</p>
+                              <p className="font-medium text-neutral-900">{mat.inventoryLotNumber}</p>
+                            </div>
+                            <div>
+                              <p className="text-neutral-500 mb-1">Lượng sử dụng</p>
+                              <p className="font-medium text-neutral-900">{mat.quantityUsed?.toLocaleString()} {mat.uom}</p>
+                            </div>
+                            <div>
+                              <p className="text-neutral-500 mb-1">Sử dụng lúc</p>
+                              <p className="font-medium text-neutral-900">{mat.usedAt ? new Date(mat.usedAt).toLocaleString('vi-VN') : '-'}</p>
+                            </div>
+                            <div>
+                              <p className="text-neutral-500 mb-1">Người nhập liệu</p>
+                              <p className="font-medium text-neutral-900">User ID: {mat.usedBy || 'Hệ thống'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm text-neutral-500 italic">
+                      Không có lịch sử nhập liệu nguyên liệu cho Mẻ này.
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                      <div>
-                        <span className="font-medium">Lô nguyên liệu:</span>
-                        <p className="text-gray-900">{mat.batchNumber}</p>
-                      </div>
-                      <div>
-                        <span className="font-medium">Nhà cung cấp:</span>
-                        <p className="text-gray-900">{mat.supplier}</p>
-                      </div>
-                      <div>
-                        <span className="font-medium">Lượng dùng:</span>
-                        <p className="text-gray-900">{mat.quantity.toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <span className="font-medium">Trạng thái:</span>
-                        <p className="text-gray-900">Đạt chuẩn</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  )}
+                </div>
               </div>
-            </div>
 
-            <div className="mt-6 flex justify-end">
-              <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 mr-3">
-                Xem chi tiết đầy đủ (PDF)
-              </button>
-              <button className="px-4 py-2 bg-gmp-primary text-white rounded-lg hover:bg-blue-700">
-                Xuất báo cáo truy xuất
-              </button>
+              {/* Action Buttons */}
+              <div className="mt-8 pt-6 border-t border-neutral-200 flex justify-end space-x-3">
+                <button className="btn-ghost flex items-center text-primary-700 font-medium">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Xem báo cáo PDF đầy đủ
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {/* Instructions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Hướng dẫn sử dụng</h3>
-        <ul className="space-y-2 text-sm text-gray-600">
-          <li className="flex items-start">
-            <span className="w-2 h-2 bg-gmp-primary rounded-full mt-1.5 mr-2 flex-shrink-0" />
-            <span>Nhập mã lô thành phẩm (như trong tem/nhãn đóng gói)</span>
-          </li>
-          <li className="flex items-start">
-            <span className="w-2 h-2 bg-gmp-primary rounded-full mt-1.5 mr-2 flex-shrink-0" />
-            <span>Hệ thống sẽ hiển thị toàn bộ chuỗi nguyên liệu đã sử dụng</span>
-          </li>
-          <li className="flex items-start">
-            <span className="w-2 h-2 bg-gmp-primary rounded-full mt-1.5 mr-2 flex-shrink-0" />
-            <span>Báo cáo đầy đủ có thể xuất ra PDF cho mục đích audit</span>
-          </li>
-          <li className="flex items-start">
-            <span className="w-2 h-2 bg-gmp-primary rounded-full mt-1.5 mr-2 flex-shrink-0" />
-            <span>Truy xuất ngược (Backward) và xuôi (Forward) đều được hỗ trợ</span>
-          </li>
-        </ul>
-      </div>
+      {!result && !isLoading && !isError && (
+        <div className="card bg-gradient-to-br from-primary-50 to-white border-primary-100">
+          <h3 className="text-lg font-bold text-primary-900 mb-4 flex items-center">
+            <Info className="w-5 h-5 mr-2" /> Hướng dẫn truy xuất (GMP compliant)
+          </h3>
+          <ul className="space-y-3 text-sm text-neutral-700">
+            <li className="flex items-start">
+              <span className="w-6 h-6 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xs mr-3 shrink-0">1</span>
+              <span>Nhập mã lô thành phẩm <strong>(Finished Good Batch)</strong> tương ứng có trên nhãn sản phẩm.</span>
+            </li>
+            <li className="flex items-start">
+              <span className="w-6 h-6 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xs mr-3 shrink-0">2</span>
+              <span>Hệ thống sẽ tra cứu toàn bộ <strong>Material Usages</strong> liên kết với mẻ sản xuất đó.</span>
+            </li>
+            <li className="flex items-start">
+              <span className="w-6 h-6 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xs mr-3 shrink-0">3</span>
+              <span>Kết quả trả về danh sách đầy đủ <strong>nguyên liệu đầu vào, mã lô của nhà cung cấp, và thời gian sử dụng</strong>. Có thể dùng cho đợt thanh tra cục quản lý Dược.</span>
+            </li>
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

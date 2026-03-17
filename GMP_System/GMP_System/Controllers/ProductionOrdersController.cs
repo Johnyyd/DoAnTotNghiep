@@ -1,10 +1,10 @@
-﻿using GMP_System.Entities;
+using GMP_System.Entities;
 using GMP_System.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GMP_System.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/production-orders")]
     [ApiController]
     public class ProductionOrdersController : ControllerBase
     {
@@ -20,7 +20,18 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> GetAll()
         {
             var orders = await _unitOfWork.ProductionOrders.GetAllAsync();
-            return Ok(orders);
+            // Wrap in PaginatedResponse format expected by frontend
+            return Ok(new { data = orders, totalCount = orders.Count(), success = true, message = "Success" });
+        }
+
+        // 1.5 Lấy danh sách Mẻ thuộc Lệnh sản xuất
+        [HttpGet("{orderId}/batches")]
+        public async Task<IActionResult> GetBatchesByOrder(int orderId)
+        {
+            // Tạm thời lấy tất cả và filter, nếu Repository chưa có hàm GetBatchesByOrderAsync
+            var allBatches = await _unitOfWork.ProductionBatches.GetAllAsync();
+            var batches = allBatches.Where(b => b.OrderId == orderId).ToList();
+            return Ok(new { data = batches, success = true, message = "Success" }); // Wrap by ApiResponse format if needed, but the original returns raw array according to other APIs
         }
 
         // 2. Tạo Lệnh Sản Xuất Mới

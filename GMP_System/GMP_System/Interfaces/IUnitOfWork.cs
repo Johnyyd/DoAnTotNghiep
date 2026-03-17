@@ -1,4 +1,4 @@
-﻿using GMP_System.Entities;
+using GMP_System.Entities;
 
 namespace GMP_System.Interfaces
 {
@@ -14,6 +14,9 @@ namespace GMP_System.Interfaces
         IGenericRepository<InventoryLot> InventoryLots { get; }
         IGenericRepository<MaterialUsage> MaterialUsages { get; }
         IGenericRepository<SystemAuditLog> SystemAuditLogs { get; }
+        IGenericRepository<Equipment> Equipments { get; }
+        IGenericRepository<UnitOfMeasure> UnitOfMeasures { get; }
+        IGenericRepository<UomConversion> UomConversions { get; }
         // Hàm lưu thay đổi (Commit)
         Task<int> CompleteAsync();
     }

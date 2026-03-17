@@ -10,6 +10,8 @@ import {
   X,
   Bell,
   User,
+  Users,
+  Package,
   LogOut,
   Settings
 } from 'lucide-react';
@@ -22,6 +24,10 @@ const navigation = [
   { name: 'Lệnh Sản Xuất', href: '/production-orders', icon: Warehouse },
   { name: 'Mẻ Sản Xuất', href: '/batches', icon: Activity },
   { name: 'Truy Xuất', href: '/traceability', icon: Search },
+  { name: 'Tồn Kho', href: '/inventory', icon: Package },
+  { name: 'Thiết Bị', href: '/equipments', icon: Settings },
+  { name: 'Tài Khoản', href: '/users', icon: Users },
+  { name: 'Nhật Ký Hệ Thống', href: '/audit-logs', icon: ClipboardList },
 ];
 
 export default function Layout() {
@@ -39,7 +45,7 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-surface border-r border-neutral-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-surface border-r border-neutral-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -63,10 +69,11 @@ export default function Layout() {
         </div>
 
         {/* Navigation */}
-        <nav className="mt-6 px-3 space-y-1">
-          {navigation.map((item) => (
-            <NavLink
-              key={item.name}
+        <div className="flex-1 overflow-y-auto py-6">
+          <nav className="px-3 space-y-1">
+            {navigation.map((item) => (
+              <NavLink
+                key={item.name}
               to={item.href}
               onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
@@ -77,10 +84,11 @@ export default function Layout() {
               {item.name}
             </NavLink>
           ))}
-        </nav>
+          </nav>
+        </div>
 
         {/* User section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-200">
+        <div className="p-4 border-t border-neutral-200 bg-surface">
           <div className="flex items-center space-x-3 mb-3">
             <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center">
               <User className="w-5 h-5 text-white" />

@@ -1,4 +1,4 @@
-﻿using GMP_System.Entities;
+using GMP_System.Entities;
 using GMP_System.Interfaces;
 using System.Security.Cryptography;
 
@@ -21,6 +21,9 @@ namespace GMP_System.Repositories
             InventoryLots = new GenericRepository<InventoryLot>(_context);
             MaterialUsages = new GenericRepository<MaterialUsage>(_context);
             SystemAuditLogs = new GenericRepository<SystemAuditLog>(_context);
+            Equipments = new GenericRepository<Equipment>(_context);
+            UnitOfMeasures = new GenericRepository<UnitOfMeasure>(_context);
+            UomConversions = new GenericRepository<UomConversion>(_context);
         }
 
         public IGenericRepository<Material> Materials { get; private set; }
@@ -32,6 +35,9 @@ namespace GMP_System.Repositories
         public IGenericRepository<InventoryLot> InventoryLots { get; private set; }
         public IGenericRepository<MaterialUsage> MaterialUsages { get; private set; }
         public IGenericRepository<SystemAuditLog> SystemAuditLogs { get; private set; }
+        public IGenericRepository<Equipment> Equipments { get; private set; }
+        public IGenericRepository<UnitOfMeasure> UnitOfMeasures { get; private set; }
+        public IGenericRepository<UomConversion> UomConversions { get; private set; }
 
         public async Task<int> CompleteAsync()
         {

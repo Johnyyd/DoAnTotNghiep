@@ -1,10 +1,10 @@
-﻿using GMP_System.Entities;
+using GMP_System.Entities;
 using GMP_System.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GMP_System.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/inventory-lots")]
     [ApiController]
     public class InventoryLotsController : ControllerBase
     {
@@ -13,6 +13,22 @@ namespace GMP_System.Controllers
         public InventoryLotsController(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
+        }
+
+        // 0. Lấy toàn bộ danh sách lô tồn kho
+        [HttpGet]
+        public async Task<IActionResult> GetLots([FromQuery] int? materialId, [FromQuery] string? batchNumber)
+        {
+            var lots = await _unitOfWork.InventoryLots.GetAllAsync();
+            var query = lots.AsQueryable();
+
+            if (materialId.HasValue)
+                query = query.Where(l => l.MaterialId == materialId.Value);
+            
+            if (!string.IsNullOrEmpty(batchNumber))
+                query = query.Where(l => l.LotNumber != null && l.LotNumber.Contains(batchNumber));
+                
+            return Ok(query);
         }
 
         // 1. Kiểm tra tồn kho (Lấy danh sách các lô có thể dùng)

@@ -22,7 +22,7 @@ namespace GMP_System.Controllers
         {
             // Tìm production batch với batch number
             var batches = await _unitOfWork.ProductionBatches.GetAllAsync();
-            var targetBatch = batches.FirstOrDefault(b => b.BatchNumber == batchNumber);
+            var targetBatch = batches.FirstOrDefault(b => b.BatchNumber != null && b.BatchNumber.Contains(batchNumber, StringComparison.OrdinalIgnoreCase));
 
             if (targetBatch == null)
             {
@@ -67,7 +67,7 @@ namespace GMP_System.Controllers
         {
             // Tìm inventory lot
             var lots = await _unitOfWork.InventoryLots.GetAllAsync();
-            var lot = lots.FirstOrDefault(l => l.LotNumber == lotNumber);
+            var lot = lots.FirstOrDefault(l => l.LotNumber != null && l.LotNumber.Contains(lotNumber, StringComparison.OrdinalIgnoreCase));
 
             if (lot == null)
             {

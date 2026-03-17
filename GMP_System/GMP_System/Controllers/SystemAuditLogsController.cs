@@ -1,9 +1,9 @@
-﻿using GMP_System.Interfaces;
+using GMP_System.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GMP_System.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/audit-logs")]
     [ApiController]
     public class SystemAuditLogsController : ControllerBase
     {
@@ -23,7 +23,7 @@ namespace GMP_System.Controllers
         }
 
         // Xem lịch sử của 1 bản ghi cụ thể (VD: Xem lịch sử sửa Công thức số 1)
-        [HttpGet("history/{tableName}/{recordId}")]
+        [HttpGet("{tableName}/{recordId}")]
         public async Task<IActionResult> GetHistory(string tableName, string recordId)
         {
             var allLogs = await _unitOfWork.SystemAuditLogs.GetAllAsync();

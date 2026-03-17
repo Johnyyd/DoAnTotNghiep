@@ -1,10 +1,10 @@
-﻿using GMP_System.Entities;
+using GMP_System.Entities;
 using GMP_System.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GMP_System.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/production-batches")]
     [ApiController]
     public class ProductionBatchesController : ControllerBase
     {
