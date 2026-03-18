@@ -59,7 +59,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-neutral-900">Bảng Điều Khiển</h1>
           <p className="text-neutral-500 mt-1">Tổng quan hệ thống GMP-WHO</p>
         </div>
         <div className={`inline-flex items-center px-4 py-2 rounded-xl border ${getStatusColor(healthStatus)}`}>
@@ -125,16 +125,16 @@ export default function Dashboard() {
       {/* GMP Compliance Status */}
       <div className="card">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-neutral-900">GMP Compliance Status</h2>
+          <h2 className="text-lg font-bold text-neutral-900">Trạng Thái Tuân Thủ GMP</h2>
           <div className="inline-flex items-center px-3 py-1 bg-secondary-50 text-secondary-700 rounded-lg text-sm">
             <Shield className="w-4 h-4 mr-2" />
-            Audit Trail Active
+            Nhật Ký Truy Vấn Hoạt Động
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
             {
-              title: 'Audit Trail',
+              title: 'Nhật Ký Truy Vấn',
               desc: 'Đang hoạt động - Tự động ghi log mọi thay đổi',
               icon: Activity,
               color: 'bg-green-50 border-green-200 text-green-900',
@@ -142,15 +142,15 @@ export default function Dashboard() {
               status: 'active'
             },
             {
-              title: 'State Machine',
-              desc: 'Draft → Approved → InProcess → Hold → Completed',
+              title: 'Luồng Trạng Thái',
+              desc: 'Nháp → Đã duyệt → Đang chờ → Tạm dừng → Hoàn thành',
               icon: LayoutDashboard,
               color: 'bg-blue-50 border-blue-200 text-blue-900',
               iconBg: 'bg-blue-100 text-blue-600',
               status: 'active'
             },
             {
-              title: 'BOM Management',
+              title: 'Quản Lý Định Mức (BOM)',
               desc: 'Hỗ trợ cấu trúc đệ quy nhiều cấp',
               icon: Package,
               color: 'bg-purple-50 border-purple-200 text-purple-900',
@@ -158,8 +158,8 @@ export default function Dashboard() {
               status: 'active'
             },
             {
-              title: 'Data Locking',
-              desc: 'Recipe snapshot khi Approved, không cho phép sửa',
+              title: 'Khóa Dữ Liệu',
+              desc: 'Công thức được snapshot khi duyệt, không thể sửa đổi',
               icon: Shield,
               color: 'bg-orange-50 border-orange-200 text-orange-900',
               iconBg: 'bg-orange-100 text-orange-600',

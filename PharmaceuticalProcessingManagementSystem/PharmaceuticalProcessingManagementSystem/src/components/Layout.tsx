@@ -18,7 +18,7 @@ import {
 import { useState } from 'react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Bảng Điều Khiển', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Nguyên Liệu', href: '/materials', icon: Pill },
   { name: 'Công Thức', href: '/recipes', icon: ClipboardList },
   { name: 'Lệnh Sản Xuất', href: '/production-orders', icon: Warehouse },
@@ -57,7 +57,7 @@ export default function Layout() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-primary-700">GMP-WHO</h1>
-              <p className="text-xs text-neutral-500 -mt-1">Pharmaceutical</p>
+              <p className="text-xs text-neutral-500 -mt-1">Dược phẩm</p>
             </div>
           </div>
           <button
@@ -95,7 +95,7 @@ export default function Layout() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-neutral-900 truncate">Admin</p>
-              <p className="text-xs text-neutral-500 truncate">Administrator</p>
+              <p className="text-xs text-neutral-500 truncate">Quản trị viên</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -125,7 +125,7 @@ export default function Layout() {
           {/* Breadcrumb / Page title */}
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-neutral-900">
-              Pharmaceutical Processing Management
+              Quản Lý Sản Xuất Dược Phẩm
             </h2>
           </div>
 
@@ -140,7 +140,7 @@ export default function Layout() {
             {/* Quick status indicator */}
             <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 bg-secondary-50 border border-secondary-200 rounded-lg">
               <div className="w-2 h-2 bg-secondary-500 rounded-full animate-pulse" />
-              <span className="text-sm font-medium text-secondary-700">Healthy</span>
+              <span className="text-sm font-medium text-secondary-700">Hoạt động tốt</span>
             </div>
           </div>
         </header>

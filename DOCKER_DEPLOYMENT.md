@@ -8,7 +8,8 @@ Hướng dẫn nhanh để chạy toàn bộ hệ thống GMP-WHO bằng Docker.
 |---------|------|-------|-------|
 | **gmp-sqlserver** | 1434 | mcr.microsoft.com/mssql/server:2022-latest | Database SQL Server |
 | **gmp-api** | 5001 | gmp-who-api (custom) | Backend .NET API |
-| **gmp-frontend** | 80 | gmp-who-frontend (custom) | Web Admin Interface |
+| **gmp-frontend** | 8080 | gmp-who-frontend (custom) | Web Admin Interface |
+| **gmp-mobile** | 8081 | gmp-who-mobile (custom) | Mobile Tablet Interface (Flutter Web) |
 
 ## 🚀 Cách 1: Docker Compose (Khuyến nghị)
 
@@ -59,6 +60,7 @@ Hoặc dùng `makeall.sh` để có menu tương tác:
 | URL | Mô tả |
 |-----|-------|
 | http://localhost:8080 | Web Admin (Frontend) |
+| http://localhost:8081 | Mobile App (Tablet Interface) |
 | http://localhost:5001/swagger | Swagger UI (Backend API docs) |
 | http://localhost:5001/scalar | Scalar API Reference |
 | http://localhost:5001/api/health | Health check endpoint |
@@ -149,7 +151,8 @@ docker network rm gmp-network
 
 | Port | Service | Description |
 |------|---------|-------------|
-| 80 | gmp-frontend | HTTP (Web Admin) |
+| 8080 | gmp-frontend | HTTP (Web Admin) |
+| 8081 | gmp-mobile | HTTP (Mobile Tablet Interface) |
 | 1434 | gmp-sqlserver | SQL Server TCP |
 | 5001 | gmp-api | Backend REST API |
 

@@ -69,6 +69,20 @@ services:
       - gmp-api
     restart: unless-stopped
 
+  # Mobile App (Flutter Web)
+  gmp-mobile:
+    build:
+      context: ./MobileApp
+      dockerfile: Dockerfile
+    container_name: gmp-mobile
+    networks:
+      - gmp-network
+    ports:
+      - "8081:80"
+    depends_on:
+      - gmp-api
+    restart: unless-stopped
+
 networks:
   gmp-network:
     external: true

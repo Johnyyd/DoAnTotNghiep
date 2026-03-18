@@ -70,8 +70,8 @@ export default function ProductionBatches() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mẻ Sản Xuất (Production Batches)</h1>
-          <p className="text-neutral-500 mt-1">Quản lý và thực thi các mẻ sản xuất (Batch Execution)</p>
+          <h1 className="text-2xl font-bold text-gray-900">Mẻ Sản Xuất</h1>
+          <p className="text-neutral-500 mt-1">Quản lý và thực thi các mẻ sản xuất</p>
         </div>
         <button className="flex items-center px-4 py-2 bg-gmp-primary text-white rounded-lg hover:bg-blue-700 transition-colors">
           Tạo mẻ mới

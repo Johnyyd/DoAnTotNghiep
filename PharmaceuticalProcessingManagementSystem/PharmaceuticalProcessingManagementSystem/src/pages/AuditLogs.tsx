@@ -34,15 +34,21 @@ export default function AuditLogs() {
     return type.includes(term) || action.includes(term) || log.entityId?.toString().includes(term);
   });
 
-  const getActionBadge = (action: string) => {
-    const map: Record<string, string> = {
-      Create: 'bg-green-100 text-green-700',
-      Update: 'bg-blue-100 text-blue-700',
-      Delete: 'bg-red-100 text-red-700',
-      Approve: 'bg-purple-100 text-purple-700',
-      Complete: 'bg-teal-100 text-teal-700',
-    };
-    return map[action] || 'bg-neutral-100 text-neutral-700';
+  const getActionInfo = (action: string) => {
+    switch (action) {
+      case 'Create':
+        return { label: 'Tạo mới', classes: 'bg-green-100 text-green-700' };
+      case 'Update':
+        return { label: 'Cập nhật', classes: 'bg-blue-100 text-blue-700' };
+      case 'Delete':
+        return { label: 'Xóa', classes: 'bg-red-100 text-red-700' };
+      case 'Approve':
+        return { label: 'Phê duyệt', classes: 'bg-purple-100 text-purple-700' };
+      case 'Complete':
+        return { label: 'Hoàn thành', classes: 'bg-teal-100 text-teal-700' };
+      default:
+        return { label: action, classes: 'bg-neutral-100 text-neutral-700' };
+    }
   };
 
   return (
@@ -117,9 +123,14 @@ export default function AuditLogs() {
                     </td>
                     <td className="py-3 px-4 text-sm text-neutral-900">{log.changedByName}</td>
                     <td className="py-3 px-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getActionBadge(log.action)}`}>
-                        {log.action}
-                      </span>
+                      {(() => {
+                        const info = getActionInfo(log.action);
+                        return (
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${info.classes}`}>
+                            {info.label}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="py-3 px-4 text-sm text-neutral-900">{log.entityType}</td>
                     <td className="py-3 px-4 text-sm text-neutral-900">{log.entityId}</td>

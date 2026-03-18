@@ -28,7 +28,7 @@ export default function Traceability() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Truy Xuất Nguồn Gốc (Traceability)</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Truy Xuất Nguồn Gốc</h1>
           <p className="text-neutral-500 mt-1">Truy xuất ngược từ Mẻ Thành Phẩm ra các Nguyên Liệu cấu thành</p>
         </div>
       </div>
@@ -179,7 +179,7 @@ export default function Traceability() {
       {!result && !isLoading && !isError && (
         <div className="card bg-gradient-to-br from-primary-50 to-white border-primary-100">
           <h3 className="text-lg font-bold text-primary-900 mb-4 flex items-center">
-            <Info className="w-5 h-5 mr-2" /> Hướng dẫn truy xuất (GMP compliant)
+            <Info className="w-5 h-5 mr-2" /> Hướng dẫn truy xuất (Tuân thủ GMP)
           </h3>
           <ul className="space-y-3 text-sm text-neutral-700">
             <li className="flex items-start">

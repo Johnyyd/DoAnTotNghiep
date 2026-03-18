@@ -67,7 +67,7 @@ export default function ProductionOrders() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Lệnh Sản Xuất (Production Orders)</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Lệnh Sản Xuất</h1>
           <p className="text-neutral-500 mt-1">Quản lý và theo dõi tiến độ các lệnh sản xuất</p>
         </div>
         <button className="flex items-center px-4 py-2 bg-gmp-primary text-white rounded-lg hover:bg-blue-700 transition-colors">
@@ -127,7 +127,7 @@ export default function ProductionOrders() {
               <thead>
                 <tr>
                   <th>Mã Lệnh</th>
-                  <th>Công thức (Recipe)</th>
+                  <th>Công thức</th>
                   <th>Số lượng Kế hoạch</th>
                   <th>Trạng thái</th>
                   <th>Dự kiến bắt đầu</th>
@@ -146,7 +146,7 @@ export default function ProductionOrders() {
                         </code>
                       </td>
                       <td className="font-medium text-neutral-900">
-                        {order.recipeName || `Recipe #${order.recipeId}`}
+                        {order.recipeName || `Công thức #${order.recipeId}`}
                       </td>
                       <td className="text-neutral-600">
                         {order.plannedQuantity?.toLocaleString() || 0}

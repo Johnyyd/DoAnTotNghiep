@@ -30,14 +30,19 @@ export default function AppUsers() {
     return fname.includes(term) || uname.includes(term);
   });
 
-  const getRoleBadge = (role: string) => {
-    const map: Record<string, string> = {
-      Admin: 'bg-red-100 text-red-700',
-      QualityControl: 'bg-purple-100 text-purple-700',
-      Manager: 'bg-blue-100 text-blue-700',
-      Operator: 'bg-neutral-100 text-neutral-700',
-    };
-    return map[role] || map['Operator'];
+  const getRoleInfo = (role: string) => {
+    switch (role) {
+      case 'Admin':
+        return { label: 'Quản trị viên', classes: 'bg-red-100 text-red-700' };
+      case 'QualityControl':
+        return { label: 'Kiểm soát chất lượng (QC)', classes: 'bg-purple-100 text-purple-700' };
+      case 'Manager':
+        return { label: 'Quản lý', classes: 'bg-blue-100 text-blue-700' };
+      case 'Operator':
+        return { label: 'Nhân viên vận hành', classes: 'bg-neutral-100 text-neutral-700' };
+      default:
+        return { label: role, classes: 'bg-neutral-100 text-neutral-700' };
+    }
   };
 
   return (
@@ -118,9 +123,14 @@ export default function AppUsers() {
                     </td>
                     <td className="py-3 px-4 text-sm text-neutral-600">{user.fullName}</td>
                     <td className="py-3 px-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getRoleBadge(user.role)}`}>
-                        {user.role}
-                      </span>
+                      {(() => {
+                        const info = getRoleInfo(user.role);
+                        return (
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${info.classes}`}>
+                            {info.label}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="py-3 px-4">
                       {user.isActive ? (

@@ -199,11 +199,11 @@ export default function Recipes() {
                 </div>
                 <div className="space-y-3 mb-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-neutral-500">Version</span>
+                    <span className="text-neutral-500">Phiên bản</span>
                     <span className="font-medium">v{recipe.versionNumber || 1}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-neutral-500">Batch Size</span>
+                    <span className="text-neutral-500">Cỡ lô</span>
                     <span className="font-medium">{recipe.batchSize?.toLocaleString() || '-'}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">

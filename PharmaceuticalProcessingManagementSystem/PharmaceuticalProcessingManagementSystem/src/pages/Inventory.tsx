@@ -32,16 +32,16 @@ export default function Inventory() {
     return materialName.includes(term) || lotNumber.includes(term);
   });
 
-  const getStatusBadge = (status: string) => {
+  const getStatusInfo = (status: string) => {
     switch (status) {
       case 'Passed':
       case 'Approved':
-        return 'bg-green-100 text-green-700';
+        return { label: 'Đạt (Passed)', classes: 'bg-green-100 text-green-700' };
       case 'Failed':
       case 'Rejected':
-        return 'bg-red-100 text-red-700';
+        return { label: 'Không Đạt (Failed)', classes: 'bg-red-100 text-red-700' };
       default:
-        return 'bg-yellow-100 text-yellow-700';
+        return { label: 'Chờ kiểm tra (Pending)', classes: 'bg-yellow-100 text-yellow-700' };
     }
   };
 
@@ -121,9 +121,14 @@ export default function Inventory() {
                       {lot.expiryDate ? new Date(lot.expiryDate).toLocaleDateString('vi-VN') : '-'}
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(lot.qcStatus)}`}>
-                        {lot.qcStatus}
-                      </span>
+                      {(() => {
+                        const info = getStatusInfo(lot.qcStatus);
+                        return (
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${info.classes}`}>
+                            {info.label}
+                          </span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))
