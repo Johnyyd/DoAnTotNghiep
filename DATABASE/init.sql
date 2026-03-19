@@ -1,6 +1,8 @@
 -- =====================================================
 -- GMP-WHO Pharmaceutical Processing Management System
--- Database Initialization Script
+-- Database Initialization Script (Kịch bản khởi tạo Cơ Sở Dữ Liệu)
+-- File này đóng vai trò như Entry Point chạy thứ tự các kịch bản tạo cấu trúc SQL (Schema, Tables),
+-- từ Master Data cơ sở cho đến Logic chạy phức tạp (Trigger, Procedures) dùng trên SQL Server Container
 -- =====================================================
 
 PRINT 'Starting GMP Database Initialization...';

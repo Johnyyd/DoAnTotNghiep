@@ -1,122 +1,138 @@
-# YÊU CẦU THIẾT KẾ GIAO DIỆN MOBILE APP: HỒ SƠ CHẾ BIẾN LÔ ĐIỆN TỬ (eBMR)
+# PRODUCT REQUIREMENT DOCUMENT & UI/UX SPECIFICATION
 
-**Mô tả chung:** Ứng dụng di động dành cho nhân viên vận hành tại nhà máy sản xuất Dược phẩm. App giúp số hóa quá trình ghi chép "Hồ sơ chế biến lô" thay cho bản giấy. Giao diện cần trực quan, dễ thao tác trên màn hình điện thoại, các trường dữ liệu cần được phân cụm rõ ràng.
+**Project:** Electronic Batch Manufacturing Record (eBMR) - Mobile App
+**Target Device:** Mobile (iOS/Android)
+**Primary User:** Factory Operator (Nhân viên vận hành nhà máy dược phẩm).
+
+## 1. GLOBAL APP SETTINGS & USER FLOW
+
+- **Color Palette:** Clean, medical/industrial theme (Primary: Blue/Teal, Background: Light Gray/White, Success: Green, Error: Red).
+- **Typography:** highly legible sans-serif (Inter, Roboto).
+- **User Flow:** 1. User selects an active Batch (Lô sản xuất). 2. User views the "Batch Dashboard" listing all steps. 3. User clicks on a pending step (e.g., Sấy -> Cân -> Trộn). 4. User fills out the form. Data auto-saves. 5. User signs (E-signature) and submits. The app unlocks the next step.
 
 ---
 
-## 1. COMPONENT DÙNG CHUNG: STICKY HEADER (THÔNG TIN LÔ)
+## 2. COMMON COMPONENT: STICKY BATCH HEADER
 
-_Component này luôn ghim ở đầu màn hình trong mọi công đoạn để nhân viên biết họ đang thao tác trên lô nào._
+_Must be pinned to the top of the screen during all data-entry steps._
 
-- [cite_start]**Tên sản phẩm:** Viên nang... (Hiển thị nổi bật) [cite: 2]
-- [cite_start]**Số lô (Batch No):** Text read-only [cite: 2]
-- [cite_start]**Cỡ lô:** Text read-only [cite: 2]
+- [cite_start]**Title:** VIÊN NANG... [cite: 2] (Bold, Large)
+- **Số lô (Batch No):** `<Text ReadOnly>`
+- [cite_start]**SĐK & Cỡ lô:** `<Text ReadOnly>` [cite: 2]
 - [cite_start]**Quy cách:** Thùng/ 80 chai/ 40 viên [cite: 2]
-- [cite_start]**Ngày bắt đầu / Ngày kết thúc:** Date format [cite: 2, 4]
-- [cite_start]_UI Hint:_ Thiết kế dạng Card nhỏ gọn, có nút "Mở rộng" (Caret down) để xem thêm các thông tin như: SĐK, Hạn dùng, Dạng phân liều, Người soạn, Người kiểm tra[cite: 2].
+- [cite_start]**Timeline:** Ngày bắt đầu `[Date]` - Ngày kết thúc `[Date]` [cite: 2, 4]
+- **UI Hint:** Create a collapsible accordion. Show only "Tên SP" and "Số lô" when collapsed to save mobile screen space.
 
 ---
 
-## 2. MÀN HÌNH 1: CÔNG ĐOẠN SẤY NGUYÊN LIỆU (SẤY TD 8 / NLC 3)
+## 3. SCREEN 1: BATCH DASHBOARD (DANH SÁCH CÔNG ĐOẠN)
 
-[cite_start]_Giao diện áp dụng cho cả việc sấy tá dược và hoạt chất[cite: 65, 79]._
+_A list of manufacturing steps for the selected batch. Shows progress._
 
-### 2.1. Cụm: Thông tin chung
-
-- [cite_start]**Phòng thực hiện:** Dropdown (Mặc định: Pha chế) [cite: 67]
-- [cite_start]**Ngày thực hiện:** Date picker (Mặc định: Hôm nay) [cite: 67]
-- [cite_start]**Người thực hiện / Người kiểm tra:** Text input (hoặc User Select) kèm nút bấm "Ký tên" (E-signature)[cite: 67].
-
-### 2.2. Cụm: Kiểm tra điều kiện sản xuất
-
-_UI Hint: Sử dụng Toggle Switch hoặc Segmented Control (Sạch / Không sạch)._
-
-- [cite_start]**Vệ sinh phòng pha chế:** Toggle [Sạch] / [Không sạch] [cite: 67]
-- [cite_start]**Máy sấy tầng sôi KBC-TS-50:** Toggle [Sạch] / [Không sạch] [cite: 67]
-- [cite_start]**Dụng cụ sấy:** Toggle [Sạch] / [Không sạch] [cite: 67]
-
-### 2.3. Cụm: Môi trường sản xuất (Thời điểm kiểm tra)
-
-_UI Hint: Nhập liệu dạng Card, có hiển thị sẵn thông số tiêu chuẩn mờ (placeholder) bên dưới ô nhập._
-
-- [cite_start]**Thời gian kiểm tra:** Time picker (Giờ : Phút) [cite: 67]
-- **Nhiệt độ đọc:** Number input (Đơn vị: °C). [cite_start]_Note: Tiêu chuẩn 21°C - 25°C_[cite: 67].
-- **Độ ẩm đọc:** Number input (Đơn vị: %). [cite_start]_Note: Tiêu chuẩn 45% - 70%_[cite: 67].
-- **Áp lực phòng đọc:** Number input (Đơn vị: Pa). [cite_start]_Note: Tiêu chuẩn >= 10 Pa_[cite: 67].
-
-### 2.4. Cụm: Thông số vận hành & Kết quả
-
-- [cite_start]**Tình trạng chạy không tải:** Toggle [Ổn định] / [Không ổn định] [cite: 67]
-- [cite_start]**Nhiệt độ khí vào ổn định:** Number input (°C) [cite: 67]
-- [cite_start]**Nhiệt độ khí ra kết thúc:** Number input (°C) [cite: 67]
-- [cite_start]**Thời gian sấy:** \* Bắt đầu từ: Time picker [cite: 67]
-  - [cite_start]Kết thúc: Time picker [cite: 67]
-- **Kết quả:**
-  - [cite_start]Độ ẩm sau khi sấy: Number input (%) [cite: 67]
-  - [cite_start]Khối lượng trước khi sấy: Number input (kg) [cite: 67]
-  - [cite_start]Khối lượng sau khi sấy: Number input (kg) [cite: 67]
-  - [cite_start]Lấy mẫu kiểm tra: `[Input: g/túi]` x `[Input: số túi]` = `[Calculated Field: Tổng số g]`[cite: 67].
+- [cite_start]**Step 1:** Xử lý nguyên liệu - Sấy TD 8 `[Status Badge: Completed/Pending]` [cite: 65]
+- [cite_start]**Step 2:** Xử lý nguyên liệu - Sấy NLC 3 `[Status Badge: Pending]` [cite: 79]
+- [cite_start]**Step 3:** Pha chế - Cân nguyên liệu `[Status Badge: Locked]` [cite: 120]
+- [cite_start]**Step 4:** Pha chế - Trộn khô `[Status Badge: Locked]` [cite: 127]
 
 ---
 
-## 3. MÀN HÌNH 2: CÔNG ĐOẠN CÂN NGUYÊN LIỆU
+## 4. SCREEN 2: CÔNG ĐOẠN SẤY (SẤY TD 8 / NLC 3)
 
-[cite_start]_Quá trình lấy nguyên liệu và cân đo chuẩn bị pha chế[cite: 120]._
+_Reusable form template for any drying step._
 
-### 3.1. Cụm: Môi trường & Thiết bị (Tương tự công đoạn sấy)
+### Section 4.1: Thông tin chung
+
+- [cite_start]**Phòng thực hiện:** `<Dropdown>` (Mặc định: Pha chế) [cite: 67]
+- **Ngày:** `<DatePicker>`
+- [cite_start]**Người thực hiện & Người kiểm tra:** `<UserSelect>` [cite: 67]
+
+### Section 4.2: Kiểm tra vệ sinh (Checklist)
+
+_UI Hint: Use Segmented Controls or Switch Toggles._
+
+- [cite_start]**Phòng pha chế:** `[Sạch] / [Không sạch]` [cite: 67]
+- [cite_start]**Máy sấy tầng sôi KBC-TS-50:** `[Sạch] / [Không sạch]` [cite: 67]
+- [cite_start]**Dụng cụ sấy:** `[Sạch] / [Không sạch]` [cite: 67]
+
+### Section 4.3: Điều kiện môi trường
+
+_UI Hint: Render as a 2-column grid. Show standard requirements as small placeholder text below the input._
+
+- [cite_start]**Thời gian kiểm tra:** `<TimePicker>` [cite: 67]
+- [cite_start]**Nhiệt độ đọc (°C):** `<NumberInput>` _(Standard: 21°C - 25°C)_ [cite: 67]
+- [cite_start]**Độ ẩm đọc (%):** `<NumberInput>` _(Standard: 45% - 70%)_ [cite: 67]
+- [cite_start]**Áp lực phòng đọc (Pa):** `<NumberInput>` _(Standard: >= 10 Pa)_ [cite: 67]
+
+### Section 4.4: Thông số sấy & Kết quả
+
+- [cite_start]**Tình trạng máy chạy không tải:** `[Ổn định] / [Không ổn định]` [cite: 67]
+- [cite_start]**Nhiệt độ khí vào (°C):** `<NumberInput>` [cite: 67]
+- [cite_start]**Nhiệt độ khí ra (°C):** `<NumberInput>` [cite: 67]
+- [cite_start]**Thời gian sấy:** Bắt đầu `<TimePicker>` - Kết thúc `<TimePicker>` [cite: 67]
+- [cite_start]**Độ ẩm sau khi sấy (%):** `<NumberInput>` [cite: 67]
+- [cite_start]**Lấy mẫu kiểm tra:** `<NumberInput: g/túi>` x `<NumberInput: số túi>` = `<Text: Tính tự động tổng g>` [cite: 67]
+- [cite_start]**Số lượng trước khi sấy (kg):** `<NumberInput>` [cite: 67]
+- [cite_start]**Số lượng sau khi sấy (kg):** `<NumberInput>` [cite: 67]
+- **Action:** `<Button: Ký & Lưu công đoạn>`
+
+---
+
+## 5. SCREEN 3: CÔNG ĐOẠN CÂN NGUYÊN LIỆU
+
+### Section 5.1: Môi trường & Thiết bị
 
 - [cite_start]**Phòng thực hiện:** Phòng cân [cite: 121]
-- [cite_start]**Môi trường:** Nhập Nhiệt độ (°C), Độ ẩm (%), Áp lực (Pa)[cite: 121].
-- [cite_start]**Tình trạng cân (IW2-60 & PMA-5000):** Toggle [Tốt] / [Không ổn định][cite: 121].
+- [cite_start]**Nhiệt độ, Độ ẩm, Áp lực:** _(Giống Section 4.3)_ [cite: 121]
+- [cite_start]**Cân IW2-60:** `[Tốt] / [Không ổn định]` [cite: 121]
+- [cite_start]**Cân PMA-5000:** `[Tốt] / [Không ổn định]` [cite: 121]
 
-### 3.2. Cụm: Danh sách nguyên liệu cần cân
+### Section 5.2: Danh sách nguyên liệu cần cân
 
-_UI Hint: Không dùng Table truyền thống vì màn hình mobile hẹp. Thay vào đó, dùng dạng "List View" với các "Material Card". Mỗi Card đại diện cho 1 nguyên liệu._
+_UI Hint: Do NOT use a wide table. Use a vertically scrollable list of "Material Cards"._
+**Material Card Structure:**
 
-**Cấu trúc 1 Material Card:**
+- [cite_start]**Tên nguyên liệu:** `<Text>` (Loop through: NLC 3, TD 1, TD 3, TD 4, TD 5, TD 8) [cite: 122]
+- [cite_start]**Số phiếu KN:** `<TextInput>` [cite: 122]
+- [cite_start]**Khối lượng yêu cầu (kg):** `<NumberInput: ReadOnly/Pre-filled>` [cite: 122]
+- [cite_start]**Khối lượng cân (kg):** `<NumberInput>` _(UI Logic: Text turns green if matches "Khối lượng yêu cầu")_ [cite: 122]
+- [cite_start]**Người cân / Người kiểm soát:** `<SignaturePad>` [cite: 122]
 
-- [cite_start]**Tên nguyên liệu:** Text (VD: NLC 3, TD 1, TD 3...) [cite: 122]
-- [cite_start]**Số phiếu KN (Kiểm nghiệm):** Text input [cite: 122]
-- [cite_start]**Khối lượng yêu cầu:** Number input (kg) [cite: 122]
-- [cite_start]**Khối lượng thực cân:** Number input (kg) (Highlight màu xanh nếu khớp KL yêu cầu) [cite: 122]
-- [cite_start]**Người cân / Người kiểm soát:** Select / Ký tên [cite: 122]
-- _Action:_ Nút "Lưu/Hoàn thành" cho từng thẻ nguyên liệu.
+### Section 5.3: Nhận xét
 
-### 3.3. Cụm: Nhận xét
-
-- [cite_start]**Nhận xét quá trình cân:** Text area (nhiều dòng)[cite: 123].
+- [cite_start]**Nhận xét:** `<TextArea>` [cite: 123]
 
 ---
 
-## 4. MÀN HÌNH 3: CÔNG ĐOẠN TRỘN KHÔ
+## 6. SCREEN 4: CÔNG ĐOẠN TRỘN KHÔ
 
-[cite_start]_Quá trình trộn hỗn hợp bột[cite: 127]._
-
-### 4.1. Cụm: Môi trường & Thiết bị
+### Section 6.1: Môi trường & Thiết bị
 
 - [cite_start]**Phòng thực hiện:** Trộn khô [cite: 128]
-- [cite_start]**Thiết bị (Máy trộn AD-LP-200):** Toggle [Sạch] / [Không sạch] [cite: 128]
-- [cite_start]**Nhập thông số môi trường:** Nhiệt độ, Độ ẩm, Áp lực[cite: 128].
+- [cite_start]**Nhiệt độ, Độ ẩm, Áp lực:** _(Giống Section 4.3)_ [cite: 128]
+- [cite_start]**Máy trộn lập phương AD-LP-200:** `[Sạch] / [Không sạch]` [cite: 128]
 
-### 4.2. Cụm: Thông số vận hành máy
+### Section 6.2: Thông số vận hành
 
-- **Thời gian trộn thực tế:** Number input (Phút). [cite_start]_Note: Tiêu chuẩn 15 phút_[cite: 128].
-- **Tốc độ quay thực tế:** Number input (Vòng/phút). [cite_start]_Note: Tiêu chuẩn 15 vòng/phút_[cite: 128].
-- [cite_start]**Thời gian trộn:** Từ (Time picker) - Đến (Time picker)[cite: 132].
+- [cite_start]**Thời gian trộn:** Từ `<TimePicker>` - Đến `<TimePicker>` [cite: 132]
+- [cite_start]**Thời gian trộn thực tế (phút):** `<NumberInput>` _(Standard: 15 phút)_ [cite: 128]
+- [cite_start]**Tốc độ quay thực tế (vòng/phút):** `<NumberInput>` _(Standard: 15 vòng/phút)_ [cite: 128]
 
-### 4.3. Cụm: Đối chiếu nguyên liệu đưa vào trộn
+### Section 6.3: Đối chiếu nguyên liệu
 
-_UI Hint: Danh sách các ô nhập liệu dạng lưới 2 cột (Lý thuyết vs Thực tế)._
+_UI Hint: 2-column layout (Lý thuyết vs Thực sử dụng)._
 
-- **NLC 3:** Lưới nhập [Lý thuyết: ___ kg] | [cite_start][Thực sử dụng: ___ kg] [cite: 132]
-- [cite_start]**TD 1, TD 3, TD 4, TD 5, TD 8:** (Tương tự như trên) [cite: 132]
-- [cite_start]**Dư phẩm lô số:** Text input [cite: 132]
-- [cite_start]**Xác nhận:** Nút bấm "Ký xác nhận sử dụng"[cite: 132].
+- [cite_start]**NLC 3 (kg):** `<ReadOnly: X>` vs `<Input: Y>` [cite: 132]
+- [cite_start]**TD 1 (kg):** `<ReadOnly: X>` vs `<Input: Y>` [cite: 132]
+- [cite_start]**TD 3 (kg):** `<ReadOnly: X>` vs `<Input: Y>` [cite: 132]
+- [cite_start]**TD 4 (kg):** `<ReadOnly: X>` vs `<Input: Y>` [cite: 132]
+- [cite_start]**TD 5 (kg):** `<ReadOnly: X>` vs `<Input: Y>` [cite: 132]
+- [cite_start]**TD 8 (kg):** `<ReadOnly: X>` vs `<Input: Y>` [cite: 132]
+- [cite_start]**Dư phẩm lô số:** `<TextInput>` [cite: 132]
+- [cite_start]**Xác nhận đưa vào máy:** `<SignaturePad>` [cite: 132]
 
-### 4.4. Cụm: Kết quả trộn (Hạt khô)
+### Section 6.4: Kết quả hạt khô
 
-- [cite_start]**Tỷ trọng gõ:** Number input [cite: 132]
-- [cite_start]**Số lượng thành phẩm:** \* Bao bì: `[Input: Số túi]` x `[Input: kg/túi]` [cite: 132]
-  - [cite_start]Số lẻ cộng thêm: `+ [Input: kg]` [cite: 132]
-  - [cite_start]Tổng cộng: `[Calculated Field: Tổng số kg]` [cite: 132]
-- [cite_start]**Nhận xét quá trình trộn:** Text area[cite: 132].
+- [cite_start]**Tỷ trọng gõ:** `<NumberInput>` [cite: 132]
+- [cite_start]**Số lượng đóng gói:** `<NumberInput: Số túi>` x `<NumberInput: kg/túi>` = `<Calculated: Tổng kg>` [cite: 132]
+- [cite_start]**Nhận xét:** `<TextArea>` [cite: 132]
+- **Action:** `<Button: Hoàn thành Công đoạn Trộn>`

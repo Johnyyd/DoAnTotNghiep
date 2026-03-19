@@ -1,91 +1,107 @@
-version: '3.8'
+version: '3.8' # Khai báo định dạng thư viện Docker Compose CLI đang dùng (Phiên bản 3.8 tương thích rất tốt với hệ sinh thái Linux/Windows)
 
-services:
-  # SQL Server Database
+services: # Cụm từ khóa khai báo danh sách các Node (Micro-Container) sẽ được ráp nối và chạy đồng thời trong hệ thống
+  # ==============================================================================================================================
+  # 1. DATABASE NODE: SQL Server (Bảo vệ dữ liệu gốc theo toàn vẹn chuẩn GMP, lưu lịch sử Audit Trail)
+  # ==============================================================================================================================
   gmp-sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: gmp-sqlserver
+    image: mcr.microsoft.com/mssql/server:2022-latest # Hình mẫu máy ảo: Tải hệ quản trị MS SQL 2022 Linux trực tiếp từ Microsoft (mcr)
+    container_name: gmp-sqlserver # Định danh cứng tên máy chủ là "gmp-sqlserver", tránh việc Docker tự tạo ra tên chuỗi Random lộn xộn
     networks:
-      - gmp-network
+      - gmp-network # Trói chân Container này vào mạng ảo nội bộ (gmp-network). Các Node chung mạng mới nhìn thấy mặt nhau bằng tên
     ports:
-      - "1434:1433"
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=GMP_Strong@Passw0rd123
+      - "1434:1433" # Đục lỗ xỏ dây cáp mạng (Port Forwarding): Map cổng 1433 bên trong ảo ra số 1434 của PC Windows ngoài đời (tránh trùng SSMS local)
+    environment: # Đẩy Environment Variables (Biến môi trường) vào mạch máu của Container ngay khoảnh khắc hạt nhân chạm vạch Booting
+      - ACCEPT_EULA=Y # Tham số bắt buộc: Microsoft ép Server khai báo Chấp nhận điều khoản (End User License) mới cho phép nổ máy.
+      - SA_PASSWORD=GMP_Strong@Passw0rd123 # Bơm mật khẩu rễ (Root) khởi thủy cho tài khoản siêu quản trị viên [sa]
     volumes:
-      - ./DATABASE:/var/opt/mssql/backup:ro
-      - gmp-sqlserver-data:/var/opt/mssql
+      # Volumes (Cơ chế gắn ổ cứng ngoài): Cực kỳ quan trọng để Database không bị bay màu (mất Data bay trắng sạch) mỗi khi xóa hoặc Restart Container
+      - ./DATABASE:/var/opt/mssql/backup:ro # Khóa chết thư mục code /DATABASE ngoài máy bạn vào /backup trong ảo theo chế độ (ro = ReadOnly)
+      - gmp-sqlserver-data:/var/opt/mssql # Rẽ luồng ghi dữ liệu vật lý (mdf/ldf) sang hẳn một ổ đĩa trừu tượng (Volume ảo) tên là gmp-sqlserver-data
     healthcheck:
+      # Cơ chế Thăm Khám Sức Khỏe (HealthCheck): Máy chủ SQL sau lệnh Run có thể mất phút mốt mới Boot xong, cái này chọc ping để canh giờ chín muồi
       test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "GMP_Strong@Passw0rd123", "-C", "-Q", "SELECT 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-    restart: unless-stopped
+      interval: 10s # Mỗi 10 giây nã súng gọi cửa Database 1 lần xem mở mắt chưa
+      timeout: 5s # Hạ lệnh rớt Ping sau 5 giây nếu SQL chưa đủ tỉnh mà Call trả lời
+      retries: 10 # Khoanh vùng chịu đựng: Ping tịt liên tiếp 10 Nháy thì tuyên án Máy Bệnh (Unhealthy state)
+      start_period: 30s # Bù giờ khởi hành (Ân hạn 30s): Cho phép máy tính ì ạch quay quạt trong 30s đầu không thèm Ping ép nhịp tim
+    restart: unless-stopped # Luật luân hồi: Bất hễ máy tính Restart hay Docker Crash, mống Container này tự động bật dậy (Trừ phi bị Force Kill thủ công)
 
-  # Backend API (.NET)
+  # ==============================================================================================================================
+  # 2. BACKEND NODE (.NET Core API): Não bộ định tuyến logic nghiệp vụ (Controllers), đọc/ghi Dữ liệu lên SQL Server (EF Core)
+  # ==============================================================================================================================
   gmp-api:
     build:
-      context: ./GMP_System/GMP_System
-      dockerfile: Dockerfile
-    container_name: gmp-api
+      context: ./GMP_System/GMP_System # Chỉ định ngón tay chỉ thẳng vào Thư mục chứa Mã nguồn C#
+      dockerfile: Dockerfile # Yêu cầu trình biên dịch đọc sổ tay cấu trúc Build (Dockerfile) để nặn ra Image
+    container_name: gmp-api # Định danh cụm máy chủ API
     networks:
-      - gmp-network
+      - gmp-network # Ghép nối chung mạch máu LAN ảo với SQL Server
     ports:
-      - "5001:5000"
+      - "5001:5000" # Mở cửa sổ đón luồng Traffic (Traffic Ingress), cổng 5001 ở ngoài sẽ trượt chui vào cổng 5000 trong bụng
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Development # Nhồi nhét biến ASP.NET để nhắm cho API biết nó đang nằm trên ổ dev, nôn ra lỗi đỏ chi tiết (Swagger UI)
+      # Chuỗi kết nối Database nhắm thẳng vào tên máy ảo `gmp-sqlserver` thay vì 'localhost' (DNS do Docker phân giải nội bộ)
       - ConnectionStrings__DefaultConnection=Server=gmp-sqlserver;Database=GMP_WHO_DB;User Id=sa;Password=GMP_Strong@Passw0rd123;TrustServerCertificate=true
+      # Chìa khóa đúc ra chuỗi mã Token (JWT Token). Mật lệnh ký số (Sign) phòng thủ giả mạo Admin
       - Jwt__Key=GMP_WHO_Default_Secret_Key_Minimum_32_Characters_Long_123456789
     depends_on:
       gmp-sqlserver:
-        condition: service_healthy
+        # Cú pháp khắt khe (condition): Cấm kịch liệt Container API này bật dậy nếu gmp-sqlserver chưa hò reo "Healthy" (đã quét ping SELECT 1 ok)
+        condition: service_healthy 
     volumes:
-      - ./DATABASE:/app/DATABASE:ro
+      - ./DATABASE:/app/DATABASE:ro # Kẹp file init SQL vào bụng API nếu lỡ API có nghiệp vụ Cần Trích xuất Script SQL
     restart: unless-stopped
     healthcheck:
+      # Ping qua chuẩn lướt sóng HTTP ngầm (cổng /health) xem máy chủ Kestrel của C# đã mở trạm thu nhận Request chưa
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 20s
-    # Database initialization is handled by EF Core on startup
+    # Ghi chú: Kịch bản Đổ Khuôn Khởi tạo Database (Migrations) đã nhúng ngầm bên trong Event Startup của Entity Framework C# (Không cần Docker thao tác)
 
-  # Frontend Admin (React + Nginx)
+  # ==============================================================================================================================
+  # 3. FRONTEND KHO TINH (React + TypeScript): Web Quản trị (Dashboard) cho Quản đốc Tổ trưởng. Server qua bóng lưng Nginx Siêu Tốc
+  # ==============================================================================================================================
   gmp-frontend:
     build:
       context: ./PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem
       dockerfile: Dockerfile
       args:
+        # Truyền biến Args tĩnh vào ngay khoảnh khắc Đang Hàn (Build Time) để Web App nới lỏng API Base URL sang relative (/api)
         - VITE_API_URL=/api
     container_name: gmp-frontend
     networks:
       - gmp-network
     ports:
-      - "8080:80"
+      - "8080:80" # Bọc lót 80 (cổng web HTML ngầm định) quăng ra cổng 8080 (Truy Cập React Localhost 8080)
     environment:
-      - VITE_API_URL=/api
+      - VITE_API_URL=/api # Đóng đinh Biến Run-time (Nhỡ Docker file fail Args)
     depends_on:
-      - gmp-api
+      - gmp-api # Xếp nhịp điệu (Wait mechanism): Nginx đợi C# API bung búa xong mới thèm bật nắp
     restart: unless-stopped
 
-  # Mobile App (Flutter Web)
+  # ==============================================================================================================================
+  # 4. MOBILE APP (Flutter Web App): Điểm nối thao tác quét tay dành cho công nhân dưới sàn máy, tích hợp eBMR (Electronic Batch Records)
+  # ==============================================================================================================================
   gmp-mobile:
     build:
-      context: ./MobileApp
+      context: ./MobileApp # Con đẻ Cấu trúc là Thư mục Flutter
       dockerfile: Dockerfile
-    container_name: gmp-mobile
+    container_name: gmp-mobile // Đặt tên mảng ghép hình
     networks:
       - gmp-network
     ports:
-      - "8081:80"
+      - "8081:80" # Trực tuyến Web Server dành riêng cho màn Mobile chạy nền ở Localhost:8081
     depends_on:
-      - gmp-api
+      - gmp-api # Chờ C# API dựng form API lên thì em út Mobile mới bắt điện rẽ nhánh
     restart: unless-stopped
 
+# KHAI BÁO CỘI RỄ CAO CẤP (GLOBAL ROOT)
 networks:
-  gmp-network:
-    external: true
+  gmp-network: # Bộ định tuyến dây cáp vô hình nối mạch cả 4 cỗ xe tăng chạy chung 1 dải IP Local
+    external: true # (Tự động map Network name ngoài thay vì sinh clone tên mớii ảo)
 
 volumes:
-  gmp-sqlserver-data:
+  gmp-sqlserver-data: # Tạo phôi định nghĩa Thể Chứa (Ổ Rỗng) chờ Container nhồi Data chui ra chui vào mà ko sợ hỏng đĩa

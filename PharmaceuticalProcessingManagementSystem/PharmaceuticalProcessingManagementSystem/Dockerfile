@@ -1,6 +1,7 @@
 # GMP-WHO Frontend Admin (React + TypeScript)
-# Multi-stage build for production
-
+# Sử dụng công nghệ Multi-stage build để tối ưu cho Production
+# Stage 1: Build mã nguồn React ra các file tĩnh chuẩn (HTML, CSS, JS) bằng Node.js
+# Stage 2: Nhúng mã tĩnh để phân phối qua Web Server Nginx (Giảm triệt để dung lượng)
 # Stage 1: Build
 FROM node:20-alpine AS build
 WORKDIR /app
