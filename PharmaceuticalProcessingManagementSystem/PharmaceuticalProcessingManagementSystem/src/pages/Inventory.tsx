@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { inventoryApi } from '@/services/api';
 import { Search, PackageOpen, Filter } from 'lucide-react';
@@ -64,7 +64,7 @@ export default function Inventory() {
               type="text"
               placeholder="Tìm kiếm theo mã lô, tên nguyên liệu..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow"
             />
           </div>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,33 +15,33 @@ public partial class GmpContext : DbContext
     {
     }
 
-    public virtual DbSet<AppUser> AppUsers { get; set; }
+    public virtual DbSet<AppUser> AppUsers { get; set; } = null!;
 
-    public virtual DbSet<BatchProcessLog> BatchProcessLogs { get; set; }
+    public virtual DbSet<BatchProcessLog> BatchProcessLogs { get; set; } = null!;
 
-    public virtual DbSet<Equipment> Equipments { get; set; }
+    public virtual DbSet<Equipment> Equipments { get; set; } = null!;
 
-    public virtual DbSet<InventoryLot> InventoryLots { get; set; }
+    public virtual DbSet<InventoryLot> InventoryLots { get; set; } = null!;
 
-    public virtual DbSet<Material> Materials { get; set; }
+    public virtual DbSet<Material> Materials { get; set; } = null!;
 
-    public virtual DbSet<MaterialUsage> MaterialUsages { get; set; }
+    public virtual DbSet<MaterialUsage> MaterialUsages { get; set; } = null!;
 
-    public virtual DbSet<ProductionBatch> ProductionBatches { get; set; }
+    public virtual DbSet<ProductionBatch> ProductionBatches { get; set; } = null!;
 
-    public virtual DbSet<ProductionOrder> ProductionOrders { get; set; }
+    public virtual DbSet<ProductionOrder> ProductionOrders { get; set; } = null!;
 
-    public virtual DbSet<Recipe> Recipes { get; set; }
+    public virtual DbSet<Recipe> Recipes { get; set; } = null!;
 
-    public virtual DbSet<RecipeBom> RecipeBoms { get; set; }
+    public virtual DbSet<RecipeBom> RecipeBoms { get; set; } = null!;
 
-    public virtual DbSet<RecipeRouting> RecipeRoutings { get; set; }
+    public virtual DbSet<RecipeRouting> RecipeRoutings { get; set; } = null!;
 
-    public virtual DbSet<SystemAuditLog> SystemAuditLogs { get; set; }
+    public virtual DbSet<SystemAuditLog> SystemAuditLogs { get; set; } = null!;
 
-    public virtual DbSet<UnitOfMeasure> UnitOfMeasures { get; set; }
+    public virtual DbSet<UnitOfMeasure> UnitOfMeasures { get; set; } = null!;
 
-    public virtual DbSet<UomConversion> UomConversions { get; set; }
+    public virtual DbSet<UomConversion> UomConversions { get; set; } = null!;
 
     // Configuration is now handled via Program.cs using AddDbContext.
     // Removed hardcoded LocalDB connection to support Docker/Linux.

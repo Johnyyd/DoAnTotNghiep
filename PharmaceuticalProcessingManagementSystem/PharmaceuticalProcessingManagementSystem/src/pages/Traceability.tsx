@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { inventoryApi } from '@/services/api';
 import { Search, Info, Package, FileText, CheckCircle, XCircle } from 'lucide-react';
@@ -42,7 +42,7 @@ export default function Traceability() {
               type="text"
               placeholder="Nhập mã lô thành phẩm (ví dụ: FB-001)..."
               value={batchNumberInput}
-              onChange={(e) => setBatchNumberInput(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBatchNumberInput(e.target.value)}
               className="input pl-10"
               required
             />

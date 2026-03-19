@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { productionOrdersApi } from '@/services/api';
 import { ProductionOrder } from '@/types';
@@ -84,13 +84,13 @@ export default function ProductionOrders() {
               type="text"
               placeholder="Tìm kiếm theo mã lệnh (VD: PO-001)..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
               className="input pl-10"
             />
           </div>
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusFilter(e.target.value)}
             className="input w-auto sm:w-48"
           >
             <option value="all">Tất cả trạng thái</option>

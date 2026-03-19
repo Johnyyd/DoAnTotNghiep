@@ -1,4 +1,4 @@
-﻿using GMP_System.Entities;
+using GMP_System.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using System.Text.Json;
@@ -40,8 +40,8 @@ namespace GMP_System.Interceptors
                     ChangedBy = 1 // Tạm thời để cứng là Admin (Sau này lấy từ Token User)
                 };
 
-                var oldValues = new Dictionary<string, object>();
-                var newValues = new Dictionary<string, object>();
+                var oldValues = new Dictionary<string, object?>();
+                var newValues = new Dictionary<string, object?>();
 
                 // 2. Lấy giá trị từng cột
                 foreach (var property in entry.Properties)

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { productionBatchesApi } from '@/services/api';
 import { ProductionBatch } from '@/types';
@@ -86,7 +86,7 @@ export default function ProductionBatches() {
               type="text"
               placeholder="Tìm kiếm theo mã mẻ (VD: BATCH-001)..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
               className="input pl-10"
             />
           </div>

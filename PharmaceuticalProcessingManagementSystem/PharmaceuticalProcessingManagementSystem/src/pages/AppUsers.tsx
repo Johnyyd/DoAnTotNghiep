@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { appUsersApi } from '@/services/api';
 import { Search, Users, Filter, Plus, Edit2, Trash2 } from 'lucide-react';
@@ -68,7 +68,7 @@ export default function AppUsers() {
               type="text"
               placeholder="Tìm kiếm tài khoản, tên nhân viên..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow"
             />
           </div>

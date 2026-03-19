@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { recipesApi } from '@/services/api';
 import { Recipe } from '@/types';
@@ -145,14 +145,14 @@ export default function Recipes() {
               type="text"
               placeholder="Tìm kiếm công thức..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
               className="input pl-10"
             />
           </div>
           <div className="flex items-center space-x-2">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusFilter(e.target.value)}
               className="input w-auto"
             >
               <option value="all">Tất cả trạng thái</option>

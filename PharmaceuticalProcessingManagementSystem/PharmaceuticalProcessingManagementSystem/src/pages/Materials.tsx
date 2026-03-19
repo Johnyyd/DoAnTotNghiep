@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { materialsApi } from '@/services/api';
 import { Material } from '@/types';
@@ -150,7 +150,7 @@ export default function Materials() {
               type="text"
               placeholder="Tìm kiếm theo mã hoặc tên nguyên liệu..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
               className="input pl-10"
             />
           </div>
@@ -277,7 +277,7 @@ export default function Materials() {
                     type="text"
                     required
                     value={formData.materialCode || ''}
-                    onChange={(e) => setFormData({ ...formData, materialCode: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, materialCode: e.target.value })}
                     className="input"
                     placeholder="VD: MAT-001"
                   />
@@ -288,7 +288,7 @@ export default function Materials() {
                     type="text"
                     required
                     value={formData.materialName || ''}
-                    onChange={(e) => setFormData({ ...formData, materialName: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, materialName: e.target.value })}
                     className="input"
                     placeholder="VD: Paracetamol 500mg"
                   />
@@ -298,7 +298,7 @@ export default function Materials() {
                   <select
                     required
                     value={formData.type || ''}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as 'RawMaterial' | 'Packaging' | 'FinishedGood' | 'Intermediate' })}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, type: e.target.value as 'RawMaterial' | 'Packaging' | 'FinishedGood' | 'Intermediate' })}
                     className="input"
                   >
                     <option value="">Chọn loại</option>
@@ -313,7 +313,7 @@ export default function Materials() {
                   <select
                     required
                     value={formData.baseUomId || ''}
-                    onChange={(e) => setFormData({ ...formData, baseUomId: Number(e.target.value) })}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, baseUomId: Number(e.target.value) })}
                     className="input"
                   >
                     <option value="">Chọn đơn vị</option>
@@ -328,7 +328,7 @@ export default function Materials() {
                   <textarea
                     rows={3}
                     value={formData.description || ''}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, description: e.target.value })}
                     className="input"
                     placeholder="Mô tả chi tiết về nguyên liệu..."
                   />
@@ -338,7 +338,7 @@ export default function Materials() {
                     <input
                       type="checkbox"
                       checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, isActive: e.target.checked })}
                       className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
                     />
                     <span className="text-sm font-medium text-neutral-700">Hoạt động</span>

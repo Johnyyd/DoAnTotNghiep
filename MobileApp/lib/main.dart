@@ -45,7 +45,7 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
   bool _isHeaderExpanded = false;
-  String _selectedBatch = 'BATCH-NLC3-001';
+  final String _selectedBatch = 'BATCH-NLC3-001';
   String _status = 'ĐANG THỰC HIỆN';
 
   void _showSignDialog(String stepName) {
@@ -83,7 +83,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> _pages = [
+    final List<Widget> pages = [
        DryingOperationScreen(onSign: () => _showSignDialog('Công đoạn Sấy')),
        WeighingOperationScreen(onSign: () => _showSignDialog('Cân nguyên liệu')),
        MixingOperationScreen(onSign: () => _showSignDialog('Công đoạn Trộn')),
@@ -107,7 +107,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           Expanded(
             child: IndexedStack(
               index: _selectedIndex,
-              children: _pages,
+              children: pages,
             ),
           ),
         ],
@@ -355,7 +355,7 @@ class _MixingOperationScreenState extends State<MixingOperationScreen> {
           decoration: BoxDecoration(color: Colors.indigo.shade900, borderRadius: BorderRadius.circular(8)),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [const Text('TỔNG KHỐI LƯỢNG:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)), Text('${_yield} kg', style: const TextStyle(color: Colors.amber, fontSize: 18, fontWeight: FontWeight.bold))],
+            children: [const Text('TỔNG KHỐI LƯỢNG:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)), Text('$_yield kg', style: const TextStyle(color: Colors.amber, fontSize: 18, fontWeight: FontWeight.bold))],
           ),
         ),
         const SizedBox(height: 24),
@@ -445,7 +445,7 @@ class _Helper {
   }
 
   static Widget buildToggleRow(String label, bool val) {
-    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(label), Switch(value: val, onChanged: (v) {}, activeColor: Colors.green)]);
+    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(label), Switch(value: val, onChanged: (v) {}, activeThumbColor: Colors.green)]);
   }
 
   static Widget buildDropdown(String label, String val) {
