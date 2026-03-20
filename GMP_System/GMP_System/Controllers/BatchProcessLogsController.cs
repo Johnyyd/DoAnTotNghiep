@@ -1,4 +1,4 @@
-﻿using GMP_System.Entities;
+using GMP_System.Entities;
 using GMP_System.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,7 +22,7 @@ namespace GMP_System.Controllers
             var allLogs = await _unitOfWork.BatchProcessLogs.GetAllAsync();
             // SỬA TÊN BIẾN: BatchID (theo SQL) thay vì BatchId
             var batchLogs = allLogs.Where(x => x.BatchId == batchId).OrderBy(x => x.StartTime);
-            return Ok(batchLogs);
+            return Ok(new { data = batchLogs.ToList(), success = true, message = "Success" });
         }
 
         // 2. Ghi nhận một bước công việc

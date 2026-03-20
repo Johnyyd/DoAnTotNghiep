@@ -19,7 +19,7 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> GetAll()
         {
             var equipments = await _unitOfWork.Equipments.GetAllAsync();
-            return Ok(equipments);
+            return Ok(new { data = equipments, success = true, message = "Success" });
         }
 
         [HttpGet("{id}")]

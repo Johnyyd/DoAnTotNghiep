@@ -1,4 +1,4 @@
-﻿using GMP_System.Entities;
+using GMP_System.Entities;
 using GMP_System.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,7 +23,7 @@ namespace GMP_System.Controllers
             // Để lấy cả BOM, ta cần sửa Repository hoặc dùng Include (sẽ hướng dẫn sau).
             // Tạm thời lấy danh sách Recipe cơ bản.
             var recipes = await _unitOfWork.Recipes.GetAllAsync();
-            return Ok(recipes);
+            return Ok(new { data = recipes, success = true, message = "Success" });
         }
 
         // 2. Tạo công thức mới (Kèm danh sách nguyên liệu BOM)

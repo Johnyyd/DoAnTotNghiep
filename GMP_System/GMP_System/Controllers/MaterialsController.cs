@@ -1,4 +1,4 @@
-﻿using GMP_System.Entities;
+using GMP_System.Entities;
 using GMP_System.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,7 +22,7 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> GetAll()
         {
             var materials = await _unitOfWork.Materials.GetAllAsync();
-            return Ok(materials);
+            return Ok(new { data = materials, success = true, message = "Success" });
         }
 
         // GET: api/Materials/5

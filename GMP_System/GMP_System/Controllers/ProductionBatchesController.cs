@@ -20,7 +20,7 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> GetAll()
         {
             var batches = await _unitOfWork.ProductionBatches.GetAllAsync();
-            return Ok(batches);
+            return Ok(new { data = batches, success = true, message = "Success" });
         }
 
         // 2. Bắt đầu một Lô sản xuất mới

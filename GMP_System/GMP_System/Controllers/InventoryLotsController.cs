@@ -28,7 +28,7 @@ namespace GMP_System.Controllers
             if (!string.IsNullOrEmpty(batchNumber))
                 query = query.Where(l => l.LotNumber != null && l.LotNumber.Contains(batchNumber));
                 
-            return Ok(query);
+            return Ok(new { data = query.ToList(), success = true, message = "Success" });
         }
 
         // 1. Kiểm tra tồn kho (Lấy danh sách các lô có thể dùng)
@@ -42,7 +42,7 @@ namespace GMP_System.Controllers
                                          // Lưu ý: Entity của bạn là Qcstatus (chữ s thường)
                                          && x.Qcstatus == "Released")
                                 .OrderBy(x => x.ExpiryDate);
-            return Ok(available);
+            return Ok(new { data = available.ToList(), success = true, message = "Success" });
         }
 
         // 2. Nhập Kho Nguyên Liệu
