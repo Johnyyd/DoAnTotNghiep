@@ -1,71 +1,80 @@
 import 'package:flutter/material.dart';
 import '../components/step_form_inputs.dart';
+import '../services/api_service.dart';
 
 /// Màn hình [MixingStepScreen] dành cho công đoạn trộn khô nguyên liệu.
-/// Hỗ trợ kiểm tra máy trộn, thông số thời gian quay, và 
-/// bảng phân tích đối chiếu khối lượng lý thuyết so với thực tế nhập vào.
-class MixingStepScreen extends StatelessWidget {
+class MixingStepScreen extends StatefulWidget {
   const MixingStepScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Dùng ListView để tránh lỗi tràn màn hình (Overflow) trên các thiết bị có kích thước nhỏ
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Tên màn hình
-        const Text('CÔNG ĐOẠN TRỘN KHÔ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-        
-        // --- Phần Môi trường ---
-        const FormSectionHeader('6.1 MÔI TRƯỜNG & THIẾT BỊ'),
-        // ReadOnlyField hiển thị tĩnh phòng thực hiện
-        const ReadOnlyField(label: 'Phòng thực hiện', value: 'Trộn khô'),
-        const SegmentedToggle(label: 'Máy trộn lập phương AD-LP-200', optionA: 'Sạch', optionB: 'Không sạch'),
+  State<MixingStepScreen> createState() => _MixingStepScreenState();
+}
 
-        const FormSectionHeader('6.2 THÔNG SỐ VẬN HÀNH'),
-        const Row(
-          children: [
-            Expanded(child: StandardInputField(label: 'Từ', hint: '09:00', suffixIcon: Icon(Icons.access_time))),
-            SizedBox(width: 16),
-            Expanded(child: StandardInputField(label: 'Đến', hint: '09:15', suffixIcon: Icon(Icons.access_time))),
-          ],
-        ),
-        const StandardInputField(label: 'Thời gian trộn thực tế (phút)', hint: '15', standardText: 'Standard: 15 phút', keyboardType: TextInputType.number),
-        const StandardInputField(label: 'Tốc độ quay (vòng/phút)', hint: '15', standardText: 'Standard: 15 vòng/phút', keyboardType: TextInputType.number),
+class _MixingStepScreenState extends State<MixingStepScreen> {
+  final _tempCtrl = TextEditingController();
+  final _humidCtrl = TextEditingController();
+  final _timeCtrl = TextEditingController();
+  final _pressCtrl = TextEditingController();
+  
+  final _timeStartCtrl = TextEditingController();
+  final _timeEndCtrl = TextEditingController();
+  final _tgCaiDatCtrl = TextEditingController();
+  final _tocDoCaiDatCtrl = TextEditingController();
+  final _tgThucTeCtrl = TextEditingController();
+  final _tocDoThucTeCtrl = TextEditingController();
+  
+  final _duPhamCtrl = TextEditingController();
+  final _tyTrongCtrl = TextEditingController();
+  final _noteCtrl = TextEditingController();
 
-        const FormSectionHeader('6.3 ĐỐI CHIẾU NGUYÊN LIỆU'),
-        const Text('Lý thuyết vs Thực sử dụng', style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.grey)),
-        const SizedBox(height: 8),
-        _buildComparisonRow('NLC 3 (kg)', '50.00'),
-        _buildComparisonRow('TD 1 (kg)', '10.00'),
-        _buildComparisonRow('TD 3 (kg)', '5.00'),
-        _buildComparisonRow('TD 4 (kg)', '15.00'),
-        _buildComparisonRow('TD 5 (kg)', '2.50'),
-        _buildComparisonRow('TD 8 (kg)', '1.50'),
-        const SizedBox(height: 12),
-        const StandardInputField(label: 'Dư phẩm lô số', hint: 'Nhập số lô dư phẩm'),
+  String _phongSach = 'Sạch';
+  String _mayTron = 'Sạch';
+  String _dungCu = 'Sạch';
+  String _slDongGoi = '0'; // Kết quả MixingPackagingField
+  
+  // Lưu "Thực tế" cho các nguyên liệu đối chiếu
+  final Map<String, String> _actualMaterials = {};
 
-        const FormSectionHeader('6.4 KẾT QUẢ HẠT KHÔ'),
-        const StandardInputField(label: 'Tỷ trọng gõ', hint: '0.8', keyboardType: TextInputType.number),
-        const ReadOnlyField(label: 'Số lượng đóng gói', value: '10 túi x 8 kg/túi = 80 kg'),
-        const SizedBox(height: 12),
-        const Text('Nhận xét', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54)),
-        const SizedBox(height: 4),
-        const TextField(
-          maxLines: 3,
-          decoration: InputDecoration(hintText: 'Nhập ghi chú hoặc nhận xét...'),
-        ),
-        
-        const SizedBox(height: 24),
-        ESignatureButton(title: 'HOÀN THÀNH CÔNG ĐOẠN TRỘN', onPressed: () {}),
-        const SizedBox(height: 32),
-      ],
+  bool _isSaving = false;
+
+  void _updateActualMaterial(String name, String value) {
+    _actualMaterials[name] = value;
+  }
+
+  Future<void> _submit() async {
+    setState(() => _isSaving = true);
+    final params = {
+      "veSinhPhong": _phongSach,
+      "veSinhMay": _mayTron,
+      "veSinhDungCu": _dungCu,
+      "nhietDo": _tempCtrl.text,
+      "doAm": _humidCtrl.text,
+      "thoiGianKiemTra": _timeCtrl.text,
+      "apLuc": _pressCtrl.text,
+      "tgBatDau": _timeStartCtrl.text,
+      "tgKetThuc": _timeEndCtrl.text,
+      "tgCaiDat": _tgCaiDatCtrl.text,
+      "tocDoCaiDat": _tocDoCaiDatCtrl.text,
+      "tgThucTe": _tgThucTeCtrl.text,
+      "tocDoThucTe": _tocDoThucTeCtrl.text,
+      "khoiLuongThucTe": _actualMaterials,
+      "duPhamLoSo": _duPhamCtrl.text,
+      "tyTrongGo": _tyTrongCtrl.text,
+      "slDongGoiKg": _slDongGoi,
+      "notes": _noteCtrl.text,
+    };
+    
+    // Giả lập Dữ liệu: Lô NLC 3 (BatchId=1), Bước Trộn Khô (StepId=3)
+    bool success = await ApiService.submitStepData(1, 3, 'USR-OP-001', params);
+    setState(() => _isSaving = false);
+    
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(success ? '✔ Lưu công đoạn trộn thành công!' : '❌ Lỗi khi lưu dữ liệu!'))
     );
   }
 
-  /// Hàm hỗ trợ hiển thị 1 dòng so sánh dữ liệu đối chiếu nguyên liệu
-  /// Hiển thị tên nguyên liệu [label], khối lượng lý thuyết [expected] và input điền thực tế.
-  Widget _buildComparisonRow(String label, String expected) {
+  Widget _buildComparisonRow(String key, String label, String expected) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
@@ -73,9 +82,88 @@ class MixingStepScreen extends StatelessWidget {
           Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
           Expanded(child: ReadOnlyField(label: '', value: expected)),
           const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('vs', style: TextStyle(color: Colors.grey))),
-          const Expanded(child: StandardInputField(label: '', hint: 'Thực tế')),
+          Expanded(child: StandardInputField(
+            label: '', 
+            hint: 'Thực tế', 
+            onChanged: (v) => _updateActualMaterial(key, v),
+          )),
         ],
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const Text('CÔNG ĐOẠN TRỘN KHÔ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+        
+        const FormSectionHeader('6.1 MÔI TRƯỜNG & THIẾT BỊ'),
+        const ReadOnlyField(label: 'Phòng thực hiện', value: 'Trộn khô'),
+        SegmentedToggle(label: 'Phòng trộn khô', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _phongSach = v),
+        SegmentedToggle(label: 'Máy trộn lập phương AD-LP-200', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _mayTron = v),
+        SegmentedToggle(label: 'Dụng cụ sản xuất', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _dungCu = v),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: StandardInputField(label: 'Nhiệt độ (°C)', controller: _tempCtrl, hint: '23.0', standardText: 'Standard: 21 - 25', keyboardType: TextInputType.number)),
+            const SizedBox(width: 16),
+            Expanded(child: StandardInputField(label: 'Độ ẩm (%)', controller: _humidCtrl, hint: '60.0', standardText: 'Standard: 45 - 70', keyboardType: TextInputType.number)),
+          ],
+        ),
+        StandardInputField(label: 'Thời gian kiểm tra', controller: _timeCtrl, hint: '08:00 AM', suffixIcon: const Icon(Icons.access_time)),
+        StandardInputField(label: 'Áp lực phòng (Pa)', controller: _pressCtrl, hint: '15', standardText: 'Standard: >= 10', keyboardType: TextInputType.number),
+
+        const FormSectionHeader('6.2 THÔNG SỐ VẬN HÀNH'),
+        Row(
+          children: [
+            Expanded(child: StandardInputField(label: 'Từ', controller: _timeStartCtrl, hint: '09:00', suffixIcon: const Icon(Icons.access_time))),
+            const SizedBox(width: 16),
+            Expanded(child: StandardInputField(label: 'Đến', controller: _timeEndCtrl, hint: '09:15', suffixIcon: const Icon(Icons.access_time))),
+          ],
+        ),
+        Row(
+          children: [
+            Expanded(child: StandardInputField(label: 'TG cài đặt (phút)', controller: _tgCaiDatCtrl, hint: '15', keyboardType: TextInputType.number)),
+            const SizedBox(width: 16),
+            Expanded(child: StandardInputField(label: 'Tốc độ cài đặt (v/p)', controller: _tocDoCaiDatCtrl, hint: '15', keyboardType: TextInputType.number)),
+          ],
+        ),
+        StandardInputField(label: 'Thời gian trộn thực tế (phút)', controller: _tgThucTeCtrl, hint: '15', standardText: 'Standard: 15 phút', keyboardType: TextInputType.number),
+        StandardInputField(label: 'Tốc độ quay (vòng/phút)', controller: _tocDoThucTeCtrl, hint: '15', standardText: 'Standard: 15 vòng/phút', keyboardType: TextInputType.number),
+
+        const FormSectionHeader('6.3 ĐỐI CHIẾU NGUYÊN LIỆU'),
+        const Text('Lý thuyết vs Thực sử dụng', style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.grey)),
+        const SizedBox(height: 8),
+        _buildComparisonRow('NLC3', 'NLC 3 (kg)', '50.00'),
+        _buildComparisonRow('TD1', 'TD 1 (kg)', '10.00'),
+        _buildComparisonRow('TD3', 'TD 3 (kg)', '5.00'),
+        _buildComparisonRow('TD4', 'TD 4 (kg)', '15.00'),
+        _buildComparisonRow('TD5', 'TD 5 (kg)', '2.50'),
+        _buildComparisonRow('TD8', 'TD 8 (kg)', '1.50'),
+        const SizedBox(height: 12),
+        StandardInputField(label: 'Dư phẩm lô số', controller: _duPhamCtrl, hint: 'Nhập số lô dư phẩm'),
+
+        const FormSectionHeader('6.4 KẾT QUẢ HẠT KHÔ'),
+        StandardInputField(label: 'Tỷ trọng gõ', controller: _tyTrongCtrl, hint: '0.8', keyboardType: TextInputType.number),
+        MixingPackagingField(onResultChanged: (v) => _slDongGoi = v),
+        const SizedBox(height: 12),
+        const Text('Nhận xét', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54)),
+        const SizedBox(height: 4),
+        TextField(
+          controller: _noteCtrl,
+          maxLines: 3,
+          decoration: const InputDecoration(hintText: 'Nhập ghi chú hoặc nhận xét...'),
+        ),
+        
+        const SizedBox(height: 24),
+        _isSaving
+          ? const Center(child: CircularProgressIndicator())
+          : ESignatureButton(title: 'HOÀN THÀNH CÔNG ĐOẠN TRỘN', onPressed: _submit),
+        const SizedBox(height: 32),
+      ],
     );
   }
 }

@@ -5,6 +5,7 @@
 | Service | Status | Port | Tailscale Access |
 |---------|--------|------|------------------|
 | Frontend (Nginx) | ✅ Up | 80 | `http://100.89.137.3` |
+| Mobile App (Flutter) | ✅ Up | 8081 | `http://100.89.137.3:8081` |
 | Backend API (.NET) | ✅ Up | 5001 → 5000 | `http://100.89.137.3:5001` |
 | SQL Server | ✅ Up | 1434 → 1433 | `100.89.137.3,1434` |
 
@@ -42,16 +43,17 @@ curl http://localhost  # Should show HTML
 
 ## 🔗 URLs
 
-| Environment | Frontend | Backend API | Health Check |
-|-------------|----------|-------------|--------------|
-| **Localhost** | http://localhost | http://localhost:5001 | `http://localhost:5001/api/health` |
-| **Tailscale** | http://100.89.137.3 | http://100.89.137.3:5001 | `http://100.89.137.3:5001/api/health` |
+| Environment | Frontend | Mobile App | Backend API | Health Check |
+|-------------|----------|------------|-------------|--------------|
+| **Localhost** | http://localhost | http://localhost:8081 | http://localhost:5001 | `http://localhost:5001/api/health` |
+| **Tailscale** | http://100.89.137.3 | http://100.89.137.3:8081 | http://100.89.137.3:5001 | `http://100.89.137.3:5001/api/health` |
 
 ## 🏗️ Architecture
 
 ```
 Frontend (React + Nginx) -> port 80
-    ↓ (proxy /api/)
+Mobile App (Flutter Web) -> port 8081
+    ↓ (proxy /api/ hoặc truy vấn trực tiếp)
 Backend (.NET API) -> port 5000 (container), 5001 (host)
     ↓ (SQL Server)
 Database (SQL Server 2022) -> port 1433 (container), 1434 (host)

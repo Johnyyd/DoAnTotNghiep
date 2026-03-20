@@ -41,6 +41,7 @@ case $choice in
         echo "Services starting..."
         echo "  Backend API: http://localhost:5001"
         echo "  Frontend:    http://localhost:8080"
+        echo "  Mobile App:  http://localhost:8081"
         echo "  Database:    localhost,1434 (SA password: GMP_Strong@Passw0rd123)"
         echo ""
         echo "To view logs: docker-compose logs -f"
@@ -62,6 +63,7 @@ case $choice in
         echo "All services rebuilt and started!"
         echo "  Backend API: http://localhost:5001"
         echo "  Frontend:    http://localhost:8080"
+        echo "  Mobile App:  http://localhost:8081"
         ;;
     4)
         echo "Which service logs to view?"
@@ -69,12 +71,14 @@ case $choice in
         echo "  2) Backend API only"
         echo "  3) Frontend only"
         echo "  4) Database only"
-        read -p "Enter choice [1-4]: " log_choice
+        echo "  5) Mobile App only"
+        read -p "Enter choice [1-5]: " log_choice
         case $log_choice in
             1) docker compose logs -f ;;
             2) docker compose logs -f gmp-api ;;
             3) docker compose logs -f gmp-frontend ;;
             4) docker compose logs -f gmp-sqlserver ;;
+            5) docker compose logs -f gmp-mobile ;;
             *) echo "Invalid choice" ;;
         esac
         ;;

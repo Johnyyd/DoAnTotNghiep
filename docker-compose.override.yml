@@ -34,6 +34,7 @@ services: # Danh sách các services trong hệ thống
     build:
       context: ./GMP_System/GMP_System # Chỉ định địa chỉ của thư mục C#
       dockerfile: Dockerfile # Đường dẫn cụ thể trỏ vào file Build cấu trúc
+      target: build # Hook môi trường Development để sử dụng Hot Reload chứ không đóng gói Production final stage
     container_name: gmp-api 
     networks:
       - gmp-network 
@@ -41,6 +42,7 @@ services: # Danh sách các services trong hệ thống
       - "5001:5000" # Mở khoá cổng 5000 ngầm để host nhận ở 5001
     environment:
       - ASPNETCORE_ENVIRONMENT=Development # Đặt môi trường về dạng Dev giúp khởi phát các thông báo sửa lỗi chi tiết (Swagger UI)
+      - DOTNET_USE_POLLING_FILE_WATCHER=1 # Cho phép ứng dụng theo dõi các thay đổi của tệp qua ổ đĩa Docker gắn kèm
       # Thông số chuỗi kết nối Database nhắm thẳng vào tên 'gmp-sqlserver' cùng LAN thay vì đánh qua localhost
       - ConnectionStrings__DefaultConnection=Server=gmp-sqlserver;Database=GMP_WHO_DB;User Id=sa;Password=GMP_Strong@Passw0rd123;TrustServerCertificate=true
       # Key phục vụ mã hoá chuẩn ký Server bảo mật cho JWT Access Token
@@ -51,6 +53,8 @@ services: # Danh sách các services trong hệ thống
         condition: service_healthy 
     volumes:
       - ./DATABASE:/app/DATABASE:ro # Liên kết thư mục Script nếu Controller có nhu cầu truy vấn tĩnh
+      - ./GMP_System/GMP_System:/src # Ánh xạ qua bộ nhớ Host và mã nguồn Container tại gốc
+    command: dotnet watch run --project GMP_System.csproj --urls "http://0.0.0.0:5000" --no-hot-reload
     restart: unless-stopped
     healthcheck:
       # Ping qua chuẩn HTTP thông thường kiểm tra EndPoint Kestrel đã Online chưa
@@ -68,6 +72,7 @@ services: # Danh sách các services trong hệ thống
     build:
       context: ./PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem
       dockerfile: Dockerfile
+      target: build # Sử dụng bản thảo Build có chứa môi trường Dev thay vì Nginx 
       args:
         # Giới hạn API Base URL thành tương đối (relative path) truyền vào quá trình build
         - VITE_API_URL=/api
@@ -78,6 +83,11 @@ services: # Danh sách các services trong hệ thống
       - "8080:80" # Maps port chạy ứng dụng qua Host là 8080
     environment:
       - VITE_API_URL=/api 
+      - CHOKIDAR_USEPOLLING=true # Trình theo dõi thay đổi tệp đối với ổ đĩa được phân mảnh
+    volumes:
+      - ./PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem:/app
+      - /app/node_modules # Khoá chống ghi đè thư mục node_modules cho container và máy host 
+    command: npm run dev -- --host 0.0.0.0 --port 80
     depends_on:
       - gmp-api # Xếp loại phụ thuộc đợi tải Backend đằng trước
     restart: unless-stopped
@@ -89,11 +99,17 @@ services: # Danh sách các services trong hệ thống
     build:
       context: ./MobileApp # Thư mục con của mã nguồn Flutter
       dockerfile: Dockerfile
+      target: build # Sử dụng bản thảo Build chứa Flutter SDK thay vì Nginx web server
     container_name: gmp-mobile 
     networks:
       - gmp-network
     ports:
       - "8081:80" # Trực tuyến Web Server dành riêng cho app flutter hoạt động qua 8081
+    volumes:
+      - ./MobileApp:/app
+      - /app/.dart_tool # Cô lập kho nhớ tạm
+      - /app/build # Rẽ luồng nhánh tránh lưu build lên host vật lý
+    command: flutter run -d web-server --web-port 80 --web-hostname 0.0.0.0
     depends_on:
       - gmp-api # Xếp loại phụ thuộc đợi tải Backend đằng trước
     restart: unless-stopped
