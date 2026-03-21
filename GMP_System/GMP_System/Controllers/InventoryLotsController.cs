@@ -1,12 +1,14 @@
 using GMP_System.Entities;
 using GMP_System.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace GMP_System.Controllers
 {
-    [Route("api/inventory-lots")]
+    [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class InventoryLotsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -16,92 +18,59 @@ namespace GMP_System.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        // GET: api/inventory-lots?materialId=1&lotNumber=LOT-001
+        // GET: api/InventoryLots
         [HttpGet]
-        public async Task<IActionResult> GetLots(
-            [FromQuery] int? materialId,
-            [FromQuery] string? lotNumber)
+        public async Task<IActionResult> GetLots([FromQuery] int? materialId, [FromQuery] string? lotNumber)
         {
-            IQueryable<InventoryLot> query = _unitOfWork.InventoryLots
-                .Query()
-                .Include(l => l.Material);
-
+            var query = _unitOfWork.InventoryLots.Query();
+            
             if (materialId.HasValue)
                 query = query.Where(l => l.MaterialId == materialId.Value);
-
+            
             if (!string.IsNullOrEmpty(lotNumber))
-                query = query.Where(l => l.LotNumber != null && l.LotNumber.Contains(lotNumber));
+                query = query.Where(l => l.LotNumber.Contains(lotNumber));
 
-            var lots = await query.OrderByDescending(l => l.LotId).ToListAsync();
-            return Ok(new { data = lots, success = true, message = "Success" });
+            var lots = await query.Include(l => l.Material).ToListAsync();
+            return Ok(new { success = true, data = lots });
         }
 
-        // GET: api/inventory-lots/available
-        [HttpGet("available")]
-        public async Task<IActionResult> GetAvailableLots()
-        {
-            var lots = await _unitOfWork.InventoryLots
-                .Query()
-                .Include(l => l.Material)
-                .Where(l => l.QuantityCurrent > 0
-                         && l.ExpiryDate > DateTime.Now
-                         && l.Qcstatus == "Released")
-                .OrderBy(l => l.ExpiryDate)
-                .ToListAsync();
-
-            return Ok(new { data = lots, success = true, message = "Success" });
-        }
-
-        // GET: api/inventory-lots/5
+        // GET: api/InventoryLots/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetLot(int id)
         {
-            var lot = await _unitOfWork.InventoryLots
-                .Query()
-                .Include(l => l.Material)
-                .Include(l => l.MaterialUsages)
-                .FirstOrDefaultAsync(l => l.LotId == id);
+            var lot = await _unitOfWork.InventoryLots.GetByIdWithIncludeAsync(id, l => l.Material);
+            if (lot == null) return NotFound(new { success = false, message = "Không tìm thấy lô hàng." });
 
-            if (lot == null) return NotFound(new { success = false, message = "Không tìm thấy lô." });
-            return Ok(new { data = lot, success = true, message = "Success" });
+            return Ok(new { success = true, data = lot });
         }
 
-        // POST: api/inventory-lots — Nhập kho
+        // POST: api/InventoryLots
         [HttpPost]
-        public async Task<IActionResult> ReceiveMaterial(InventoryLot lot)
+        public async Task<IActionResult> CreateLot([FromBody] InventoryLot lot)
         {
-            if (lot.MaterialId == null) return BadRequest(new { success = false, message = "Chưa chọn nguyên liệu." });
-            if (lot.QuantityCurrent <= 0) return BadRequest(new { success = false, message = "Số lượng nhập phải > 0." });
-            if (string.IsNullOrEmpty(lot.LotNumber)) return BadRequest(new { success = false, message = "Thiếu số lô." });
-
-            lot.Qcstatus = "Quarantine"; // mặc định kiểm dịch khi nhập kho
-
+            // lot.CreatedAt = DateTime.Now; // InventoryLot doesn't have CreatedAt
             await _unitOfWork.InventoryLots.AddAsync(lot);
             await _unitOfWork.CompleteAsync();
 
-            return Ok(new { success = true, message = "Nhập kho thành công!", data = new { lotId = lot.LotId, lotNumber = lot.LotNumber } });
+            return CreatedAtAction(nameof(GetLot), new { id = lot.LotId }, new { success = true, data = lot });
         }
 
-        // POST: api/inventory-lots/{id}/qc — Duyệt QC lô
+        // POST: api/InventoryLots/{id}/qc
         [HttpPost("{id}/qc")]
-        public async Task<IActionResult> UpdateQcStatus(int id, [FromBody] QcUpdateRequest request)
+        public async Task<IActionResult> UpdateQcStatus(int id, [FromBody] QcUpdateDto request)
         {
             var lot = await _unitOfWork.InventoryLots.GetByIdAsync(id);
-            if (lot == null) return NotFound(new { success = false, message = "Không tìm thấy lô." });
-
-            var validStatuses = new[] { "Released", "Rejected", "Quarantine" };
-            if (!validStatuses.Contains(request.Status))
-                return BadRequest(new { success = false, message = "Trạng thái phải là: Released, Rejected, Quarantine" });
+            if (lot == null) return NotFound(new { success = false, message = "Không tìm thấy lô hàng." });
 
             lot.Qcstatus = request.Status;
             _unitOfWork.InventoryLots.Update(lot);
             await _unitOfWork.CompleteAsync();
 
-            return Ok(new { success = true, message = "Cập nhật QC thành công!", lotNumber = lot.LotNumber, status = lot.Qcstatus });
+            return Ok(new { success = true, message = "Cập nhật trạng thái QC thành công." });
         }
     }
 
-    public class QcUpdateRequest
+    public class QcUpdateDto
     {
         public string Status { get; set; } = string.Empty;
     }

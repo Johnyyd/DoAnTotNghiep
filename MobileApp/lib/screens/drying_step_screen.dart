@@ -4,8 +4,16 @@ import '../services/api_service.dart';
 
 /// Màn hình [DryingStepScreen] quản lý công đoạn sấy nguyên liệu.
 class DryingStepScreen extends StatefulWidget {
+  final int batchId;
+  final int stepId;
   final String stepName;
-  const DryingStepScreen({super.key, required this.stepName});
+
+  const DryingStepScreen({
+    super.key, 
+    required this.batchId,
+    required this.stepId,
+    required this.stepName,
+  });
 
   @override
   State<DryingStepScreen> createState() => _DryingStepScreenState();
@@ -30,7 +38,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   String _maySay = 'Sạch';
   String _dungCuSay = 'Sạch';
   String _mayKhongTai = 'Ổn định';
-  String _mauKiemTra = '0'; // Lưu kết quả DryingSampleField
+  String _mauKiemTra = '0'; 
   
   bool _isSaving = false;
 
@@ -57,16 +65,18 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       "slSauSay": _slSauCtrl.text,
     };
     
-    // Ghi nhận: Lô mặc định BatchId=1, Bước Sấy StepId=2
     bool success = await ApiService.submitStepData(
-      batchId: 1,
-      stepId: 2,
+      batchId: widget.batchId,
+      stepId: widget.stepId,
       resultStatus: 'Passed',
       parametersData: params,
     );
     setState(() => _isSaving = false);
     
     if (!mounted) return;
+    if (success) {
+      Navigator.pop(context);
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(success ? '✔ Lưu công đoạn sấy thành công!' : '❌ Lỗi khi lưu dữ liệu!'))
     );
@@ -74,68 +84,71 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text(widget.stepName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-        
-        const FormSectionHeader('4.1 THÔNG TIN CHUNG'),
-        const StandardInputField(label: 'Phòng thực hiện', hint: 'Pha chế'),
-        StandardInputField(label: 'Ngày', controller: _ngayCtrl, suffixIcon: const Icon(Icons.calendar_today)),
-        StandardInputField(label: 'Người thực hiện & Người kiểm tra', controller: _nguoiCtrl, hint: 'Chọn nhân viên', suffixIcon: const Icon(Icons.person_add)),
-
-        const FormSectionHeader('4.2 KIỂM TRA VỆ SINH'),
-        SegmentedToggle(label: 'Phòng pha chế', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _phongSach = v),
-        SegmentedToggle(label: 'Máy sấy tầng sôi KBC-TS-50', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _maySay = v),
-        SegmentedToggle(label: 'Dụng cụ sấy', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _dungCuSay = v),
-
-        const FormSectionHeader('4.3 ĐIỀU KIỆN MÔI TRƯỜNG'),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: StandardInputField(label: 'Nhiệt độ (°C)', controller: _tempCtrl, hint: '23.0', standardText: 'Standard: 21 - 25', keyboardType: TextInputType.number)),
-            const SizedBox(width: 16),
-            Expanded(child: StandardInputField(label: 'Độ ẩm (%)', controller: _humidCtrl, hint: '60.0', standardText: 'Standard: 45 - 70', keyboardType: TextInputType.number)),
-          ],
-        ),
-        StandardInputField(label: 'Thời gian kiểm tra', controller: _timeCtrl, hint: '08:00 AM', suffixIcon: const Icon(Icons.access_time)),
-        StandardInputField(label: 'Áp lực phòng đọc (Pa)', controller: _pressCtrl, hint: '15', standardText: 'Standard: >= 10', keyboardType: TextInputType.number),
-
-        const FormSectionHeader('4.4 THÔNG SỐ SẤY & KẾT QUẢ'),
-        SegmentedToggle(label: 'Tình trạng máy chạy không tải', optionA: 'Ổn định', optionB: 'Không ổn định', onChanged: (v) => _mayKhongTai = v),
-        Row(
-          children: [
-            Expanded(child: StandardInputField(label: 'Nhiệt độ khí vào (°C)', controller: _tempInCtrl, hint: '50', keyboardType: TextInputType.number)),
-            const SizedBox(width: 16),
-            Expanded(child: StandardInputField(label: 'Nhiệt độ khí ra (°C)', controller: _tempOutCtrl, hint: '45', keyboardType: TextInputType.number)),
-          ],
-        ),
-        Row(
-          children: [
-            Expanded(child: StandardInputField(label: 'Bắt đầu sấy', controller: _timeStartCtrl, hint: '08:30 AM', suffixIcon: const Icon(Icons.access_time))),
-            const SizedBox(width: 16),
-            Expanded(child: StandardInputField(label: 'Kết thúc sấy', controller: _timeEndCtrl, hint: '10:30 AM', suffixIcon: const Icon(Icons.access_time))),
-          ],
-        ),
-        StandardInputField(label: 'Độ ẩm sau khi sấy (%)', controller: _humidAfterCtrl, hint: '1.5', keyboardType: TextInputType.number),
-        
-        DryingSampleField(onResultChanged: (v) => _mauKiemTra = v),
-        const SizedBox(height: 16),
-        
-        Row(
-          children: [
-            Expanded(child: StandardInputField(label: 'SL trước sấy (kg)', controller: _slTruocCtrl, hint: '100', keyboardType: TextInputType.number)),
-            const SizedBox(width: 16),
-            Expanded(child: StandardInputField(label: 'SL sau sấy (kg)', controller: _slSauCtrl, hint: '95', keyboardType: TextInputType.number)),
-          ],
-        ),
-        
-        const SizedBox(height: 24),
-        _isSaving
-         ? const Center(child: CircularProgressIndicator())
-         : ESignatureButton(title: 'KÝ & LƯU CÔNG ĐOẠN', onPressed: _submit),
-        const SizedBox(height: 32),
-      ],
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.stepName)),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Text(widget.stepName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+          
+          const FormSectionHeader('4.1 THÔNG TIN CHUNG'),
+          const StandardInputField(label: 'Phòng thực hiện', hint: 'Pha chế'),
+          StandardInputField(label: 'Ngày', controller: _ngayCtrl, suffixIcon: const Icon(Icons.calendar_today)),
+          StandardInputField(label: 'Người thực hiện & Người kiểm tra', controller: _nguoiCtrl, hint: 'Chọn nhân viên', suffixIcon: const Icon(Icons.person_add)),
+  
+          const FormSectionHeader('4.2 KIỂM TRA VỆ SINH'),
+          SegmentedToggle(label: 'Phòng pha chế', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _phongSach = v),
+          SegmentedToggle(label: 'Máy sấy tầng sôi KBC-TS-50', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _maySay = v),
+          SegmentedToggle(label: 'Dụng cụ sấy', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _dungCuSay = v),
+  
+          const FormSectionHeader('4.3 ĐIỀU KIỆN MÔI TRƯỜNG'),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: StandardInputField(label: 'Nhiệt độ (°C)', controller: _tempCtrl, hint: '23.0', standardText: 'Standard: 21 - 25', keyboardType: TextInputType.number)),
+              const SizedBox(width: 16),
+              Expanded(child: StandardInputField(label: 'Độ ẩm (%)', controller: _humidCtrl, hint: '60.0', standardText: 'Standard: 45 - 70', keyboardType: TextInputType.number)),
+            ],
+          ),
+          StandardInputField(label: 'Thời gian kiểm tra', controller: _timeCtrl, hint: '08:00 AM', suffixIcon: const Icon(Icons.access_time)),
+          StandardInputField(label: 'Áp lực phòng đọc (Pa)', controller: _pressCtrl, hint: '15', standardText: 'Standard: >= 10', keyboardType: TextInputType.number),
+  
+          const FormSectionHeader('4.4 THÔNG SỐ SẤY & KẾT QUẢ'),
+          SegmentedToggle(label: 'Tình trạng máy chạy không tải', optionA: 'Ổn định', optionB: 'Không ổn định', onChanged: (v) => _mayKhongTai = v),
+          Row(
+            children: [
+              Expanded(child: StandardInputField(label: 'Nhiệt độ khí vào (°C)', controller: _tempInCtrl, hint: '50', keyboardType: TextInputType.number)),
+              const SizedBox(width: 16),
+              Expanded(child: StandardInputField(label: 'Nhiệt độ khí ra (°C)', controller: _tempOutCtrl, hint: '45', keyboardType: TextInputType.number)),
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(child: StandardInputField(label: 'Bắt đầu sấy', controller: _timeStartCtrl, hint: '08:30 AM', suffixIcon: const Icon(Icons.access_time))),
+              const SizedBox(width: 16),
+              Expanded(child: StandardInputField(label: 'Kết thúc sấy', controller: _timeEndCtrl, hint: '10:30 AM', suffixIcon: const Icon(Icons.access_time))),
+            ],
+          ),
+          StandardInputField(label: 'Độ ẩm sau khi sấy (%)', controller: _humidAfterCtrl, hint: '1.5', keyboardType: TextInputType.number),
+          
+          DryingSampleField(onResultChanged: (v) => _mauKiemTra = v),
+          const SizedBox(height: 16),
+          
+          Row(
+            children: [
+              Expanded(child: StandardInputField(label: 'SL trước sấy (kg)', controller: _slTruocCtrl, hint: '100', keyboardType: TextInputType.number)),
+              const SizedBox(width: 16),
+              Expanded(child: StandardInputField(label: 'SL sau sấy (kg)', controller: _slSauCtrl, hint: '95', keyboardType: TextInputType.number)),
+            ],
+          ),
+          
+          const SizedBox(height: 24),
+          _isSaving
+           ? const Center(child: CircularProgressIndicator())
+           : ESignatureButton(title: 'KÝ & LƯU CÔNG ĐOẠN', onPressed: _submit),
+          const SizedBox(height: 32),
+        ],
+      ),
     );
   }
 }

@@ -209,6 +209,22 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                       return Card(
                         margin: const EdgeInsets.only(bottom: 10),
                         child: ListTile(
+                          onTap: () {
+                            Widget? nextScreen;
+                            final stepType = log['step']?['stepName']?.toString().toLowerCase() ?? '';
+                            
+                            if (stepType.contains('cân') || stepType.contains('weigh')) {
+                              nextScreen = WeighingStepScreen(batchId: widget.batchId, stepId: log['stepId']);
+                            } else if (stepType.contains('trộn') || stepType.contains('mix')) {
+                              nextScreen = MixingStepScreen(batchId: widget.batchId, stepId: log['stepId']);
+                            } else if (stepType.contains('sấy') || stepType.contains('dry')) {
+                              nextScreen = DryingStepScreen(batchId: widget.batchId, stepId: log['stepId'], stepName: log['step']?['stepName'] ?? 'SẤY');
+                            }
+
+                            if (nextScreen != null) {
+                              Navigator.of(context).push(MaterialPageRoute(builder: (_) => nextScreen!)).then((_) => _load());
+                            }
+                          },
                           leading: CircleAvatar(
                             backgroundColor: color.withOpacity(0.15),
                             child: Text(

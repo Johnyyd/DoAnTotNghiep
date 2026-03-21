@@ -1,11 +1,13 @@
 using GMP_System.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace GMP_System.Controllers
 {
-    [Route("api/audit-logs")]
+    [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin,QA_QC")]
     public class SystemAuditLogsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -15,38 +17,35 @@ namespace GMP_System.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        // GET: api/audit-logs?tableName=Recipe&recordId=1
+        // GET: api/SystemAuditLogs
         [HttpGet]
-        public async Task<IActionResult> GetAll(
-            [FromQuery] string? tableName,
-            [FromQuery] string? recordId)
+        public async Task<IActionResult> GetLogs([FromQuery] string? entityType, [FromQuery] int? entityId, [FromQuery] int limit = 100)
         {
-            IQueryable<GMP_System.Entities.SystemAuditLog> query = _unitOfWork.SystemAuditLogs
-                .Query()
-                .Include(l => l.ChangedByNavigation);
+            var query = _unitOfWork.SystemAuditLogs.Query();
 
-            if (!string.IsNullOrEmpty(tableName))
-                query = query.Where(l => l.TableName == tableName);
+            if (!string.IsNullOrEmpty(entityType))
+                query = query.Where(l => l.TableName == entityType);
 
-            if (!string.IsNullOrEmpty(recordId))
-                query = query.Where(l => l.RecordId == recordId);
+            if (entityId.HasValue)
+                query = query.Where(l => l.RecordId == entityId.Value.ToString());
 
-            var logs = await query.OrderByDescending(l => l.ChangedDate).ToListAsync();
-            return Ok(new { data = logs, success = true, message = "Success" });
+            var logs = await query.OrderByDescending(l => l.ChangedDate)
+                                  .Take(limit)
+                                  .ToListAsync();
+
+            return Ok(new { success = true, data = logs });
         }
 
-        // GET: api/audit-logs/{tableName}/{recordId}
-        [HttpGet("{tableName}/{recordId}")]
-        public async Task<IActionResult> GetHistory(string tableName, string recordId)
+        // GET: api/SystemAuditLogs/EntityType/EntityId
+        [HttpGet("{entityType}/{entityId}")]
+        public async Task<IActionResult> GetEntityLogs(string entityType, string entityId)
         {
-            var history = await _unitOfWork.SystemAuditLogs
-                .Query()
-                .Include(l => l.ChangedByNavigation)
-                .Where(l => l.TableName == tableName && l.RecordId == recordId)
-                .OrderByDescending(l => l.ChangedDate)
-                .ToListAsync();
+            var logs = await _unitOfWork.SystemAuditLogs.Query()
+                                  .Where(l => l.TableName == entityType && l.RecordId == entityId)
+                                  .OrderByDescending(l => l.ChangedDate)
+                                  .ToListAsync();
 
-            return Ok(new { data = history, success = true, message = "Success" });
+            return Ok(new { success = true, data = logs });
         }
     }
 }
