@@ -112,12 +112,26 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
+// ----- HEALTH CHECK ENDPOINT -----
+app.MapGet("/health", () => Results.Ok(new { status = "Healthy", timestamp = DateTime.UtcNow }));
+
 // ============================================================
 // 5. SEED DATABASE
 // ============================================================
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<GmpContext>();
+
+    // ----- MANUAL MIGRATION: Đảm bảo có cột PasswordHash -----
+    db.Database.ExecuteSqlRaw(@"
+        IF NOT EXISTS (SELECT * FROM sys.columns 
+                       WHERE object_id = OBJECT_ID(N'[AppUsers]') 
+                       AND name = 'PasswordHash')
+        BEGIN
+            ALTER TABLE AppUsers ADD PasswordHash NVARCHAR(MAX) NULL;
+        END
+    ");
+
     db.Database.EnsureCreated();
 
     // ----- SEED USERS (nếu chưa có) -----
@@ -157,10 +171,17 @@ using (var scope = app.Services.CreateScope())
     else
     {
         // Cập nhật PasswordHash cho user đã có mà chưa có hash
-        var usersWithoutHash = db.AppUsers.Where(u => u.PasswordHash == null).ToList();
+        var usersWithoutHash = db.AppUsers.ToList().Where(u => string.IsNullOrEmpty(u.PasswordHash)).ToList();
         foreach (var u in usersWithoutHash)
         {
-            u.PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123");
+            string defaultPass = u.Username.ToLower() switch 
+            {
+                "admin" => "Admin@123",
+                "qc01" => "Qc@123456",
+                "op01" => "Op@123456",
+                _ => "Gmp@123456"
+            };
+            u.PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPass);
         }
         if (usersWithoutHash.Any()) db.SaveChanges();
     }

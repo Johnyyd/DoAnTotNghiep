@@ -58,11 +58,11 @@ INSERT INTO UnitOfMeasure (UomName, Description) VALUES
 -- 2. App Users (ID 1-4)
 -- =================)
 PRINT 'Seeding App Users...';
-INSERT INTO AppUsers (Username, FullName, Role, IsActive) VALUES
-('admin', 'Nguyễn Văn Admin', 'Admin', 1),
-('qc_specialist', 'Trần Thị Kiểm Tra', 'QA_QC', 1),
-('production_mgr', 'Lê Văn Quản Lý', 'ProductionManager', 1),
-('operator1', 'Phạm Công Nhân', 'Operator', 1);
+INSERT INTO AppUsers (Username, FullName, Role, IsActive, PasswordHash) VALUES
+('admin', 'Nguyễn Văn Admin', 'Admin', 1, NULL),
+('qc_specialist', 'Trần Thị Kiểm Tra', 'QA_QC', 1, NULL),
+('production_mgr', 'Lê Văn Quản Lý', 'ProductionManager', 1, NULL),
+('operator1', 'Phạm Công Nhân', 'Operator', 1, NULL);
 
 -- =====================================================
 -- 3. Equipments (ID 1-6)

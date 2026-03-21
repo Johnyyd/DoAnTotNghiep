@@ -135,3 +135,5 @@
 /src/obj/Debug/net8.0/GMP_System.pdb
 /src/obj/Debug/net8.0/GMP_System.genruntimeconfig.cache
 /src/obj/Debug/net8.0/ref/GMP_System.dll
+/src/bin/Debug/net8.0/BCrypt.Net-Next.dll
+/src/bin/Debug/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll

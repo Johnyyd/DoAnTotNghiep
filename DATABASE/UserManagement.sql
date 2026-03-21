@@ -7,6 +7,7 @@ BEGIN
         Username VARCHAR(50) NOT NULL UNIQUE,
         FullName NVARCHAR(100) NOT NULL,
         Role NVARCHAR(20) CHECK (Role IN ('Admin', 'QA_QC', 'ProductionManager', 'Operator', 'Storekeeper')),
+        PasswordHash NVARCHAR(MAX),
         IsActive BIT DEFAULT 1,
         CreatedAt DATETIME2 DEFAULT GETDATE()
     );
