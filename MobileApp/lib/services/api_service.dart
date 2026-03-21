@@ -1,51 +1,156 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'auth_service.dart';
 
+/// [ApiService] — Lớp trung gian kết nối giao tiếp HTTP với Backend GMP System.
+/// Mọi request đều tự động gắn JWT token từ [AuthService].
 class ApiService {
-  // Use localhost for local dev/web-server, or 10.0.2.2 for Android emulator
-  // If deployed via Docker/Tailscale, this could be the proxy URL.
-  // For Docker Compose, the backend is typically exposed on 5001.
-  static const String baseUrl = 'http://localhost:5001/api';
+  // Trong Docker Compose: frontend (8081) gọi backend qua proxy nginx → /api
+  // Dev local: gọi thẳng port 5001
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:5001/api',
+  );
 
-  /// Gửi dữ liệu Batch Process Log lên Backend
-  static Future<bool> submitStepData(int batchId, int stepId, String operatorId, Map<String, dynamic> parametersData) async {
-    final url = Uri.parse('$baseUrl/BatchProcessLogs');
-    
-    // Construct the payload matching the .NET DTO / Entity expected structure
-    final Map<String, dynamic> payload = {
-      "batchId": batchId,
-      "stepId": stepId,
-      "operatorId": operatorId,
-      "startTime": DateTime.now().toUtc().toIso8601String(),
-      "endTime": DateTime.now().toUtc().toIso8601String(),
-      "resultStatus": "Completed",
-      "parametersData": jsonEncode(parametersData),
-      "notes": "Submitted from Mobile App eBMR",
-      "qcPassed": true
+  /// Headers mặc định kèm JWT token
+  static Future<Map<String, String>> _headers() async {
+    final token = AuthService.token;
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
+
+  // ─── AUTHENTICATION ────────────────────────────────────────
+  
+  /// Đăng nhập: trả về {token, user} nếu thành công
+  static Future<Map<String, dynamic>?> login(String username, String password) async {
+    final url = Uri.parse('$baseUrl/auth/login');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': username, 'password': password}),
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        return body['data'] as Map<String, dynamic>?;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // ─── PRODUCTION BATCHES ────────────────────────────────────
+
+  /// Lấy danh sách tất cả mẻ sản xuất
+  static Future<List<Map<String, dynamic>>> getBatches() async {
+    final url = Uri.parse('$baseUrl/production-batches');
+    try {
+      final response = await http.get(url, headers: await _headers());
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final data = body['data'] as List<dynamic>? ?? [];
+        return data.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Lấy chi tiết một mẻ sản xuất theo ID (kèm BOM, Routing)
+  static Future<Map<String, dynamic>?> getBatchById(int batchId) async {
+    final url = Uri.parse('$baseUrl/production-batches/$batchId');
+    try {
+      final response = await http.get(url, headers: await _headers());
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        return body['data'] as Map<String, dynamic>?;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Kết thúc một mẻ sản xuất
+  static Future<bool> finishBatch(int batchId) async {
+    final url = Uri.parse('$baseUrl/production-batches/$batchId/finish');
+    try {
+      final response = await http.post(url, headers: await _headers());
+      return response.statusCode >= 200 && response.statusCode < 300;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ─── BATCH PROCESS LOGS ────────────────────────────────────
+
+  /// Lấy nhật ký công đoạn của một mẻ
+  static Future<List<Map<String, dynamic>>> getProcessLogs(int batchId) async {
+    final url = Uri.parse('$baseUrl/batchprocesslogs/batch/$batchId');
+    try {
+      final response = await http.get(url, headers: await _headers());
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final data = body['data'] as List<dynamic>? ?? [];
+        return data.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Ghi nhận kết quả một bước công đoạn
+  static Future<bool> submitStepData({
+    required int batchId,
+    required int stepId,
+    required String resultStatus, // "Passed", "Failed", "PendingQC"
+    Map<String, dynamic>? parametersData,
+    String? notes,
+  }) async {
+    final url = Uri.parse('$baseUrl/batchprocesslogs');
+    final payload = {
+      'batchId': batchId,
+      'stepId': stepId,
+      'startTime': DateTime.now().toUtc().toIso8601String(),
+      'endTime': DateTime.now().toUtc().toIso8601String(),
+      'resultStatus': resultStatus,
+      if (parametersData != null) 'parametersData': jsonEncode(parametersData),
+      if (notes != null) 'notes': notes,
     };
 
     try {
-      print('Sending POST request to $url with payload: $payload');
       final response = await http.post(
         url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: await _headers(),
         body: jsonEncode(payload),
       );
-
-      print('Response Status: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return true;
-      } else {
-        return false;
-      }
+      return response.statusCode >= 200 && response.statusCode < 300;
     } catch (e) {
-      print('Error calling API: $e');
       return false;
+    }
+  }
+
+  // ─── INVENTORY LOTS ────────────────────────────────────────
+
+  /// Lấy danh sách lô nguyên liệu (đã Released)
+  static Future<List<Map<String, dynamic>>> getAvailableLots() async {
+    final url = Uri.parse('$baseUrl/inventory-lots/available');
+    try {
+      final response = await http.get(url, headers: await _headers());
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final data = body['data'] as List<dynamic>? ?? [];
+        return data.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      return [];
     }
   }
 }

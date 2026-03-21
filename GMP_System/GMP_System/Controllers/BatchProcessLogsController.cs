@@ -1,6 +1,7 @@
 using GMP_System.Entities;
 using GMP_System.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace GMP_System.Controllers
 {
@@ -15,14 +16,16 @@ namespace GMP_System.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        // 1. Xem nhật ký của một Lô cụ thể
+        // 1. Xem nhật ký của một Lô cụ thể (query at DB level)
         [HttpGet("batch/{batchId}")]
         public async Task<IActionResult> GetLogsByBatch(int batchId)
         {
-            var allLogs = await _unitOfWork.BatchProcessLogs.GetAllAsync();
-            // SỬA TÊN BIẾN: BatchID (theo SQL) thay vì BatchId
-            var batchLogs = allLogs.Where(x => x.BatchId == batchId).OrderBy(x => x.StartTime);
-            return Ok(new { data = batchLogs.ToList(), success = true, message = "Success" });
+            var batchLogs = await _unitOfWork.BatchProcessLogs
+                .Query()
+                .Where(x => x.BatchId == batchId)
+                .OrderBy(x => x.StartTime)
+                .ToListAsync();
+            return Ok(new { data = batchLogs, success = true, message = "Success" });
         }
 
         // 2. Ghi nhận một bước công việc

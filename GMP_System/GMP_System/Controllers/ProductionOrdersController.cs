@@ -1,6 +1,7 @@
 using GMP_System.Entities;
 using GMP_System.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace GMP_System.Controllers
 {
@@ -15,66 +16,120 @@ namespace GMP_System.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        // 1. Lấy danh sách lệnh sản xuất
+        // GET: api/production-orders
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var orders = await _unitOfWork.ProductionOrders.GetAllAsync();
-            // Wrap in PaginatedResponse format expected by frontend
-            return Ok(new { data = orders, totalCount = orders.Count(), success = true, message = "Success" });
+            var orders = await _unitOfWork.ProductionOrders
+                .Query()
+                .Include(o => o.Recipe)
+                    .ThenInclude(r => r!.Material)
+                .Include(o => o.CreatedByNavigation)
+                .ToListAsync();
+
+            return Ok(new { data = orders, totalCount = orders.Count, success = true, message = "Success" });
         }
 
-        // 1.5 Lấy danh sách Mẻ thuộc Lệnh sản xuất
+        // GET: api/production-orders/5
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var order = await _unitOfWork.ProductionOrders
+                .Query()
+                .Include(o => o.Recipe)
+                    .ThenInclude(r => r!.Material)
+                .Include(o => o.ProductionBatches)
+                .Include(o => o.CreatedByNavigation)
+                .FirstOrDefaultAsync(o => o.OrderId == id);
+
+            if (order == null)
+                return NotFound(new { success = false, message = $"Không tìm thấy lệnh sản xuất ID={id}" });
+
+            return Ok(new { data = order, success = true, message = "Success" });
+        }
+
+        // GET: api/production-orders/{orderId}/batches
         [HttpGet("{orderId}/batches")]
         public async Task<IActionResult> GetBatchesByOrder(int orderId)
         {
-            // Tạm thời lấy tất cả và filter, nếu Repository chưa có hàm GetBatchesByOrderAsync
-            var allBatches = await _unitOfWork.ProductionBatches.GetAllAsync();
-            var batches = allBatches.Where(b => b.OrderId == orderId).ToList();
-            return Ok(new { data = batches, success = true, message = "Success" }); // Wrap by ApiResponse format if needed, but the original returns raw array according to other APIs
+            var batches = await _unitOfWork.ProductionBatches
+                .Query()
+                .Where(b => b.OrderId == orderId)
+                .Include(b => b.MaterialUsages)
+                    .ThenInclude(u => u.InventoryLot)
+                        .ThenInclude(l => l!.Material)
+                .ToListAsync();
+
+            return Ok(new { data = batches, success = true, message = "Success" });
         }
 
-        // 2. Tạo Lệnh Sản Xuất Mới
+        // POST: api/production-orders
         [HttpPost]
         public async Task<IActionResult> Create(ProductionOrder order)
         {
-            // SỬA LỖI 1: Kiểm tra RecipeId (int?) trước khi dùng
             if (order.RecipeId == null)
-            {
-                return BadRequest("Lỗi: Vui lòng nhập ID công thức (RecipeId).");
-            }
-
-            // Dùng .Value để lấy giá trị int thật sự
-            var recipe = await _unitOfWork.Recipes.GetByIdAsync(order.RecipeId.Value);
+                return BadRequest(new { success = false, message = "Vui lòng chọn công thức (RecipeId)." });
 
             if (order.PlannedQuantity <= 0)
-                return BadRequest("Số lượng kế hoạch phải lớn hơn 0");
+                return BadRequest(new { success = false, message = "Số lượng kế hoạch phải lớn hơn 0." });
 
+            var recipe = await _unitOfWork.Recipes.GetByIdAsync(order.RecipeId.Value);
             if (recipe == null)
-            {
-                return BadRequest($"Lỗi: Không tìm thấy Công thức có ID = {order.RecipeId}");
-            }
+                return BadRequest(new { success = false, message = $"Không tìm thấy công thức ID={order.RecipeId}" });
 
-            // Tự động điền dữ liệu
+            if (recipe.Status != "Approved")
+                return BadRequest(new { success = false, message = "Chỉ có thể tạo lệnh sản xuất từ công thức đã được duyệt." });
+
             order.Status = "Draft";
             order.CreatedAt = DateTime.Now;
-
-            // SỬA LỖI 2: Xử lý ngày tháng (DateTime?)
             if (!order.StartDate.HasValue) order.StartDate = DateTime.Now;
+            if (!order.EndDate.HasValue) order.EndDate = order.StartDate!.Value.AddDays(2);
 
-            // Phải dùng .Value thì mới cộng ngày được
-            if (!order.EndDate.HasValue) order.EndDate = order.StartDate.Value.AddDays(2);
+            // Lấy UserId từ JWT để gán CreatedBy
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdClaim, out var userId)) order.CreatedBy = userId;
 
-            // Lưu vào DB
             await _unitOfWork.ProductionOrders.AddAsync(order);
             await _unitOfWork.CompleteAsync();
 
-            return Ok(new
-            {
-                Message = "Tạo lệnh sản xuất thành công!",
-                ProductionOrderId = order.OrderId, // Đảm bảo tên biến đúng với Entity
-                Status = order.Status
-            });
+            return Ok(new { success = true, message = "Tạo lệnh sản xuất thành công!", data = new { orderId = order.OrderId, status = order.Status } });
+        }
+
+        // PUT: api/production-orders/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, ProductionOrder order)
+        {
+            var existing = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
+            if (existing == null)
+                return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
+
+            if (existing.Status != "Draft")
+                return BadRequest(new { success = false, message = "Chỉ có thể chỉnh sửa lệnh ở trạng thái Draft." });
+
+            existing.PlannedQuantity = order.PlannedQuantity;
+            existing.StartDate = order.StartDate;
+            existing.EndDate = order.EndDate;
+
+            _unitOfWork.ProductionOrders.Update(existing);
+            await _unitOfWork.CompleteAsync();
+
+            return Ok(new { success = true, message = "Cập nhật thành công!", orderId = id });
+        }
+
+        // DELETE: api/production-orders/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var order = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
+            if (order == null)
+                return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
+
+            if (order.Status != "Draft")
+                return BadRequest(new { success = false, message = "Chỉ có thể xóa lệnh ở trạng thái Draft." });
+
+            _unitOfWork.ProductionOrders.Remove(order);
+            await _unitOfWork.CompleteAsync();
+            return Ok(new { success = true, message = "Đã xóa lệnh sản xuất." });
         }
     }
 }

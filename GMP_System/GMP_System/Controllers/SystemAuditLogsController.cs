@@ -1,5 +1,6 @@
 using GMP_System.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace GMP_System.Controllers
 {
@@ -14,23 +15,38 @@ namespace GMP_System.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        // GET: api/audit-logs?tableName=Recipe&recordId=1
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(
+            [FromQuery] string? tableName,
+            [FromQuery] string? recordId)
         {
-            var logs = await _unitOfWork.SystemAuditLogs.GetAllAsync();
-            // Sắp xếp mới nhất lên đầu
-            return Ok(logs.OrderByDescending(x => x.ChangedDate));
+            IQueryable<GMP_System.Entities.SystemAuditLog> query = _unitOfWork.SystemAuditLogs
+                .Query()
+                .Include(l => l.ChangedByNavigation);
+
+            if (!string.IsNullOrEmpty(tableName))
+                query = query.Where(l => l.TableName == tableName);
+
+            if (!string.IsNullOrEmpty(recordId))
+                query = query.Where(l => l.RecordId == recordId);
+
+            var logs = await query.OrderByDescending(l => l.ChangedDate).ToListAsync();
+            return Ok(new { data = logs, success = true, message = "Success" });
         }
 
-        // Xem lịch sử của 1 bản ghi cụ thể (VD: Xem lịch sử sửa Công thức số 1)
+        // GET: api/audit-logs/{tableName}/{recordId}
         [HttpGet("{tableName}/{recordId}")]
         public async Task<IActionResult> GetHistory(string tableName, string recordId)
         {
-            var allLogs = await _unitOfWork.SystemAuditLogs.GetAllAsync();
-            var history = allLogs
-                .Where(x => x.TableName == tableName && x.RecordId == recordId)
-                .OrderByDescending(x => x.ChangedDate);
-            return Ok(history);
+            var history = await _unitOfWork.SystemAuditLogs
+                .Query()
+                .Include(l => l.ChangedByNavigation)
+                .Where(l => l.TableName == tableName && l.RecordId == recordId)
+                .OrderByDescending(l => l.ChangedDate)
+                .ToListAsync();
+
+            return Ok(new { data = history, success = true, message = "Success" });
         }
     }
 }

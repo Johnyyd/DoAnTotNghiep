@@ -64,8 +64,14 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
       "notes": _noteCtrl.text,
     };
     
-    // Giả lập Dữ liệu: Lô NLC 3 (BatchId=1), Bước Trộn Khô (StepId=3)
-    bool success = await ApiService.submitStepData(1, 3, 'USR-OP-001', params);
+    // Ghi nhận: Lô mặc định BatchId=1, Bước Trộn Khô StepId=3
+    bool success = await ApiService.submitStepData(
+      batchId: 1,
+      stepId: 3,
+      resultStatus: 'Passed',
+      parametersData: params,
+      notes: _noteCtrl.text,
+    );
     setState(() => _isSaving = false);
     
     if (!mounted) return;

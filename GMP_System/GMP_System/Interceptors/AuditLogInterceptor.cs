@@ -1,12 +1,27 @@
 using GMP_System.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace GMP_System.Interceptors
 {
     public class AuditLogInterceptor : SaveChangesInterceptor
     {
+        private readonly IHttpContextAccessor? _httpContextAccessor;
+
+        // Constructor cho DI (khi được inject qua IHttpContextAccessor)
+        public AuditLogInterceptor(IHttpContextAccessor httpContextAccessor)
+        {
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        // Constructor mặc định (dùng khi khởi tạo trực tiếp — fallback)
+        public AuditLogInterceptor()
+        {
+            _httpContextAccessor = null;
+        }
+
         public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
             DbContextEventData eventData,
             InterceptionResult<int> result,
@@ -15,41 +30,46 @@ namespace GMP_System.Interceptors
             var context = eventData.Context;
             if (context == null) return await base.SavingChangesAsync(eventData, result, cancellationToken);
 
+            // Lấy UserId từ JWT Claims (nếu có HTTP context)
+            int? currentUserId = null;
+            var userIdClaim = _httpContextAccessor?.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdClaim, out var parsedId))
+                currentUserId = parsedId;
+
             var auditEntries = new List<SystemAuditLog>();
 
-            // 1. Duyệt qua tất cả các thay đổi đang chờ lưu
             foreach (var entry in context.ChangeTracker.Entries())
             {
-                // Bỏ qua chính bảng AuditLog để tránh vòng lặp vô tận
                 if (entry.Entity is SystemAuditLog || entry.State == EntityState.Detached || entry.State == EntityState.Unchanged)
                     continue;
 
                 string actionName = entry.State switch
                 {
-                    EntityState.Added => "INSERT",    // Added -> INSERT
-                    EntityState.Modified => "UPDATE", // Modified -> UPDATE
-                    EntityState.Deleted => "DELETE",  // Deleted -> DELETE
+                    EntityState.Added => "INSERT",
+                    EntityState.Modified => "UPDATE",
+                    EntityState.Deleted => "DELETE",
                     _ => "UNKNOWN"
                 };
 
                 var auditEntry = new SystemAuditLog
                 {
-                    TableName = entry.Entity.GetType().Name, // Tên bảng (VD: Material)
-                    Action = actionName, // Added, Modified, Deleted
+                    TableName = entry.Entity.GetType().Name,
+                    Action = actionName,
                     ChangedDate = DateTime.Now,
-                    ChangedBy = 1 // Tạm thời để cứng là Admin (Sau này lấy từ Token User)
+                    ChangedBy = currentUserId // null nếu không có token (seed time)
                 };
 
                 var oldValues = new Dictionary<string, object?>();
                 var newValues = new Dictionary<string, object?>();
 
-                // 2. Lấy giá trị từng cột
                 foreach (var property in entry.Properties)
                 {
                     string propertyName = property.Metadata.Name;
-                    if (property.IsTemporary) continue; // Bỏ qua các giá trị tạm
+                    if (property.IsTemporary) continue;
 
-                    // Lấy Primary Key (RecordID)
+                    // Không log PasswordHash vào audit trail
+                    if (propertyName == "PasswordHash") continue;
+
                     if (property.Metadata.IsPrimaryKey())
                     {
                         auditEntry.RecordId = property.CurrentValue?.ToString();
@@ -60,11 +80,9 @@ namespace GMP_System.Interceptors
                         case EntityState.Added:
                             newValues[propertyName] = property.CurrentValue;
                             break;
-
                         case EntityState.Deleted:
                             oldValues[propertyName] = property.OriginalValue;
                             break;
-
                         case EntityState.Modified:
                             if (property.IsModified)
                             {
@@ -75,15 +93,12 @@ namespace GMP_System.Interceptors
                     }
                 }
 
-                // 3. Chuyển sang JSON để lưu
-                // Chỉ lưu nếu có thay đổi
                 if (oldValues.Count > 0) auditEntry.OldValue = JsonSerializer.Serialize(oldValues);
                 if (newValues.Count > 0) auditEntry.NewValue = JsonSerializer.Serialize(newValues);
 
                 auditEntries.Add(auditEntry);
             }
 
-            // 4. Chèn Audit Log vào Database (Ngay trong Transaction hiện tại)
             if (auditEntries.Count > 0)
             {
                 await context.AddRangeAsync(auditEntries);

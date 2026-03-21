@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace GMP_System.Entities;
@@ -10,6 +10,9 @@ public partial class AppUser
     public string Username { get; set; } = null!;
 
     public string FullName { get; set; } = null!;
+
+    public string? PasswordHash { get; set; }
+
 
     public string? Role { get; set; }
 

@@ -1,64 +1,180 @@
 using GMP_System.Entities;
 using GMP_System.Interfaces;
 using GMP_System.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        // Ngăn chặn lỗi vòng lặp (Recipe -> BOM -> Recipe...)
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        options.JsonSerializerOptions.PropertyNamingPolicy = null;
-    });
+// ============================================================
+// 1. CONTROLLERS + JSON
+// ============================================================
+builder.Services.AddControllers(options =>
+{
+    // Áp dụng [Authorize] cho toàn bộ API — chỉ AllowAnonymous mới bypass được
+    options.Filters.Add(new AuthorizeFilter());
+})
+.AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.JsonSerializerOptions.PropertyNamingPolicy = null;
+});
 
-// CORS policy - allow frontend to access API
+// ============================================================
+// 2. JWT AUTHENTICATION
+// ============================================================
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? "GMP_WHO_Default_Secret_Key_Minimum_32_Characters_Long_123456789";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "gmp-api";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "gmp-frontend";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ClockSkew = TimeSpan.Zero
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnChallenge = context =>
+        {
+            context.HandleResponse();
+            context.Response.StatusCode = 401;
+            context.Response.ContentType = "application/json";
+            return context.Response.WriteAsync(
+                "{\"success\":false,\"message\":\"Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.\"}");
+        },
+        OnForbidden = context =>
+        {
+            context.Response.StatusCode = 403;
+            context.Response.ContentType = "application/json";
+            return context.Response.WriteAsync(
+                "{\"success\":false,\"message\":\"Bạn không có quyền truy cập chức năng này.\"}");
+        }
+    };
+});
+
+builder.Services.AddAuthorization();
+
+// ============================================================
+// 3. CORS — cho phép frontend và mobile
+// ============================================================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
         policy =>
         {
             policy.WithOrigins(
-                    "http://localhost:8080",
-                    "http://100.89.137.3:8080"
+                    "http://localhost:8080",   // Frontend DEV
+                    "http://localhost:8081",   // Mobile DEV
+                    "http://100.89.137.3:8080", // Frontend prod (Tailscale)
+                    "http://100.89.137.3:8081"  // Mobile prod (Tailscale)
                 )
                 .AllowAnyMethod()
                 .AllowAnyHeader();
         });
 });
 
-// 1. Đăng ký Database Context
+// ============================================================
+// 4. DATABASE + UnitOfWork
+// ============================================================
+builder.Services.AddScoped<GMP_System.Interceptors.AuditLogInterceptor>();
+
 builder.Services.AddDbContext<GmpContext>((sp, options) =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    options.AddInterceptors(new GMP_System.Interceptors.AuditLogInterceptor());
+    var interceptor = sp.GetRequiredService<GMP_System.Interceptors.AuditLogInterceptor>();
+    options.AddInterceptors(interceptor);
     options.UseSqlServer(connectionString);
 });
 
-// 2. Đăng ký UnitOfWork
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// IHttpContextAccessor — cho AuditLogInterceptor lấy user từ JWT
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-// Initialize database (Code First)
+// ============================================================
+// 5. SEED DATABASE
+// ============================================================
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<GmpContext>();
     db.Database.EnsureCreated();
 
-    // Seed data if empty
+    // ----- SEED USERS (nếu chưa có) -----
+    if (!db.AppUsers.Any())
+    {
+        db.AppUsers.AddRange(
+            new GMP_System.Entities.AppUser
+            {
+                Username = "admin",
+                FullName = "Quản Trị Viên",
+                Role = "Admin",
+                IsActive = true,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
+                CreatedAt = DateTime.Now
+            },
+            new GMP_System.Entities.AppUser
+            {
+                Username = "qc01",
+                FullName = "Nguyễn Kiểm Soát",
+                Role = "QualityControl",
+                IsActive = true,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Qc@123456"),
+                CreatedAt = DateTime.Now
+            },
+            new GMP_System.Entities.AppUser
+            {
+                Username = "op01",
+                FullName = "Trần Vận Hành",
+                Role = "Operator",
+                IsActive = true,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Op@123456"),
+                CreatedAt = DateTime.Now
+            }
+        );
+        db.SaveChanges();
+    }
+    else
+    {
+        // Cập nhật PasswordHash cho user đã có mà chưa có hash
+        var usersWithoutHash = db.AppUsers.Where(u => u.PasswordHash == null).ToList();
+        foreach (var u in usersWithoutHash)
+        {
+            u.PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123");
+        }
+        if (usersWithoutHash.Any()) db.SaveChanges();
+    }
+
+    // ----- SEED MATERIALS DATA (nếu chưa có) -----
     if (!db.Materials.Any())
     {
-        var unit1 = new UnitOfMeasure { UomName = "Kilogram", Description = "Kilogram" };
-        var unit2 = new UnitOfMeasure { UomName = "Gram", Description = "Gram" };
-        var unit3 = new UnitOfMeasure { UomName = "Tablet", Description = "Tablet" };
+        var unit1 = new GMP_System.Entities.UnitOfMeasure { UomName = "Kilogram", Description = "Kilogram" };
+        var unit2 = new GMP_System.Entities.UnitOfMeasure { UomName = "Gram", Description = "Gram" };
+        var unit3 = new GMP_System.Entities.UnitOfMeasure { UomName = "Tablet", Description = "Tablet" };
         db.UnitOfMeasures.AddRange(unit1, unit2, unit3);
         db.SaveChanges();
 
-        var material1 = new Material
+        var material1 = new GMP_System.Entities.Material
         {
             MaterialCode = "MAT-001",
             MaterialName = "Paracetamol 500mg",
@@ -68,7 +184,7 @@ using (var scope = app.Services.CreateScope())
             Description = "Active ingredient for pain relief",
             CreatedAt = DateTime.Now
         };
-        var material2 = new Material
+        var material2 = new GMP_System.Entities.Material
         {
             MaterialCode = "MAT-002",
             MaterialName = "Microcrystalline Cellulose",
@@ -78,7 +194,7 @@ using (var scope = app.Services.CreateScope())
             Description = "Excipient binder",
             CreatedAt = DateTime.Now
         };
-        var material3 = new Material
+        var material3 = new GMP_System.Entities.Material
         {
             MaterialCode = "MAT-003",
             MaterialName = "Para Film",
@@ -91,7 +207,7 @@ using (var scope = app.Services.CreateScope())
         db.Materials.AddRange(material1, material2, material3);
         db.SaveChanges();
 
-        var recipe1 = new Recipe
+        var recipe1 = new GMP_System.Entities.Recipe
         {
             MaterialId = material1.MaterialId,
             BatchSize = 1000,
@@ -104,15 +220,14 @@ using (var scope = app.Services.CreateScope())
         db.Recipes.Add(recipe1);
         db.SaveChanges();
 
-        // Add recipe BOM
-        db.RecipeBoms.Add(new RecipeBom
+        db.RecipeBoms.Add(new GMP_System.Entities.RecipeBom
         {
             RecipeId = recipe1.RecipeId,
             MaterialId = material2.MaterialId,
             Quantity = 0.5m,
             UomId = unit1.UomId
         });
-        db.RecipeBoms.Add(new RecipeBom
+        db.RecipeBoms.Add(new GMP_System.Entities.RecipeBom
         {
             RecipeId = recipe1.RecipeId,
             MaterialId = material3.MaterialId,
@@ -120,8 +235,7 @@ using (var scope = app.Services.CreateScope())
             UomId = unit2.UomId
         });
 
-        // Seed Inventory Lots (for materials 2 and 3)
-        var lot1 = new InventoryLot
+        var lot1 = new GMP_System.Entities.InventoryLot
         {
             MaterialId = material2.MaterialId,
             LotNumber = "LOT-MCC-001",
@@ -130,7 +244,7 @@ using (var scope = app.Services.CreateScope())
             ExpiryDate = DateTime.Now.AddMonths(11),
             Qcstatus = "Released"
         };
-        var lot2 = new InventoryLot
+        var lot2 = new GMP_System.Entities.InventoryLot
         {
             MaterialId = material3.MaterialId,
             LotNumber = "LOT-FILM-001",
@@ -142,8 +256,7 @@ using (var scope = app.Services.CreateScope())
         db.InventoryLots.AddRange(lot1, lot2);
         db.SaveChanges();
 
-        // Seed Production Order
-        var order1 = new ProductionOrder
+        var order1 = new GMP_System.Entities.ProductionOrder
         {
             OrderCode = "PO-001",
             RecipeId = recipe1.RecipeId,
@@ -157,8 +270,7 @@ using (var scope = app.Services.CreateScope())
         db.ProductionOrders.Add(order1);
         db.SaveChanges();
 
-        // Seed Production Batch
-        var batch1 = new ProductionBatch
+        var batch1 = new GMP_System.Entities.ProductionBatch
         {
             OrderId = order1.OrderId,
             BatchNumber = "BATCH-PCM-001",
@@ -169,8 +281,7 @@ using (var scope = app.Services.CreateScope())
         db.ProductionBatches.Add(batch1);
         db.SaveChanges();
 
-        // Seed Material Usages linking batch and lots
-        db.MaterialUsages.Add(new MaterialUsage
+        db.MaterialUsages.Add(new GMP_System.Entities.MaterialUsage
         {
             BatchId = batch1.BatchId,
             InventoryLotId = lot1.LotId,
@@ -178,7 +289,7 @@ using (var scope = app.Services.CreateScope())
             Timestamp = DateTime.Now.AddDays(-7),
             Note = "Used in batch BATCH-PCM-001"
         });
-        db.MaterialUsages.Add(new MaterialUsage
+        db.MaterialUsages.Add(new GMP_System.Entities.MaterialUsage
         {
             BatchId = batch1.BatchId,
             InventoryLotId = lot2.LotId,
@@ -191,15 +302,15 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    // Simple health check endpoint
-    app.MapGet("/health", () => Results.Json(new { status = "healthy", timestamp = DateTime.UtcNow }));
-}
+// ============================================================
+// 6. MIDDLEWARE PIPELINE
+// ============================================================
+app.MapGet("/health", () => Results.Json(new { status = "healthy", timestamp = DateTime.UtcNow }))
+   .AllowAnonymous();
 
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
+app.UseAuthentication();   // PHẢI trước UseAuthorization
 app.UseAuthorization();
 app.MapControllers();
 

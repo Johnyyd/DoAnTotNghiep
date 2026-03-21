@@ -42,16 +42,21 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    console.error('API Error:', error);
-    return Promise.reject(error.response?.data || error.message);
+    if (error.response?.status === 401) {
+      // Token expired or invalid — clear storage
+      localStorage.removeItem('gmp_token');
+      localStorage.removeItem('gmp_user');
+    }
+    console.error('API Error:', error.response?.data || error.message);
+    // Preserve the full error so AuthContext can read error.response.data.message
+    return Promise.reject(error);
   }
 );
 
 // ============== AUTH & USERS ==============
 export const authApi = {
-  login: (credentials: { email: string; password: string }) =>
+  login: (credentials: { username: string; password: string }) =>
     api.post<ApiResponse<{ user: User; token: string }>>('/auth/login', credentials),
-  logout: () => api.post<ApiResponse<null>>('/auth/logout'),
   me: () => api.get<ApiResponse<User>>('/auth/me'),
 };
 
@@ -128,35 +133,34 @@ export const productionOrdersApi = {
 
 // ============== PRODUCTION BATCHES ==============
 export const productionBatchesApi = {
+  getAll: () =>
+    api.get<ApiResponse<ProductionBatch[]>>('/production-batches'),
   getByOrder: (orderId: number) =>
     api.get<ApiResponse<ProductionBatch[]>>(`/production-orders/${orderId}/batches`),
+  getById: (id: number) =>
+    api.get<ApiResponse<ProductionBatch>>(`/production-batches/${id}`),
   create: (data: Partial<ProductionBatch>) =>
     api.post<ApiResponse<ProductionBatch>>('/production-batches', data),
-  start: (batchId: number, operatorId: number) =>
-    api.post<ApiResponse<ProductionBatch>>(`/production-batches/${batchId}/start`, { operatorId }),
-  complete: (batchId: number, signature?: string) =>
-    api.post<ApiResponse<ProductionBatch>>(`/production-batches/${batchId}/complete`, { signature }),
+  finish: (batchId: number) =>
+    api.post<ApiResponse<ProductionBatch>>(`/production-batches/${batchId}/finish`),
 
   getProcessLogs: (batchId: number) =>
-    api.get<ApiResponse<BatchProcessLog[]>>(`/production-batches/${batchId}/logs`),
+    api.get<ApiResponse<BatchProcessLog[]>>(`/batchprocesslogs/batch/${batchId}`),
 
-  logStep: (batchId: number, stepId: number, data: Partial<BatchProcessLog>) =>
-    api.post<ApiResponse<BatchProcessLog>>(`/production-batches/${batchId}/logs`, {
-      ...data,
-      stepId,
-    }),
-
-  completeStep: (logId: number, qcResult: 'Pass' | 'Fail', qcSignature?: string) =>
-    api.post<ApiResponse<BatchProcessLog>>(`/batch-process-logs/${logId}/complete`, {
-      qcResult,
-      qcSignature,
-    }),
+  logStep: (data: Partial<BatchProcessLog>) =>
+    api.post<ApiResponse<BatchProcessLog>>('/batchprocesslogs', data),
 };
 
 // ============== INVENTORY & TRACEABILITY ==============
 export const inventoryApi = {
-  getLots: (params?: { materialId?: number; batchNumber?: string }) =>
+  getAll: () =>
+    api.get<ApiResponse<any[]>>('/inventory-lots'),
+  getLots: (params?: { materialId?: number; lotNumber?: string }) =>
     api.get<ApiResponse<any[]>>('/inventory-lots', { params }),
+  receive: (data: any) =>
+    api.post<ApiResponse<any>>('/inventory-lots', data),
+  updateQc: (lotId: number, status: string) =>
+    api.post<ApiResponse<any>>(`/inventory-lots/${lotId}/qc`, { status }),
 
   // Traceability: track finished goods back to raw materials
   traceBackward: (finishedGoodBatchNumber: string) =>

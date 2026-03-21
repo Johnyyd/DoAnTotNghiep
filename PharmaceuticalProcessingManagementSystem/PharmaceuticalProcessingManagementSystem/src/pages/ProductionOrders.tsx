@@ -16,19 +16,24 @@ export default function ProductionOrders() {
   const ordersList = Array.isArray(ordersData) ? ordersData : (ordersData as any)?.data || [];
 
   const normalizedOrders: ProductionOrder[] = ordersList.map((o: any) => ({
-    orderId: o.OrderId,
-    orderCode: o.OrderCode,
-    recipeId: o.RecipeId,
-    plannedQuantity: o.PlannedQuantity,
-    actualQuantity: o.ActualQuantity,
-    status: o.Status,
-    plannedStartDate: o.PlannedStartDate,
-    plannedEndDate: o.PlannedEndDate,
-    actualStartDate: o.ActualStartDate,
-    actualEndDate: o.ActualEndDate,
-    approvedBy: o.ApprovedBy,
-    approvedDate: o.ApprovedDate,
-    recipe: o.Recipe,
+    orderId: o.orderId ?? o.OrderId,
+    orderCode: o.orderCode ?? o.OrderCode,
+    recipeId: o.recipeId ?? o.RecipeId,
+    productId: o.productId ?? o.recipeId,
+    productName: o.recipe?.material?.materialName ?? o.productName ?? `Công thức #${o.recipeId ?? o.RecipeId}`,
+    recipeName: o.recipe?.material?.materialName ?? o.recipeName,
+    recipeCode: o.recipe?.recipeCode ?? o.recipeCode,
+    plannedQuantity: o.plannedQuantity ?? o.PlannedQuantity,
+    actualQuantity: o.actualQuantity ?? o.ActualQuantity,
+    status: o.status ?? o.Status,
+    plannedStartDate: o.startDate ?? o.plannedStartDate ?? o.StartDate,
+    plannedEndDate: o.endDate ?? o.plannedEndDate ?? o.EndDate,
+    actualStartDate: o.actualStartDate,
+    actualEndDate: o.actualEndDate,
+    approvedBy: o.approvedBy ?? o.ApprovedBy,
+    approvedDate: o.approvedDate ?? o.ApprovedDate,
+    createdBy: o.createdBy ?? o.CreatedBy,
+    createdAt: o.createdAt ?? o.CreatedAt,
   }));
 
   const filteredOrders = normalizedOrders.filter((order) => {
@@ -43,10 +48,11 @@ export default function ProductionOrders() {
         return { label: 'Nháp', badgeClass: 'bg-neutral-100 text-neutral-700', icon: Clock };
       case 'Approved':
         return { label: 'Đã duyệt', badgeClass: 'bg-blue-100 text-blue-700', icon: CheckCircle };
-      case 'InProcess':
+      case 'In-Process':
         return { label: 'Đang sản xuất', badgeClass: 'bg-purple-100 text-purple-700', icon: AlertCircle };
-      case 'Hold':
+      case 'On-Hold':
         return { label: 'Tạm dừng', badgeClass: 'bg-orange-100 text-orange-700', icon: Clock };
+
       case 'Completed':
         return { label: 'Hoàn thành', badgeClass: 'bg-green-100 text-green-700', icon: CheckCircle };
       default:
@@ -96,8 +102,8 @@ export default function ProductionOrders() {
             <option value="all">Tất cả trạng thái</option>
             <option value="Draft">Nháp</option>
             <option value="Approved">Đã duyệt</option>
-            <option value="InProcess">Đang sản xuất</option>
-            <option value="Hold">Tạm dừng</option>
+            <option value="In-Process">Đang sản xuất</option>
+            <option value="On-Hold">Tạm dừng</option>
             <option value="Completed">Hoàn thành</option>
           </select>
         </div>

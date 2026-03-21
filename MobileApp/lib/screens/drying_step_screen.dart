@@ -57,8 +57,13 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       "slSauSay": _slSauCtrl.text,
     };
     
-    // Giả lập Dữ liệu: Lô NLC 3 (BatchId=1), Bước Sấy (StepId=2)
-    bool success = await ApiService.submitStepData(1, 2, 'USR-OP-001', params);
+    // Ghi nhận: Lô mặc định BatchId=1, Bước Sấy StepId=2
+    bool success = await ApiService.submitStepData(
+      batchId: 1,
+      stepId: 2,
+      resultStatus: 'Passed',
+      parametersData: params,
+    );
     setState(() => _isSaving = false);
     
     if (!mounted) return;

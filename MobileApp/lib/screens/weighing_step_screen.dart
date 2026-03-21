@@ -44,8 +44,13 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
       "notes": _noteCtrl.text,
     };
     
-    // Test data: Batch = 1, Step = 1
-    bool success = await ApiService.submitStepData(1, 1, 'USR-OP-001', params);
+    // Ghi nhận: Lô mặc định BatchId=1, Bước Cân StepId=1
+    bool success = await ApiService.submitStepData(
+      batchId: 1,
+      stepId: 1,
+      resultStatus: 'Passed',
+      parametersData: params,
+    );
     setState(() => _isSaving = false);
     
     if (!mounted) return;
