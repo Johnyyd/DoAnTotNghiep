@@ -29,9 +29,13 @@ class ApiService {
     final url = Uri.parse('$baseUrl/auth/login');
     try {
       final response = await http.post(
-        url,
+        Uri.parse('$baseUrl/auth/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'username': username, 'password': password}),
+        body: jsonEncode({
+          'username': username,
+          'password': password,
+          'platform': 'Mobile',
+        }),
       );
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body) as Map<String, dynamic>;

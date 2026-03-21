@@ -41,6 +41,15 @@ namespace GMP_System.Controllers
             if (user.IsActive != true)
                 return Unauthorized(new { success = false, message = "Tài khoản đã bị khóa. Liên hệ quản trị viên." });
 
+            // Kiểm tra phân quyền truy cập nền tảng
+            if (request.Platform?.Equals("Web", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                if (!user.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Unauthorized(new { success = false, message = "Tài khoản này chỉ được phép đăng nhập trên ứng dụng Mobile." });
+                }
+            }
+
             // Kiểm tra password hash
             if (string.IsNullOrEmpty(user.PasswordHash) || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 return Unauthorized(new { success = false, message = "Tên đăng nhập hoặc mật khẩu không đúng." });
@@ -131,5 +140,6 @@ namespace GMP_System.Controllers
     {
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public string? Platform { get; set; } // "Web" or "Mobile"
     }
 }

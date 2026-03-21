@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (username: string, password: string) => {
     setState(s => ({ ...s, isLoading: true }));
     try {
-      const response: any = await api.post('/auth/login', { username, password });
+      const response: any = await api.post('/auth/login', { username, password, platform: 'Web' });
       // Backend trả về: { success, data: { token, user } }
       const { token, user } = response.data ?? response;
 

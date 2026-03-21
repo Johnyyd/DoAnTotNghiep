@@ -112,8 +112,6 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-// ----- HEALTH CHECK ENDPOINT -----
-app.MapGet("/health", () => Results.Ok(new { status = "Healthy", timestamp = DateTime.UtcNow }));
 
 // ============================================================
 // 5. SEED DATABASE
@@ -134,57 +132,39 @@ using (var scope = app.Services.CreateScope())
 
     db.Database.EnsureCreated();
 
-    // ----- SEED USERS (nếu chưa có) -----
-    if (!db.AppUsers.Any())
+    // ----- ĐẢM BẢO CÁC USER MẶC ĐỊNH LUÔN TỒN TẠI -----
+    Console.WriteLine("----- CHECKING DEFAULT USERS -----");
+    
+    void EnsureUser(string username, string fullName, string role, string password)
     {
-        db.AppUsers.AddRange(
-            new GMP_System.Entities.AppUser
-            {
-                Username = "admin",
-                FullName = "Quản Trị Viên",
-                Role = "Admin",
-                IsActive = true,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
-                CreatedAt = DateTime.Now
-            },
-            new GMP_System.Entities.AppUser
-            {
-                Username = "qc01",
-                FullName = "Nguyễn Kiểm Soát",
-                Role = "QualityControl",
-                IsActive = true,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Qc@123456"),
-                CreatedAt = DateTime.Now
-            },
-            new GMP_System.Entities.AppUser
-            {
-                Username = "op01",
-                FullName = "Trần Vận Hành",
-                Role = "Operator",
-                IsActive = true,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Op@123456"),
-                CreatedAt = DateTime.Now
-            }
-        );
-        db.SaveChanges();
-    }
-    else
-    {
-        // Cập nhật PasswordHash cho user đã có mà chưa có hash
-        var usersWithoutHash = db.AppUsers.ToList().Where(u => string.IsNullOrEmpty(u.PasswordHash)).ToList();
-        foreach (var u in usersWithoutHash)
+        var user = db.AppUsers.FirstOrDefault(u => u.Username == username);
+        if (user == null)
         {
-            string defaultPass = u.Username.ToLower() switch 
+            db.AppUsers.Add(new GMP_System.Entities.AppUser
             {
-                "admin" => "Admin@123",
-                "qc01" => "Qc@123456",
-                "op01" => "Op@123456",
-                _ => "Gmp@123456"
-            };
-            u.PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPass);
+                Username = username,
+                FullName = fullName,
+                Role = role,
+                IsActive = true,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                CreatedAt = DateTime.Now
+            });
+            Console.WriteLine($"Added missing user: {username}");
         }
-        if (usersWithoutHash.Any()) db.SaveChanges();
+        else
+        {
+            // Reset password để đảm bảo khớp tài liệu
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
+            Console.WriteLine($"Reset password for user: {username}");
+        }
     }
+
+    EnsureUser("admin", "Quản trị viên", "Admin", "Admin@123");
+    EnsureUser("qc01", "Trần Kiểm Tra", "QA_QC", "Qc@123456");
+    EnsureUser("op01", "Nguyễn Công Nhân", "Operator", "Op@123456");
+
+    db.SaveChanges();
+    Console.WriteLine("----- SYSTEM SEEDING COMPLETE -----");
 
     // ----- SEED MATERIALS DATA (nếu chưa có) -----
     if (!db.Materials.Any())
