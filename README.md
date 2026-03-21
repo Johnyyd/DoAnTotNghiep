@@ -49,7 +49,7 @@ Draft → Approved → In-Process → Hold → Completed
 ## 🔧 Yêu Cầu Kỹ Thuật
 
 ### Ngôn Ngữ & Nền Tảng
-- **Frontend:** JavaScript, TypeScript
+- **Frontend:** React, TypeScript
 - **Backend:** C# (.NET Core / .NET 8)
 - **Mobile:** Flutter (Dart) - Hỗ trợ Web Tablet và App Android/iOS
 
