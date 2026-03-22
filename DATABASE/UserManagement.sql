@@ -1,21 +1,18 @@
--- File: UserManagement.sql
--- 1. B?ng Ng??i d�ng h? th?ng
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AppUsers]') AND type in (N'U'))
-BEGIN
-    CREATE TABLE AppUsers (
-        UserID INT PRIMARY KEY IDENTITY(1,1),
-        Username VARCHAR(50) NOT NULL UNIQUE,
-        FullName NVARCHAR(100) NOT NULL,
-        Role NVARCHAR(20) CHECK (Role IN ('Admin', 'QA_QC', 'ProductionManager', 'Operator', 'Storekeeper')),
-        PasswordHash NVARCHAR(MAX),
-        IsActive BIT DEFAULT 1,
-        CreatedAt DATETIME2 DEFAULT GETDATE()
-    );
+﻿-- ============================================================================
+-- 👤 MODULE: QUẢN LÝ NGƯỜI DÙNG (USER MANAGEMENT)
+-- 
+-- Quản lý tài khoản, vai trò (Roles) và thông tin cá nhân của nhân viên.
+-- Đảm bảo tính bảo mật và phân quyền trong nhà máy dược.
+-- ============================================================================
 
-    -- 2. Th�m d? li?u m?u
-    INSERT INTO AppUsers (Username, FullName, Role) VALUES ('admin', N'Qu?n tr? vi�n', 'Admin');
-    INSERT INTO AppUsers (Username, FullName, Role) VALUES ('truong_kho', N'Nguy?n V?n A', 'Storekeeper');
-    INSERT INTO AppUsers (Username, FullName, Role) VALUES ('qa_manager', N'Tr?n Th? B', 'QA_QC');
-    INSERT INTO AppUsers (Username, FullName, Role) VALUES ('system_bot', N'H? th?ng T? ??ng', 'Admin');
-END
+CREATE TABLE AppUsers (
+    UserId INT PRIMARY KEY IDENTITY(1,1),
+    Username VARCHAR(50) NOT NULL UNIQUE, -- Tên đăng nhập
+    FullName NVARCHAR(100) NOT NULL,      -- Họ tên đầy đủ nhân viên
+    Role NVARCHAR(50) NOT NULL,          -- Vai trò (Admin, QA_QC, Operator, ProductionManager)
+    IsActive BIT DEFAULT 1,               -- Trạng thái hoạt động (1: Đang làm, 0: Nghỉ việc)
+    PasswordHash NVARCHAR(MAX),          -- Mật khẩu mã hóa (BCrypt)
+    CreatedAt DATETIME2 DEFAULT GETDATE(),
+    LastLogin DATETIME2
+);
 GO
