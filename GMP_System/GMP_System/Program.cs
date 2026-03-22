@@ -118,29 +118,47 @@ var app = builder.Build();
 // ============================================================
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<GmpContext>();
+    // ----- RETRY LOGIC FOR DATABASE CONNECTION -----
+    int maxRetries = 10;
+    int delay = 5000;
+    for (int i = 0; i < maxRetries; i++)
+    {
+        try
+        {
+            var db = scope.ServiceProvider.GetRequiredService<GmpContext>();
+            
+            // ----- MANUAL MIGRATION: Đảm bảo có cột PasswordHash -----
+            db.Database.ExecuteSqlRaw(@"
+                IF NOT EXISTS (SELECT * FROM sys.columns 
+                               WHERE object_id = OBJECT_ID(N'[AppUsers]') 
+                               AND name = 'PasswordHash')
+                BEGIN
+                    ALTER TABLE AppUsers ADD PasswordHash NVARCHAR(MAX) NULL;
+                END
+            ");
 
-    // ----- MANUAL MIGRATION: Đảm bảo có cột PasswordHash -----
-    db.Database.ExecuteSqlRaw(@"
-        IF NOT EXISTS (SELECT * FROM sys.columns 
-                       WHERE object_id = OBJECT_ID(N'[AppUsers]') 
-                       AND name = 'PasswordHash')
-        BEGIN
-            ALTER TABLE AppUsers ADD PasswordHash NVARCHAR(MAX) NULL;
-        END
-    ");
+            db.Database.EnsureCreated();
+            break; // Success
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Database connection attempt {i + 1} failed: {ex.Message}");
+            if (i == maxRetries - 1) throw;
+            Thread.Sleep(delay);
+        }
+    }
 
-    db.Database.EnsureCreated();
+    var dbFinal = scope.ServiceProvider.GetRequiredService<GmpContext>();
 
     // ----- ĐẢM BẢO CÁC USER MẶC ĐỊNH LUÔN TỒN TẠI -----
     Console.WriteLine("----- CHECKING DEFAULT USERS -----");
     
     void EnsureUser(string username, string fullName, string role, string password)
     {
-        var user = db.AppUsers.FirstOrDefault(u => u.Username == username);
+        var user = dbFinal.AppUsers.FirstOrDefault(u => u.Username == username);
         if (user == null)
         {
-            db.AppUsers.Add(new GMP_System.Entities.AppUser
+            dbFinal.AppUsers.Add(new GMP_System.Entities.AppUser
             {
                 Username = username,
                 FullName = fullName,
@@ -163,17 +181,17 @@ using (var scope = app.Services.CreateScope())
     EnsureUser("qc01", "Trần Kiểm Tra", "QA_QC", "Qc@123456");
     EnsureUser("op01", "Nguyễn Công Nhân", "Operator", "Op@123456");
 
-    db.SaveChanges();
+    dbFinal.SaveChanges();
     Console.WriteLine("----- SYSTEM SEEDING COMPLETE -----");
 
     // ----- SEED MATERIALS DATA (nếu chưa có) -----
-    if (!db.Materials.Any())
+    if (!dbFinal.Materials.Any())
     {
         var unit1 = new GMP_System.Entities.UnitOfMeasure { UomName = "Kilogram", Description = "Kilogram" };
         var unit2 = new GMP_System.Entities.UnitOfMeasure { UomName = "Gram", Description = "Gram" };
         var unit3 = new GMP_System.Entities.UnitOfMeasure { UomName = "Tablet", Description = "Tablet" };
-        db.UnitOfMeasures.AddRange(unit1, unit2, unit3);
-        db.SaveChanges();
+        dbFinal.UnitOfMeasures.AddRange(unit1, unit2, unit3);
+        dbFinal.SaveChanges();
 
         var material1 = new GMP_System.Entities.Material
         {
@@ -205,8 +223,8 @@ using (var scope = app.Services.CreateScope())
             Description = "Packaging film for blister packs",
             CreatedAt = DateTime.Now
         };
-        db.Materials.AddRange(material1, material2, material3);
-        db.SaveChanges();
+        dbFinal.Materials.AddRange(material1, material2, material3);
+        dbFinal.SaveChanges();
 
         var recipe1 = new GMP_System.Entities.Recipe
         {
@@ -218,17 +236,17 @@ using (var scope = app.Services.CreateScope())
             EffectiveDate = DateTime.Now.AddDays(1),
             Note = "Initial draft"
         };
-        db.Recipes.Add(recipe1);
-        db.SaveChanges();
+        dbFinal.Recipes.Add(recipe1);
+        dbFinal.SaveChanges();
 
-        db.RecipeBoms.Add(new GMP_System.Entities.RecipeBom
+        dbFinal.RecipeBoms.Add(new GMP_System.Entities.RecipeBom
         {
             RecipeId = recipe1.RecipeId,
             MaterialId = material2.MaterialId,
             Quantity = 0.5m,
             UomId = unit1.UomId
         });
-        db.RecipeBoms.Add(new GMP_System.Entities.RecipeBom
+        dbFinal.RecipeBoms.Add(new GMP_System.Entities.RecipeBom
         {
             RecipeId = recipe1.RecipeId,
             MaterialId = material3.MaterialId,
@@ -254,8 +272,8 @@ using (var scope = app.Services.CreateScope())
             ExpiryDate = DateTime.Now.AddMonths(10),
             Qcstatus = "Released"
         };
-        db.InventoryLots.AddRange(lot1, lot2);
-        db.SaveChanges();
+        dbFinal.InventoryLots.AddRange(lot1, lot2);
+        dbFinal.SaveChanges();
 
         var order1 = new GMP_System.Entities.ProductionOrder
         {
@@ -268,8 +286,8 @@ using (var scope = app.Services.CreateScope())
             StartDate = DateTime.Now.AddDays(-7),
             EndDate = DateTime.Now.AddDays(-6)
         };
-        db.ProductionOrders.Add(order1);
-        db.SaveChanges();
+        dbFinal.ProductionOrders.Add(order1);
+        dbFinal.SaveChanges();
 
         var batch1 = new GMP_System.Entities.ProductionBatch
         {
@@ -279,10 +297,10 @@ using (var scope = app.Services.CreateScope())
             EndTime = DateTime.Now.AddDays(-6),
             Status = "Completed"
         };
-        db.ProductionBatches.Add(batch1);
-        db.SaveChanges();
+        dbFinal.ProductionBatches.Add(batch1);
+        dbFinal.SaveChanges();
 
-        db.MaterialUsages.Add(new GMP_System.Entities.MaterialUsage
+        dbFinal.MaterialUsages.Add(new GMP_System.Entities.MaterialUsage
         {
             BatchId = batch1.BatchId,
             InventoryLotId = lot1.LotId,
@@ -290,7 +308,7 @@ using (var scope = app.Services.CreateScope())
             Timestamp = DateTime.Now.AddDays(-7),
             Note = "Used in batch BATCH-PCM-001"
         });
-        db.MaterialUsages.Add(new GMP_System.Entities.MaterialUsage
+        dbFinal.MaterialUsages.Add(new GMP_System.Entities.MaterialUsage
         {
             BatchId = batch1.BatchId,
             InventoryLotId = lot2.LotId,
@@ -299,7 +317,7 @@ using (var scope = app.Services.CreateScope())
             Note = "Used in batch BATCH-PCM-001"
         });
 
-        db.SaveChanges();
+        dbFinal.SaveChanges();
     }
 }
 

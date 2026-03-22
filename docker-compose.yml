@@ -101,7 +101,7 @@ services: # Danh sách các services trong hệ thống
 # KHAI BÁO BIẾN THỂ GLOBAL
 networks:
   gmp-network: # Bộ định tuyến mạng LAN dùng chung cho 4 node kết nối 
-    external: true # Tự động móc các Node vào mảng nếu cấu hình bị ghi đè
+
 
 volumes:
   gmp-sqlserver-data: # Khởi tạo khối nhớ lưu trữ data thô cho mảng SQL Server

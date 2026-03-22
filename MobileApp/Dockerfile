@@ -16,7 +16,7 @@ COPY . .
 RUN flutter pub get
 
 # Build Flutter Web
-RUN flutter build web --release --no-source-maps --verbose
+RUN flutter build web --release --no-source-maps --dart-define=API_BASE_URL=/api --verbose
 
 # Stage 2: Production
 FROM nginx:alpine AS production

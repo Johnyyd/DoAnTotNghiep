@@ -7,10 +7,7 @@ import 'auth_service.dart';
 class ApiService {
   // Trong Docker Compose: frontend (8081) gọi backend qua proxy nginx → /api
   // Dev local: gọi thẳng port 5001
-  static const String baseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://localhost:5001/api',
-  );
+  static const String baseUrl = '/api';
 
   /// Headers mặc định kèm JWT token
   static Future<Map<String, String>> _headers() async {
