@@ -99,17 +99,17 @@ services: # Danh sách các services trong hệ thống
     build:
       context: ./MobileApp # Thư mục con của mã nguồn Flutter
       dockerfile: Dockerfile
-      target: build # Sử dụng bản thảo Build chứa Flutter SDK thay vì Nginx web server
+#      target: build # Sử dụng bản thảo Build chứa Flutter SDK thay vì Nginx web server
     container_name: gmp-mobile 
     networks:
       - gmp-network
     ports:
       - "8081:80" # Trực tuyến Web Server dành riêng cho app flutter hoạt động qua 8081
-    volumes:
-      - ./MobileApp:/app
-      - /app/.dart_tool # Cô lập kho nhớ tạm
-      - /app/build # Rẽ luồng nhánh tránh lưu build lên host vật lý
-    command: flutter run -d web-server --web-port 80 --web-hostname 0.0.0.0
+#    volumes:
+#      - ./MobileApp:/app
+#      - /app/.dart_tool # Cô lập kho nhớ tạm
+#      - /app/build # Rẽ luồng nhánh tránh lưu build lên host vật lý
+#    command: flutter run -d web-server --web-port 80 --web-hostname 0.0.0.0
     depends_on:
       - gmp-api # Xếp loại phụ thuộc đợi tải Backend đằng trước
     restart: unless-stopped

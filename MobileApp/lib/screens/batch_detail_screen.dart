@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'weighing_step_screen.dart';
+import 'mixing_step_screen.dart';
+import 'drying_step_screen.dart';
 
 /// [BatchDetailScreen] — Màn hình chi tiết một mẻ sản xuất.
 /// Hiển thị danh sách các bước công đoạn (process logs) từ API,

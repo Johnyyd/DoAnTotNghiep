@@ -4,13 +4,13 @@ import '../services/api_service.dart';
 
 /// Màn hình [MixingStepScreen] dành cho công đoạn trộn khô nguyên liệu.
 class MixingStepScreen extends StatefulWidget {
-  final int batchId;
-  final int stepId;
+  final int? batchId;
+  final int? stepId;
 
   const MixingStepScreen({
     super.key,
-    required this.batchId,
-    required this.stepId,
+    this.batchId,
+    this.stepId,
   });
 
   @override
@@ -51,11 +51,14 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
   }
 
   Future<void> _fetchData() async {
-    setState(() => _isLoading = true);
-    final batch = await ApiService.getBatchById(widget.batchId);
+    if (widget.batchId == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
+    final batch = await ApiService.getBatchById(widget.batchId!);
     if (mounted) {
       setState(() {
-        _bom = batch['order']?['recipe']?['recipeBoms'] ?? [];
+        _bom = batch?['order']?['recipe']?['recipeBoms'] ?? [];
         _isLoading = false;
       });
     }
@@ -88,9 +91,11 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
       "notes": _noteCtrl.text,
     };
     
+    if (widget.batchId == null || widget.stepId == null) return;
+
     bool success = await ApiService.submitStepData(
-      batchId: widget.batchId,
-      stepId: widget.stepId,
+      batchId: widget.batchId!,
+      stepId: widget.stepId!,
       resultStatus: 'Passed',
       parametersData: params,
       notes: _noteCtrl.text,

@@ -5,13 +5,13 @@ import '../services/api_service.dart';
 
 /// Màn hình [WeighingStepScreen] hiển thị giao diện cho công đoạn cân nguyên liệu.
 class WeighingStepScreen extends StatefulWidget {
-  final int batchId;
-  final int stepId;
+  final int? batchId;
+  final int? stepId;
 
   const WeighingStepScreen({
     super.key,
-    required this.batchId,
-    required this.stepId,
+    this.batchId,
+    this.stepId,
   });
 
   @override
@@ -40,11 +40,14 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
   }
 
   Future<void> _fetchData() async {
-    setState(() => _isLoading = true);
-    final batch = await ApiService.getBatchById(widget.batchId);
+    if (widget.batchId == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
+    final batch = await ApiService.getBatchById(widget.batchId!);
     if (mounted) {
       setState(() {
-        _bom = batch['order']?['recipe']?['recipeBoms'] ?? [];
+        _bom = batch?['order']?['recipe']?['recipeBoms'] ?? [];
         _isLoading = false;
       });
     }
@@ -70,9 +73,11 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
       "notes": _noteCtrl.text,
     };
     
+    if (widget.batchId == null || widget.stepId == null) return;
+
     bool success = await ApiService.submitStepData(
-      batchId: widget.batchId,
-      stepId: widget.stepId,
+      batchId: widget.batchId!,
+      stepId: widget.stepId!,
       resultStatus: 'Passed',
       parametersData: params,
     );

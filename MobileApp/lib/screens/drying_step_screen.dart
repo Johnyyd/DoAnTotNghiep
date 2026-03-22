@@ -4,14 +4,14 @@ import '../services/api_service.dart';
 
 /// Màn hình [DryingStepScreen] quản lý công đoạn sấy nguyên liệu.
 class DryingStepScreen extends StatefulWidget {
-  final int batchId;
-  final int stepId;
+  final int? batchId;
+  final int? stepId;
   final String stepName;
 
   const DryingStepScreen({
     super.key, 
-    required this.batchId,
-    required this.stepId,
+    this.batchId,
+    this.stepId,
     required this.stepName,
   });
 
@@ -65,9 +65,11 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       "slSauSay": _slSauCtrl.text,
     };
     
+    if (widget.batchId == null || widget.stepId == null) return;
+
     bool success = await ApiService.submitStepData(
-      batchId: widget.batchId,
-      stepId: widget.stepId,
+      batchId: widget.batchId!,
+      stepId: widget.stepId!,
       resultStatus: 'Passed',
       parametersData: params,
     );

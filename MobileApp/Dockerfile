@@ -2,7 +2,7 @@
 # Multi-stage build for production
 
 # Stage 1: Build
-FROM ghcr.io/cirruslabs/flutter:stable AS build
+FROM ghcr.io/cirruslabs/flutter:3.24.0 AS build
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY . .
 RUN flutter pub get
 
 # Build Flutter Web
-RUN flutter build web --release
+RUN flutter build web --release --no-source-maps --verbose
 
 # Stage 2: Production
 FROM nginx:alpine AS production
