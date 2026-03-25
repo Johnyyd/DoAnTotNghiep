@@ -89,7 +89,7 @@ services: # Cụm từ khóa khai báo danh sách các Node (Micro-Container) s�
     build:
       context: ./MobileApp # Con đẻ Cấu trúc là Thư mục Flutter
       dockerfile: Dockerfile
-    container_name: gmp-mobile // Đặt tên mảng ghép hình
+    container_name: gmp-mobile # Đặt tên mảng ghép hình
     networks:
       - gmp-network
     ports:
