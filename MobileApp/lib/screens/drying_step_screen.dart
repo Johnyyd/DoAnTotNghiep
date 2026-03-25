@@ -42,7 +42,48 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   
   bool _isSaving = false;
 
-  Future<void> _submit() async {
+  Future<void> _verifyAndSubmit() async {
+    final pin = await _showPinDialog();
+    if (pin == null || pin.isEmpty) return;
+
+    if (pin != '123456') {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN không đúng!')));
+      return;
+    }
+
+    await _submit('Passed', null);
+  }
+
+  Future<String?> _showPinDialog() {
+    final ctrl = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('CHỮ KÝ ĐIỆN TỬ GMP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        content: TextField(
+          controller: ctrl,
+          obscureText: true,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Mã PIN cá nhân',
+            hintText: 'Nhập 123456 để test',
+            prefixIcon: Icon(Icons.lock_outline),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, null), child: const Text('Hủy')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(c, ctrl.text), 
+            child: const Text('Ký xác nhận')
+          ),
+        ],
+      )
+    );
+  }
+
+  Future<void> _submit(String resultStatus, String? devNotes) async {
     setState(() => _isSaving = true);
     final params = {
       "ngay": _ngayCtrl.text,
@@ -65,13 +106,17 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       "slSauSay": _slSauCtrl.text,
     };
     
-    if (widget.batchId == null || widget.stepId == null) return;
+    if (widget.batchId == null || widget.stepId == null) {
+      setState(() => _isSaving = false);
+      return;
+    }
 
     bool success = await ApiService.submitStepData(
       batchId: widget.batchId!,
       stepId: widget.stepId!,
-      resultStatus: 'Passed',
+      resultStatus: resultStatus,
       parametersData: params,
+      notes: devNotes,
     );
     setState(() => _isSaving = false);
     
@@ -147,7 +192,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
           const SizedBox(height: 24),
           _isSaving
            ? const Center(child: CircularProgressIndicator())
-           : ESignatureButton(title: 'KÝ & LƯU CÔNG ĐOẠN', onPressed: _submit),
+           : ESignatureButton(title: 'KÝ & LƯU CÔNG ĐOẠN', onPressed: _verifyAndSubmit),
           const SizedBox(height: 32),
         ],
       ),

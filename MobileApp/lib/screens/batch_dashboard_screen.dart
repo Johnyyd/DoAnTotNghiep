@@ -145,7 +145,7 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide(
-                  color: color.withOpacity(0.3),
+                  color: color.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -171,7 +171,7 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.12),
+                          color: color.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(_statusIcon(status), color: color, size: 24),
@@ -211,10 +211,10 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: color.withOpacity(0.1),
+                              color: color.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                               border:
-                                  Border.all(color: color.withOpacity(0.5)),
+                                  Border.all(color: color.withValues(alpha: 0.5)),
                             ),
                             child: Text(
                               _statusLabel(status),

@@ -26,7 +26,7 @@ class ApiService {
     final url = Uri.parse('$baseUrl/auth/login');
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/auth/login'),
+        url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'username': username,

@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { recipesApi } from '@/services/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { recipesApi, materialsApi } from '@/services/api';
 import { Recipe } from '@/types';
-import { ClipboardList, Plus, Search, MoreVertical, Eye, Edit, Lock, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { ClipboardList, Plus, Search, MoreVertical, Eye, Edit, Lock, Clock, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
 
 export default function Recipes() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showModal, setShowModal] = useState(false);
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
+  const [formData, setFormData] = useState<Partial<Recipe>>({});
+  const [showActions, setShowActions] = useState<number | null>(null);
 
   const { data: recipes, isLoading } = useQuery({
     queryKey: ['recipes'],
@@ -15,6 +20,60 @@ export default function Recipes() {
 
   // API can return either array directly or { data: array }
   const recipesData = Array.isArray(recipes) ? recipes : (recipes as any)?.data || [];
+
+  const { data: materialsData } = useQuery({
+    queryKey: ['materials'],
+    queryFn: () => materialsApi.getAll(),
+  });
+  const materials = Array.isArray(materialsData) ? materialsData : (materialsData as any)?.data || [];
+
+  const createMutation = useMutation({
+    mutationFn: recipesApi.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      setShowModal(false);
+      setFormData({});
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<Recipe> }) =>
+      recipesApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      setShowModal(false);
+      setEditingRecipe(null);
+      setFormData({});
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: recipesApi.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+    },
+  });
+
+  const openCreateModal = () => {
+    setEditingRecipe(null);
+    setFormData({ status: 'Draft', versionNumber: 1 });
+    setShowModal(true);
+  };
+
+  const openEditModal = (recipe: Recipe) => {
+    setEditingRecipe(recipe);
+    setFormData(recipe);
+    setShowModal(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingRecipe) {
+      updateMutation.mutate({ id: editingRecipe.recipeId, data: formData });
+    } else {
+      createMutation.mutate(formData);
+    }
+  };
 
   // Map API data to match frontend Recipe type
   const normalizedRecipes: Recipe[] = recipesData.map((r: any) => ({
@@ -108,7 +167,7 @@ export default function Recipes() {
           <h1 className="text-2xl font-bold text-neutral-900">Quản Lý Công Thức & BOM</h1>
           <p className="text-neutral-500 mt-1">Tạo, quản lý và duyệt công thức sản xuất theo GMP</p>
         </div>
-        <button className="btn-primary flex items-center">
+        <button onClick={openCreateModal} className="btn-primary flex items-center">
           <Plus className="w-5 h-5 mr-2" />
           Thêm công thức
         </button>
@@ -175,7 +234,7 @@ export default function Recipes() {
         <div className="card text-center py-12">
           <ClipboardList className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
           <p className="text-neutral-500">Chưa có công thức nào</p>
-          <button className="btn-primary mt-4">Tạo công thức đầu tiên</button>
+          <button onClick={openCreateModal} className="btn-primary mt-4">Tạo công thức đầu tiên</button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -193,9 +252,22 @@ export default function Recipes() {
                       <h3 className="font-semibold text-neutral-900">{recipe.recipeName}</h3>
                     </div>
                   </div>
-                  <button className="p-1 rounded hover:bg-neutral-100">
-                    <MoreVertical className="w-4 h-4 text-neutral-500" />
-                  </button>
+                  <div className="relative">
+                    <button onClick={() => setShowActions(showActions === recipe.recipeId ? null : recipe.recipeId)} className="p-1 rounded hover:bg-neutral-100">
+                      <MoreVertical className="w-4 h-4 text-neutral-500" />
+                    </button>
+                    {showActions === recipe.recipeId && (
+                      <div className="absolute right-0 mt-2 w-48 bg-surface rounded-xl shadow-lg border border-neutral-200 py-2 z-10">
+                        <button
+                          onClick={() => { if (confirm('Xóa công thức này?')) deleteMutation.mutate(recipe.recipeId); setShowActions(null); }}
+                          className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4 mr-3" />
+                          Xóa
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="space-y-3 mb-4">
                   <div className="flex items-center justify-between text-sm">
@@ -230,7 +302,7 @@ export default function Recipes() {
                       Xem
                     </button>
                     {recipe.status === 'Draft' ? (
-                      <button className="btn-ghost text-sm flex items-center">
+                      <button onClick={() => openEditModal(recipe)} className="btn-ghost text-sm flex items-center">
                         <Edit className="w-4 h-4 mr-1" />
                         Sửa
                       </button>
@@ -265,6 +337,109 @@ export default function Recipes() {
           </div>
         </div>
       </div>
+
+      {/* Create/Edit Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-neutral-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-neutral-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-neutral-900">
+                  {editingRecipe ? 'Chỉnh sửa công thức' : 'Thêm công thức mới'}
+                </h2>
+                <button onClick={() => setShowModal(false)} className="text-neutral-400 hover:text-neutral-600 text-2xl">&times;</button>
+              </div>
+            </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Mã công thức</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.recipeCode || ''}
+                    onChange={(e) => setFormData({ ...formData, recipeCode: e.target.value })}
+                    className="input"
+                    placeholder="VD: REC-001"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Tên công thức</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.recipeName || ''}
+                    onChange={(e) => setFormData({ ...formData, recipeName: e.target.value })}
+                    className="input"
+                    placeholder="VD: Paracetamol 500mg"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Thành phẩm (Material)</label>
+                  <select
+                    required
+                    value={formData.materialId || ''}
+                    onChange={(e) => setFormData({ ...formData, materialId: Number(e.target.value) })}
+                    className="input"
+                  >
+                    <option value="">Chọn thành phẩm...</option>
+                    {materials.map((m: any) => (
+                      <option key={m.MaterialId ?? m.materialId} value={m.MaterialId ?? m.materialId}>
+                        {(m.MaterialCode ?? m.materialCode)} - {(m.MaterialName ?? m.materialName)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Cỡ lô (Batch Size)</label>
+                  <input
+                    type="number"
+                    required
+                    value={formData.batchSize || ''}
+                    onChange={(e) => setFormData({ ...formData, batchSize: Number(e.target.value) })}
+                    className="input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Trạng thái</label>
+                  <select
+                    required
+                    value={formData.status || ''}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as NonNullable<Recipe['status']> })}
+                    className="input"
+                    disabled={!!editingRecipe && editingRecipe.status !== 'Draft'}
+                  >
+                    <option value="Draft">Nháp (Draft)</option>
+                    <option value="Approved">Đã duyệt (Approved)</option>
+                    <option value="InProcess">Đang thực hiện (InProcess)</option>
+                    <option value="Hold">Tạm ngưng (Hold)</option>
+                    <option value="Completed">Hoàn thành (Completed)</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Ghi chú</label>
+                  <textarea
+                    rows={3}
+                    value={formData.note || ''}
+                    onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                    className="input"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3 pt-4 border-t border-neutral-200">
+                <button type="button" onClick={() => setShowModal(false)} className="btn-ghost">Hủy</button>
+                <button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                  className="btn-primary"
+                >
+                  {createMutation.isPending || updateMutation.isPending ? 'Đang lưu...' : (editingRecipe ? 'Cập nhật' : 'Tạo mới')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

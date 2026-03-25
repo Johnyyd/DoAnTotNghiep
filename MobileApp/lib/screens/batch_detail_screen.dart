@@ -229,7 +229,7 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                             }
                           },
                           leading: CircleAvatar(
-                            backgroundColor: color.withOpacity(0.15),
+                            backgroundColor: color.withValues(alpha: 0.15),
                             child: Text(
                               '${i + 1}',
                               style: TextStyle(
@@ -249,10 +249,10 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: color.withOpacity(0.1),
+                              color: color.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                               border:
-                                  Border.all(color: color.withOpacity(0.4)),
+                                  Border.all(color: color.withValues(alpha: 0.4)),
                             ),
                             child: Text(
                               _logStatusLabel(status),

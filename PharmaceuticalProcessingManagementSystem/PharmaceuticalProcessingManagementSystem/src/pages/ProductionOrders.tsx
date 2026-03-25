@@ -1,17 +1,49 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productionOrdersApi } from '@/services/api';
 import { ProductionOrder } from '@/types';
-import { Search, Plus, ClipboardList, Clock, AlertCircle, CheckCircle, Eye, MoreVertical } from 'lucide-react';
+import { Search, Plus, ClipboardList, Clock, AlertCircle, CheckCircle, Eye, MoreVertical, Check, PauseCircle } from 'lucide-react';
 
 export default function ProductionOrders() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showActions, setShowActions] = useState<number | null>(null);
+  const [actionModal, setActionModal] = useState<{ type: 'approve' | 'hold', order: ProductionOrder } | null>(null);
+  const [actionInput, setActionInput] = useState('');
 
   const { data: ordersData, isLoading } = useQuery({
     queryKey: ['productionOrders'],
     queryFn: () => productionOrdersApi.getAll(),
   });
+
+  const approveMutation = useMutation({
+    mutationFn: ({ id, signature }: { id: number; signature: string }) => productionOrdersApi.approve(id, signature),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['productionOrders'] });
+      setActionModal(null);
+      setActionInput('');
+    },
+  });
+
+  const holdMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason: string }) => productionOrdersApi.hold(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['productionOrders'] });
+      setActionModal(null);
+      setActionInput('');
+    },
+  });
+
+  const handleActionSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!actionModal) return;
+    if (actionModal.type === 'approve') {
+      approveMutation.mutate({ id: actionModal.order.orderId, signature: actionInput });
+    } else {
+      holdMutation.mutate({ id: actionModal.order.orderId, reason: actionInput });
+    }
+  };
 
   const ordersList = Array.isArray(ordersData) ? ordersData : (ordersData as any)?.data || [];
 
@@ -167,13 +199,35 @@ export default function ProductionOrders() {
                         {formatDate(order.plannedStartDate)}
                       </td>
                       <td className="text-right">
-                        <div className="flex items-center justify-end space-x-2">
+                        <div className="relative flex items-center justify-end space-x-2">
                           <button className="btn-ghost flex items-center px-2 py-1 text-sm text-neutral-600 hover:text-primary-600">
                             <Eye className="w-4 h-4 mr-1" /> Xem
                           </button>
-                          <button className="p-1 rounded hover:bg-neutral-100">
+                          <button onClick={() => setShowActions(showActions === order.orderId ? null : order.orderId)} className="p-1 rounded hover:bg-neutral-100">
                             <MoreVertical className="w-4 h-4 text-neutral-500" />
                           </button>
+                          {showActions === order.orderId && (
+                            <div className="absolute right-0 top-8 mt-2 w-48 bg-surface rounded-xl shadow-lg border border-neutral-200 py-2 z-10 text-left">
+                              {order.status === 'Draft' && (
+                                <button
+                                  onClick={() => { setActionModal({ type: 'approve', order }); setShowActions(null); setActionInput(''); }}
+                                  className="w-full flex items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50"
+                                >
+                                  <Check className="w-4 h-4 mr-3" />
+                                  Duyệt lệnh (Approve)
+                                </button>
+                              )}
+                              {(order.status === 'Approved' || order.status === 'InProcess') && (
+                                <button
+                                  onClick={() => { setActionModal({ type: 'hold', order }); setShowActions(null); setActionInput(''); }}
+                                  className="w-full flex items-center px-4 py-2 text-sm text-orange-600 hover:bg-orange-50"
+                                >
+                                  <PauseCircle className="w-4 h-4 mr-3" />
+                                  Tạm ngưng (Hold)
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -184,6 +238,44 @@ export default function ProductionOrders() {
           </div>
         )}
       </div>
+
+      {/* Action Modal */}
+      {actionModal && (
+        <div className="fixed inset-0 bg-neutral-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md">
+            <div className="p-6 border-b border-neutral-200">
+              <h2 className="text-xl font-bold text-neutral-900">
+                {actionModal.type === 'approve' ? 'Duyệt lệnh sản xuất' : 'Tạm ngưng lệnh sản xuất'}
+              </h2>
+            </div>
+            <form onSubmit={handleActionSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  {actionModal.type === 'approve' ? 'Chữ ký điện tử (Mã PIN/Mật khẩu)' : 'Lý do tạm ngưng'}
+                </label>
+                <input
+                  type={actionModal.type === 'approve' ? 'password' : 'text'}
+                  required
+                  value={actionInput}
+                  onChange={(e) => setActionInput(e.target.value)}
+                  className="input"
+                  placeholder={actionModal.type === 'approve' ? 'Nhập mã PIN để xác nhận GMP...' : 'Trang thiết bị hỏng, ...'}
+                />
+              </div>
+              <div className="flex justify-end space-x-3 pt-4">
+                <button type="button" onClick={() => setActionModal(null)} className="btn-ghost">Hủy</button>
+                <button
+                  type="submit"
+                  disabled={approveMutation.isPending || holdMutation.isPending}
+                  className={`px-4 py-2 rounded-lg font-medium text-white ${actionModal.type === 'approve' ? 'bg-primary-600 hover:bg-primary-700' : 'bg-orange-600 hover:bg-orange-700'}`}
+                >
+                  {approveMutation.isPending || holdMutation.isPending ? 'Đang xử lý...' : 'Xác nhận'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

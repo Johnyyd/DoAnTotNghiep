@@ -1,0 +1,59 @@
+--- DOCX: TranThiVanAnh... ---
+ĐỀ CƯƠNG CHI TIẾT
+KHÓA LUẬN CỬ NHÂN NGÀNH CNTT NĂM HỌC 2025 - 2026
+Mã đề tài:	
+Tên đề tài: 
+Xây dựng hệ thống quản lý quy trình chế biến thuốc theo tiêu chuẩn GMP-WHO
+Định hướng đề tài: 
+☑ Định hướng ứng dụng	 Định hướng nghiên cứu 	 Định hướng MMT
+Thông tin GVHD
+Họ tên giảng viên: Trần Thị Vân Anh
+Điện thoại: 0909 188 906
+Email: anhttv@huit.edu.vn
+Nhóm sinh viên thực hiện đề tài
+	Nguyễn Hoàng Tuấn 	MSSV:2001224555	Lớp: 13DHTH09
+	Nguyễn Minh Trí 	MSSV:2001225553	Lớp: 13DHTH08
+Mục tiêu: (Nêu chi tiết mục tiêu nội dung của đề tài: mục tiêu về khảo sát hệ thống, phân tích hệ thống, thiết kế hệ thống, xây dựng và cài đặt, báo cáo…; Trình bày mục tiêu về tinh thần, thái độ làm việc cá nhân, làm việc nhóm và tự học. Lưu ý: Sinh viên phải xây dựng được một ứng dụng hoàn chỉnh trên 02 nền tảng: web, winform, mobile)
+Khảo sát qui trình nghiệp vụ và biểu mẫu liên quan.
+Xây dựng, mô hình hóa được các nghiệp vụ của hoạt động sản xuất
+Phân tích, thiết kế mô hình dữ liệu, sơ đồ lớp mức phân tích, sơ đồ lớp mức thiết kế phù hợp với hiện trạng đã khảo sát.
+Cài đặt được các nghiệp vụ của qui trình đáp ứng nhu cầu quản lý có giao diện đẹp, hài hòa, dễ sử dụng trên 02 nền tảng Web và mobile. Cài đặt được các biểu mẫu báo cáo thống kê cần thiết. Cài đặt chức năng phân quyền người dùng
+Hoàn thành báo cáo theo đúng qui định
+Báo cáo, trình bày và giải thích được các nội dung đã thực hiện trước GVHD.
+Lập kế hoạch thực hiện khóa luận, phân công công việc phù hợp giữa các thành viên.
+Rèn luyện được tính tự học, tự nghiên cứu trong quá trình giải quyết công việc.
+Có tinh thần trách nhiệm trong công việc: hoàn thành các nhiệm vụ được giao đúng tiến độ, tìm cách nâng cao hiệu quả của ứng dụng.
+Có thái độ tích cực, sẵn sàng và chủ động trong công việc.
+Tích cực trao đổi, thảo luận và hỗ trợ các thành viên trong nhóm để hoàn thành 
+đề tài.
+Sáng tạo trong việc đề xuất giải pháp, kiên nhẫn và cố gắng trong quá trình nghiên cứu và triển khai.
+Yêu cầu
+Các nội dung cụ thể cần thực hiện: 
+Tìm hiểu về cơ cấu hoạt động tại đơn vị
+Tìm hiểu các quy trình nghiệp vụ trong việc quản lý và hoạt động tại đơn vị
+Xây dựng Web và mobile hỗ trợ việc thực hiện quản lý và hoạt động theo nghiệp vụ đã phân tích, xây dựng kết xuất báo cáo thống kê.
+Hoàn chỉnh báo cáo theo biểu mẫu qui định. 
+Trình bày nội dung thực hiện trước giáo viên hướng dẫn
+Môi trường thực hiện
+Hệ quản trị CSDL: SQL Server
+Ngôn ngữ lập trình: ASP.NET, React Native
+Môi trường: Visual Studio 2022, Visual Studio Code, .NET Framework
+Microsoft Office: Word, Power Point
+Thời gian thực hiện: 12 tuần (từ ngày ........ tới ngày ..........)
+Thang điểm
+Thời gian và các công việc trong tuần:
+Tài liệu tham khảo
+Bài Giảng Phân tích hệ thống thông tin, Khoa CNTT, ĐH Công Thương TP.HCM 
+Bài Giảng Công nghệ phần mềm, khoa CNTT, ĐH Công Thương TP.HCM 
+Phạm Hữu Khang, Kỹ thuật lập trình ứng dụng chuyên nghiệp C#, NXB Lao Động Xã Hội, 2006.
+Bài giảng Hệ quản trị cơ sở dữ liệu, Khoa CNTT, ĐH Công Thương TP.HCM, 2024
+Các tài liệu liên quan yêu cầu và dữ liệu của dự án sẽ được GVHD cung cấp.
+Một số yêu cầu khác
+Số lượng SV tối đa thực hiện đề tài: 3 sinh viên.
+Có khả năng và tư duy lập trình, đọc hiểu tiếng Anh,…
+Gặp giảng viên hướng dẫn ít nhất 1 lần/tuần, thực hiện đề tài theo sự phân công của giảng viên hướng dẫn. Trước mỗi buổi báo cáo, sinh viên phải tích hợp những nội dung được phân công vào chung trong một tài liệu/ phần mềm.
+	Tp.HCM, ngày … tháng.....năm 202
+	Trưởng bộ môn	Giảng viên hướng dẫn
+	(ký và ghi rõ họ tên)	(ký và ghi rõ họ tên)
+
+--- PDF: CamScanner 4-2-2026 11.01.pdf ---

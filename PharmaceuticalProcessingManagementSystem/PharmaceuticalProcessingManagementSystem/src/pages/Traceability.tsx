@@ -34,7 +34,7 @@ export default function Traceability() {
       </div>
 
       {/* Search form */}
-      <div className="card">
+      <div className="card print:hidden">
         <form onSubmit={handleSearch} className="flex gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -164,10 +164,10 @@ export default function Traceability() {
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-8 pt-6 border-t border-neutral-200 flex justify-end space-x-3">
-                <button className="btn-ghost flex items-center text-primary-700 font-medium">
+              <div className="mt-8 pt-6 border-t border-neutral-200 flex justify-end space-x-3 print:hidden">
+                <button onClick={() => window.print()} className="btn-ghost flex items-center text-primary-700 font-medium">
                   <FileText className="w-4 h-4 mr-2" />
-                  Xem báo cáo PDF đầy đủ
+                  Xuất báo cáo PDF / In
                 </button>
               </div>
             </div>

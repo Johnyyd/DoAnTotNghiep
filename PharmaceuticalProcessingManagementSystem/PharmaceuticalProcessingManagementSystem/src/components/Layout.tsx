@@ -18,16 +18,16 @@ import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
 const navigation = [
-  { name: 'Bảng Điều Khiển', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Nguyên Liệu', href: '/materials', icon: Pill },
-  { name: 'Công Thức', href: '/recipes', icon: ClipboardList },
-  { name: 'Lệnh Sản Xuất', href: '/production-orders', icon: Warehouse },
-  { name: 'Mẻ Sản Xuất', href: '/batches', icon: Activity },
-  { name: 'Truy Xuất', href: '/traceability', icon: Search },
-  { name: 'Tồn Kho', href: '/inventory', icon: Package },
-  { name: 'Thiết Bị', href: '/equipments', icon: Settings },
-  { name: 'Tài Khoản', href: '/users', icon: Users },
-  { name: 'Nhật Ký Hệ Thống', href: '/audit-logs', icon: ClipboardList },
+  { name: 'Bảng Điều Khiển', href: '/dashboard', icon: LayoutDashboard, roles: ['Admin', 'Manager', 'QualityControl', 'Operator'] },
+  { name: 'Nguyên Liệu', href: '/materials', icon: Pill, roles: ['Admin', 'Manager', 'QualityControl'] },
+  { name: 'Công Thức', href: '/recipes', icon: ClipboardList, roles: ['Admin', 'Manager'] },
+  { name: 'Lệnh Sản Xuất', href: '/production-orders', icon: Warehouse, roles: ['Admin', 'Manager'] },
+  { name: 'Mẻ Sản Xuất', href: '/batches', icon: Activity, roles: ['Admin', 'Manager', 'Operator'] },
+  { name: 'Truy Xuất', href: '/traceability', icon: Search, roles: ['Admin', 'Manager', 'QualityControl'] },
+  { name: 'Tồn Kho', href: '/inventory', icon: Package, roles: ['Admin', 'Manager'] },
+  { name: 'Thiết Bị', href: '/equipments', icon: Settings, roles: ['Admin', 'Manager'] },
+  { name: 'Tài Khoản', href: '/users', icon: Users, roles: ['Admin'] },
+  { name: 'Nhật Ký Hệ Thống', href: '/audit-logs', icon: ClipboardList, roles: ['Admin', 'QualityControl'] },
 ];
 
 const roleLabels: Record<string, string> = {
@@ -59,7 +59,7 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-surface border-r border-neutral-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col ${
+        className={`print:hidden fixed inset-y-0 left-0 z-50 w-72 bg-surface border-r border-neutral-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -85,7 +85,7 @@ export default function Layout() {
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto py-6">
           <nav className="px-3 space-y-1">
-            {navigation.map((item) => (
+            {navigation.filter(item => !user?.role || item.roles.includes(user.role)).map((item) => (
               <NavLink
                 key={item.name}
               to={item.href}
@@ -131,9 +131,9 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 lg:ml-72">
+      <div className="flex-1 lg:ml-72 print:m-0 print:w-full">
         {/* Top header */}
-        <header className="bg-surface border-b border-neutral-200 h-16 flex items-center px-6 sticky top-0 z-30">
+        <header className="print:hidden bg-surface border-b border-neutral-200 h-16 flex items-center px-6 sticky top-0 z-30">
           <button
             className="lg:hidden p-2 rounded-lg hover:bg-neutral-100 mr-4"
             onClick={() => setSidebarOpen(true)}

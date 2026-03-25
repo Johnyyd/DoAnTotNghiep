@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { auditApi } from '@/services/api';
 import { SystemAuditLog } from '@/types';
-import { Search, History, Filter } from 'lucide-react';
+import { Search, History } from 'lucide-react';
 
 export default function AuditLogs() {
   const [search, setSearch] = useState('');
+  const [actionFilter, setActionFilter] = useState('');
 
   const { data: logs, isLoading } = useQuery({
     queryKey: ['audit-logs'],
@@ -28,6 +29,8 @@ export default function AuditLogs() {
 
   const filteredLogs = normalizedLogs.filter((log: SystemAuditLog) => {
     if (!log) return false;
+    if (actionFilter && log.action !== actionFilter) return false;
+    
     const type = log.entityType?.toLowerCase() || '';
     const action = log.action?.toLowerCase() || '';
     const term = search.toLowerCase();
@@ -75,10 +78,19 @@ export default function AuditLogs() {
             />
           </div>
           <div className="flex gap-2">
-            <button className="btn-secondary">
-              <Filter className="w-4 h-4 mr-2" />
-              Lọc
-            </button>
+            <select 
+              className="px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white"
+              value={actionFilter}
+              onChange={(e) => setActionFilter(e.target.value)}
+            >
+              <option value="">Tất cả thao tác</option>
+              <option value="Create">Tạo mới</option>
+              <option value="Update">Cập nhật</option>
+              <option value="Delete">Xóa</option>
+              <option value="Approve">Phê duyệt</option>
+              <option value="Hold">Tạm ngưng</option>
+              <option value="Complete">Hoàn thành</option>
+            </select>
           </div>
         </div>
 

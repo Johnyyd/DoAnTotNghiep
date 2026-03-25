@@ -68,7 +68,85 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     _actualMaterials[name] = value;
   }
 
-  Future<void> _submit() async {
+  Future<void> _verifyAndSubmit() async {
+    bool hasDeviation = false;
+    String deviationMsg = '';
+
+    for (var item in _bom) {
+      final name = item['material']?['materialName'] ?? 'N/A';
+      final requiredQty = (item['quantity'] as num?)?.toDouble() ?? 0.0;
+      final actualStr = _actualMaterials[name] ?? '0';
+      final actualQty = double.tryParse(actualStr) ?? 0.0;
+      
+      if (requiredQty > 0) {
+        final double diffPercent = ((actualQty - requiredQty).abs() / requiredQty) * 100;
+        if (diffPercent > 5.0) {
+          hasDeviation = true;
+          deviationMsg += '- $name: Y/c ${requiredQty}kg, Thực tế ${actualQty}kg (Lệch ${diffPercent.toStringAsFixed(1)}%)\n';
+        }
+      }
+    }
+
+    if (hasDeviation) {
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('CẢNH BÁO DEVIATION (>5%)', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16)),
+          content: Text('Phát hiện sai số khối lượng quá mức cho phép:\n\n$deviationMsg\nBạn có chắc chắn muốn tiếp tục và ghi nhận sự cố (Failed)?'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Hủy & Sửa đổi')),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(c, true), 
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Xác nhận Lỗi', style: TextStyle(color: Colors.white))
+            ),
+          ],
+        )
+      );
+      if (proceed != true) return;
+    }
+
+    final pin = await _showPinDialog();
+    if (pin == null || pin.isEmpty) return;
+
+    if (pin != '123456') {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN không đúng!')));
+      return;
+    }
+
+    await _submit(hasDeviation ? 'Failed' : 'Passed', hasDeviation ? deviationMsg : null);
+  }
+
+  Future<String?> _showPinDialog() {
+    final ctrl = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('CHỮ KÝ ĐIỆN TỬ GMP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        content: TextField(
+          controller: ctrl,
+          obscureText: true,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Mã PIN cá nhân',
+            hintText: 'Nhập 123456 để test',
+            prefixIcon: Icon(Icons.lock_outline),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, null), child: const Text('Hủy')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(c, ctrl.text), 
+            child: const Text('Ký xác nhận')
+          ),
+        ],
+      )
+    );
+  }
+
+  Future<void> _submit(String resultStatus, String? devNotes) async {
     setState(() => _isSaving = true);
     final params = {
       "veSinhPhong": _phongSach,
@@ -88,17 +166,23 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
       "duPhamLoSo": _duPhamCtrl.text,
       "tyTrongGo": _tyTrongCtrl.text,
       "slDongGoiKg": _slDongGoi,
-      "notes": _noteCtrl.text,
     };
     
-    if (widget.batchId == null || widget.stepId == null) return;
+    final finalNotes = devNotes != null 
+      ? 'DEVIATION REPORT:\n$devNotes\nGhi chú người dùng: ${_noteCtrl.text}'
+      : _noteCtrl.text;
+
+    if (widget.batchId == null || widget.stepId == null) {
+      setState(() => _isSaving = false);
+      return;
+    }
 
     bool success = await ApiService.submitStepData(
       batchId: widget.batchId!,
       stepId: widget.stepId!,
-      resultStatus: 'Passed',
+      resultStatus: resultStatus,
       parametersData: params,
-      notes: _noteCtrl.text,
+      notes: finalNotes.isNotEmpty ? finalNotes : null,
     );
     setState(() => _isSaving = false);
     
@@ -206,7 +290,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
           const SizedBox(height: 24),
           _isSaving
             ? const Center(child: CircularProgressIndicator())
-            : ESignatureButton(title: 'HOÀN THÀNH CÔNG ĐOẠN TRỘN', onPressed: _submit),
+            : ESignatureButton(title: 'HOÀN THÀNH CÔNG ĐOẠN TRỘN', onPressed: _verifyAndSubmit),
           const SizedBox(height: 32),
         ],
       ),
