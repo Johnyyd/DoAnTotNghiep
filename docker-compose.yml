@@ -89,7 +89,7 @@ services: # Danh sách các services trong hệ thống
     build:
       context: ./MobileApp # Thư mục con của mã nguồn Flutter
       dockerfile: Dockerfile
-    container_name: gmp-mobile // Đặt tên mảng ghép hình
+    container_name: gmp-mobile # Đặt tên mảng ghép hình
     networks:
       - gmp-network
     ports:
