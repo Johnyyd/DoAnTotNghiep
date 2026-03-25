@@ -15,7 +15,7 @@ echo "=== GMP-WHO Frontend Setup ==="
 # Build frontend image
 echo "Building GMP frontend image..."
 cd PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem
-docker build -t gmp-who-frontend .
+docker build --build-arg VITE_API_URL=/api -t gmp-who-frontend .
 
 # Stop existing container if any
 if docker ps -a --format '{{.Names}}' | grep -q '^gmp-frontend$'; then
@@ -28,13 +28,13 @@ fi
 echo "Starting GMP frontend..."
 docker run -d --name gmp-frontend \
     --network gmp-network \
-    -p 80:80 \
-    -e "VITE_API_URL=http://gmp-api:5000" \
+    -p 8080:80 \
+    -e "VITE_API_URL=/api" \
     gmp-who-frontend
 
 echo ""
 echo "=== GMP Frontend Started! ==="
-echo "Admin Web Interface: http://localhost"
+echo "Admin Web Interface: http://localhost:8080"
 echo "Backend API: http://localhost:5001 (on host) or http://gmp-api:5000 (within container network)"
 echo ""
 echo "To view logs:"

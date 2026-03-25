@@ -22,6 +22,7 @@ if ! docker ps --format '{{.Names}}' | grep -q '^gmp-sqlserver$'; then
         -e 'SA_PASSWORD=GMP_Strong@Passw0rd123' \
         -p 1434:1433 \
         -v "$(pwd)/DATABASE:/var/opt/mssql/backup:ro" \
+        -v "gmp-sqlserver-data:/var/opt/mssql" \
         mcr.microsoft.com/mssql/server:2022-latest
 else
     echo "SQL Server already running"

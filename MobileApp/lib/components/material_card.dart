@@ -9,6 +9,7 @@ class MaterialCard extends StatefulWidget {
   final String requiredWeightKg;
   final String initialActualWeight;
   final ValueChanged<String>? onWeightChanged;
+  final ValueChanged<String>? onPhieuKNChanged;
   
   const MaterialCard({
     super.key,
@@ -16,6 +17,7 @@ class MaterialCard extends StatefulWidget {
     required this.requiredWeightKg,
     this.initialActualWeight = '',
     this.onWeightChanged,
+    this.onPhieuKNChanged,
   });
 
   @override
@@ -32,6 +34,11 @@ class _MaterialCardState extends State<MaterialCard> {
     super.initState();
     _controller = TextEditingController(text: widget.initialActualWeight);
     _phieuKNController = TextEditingController();
+    _phieuKNController.addListener(() {
+      if (widget.onPhieuKNChanged != null) {
+        widget.onPhieuKNChanged!(_phieuKNController.text);
+      }
+    });
     _checkMatch(widget.initialActualWeight);
   }
   
@@ -71,7 +78,7 @@ class _MaterialCardState extends State<MaterialCard> {
         // BorderSide đóng vai trò là cây cọ vẽ đường viền bao quanh Card
         // Nếu cân nặng khớp hoàn toàn (_isMatched = true), viền chuyển màu Xanh lá (Success) với độ trong suốt 0.5. Ngược lại viền vô hình (transparent).
         side: BorderSide(
-          color: _isMatched ? AppTheme.success.withValues(alpha: 0.5) : Colors.transparent,
+          color: _isMatched ? AppTheme.success.withOpacity(0.5) : Colors.transparent,
           width: 2, // Bề dày của đường nét vẽ viền lên tới 2 pixels khi nó phát sáng
         ),
       ),

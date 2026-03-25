@@ -2,11 +2,11 @@
 
 export interface User {
   userId: number;
-  userCode: string;
-  userName: string;
-  email: string;
+  username: string;
+  fullName: string;
   role: 'Admin' | 'QualityControl' | 'Operator' | 'Manager';
   isActive: boolean;
+  createdAt?: string;
 }
 
 export interface Material {

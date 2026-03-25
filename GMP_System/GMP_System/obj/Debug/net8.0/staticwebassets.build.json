@@ -1,1 +1,11 @@
-{"Version":1,"Hash":"e4nl+92ABeqIXSfJ3C/YghUSYT8jh2TMH5JolR6OZVs=","Source":"GMP_System","BasePath":"/","Mode":"Root","ManifestType":"Build","ReferencedProjectsConfiguration":[],"DiscoveryPatterns":[],"Assets":[],"Endpoints":[]}
+{
+  "Version": 1,
+  "Hash": "SMOoEXvPfE2bE2R4COXtasajt6QgZihqV/fXCFUI2Ac=",
+  "Source": "GMP_System",
+  "BasePath": "_content/GMP_System",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

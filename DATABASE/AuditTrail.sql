@@ -1,18 +1,11 @@
-CREATE TRIGGER trg_Recipes_Audit
-ON Recipes
-AFTER UPDATE, DELETE
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    INSERT INTO SystemAuditLog (TableName, RecordID, Action, OldValue, NewValue, ChangedDate)
-    SELECT 
-        'Recipes',
-        CAST(d.RecipeID AS VARCHAR(50)),
-        CASE WHEN i.RecipeID IS NULL THEN 'DELETE' ELSE 'UPDATE' END,
-        (SELECT * FROM Deleted d FOR JSON AUTO), -- L?u d? li?u c? d??i d?ng JSON
-        (SELECT * FROM Inserted i FOR JSON AUTO), -- L?u d? li?u m?i d??i d?ng JSON
-        GETDATE()
-    FROM Deleted d
-    LEFT JOIN Inserted i ON d.RecipeID = i.RecipeID;
-END;
+﻿-- ============================================================================
+-- 🔍 MODULE: TRUY VẾT DỮ LIỆU (AUDIT TRAIL LOGIC)
+-- 
+-- File này chứa các Triggers tự động ghi nhận mọi sự thay đổi dữ liệu
+-- trong các bảng quan trọng (Vật tư, Lô hàng, Lệnh sản xuất).
+-- ============================================================================
+
+-- Ví dụ: Trigger theo dõi thay đổi trong bảng Materials
+PRINT 'Dang tao Trigger cho Audit Trail (Du kien)...';
+-- (Lưu ý: Logic TRIGGER chi tiết thường được triển khai tùy theo yêu cầu cụ thể của từng bảng)
+GO

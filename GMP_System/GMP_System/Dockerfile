@@ -9,7 +9,7 @@
 # ----------------------------------------------------------------------------------------------
 # Sóng gọi Image hệ điều hành tích hợp công cụ lập trình .NET 8 SDK từ Registry Microsoft (mcr)
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src # Chỉ đạo con trỏ dòng lệnh cắm cọc tại thư mục ảo '/src' để lát đổ dữ liệu vào
+WORKDIR /src
 
 # BƯỚC 1.1: Tranh thủ nạp Thư viện C# ngầm trước (Restore)
 # Chiến thuật: Nhặt mỗi file .csproj thả vào trước để đoạt trọn cơ chế Cache Layer của nền Docker.

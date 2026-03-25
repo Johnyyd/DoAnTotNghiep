@@ -13,14 +13,14 @@ Hệ thống GMP-WHO đã được cấu hình để truy cập từ xa thông q
 │                                                                 │
 │  ┌───────────────────────────────────────────────────────────┐ │
 │  │ Docker Bridge Network: gmp-network                       │ │
-│  │                                                           │ │
-│  │  ┌─────────────┐        ┌─────────────┐ ┌─────────────┐ │ │
-│  │  │  Frontend   │───────▶│   Backend   │ │   Database  │ │ │
-│  │  │  :80        │        │  :5000      │ │  :1433      │ │ │
-│  │  └─────────────┘        └─────────────┘ └─────────────┘ │ │
-│  │       (nginx)               (API)             (SQL Server)│ │
-│  └───────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+│  │                                                                     │ │
+│  │  ┌─────────────┐   ┌─────────────┐      ┌─────────────┐ ┌─────────┐ │ │
+│  │  │  Frontend   │   │  Mobile App │─────▶│   Backend   │ │ Database│ │ │
+│  │  │  :80        │   │  :80 (8081) │      │  :5000      │ │ :1433   │ │ │
+│  │  └─────────────┘   └─────────────┘      └─────────────┘ └─────────┘ │ │
+│  │      (nginx)        (flutter-web)            (API)      (SQL Server)│ │
+│  └─────────────────────────────────────────────────────────────────────┘ │
+└───────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 🔌 Ports Mapped to Host (Tailscale Accessible)
@@ -28,6 +28,7 @@ Hệ thống GMP-WHO đã được cấu hình để truy cập từ xa thông q
 | Service | Container Port | Host Port | Access via Tailscale |
 |---------|---------------|-----------|---------------------|
 | **Frontend (Nginx)** | 80 | 80 | `http://100.89.137.3` |
+| **Mobile App (Flutter)** | 80 | 8081 | `http://100.89.137.3:8081` |
 | **Backend API** | 5000 | 5001 | `http://100.89.137.3:5001` |
 | **SQL Server** | 1433 | 1434 | `100.89.137.3,1434` |
 
@@ -41,7 +42,14 @@ URL: http://100.89.137.3
 - Tự động proxy API requests qua `/api/` đến backend
 - Single Page Application với routing phía client
 
-### 2. Backend API Direct
+### 2. Mobile App (eBMR - Tablet/Android)
+```
+URL: http://100.89.137.3:8081
+```
+- Giao diện thao tác cho công nhân dưới xưởng
+- Tích hợp Flutter Web để dễ dùng trên thiết bị di động với browser
+
+### 3. Backend API Direct
 ```
 URL: http://100.89.137.3:5001
 ```
@@ -170,7 +178,8 @@ curl -I http://localhost
 - **All services are bound to 0.0.0.0** via Docker port mappings
 - Tailscale assigns IP `100.89.137.3` to this host
 - Any device in your Tailscale network can access:
-  - Frontend: `http://100.89.137.3`
+- Frontend: `http://100.89.137.3`
+  - Mobile App: `http://100.89.137.3:8081`
   - Backend API: `http://100.89.137.3:5001`
   - Database: `100.89.137.3,1434` (需要 SQL Server client)
 - **Firewall:** Ensure your host firewall allows inbound on ports 80, 5001, 1434 from Tailscale subnet (100.89.0.0/16 typically)

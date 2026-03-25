@@ -1,4 +1,4 @@
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Pill,
@@ -9,13 +9,13 @@ import {
   Menu,
   X,
   Bell,
-  User,
   Users,
   Package,
   LogOut,
   Settings
 } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 const navigation = [
   { name: 'Bảng Điều Khiển', href: '/dashboard', icon: LayoutDashboard },
@@ -30,8 +30,22 @@ const navigation = [
   { name: 'Nhật Ký Hệ Thống', href: '/audit-logs', icon: ClipboardList },
 ];
 
+const roleLabels: Record<string, string> = {
+  Admin: 'Quản trị viên',
+  QualityControl: 'Kiểm soát chất lượng',
+  Manager: 'Quản lý',
+  Operator: 'Nhân viên vận hành',
+};
+
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-neutral-50 flex">
@@ -90,12 +104,14 @@ export default function Layout() {
         {/* User section */}
         <div className="p-4 border-t border-neutral-200 bg-surface">
           <div className="flex items-center space-x-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center">
-              <User className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center shrink-0">
+              <span className="text-white font-bold text-sm">
+                {user?.username?.charAt(0).toUpperCase() ?? 'U'}
+              </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-neutral-900 truncate">Admin</p>
-              <p className="text-xs text-neutral-500 truncate">Quản trị viên</p>
+              <p className="text-sm font-medium text-neutral-900 truncate">{user?.fullName ?? user?.username}</p>
+              <p className="text-xs text-neutral-500 truncate">{roleLabels[user?.role ?? ''] ?? user?.role}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -103,7 +119,10 @@ export default function Layout() {
               <Settings className="w-4 h-4 mr-2" />
               Cài đặt
             </button>
-            <button className="flex items-center justify-center px-3 py-2 text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+            <button
+              onClick={handleLogout}
+              className="flex items-center justify-center px-3 py-2 text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+            >
               <LogOut className="w-4 h-4 mr-2" />
               Đăng xuất
             </button>

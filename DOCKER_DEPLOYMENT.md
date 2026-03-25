@@ -13,11 +13,25 @@ Hướng dẫn nhanh để chạy toàn bộ hệ thống GMP-WHO bằng Docker.
 
 ## 🚀 Cách 1: Docker Compose (Khuyến nghị)
 
-Chạy tất cả services với một lệnh:
+Dự án thiết lập song song 2 cấu trúc: `docker-compose.yml` (Chuẩn Production) và `docker-compose.override.yml` (Bật tính năng Hot Reloading cho môi trường Dev).
+
+### Chạy môi trường Development (Có Hot Reload)
+Mặc định Docker sẽ tự động gộp 2 file lại, ánh xạ mã nguồn từ máy bạn vào Container:
 
 ```bash
-# Build và start tất cả
-docker-compose up -d
+# Build và start tất cả (Bắt buộc thêm --build mỗi khi gỡ file override ra/vào)
+docker-compose up -d --build
+
+# Ghi chú Hot Reload: 
+# - Bạn sửa code React/Flutter/C#, ứng dụng sẽ tự động cập nhật ngay trên trình duyệt máy ảo.
+```
+
+### Chạy môi trường Production (Không có Hot Reload)
+Chạy kịch bản thực tế (Mã React/Flutter được đóng gói Nginx), tiêu thụ RAM thấp nhất:
+
+```bash
+# Chỉ định rõ chỉ chạy file gốc, phớt lờ file override
+docker-compose -f docker-compose.yml up -d --build
 
 # Xem logs
 docker-compose logs -f
@@ -41,7 +55,7 @@ Script này sẽ:
 
 ### 2. Start Frontend
 ```bash
-././start-gmp-frontend.sh
+./start-gmp-frontend.sh
 ```
 
 Script này sẽ:
@@ -98,7 +112,11 @@ docker build -t gmp-who-api .
 
 # Frontend
 cd PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem
-docker build -t gmp-who-frontend .
+docker build --build-arg VITE_API_URL=/api -t gmp-who-frontend .
+
+# Mobile
+cd MobileApp
+docker build -t gmp-who-mobile .
 ```
 
 Hoặc dùng docker-compose:

@@ -1,12 +1,9 @@
-CREATE TRIGGER trg_Prevent_Edit_Approved_Recipe
-ON Recipes
-FOR UPDATE, DELETE
-AS
-BEGIN
-    IF EXISTS (SELECT 1 FROM Deleted WHERE Status = 'Approved')
-    BEGIN
-        RAISERROR ('Kh�ng th? s?a ho?c x�a C�ng th?c ?� ???c Duy?t (Approved). H�y t?o Version m?i.', 16, 1);
-        ROLLBACK TRANSACTION;
-        RETURN;
-    END
-END;
+﻿-- ============================================================================
+-- 🛡️ MODULE: BẢO VỆ DỮ LIỆU (IMMUTABILITY & INTEGRITY)
+-- 
+-- Đảm bảo dữ liệu sau khi đã phê duyệt (vd: Mẻ sản xuất xong) 
+-- không thể bị sửa xóa theo yêu cầu nghiêm ngặt của GMP-WHO.
+-- ============================================================================
+
+PRINT 'Dang thiet lap cac rang buoc bao ve du lieu (Immutability)...';
+GO

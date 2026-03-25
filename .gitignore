@@ -24,3 +24,5 @@ TestResults.xml
 #Document
 *.pdf
 *.docx
+prompt.txt
+codebase_review.md

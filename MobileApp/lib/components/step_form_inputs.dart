@@ -254,3 +254,108 @@ class ESignatureButton extends StatelessWidget {
     );
   }
 }
+
+/// Component [DryingSampleField] dùng đễ nhập "Lấy mẫu kiểm tra" (g/túi x túi = g)
+class DryingSampleField extends StatefulWidget {
+  final ValueChanged<String>? onResultChanged;
+  const DryingSampleField({super.key, this.onResultChanged});
+
+  @override
+  State<DryingSampleField> createState() => _DryingSampleFieldState();
+}
+
+class _DryingSampleFieldState extends State<DryingSampleField> {
+  final TextEditingController _gController = TextEditingController();
+  final TextEditingController _tuiController = TextEditingController();
+  String _total = '0';
+
+  void _calculate() {
+    final g = double.tryParse(_gController.text) ?? 0;
+    final tui = int.tryParse(_tuiController.text) ?? 0;
+    setState(() {
+      _total = (g * tui).toStringAsFixed(1).replaceAll('.0', '');
+    });
+    if (widget.onResultChanged != null) {
+      widget.onResultChanged!(_total);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Lấy mẫu kiểm tra', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54)),
+        const SizedBox(height: 4),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(child: TextField(controller: _gController, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: const InputDecoration(hintText: 'g/túi', contentPadding: EdgeInsets.symmetric(horizontal: 8)))),
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('x', style: TextStyle(fontWeight: FontWeight.bold))),
+            Expanded(child: TextField(controller: _tuiController, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: const InputDecoration(hintText: 'số túi', contentPadding: EdgeInsets.symmetric(horizontal: 8)))),
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('=', style: TextStyle(fontWeight: FontWeight.bold))),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(8)),
+              child: Text('$_total g', style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+}
+
+/// Component [MixingPackagingField] dùng đề nhập "Số lượng đóng gói" ((túi x 10kg) + kg lẻ = kg)
+class MixingPackagingField extends StatefulWidget {
+  final ValueChanged<String>? onResultChanged;
+  const MixingPackagingField({super.key, this.onResultChanged});
+
+  @override
+  State<MixingPackagingField> createState() => _MixingPackagingFieldState();
+}
+
+class _MixingPackagingFieldState extends State<MixingPackagingField> {
+  final TextEditingController _tuiController = TextEditingController();
+  final TextEditingController _kgLeController = TextEditingController();
+  String _total = '0';
+
+  void _calculate() {
+    final tui = int.tryParse(_tuiController.text) ?? 0;
+    final kgLe = double.tryParse(_kgLeController.text) ?? 0;
+    setState(() {
+      _total = ((tui * 10) + kgLe).toStringAsFixed(1).replaceAll('.0', '');
+    });
+    if (widget.onResultChanged != null) {
+      widget.onResultChanged!(_total);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Số lượng đóng gói', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54)),
+        const SizedBox(height: 4),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text('(', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w300)),
+            Expanded(flex: 2, child: TextField(controller: _tuiController, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: const InputDecoration(hintText: 'số túi', contentPadding: EdgeInsets.symmetric(horizontal: 8)))),
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('x 10kg) +', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
+            Expanded(flex: 2, child: TextField(controller: _kgLeController, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: const InputDecoration(hintText: 'kg lẻ/túi', contentPadding: EdgeInsets.symmetric(horizontal: 8)))),
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('=', style: TextStyle(fontWeight: FontWeight.bold))),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(8)),
+              child: Text('$_total kg', style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+}

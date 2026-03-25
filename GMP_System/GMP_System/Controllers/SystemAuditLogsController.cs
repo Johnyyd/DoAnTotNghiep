@@ -1,10 +1,13 @@
 using GMP_System.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace GMP_System.Controllers
 {
-    [Route("api/audit-logs")]
+    [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin,QA_QC")]
     public class SystemAuditLogsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -14,23 +17,35 @@ namespace GMP_System.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        // GET: api/SystemAuditLogs
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetLogs([FromQuery] string? entityType, [FromQuery] int? entityId, [FromQuery] int limit = 100)
         {
-            var logs = await _unitOfWork.SystemAuditLogs.GetAllAsync();
-            // Sắp xếp mới nhất lên đầu
-            return Ok(logs.OrderByDescending(x => x.ChangedDate));
+            var query = _unitOfWork.SystemAuditLogs.Query();
+
+            if (!string.IsNullOrEmpty(entityType))
+                query = query.Where(l => l.TableName == entityType);
+
+            if (entityId.HasValue)
+                query = query.Where(l => l.RecordId == entityId.Value.ToString());
+
+            var logs = await query.OrderByDescending(l => l.ChangedDate)
+                                  .Take(limit)
+                                  .ToListAsync();
+
+            return Ok(new { success = true, data = logs });
         }
 
-        // Xem lịch sử của 1 bản ghi cụ thể (VD: Xem lịch sử sửa Công thức số 1)
-        [HttpGet("{tableName}/{recordId}")]
-        public async Task<IActionResult> GetHistory(string tableName, string recordId)
+        // GET: api/SystemAuditLogs/EntityType/EntityId
+        [HttpGet("{entityType}/{entityId}")]
+        public async Task<IActionResult> GetEntityLogs(string entityType, string entityId)
         {
-            var allLogs = await _unitOfWork.SystemAuditLogs.GetAllAsync();
-            var history = allLogs
-                .Where(x => x.TableName == tableName && x.RecordId == recordId)
-                .OrderByDescending(x => x.ChangedDate);
-            return Ok(history);
+            var logs = await _unitOfWork.SystemAuditLogs.Query()
+                                  .Where(l => l.TableName == entityType && l.RecordId == entityId)
+                                  .OrderByDescending(l => l.ChangedDate)
+                                  .ToListAsync();
+
+            return Ok(new { success = true, data = logs });
         }
     }
 }

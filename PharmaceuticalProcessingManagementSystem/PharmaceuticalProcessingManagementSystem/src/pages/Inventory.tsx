@@ -14,14 +14,14 @@ export default function Inventory() {
   const lotsData = Array.isArray(lots) ? lots : (lots as any)?.data ?? [];
 
   const normalizedLots = lotsData.map((m: any) => ({
-    lotId: m.LotId || m.lotId,
-    materialId: m.MaterialId || m.materialId,
-    materialName: m.Material?.MaterialName || m.material?.materialName || m.materialName || 'Unknown Material',
-    lotNumber: m.LotNumber || m.lotNumber,
-    quantityCurrent: m.QuantityCurrent || m.quantityCurrent,
-    manufactureDate: m.ManufactureDate || m.manufactureDate,
-    expiryDate: m.ExpiryDate || m.expiryDate,
-    qcStatus: m.Qcstatus || m.qcStatus || 'Pending',
+    lotId: m.lotId,
+    materialId: m.materialId,
+    materialName: m.material?.materialName ?? m.materialName ?? 'Unknown Material',
+    lotNumber: m.lotNumber,
+    quantityCurrent: m.quantityCurrent,
+    manufactureDate: m.manufactureDate,
+    expiryDate: m.expiryDate,
+    qcStatus: m.qcstatus ?? m.qcStatus ?? 'Quarantine',
   }));
 
   const filteredLots = normalizedLots.filter((lot: any) => {
@@ -34,14 +34,13 @@ export default function Inventory() {
 
   const getStatusInfo = (status: string) => {
     switch (status) {
-      case 'Passed':
-      case 'Approved':
-        return { label: 'Đạt (Passed)', classes: 'bg-green-100 text-green-700' };
-      case 'Failed':
+      case 'Released':
+        return { label: 'Đã duyệt (Released)', classes: 'bg-green-100 text-green-700' };
       case 'Rejected':
-        return { label: 'Không Đạt (Failed)', classes: 'bg-red-100 text-red-700' };
+        return { label: 'Từ chối (Rejected)', classes: 'bg-red-100 text-red-700' };
+      case 'Quarantine':
       default:
-        return { label: 'Chờ kiểm tra (Pending)', classes: 'bg-yellow-100 text-yellow-700' };
+        return { label: 'Kiểm dịch (Quarantine)', classes: 'bg-yellow-100 text-yellow-700' };
     }
   };
 

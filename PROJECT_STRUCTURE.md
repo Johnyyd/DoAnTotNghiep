@@ -82,7 +82,7 @@ DoAnTotNghiep/
 │       ├── Dockerfile                 # Multi-stage build + nginx
 │       └── nginx.conf                 # Nginx configuration for SPA
 │
-├── 📱 (Chưa có) MobileApp/             # React Native / Flutter (cho công nhân tablet)
+├── 📱 MobileApp/                       # Mobile App (Flutter Web) cho công nhân thao tác eBMR
 │
 ├── 🚀 start-gmp-backend.sh            # Script KHỞI ĐỘNG backend (DB + API)
 ├── 🚀 start-gmp-frontend.sh           # Script KHỞI ĐỘNG frontend
@@ -113,6 +113,7 @@ docker-compose logs -f
 
 # 3. Truy cập
 # - Frontend: http://localhost:8080
+# - Mobile App: http://localhost:8081
 # - Backend API: http://localhost:5001
 # - Swagger: http://localhost:5001/swagger
 ```
@@ -127,10 +128,9 @@ Hoặc dùng menu script:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     FRONTEND (React/TS)                    │
-│  Port: 80 (localhost:8080)                                 │
-│  Nginx static file serving                                 │
-├─────────────────────────────────────────────────────────────┤
+│   FRONTEND (React)     │      MOBILE APP (Flutter)  │
+│   Port: 8080           │      Port: 8081            │
+├────────────────────────┴────────────────────────────┤
 │                     BACKEND (.NET 8 API)                  │
 │  Port: 5000 (container) → 5001 (host)                     │
 │  Controllers → Services → Repositories → SQL Server       │

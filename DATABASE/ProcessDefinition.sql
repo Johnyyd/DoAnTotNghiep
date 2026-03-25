@@ -1,42 +1,45 @@
--- C�ng th?c g?c (Header) - Qu?n l� theo Version
+﻿-- ============================================================================
+-- 📝 MODULE: ĐỊNH NGHĨA QUY TRÌNH & CÔNG THỨC (RECIPES & BOM)
+-- 
+-- Theo GMP, mọi sản phẩm phải có công thức chính (Master Recipe) 
+-- và định mức vật tư (BOM) được phê duyệt bởi bộ phận QA.
+-- ============================================================================
+
+-- 1. CÔNG THỨC CHÍNH (Recipes)
 CREATE TABLE Recipes (
-    RecipeID INT PRIMARY KEY IDENTITY(1,1),
-    MaterialID INT REFERENCES Materials(MaterialID), -- S?n xu?t ra m�n g�
-    VersionNumber INT NOT NULL, -- Phi�n b?n 1, 2, 3...
-    BatchSize DECIMAL(18, 4) NOT NULL, -- K�ch th??c l� chu?n (VD: 100,000 vi�n)
-    Status NVARCHAR(50) CHECK (Status IN ('Draft', 'PendingApproval', 'Approved', 'Obsolete')),
-    ApprovedBy INT, -- ID ng??i duy?t (li�n k?t b?ng User)
+    RecipeId INT PRIMARY KEY IDENTITY(1,1),
+    MaterialId INT REFERENCES Materials(MaterialId), -- Sản phẩm đầu ra
+    VersionNumber INT DEFAULT 1,                      -- Phiên bản công thức
+    BatchSize DECIMAL(18, 2) NOT NULL,               -- Cỡ mẻ tiêu chuẩn (vd: 100 kg)
+    Status NVARCHAR(50) DEFAULT 'Draft',            -- Trạng thái (Nháp, Đã phê duyệt, Hết hiệu lực)
+    ApprovedBy INT REFERENCES AppUsers(UserId),       -- Người phê duyệt (QA/QC)
     ApprovedDate DATETIME2,
-    CreatedAt DATETIME2,
-    EffectiveDate DATETIME2, -- Ng�y hi?u l?c
-    Note NVARCHAR(MAX),
-    -- R�ng bu?c: M?t s?n ph?m c� th? c� nhi?u version, nh?ng m?i version l� duy nh?t
-    CONSTRAINT UQ_Recipe_Version UNIQUE (MaterialID, VersionNumber)
+    CreatedAt DATETIME2 DEFAULT GETDATE(),
+    EffectiveDate DATETIME2,                          -- Ngày có hiệu lực
+    Note NVARCHAR(500)
 );
 
---ALTER TABLE Recipes
---ADD CreatedAt DATETIME2 NULL;
-
--- BOM (Bill of Materials) - ??nh m?c nguy�n li?u
-CREATE TABLE RecipeBOM (
-    BomID INT PRIMARY KEY IDENTITY(1,1),
-    RecipeID INT REFERENCES Recipes(RecipeID),
-    MaterialID INT REFERENCES Materials(MaterialID), -- Nguy�n li?u c?n d�ng
-    Quantity DECIMAL(18, 6) NOT NULL, -- S? l??ng c?n cho 1 BatchSize chu?n
-    UomID INT REFERENCES UnitOfMeasure(UomID),
-    WastePercentage DECIMAL(5, 2) DEFAULT 0, -- T? l? hao h?t cho ph�p
+-- 2. ĐỊNH MỨC NGUYÊN VẬT LIỆU (Recipe BOM)
+-- Chi tiết từng thành phần để tạo ra sản phẩm.
+CREATE TABLE RecipeBom (
+    BomId INT PRIMARY KEY IDENTITY(1,1),
+    RecipeId INT REFERENCES Recipes(RecipeId),
+    MaterialId INT REFERENCES Materials(MaterialId), -- Nguyên vật liệu thành phần
+    Quantity DECIMAL(18, 4) NOT NULL,               -- Lượng yêu cầu
+    UomId INT REFERENCES UnitOfMeasure(UomId),       -- Đơn vị tính của nguyên liệu
+    WastePercentage DECIMAL(5, 2) DEFAULT 0,         -- Tỷ lệ hao hụt cho phép (%)
     Note NVARCHAR(200)
 );
 
--- Routing (Quy tr�nh s?n xu?t) - C�c b??c th?c hi?n
+-- 3. CÁC BƯỚC CÔNG ĐOẠN (Recipe Routing)
+-- Quy trình sản xuất từng bước (vd: Cân, Trộn, Sấy...).
 CREATE TABLE RecipeRouting (
-    RoutingID INT PRIMARY KEY IDENTITY(1,1),
-    RecipeID INT REFERENCES Recipes(RecipeID),
-    StepNumber INT NOT NULL, -- B??c 10, 20, 30...
-    StepName NVARCHAR(200) NOT NULL, -- Tr?n, D?p vi�n, Bao phim
-    Description NVARCHAR(MAX), -- M� t? k? thu?t (nhi?t ??, ?? ?m, t?c ?? m�y)
-    EstimatedTimeMinutes INT,
-    DefaultEquipmentID INT REFERENCES Equipments(EquipmentID) -- M�y m?c ??nh
+    RoutingId INT PRIMARY KEY IDENTITY(1,1),
+    RecipeId INT REFERENCES Recipes(RecipeId),
+    StepNumber INT NOT NULL,                        -- Số thứ tự bước (1, 2, 3...)
+    StepName NVARCHAR(100) NOT NULL,                -- Tên bước (vd: Trộn khô)
+    DefaultEquipmentId INT REFERENCES Equipments(EquipmentId), -- Thiết bị mặc định
+    EstimatedTimeMinutes INT,                      -- Thời gian dự kiến (phút)
+    Description NVARCHAR(500)                       -- Chi tiết nội dung công việc
 );
-
-SELECT * FROM Recipes;
+GO

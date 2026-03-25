@@ -1,9 +1,24 @@
--- =====================================================
--- GMP-WHO Pharmaceutical Processing Management System
--- Database Initialization Script (Kịch bản khởi tạo Cơ Sở Dữ Liệu)
--- File này đóng vai trò như Entry Point chạy thứ tự các kịch bản tạo cấu trúc SQL (Schema, Tables),
--- từ Master Data cơ sở cho đến Logic chạy phức tạp (Trigger, Procedures) dùng trên SQL Server Container
--- =====================================================
+-- ============================================================================
+-- 💊 HỆ THỐNG QUẢN LÝ SẢN XUẤT DƯỢC PHẨM (GMP-WHO)
+-- KỊCH BẢN KHỞI TẠO CƠ SỞ DỮ LIỆU (ENTRY POINT)
+-- 
+-- File này là "Điểm bắt đầu" để thiết lập toàn bộ cấu trúc DB. 
+-- Nó sẽ tự động tạo Database PharmaceuticalProcessingManagementSystem
+-- sau đó gọi lần lượt các file thành phần (Module) theo đúng thứ tự logic.
+-- ============================================================================
+
+USE master;
+GO
+
+-- 1. TẠO DATABASE MỚI (Nếu chưa có)
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'PharmaceuticalProcessingManagementSystem')
+BEGIN
+    CREATE DATABASE [PharmaceuticalProcessingManagementSystem];
+END
+GO
+
+USE [PharmaceuticalProcessingManagementSystem];
+GO
 
 PRINT 'Starting GMP Database Initialization...';
 

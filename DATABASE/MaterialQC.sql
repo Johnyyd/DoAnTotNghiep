@@ -1,16 +1,16 @@
-CREATE TRIGGER trg_Check_Material_QC
-ON MaterialUsage
-AFTER INSERT
-AS
-BEGIN
-    IF EXISTS (
-        SELECT 1 
-        FROM Inserted i
-        JOIN InventoryLots l ON i.InventoryLotID = l.LotID
-        WHERE l.QCStatus <> 'Released' OR l.ExpiryDate < GETDATE()
-    )
-    BEGIN
-        RAISERROR ('L?i GMP: Kh�ng th? c?p ph�t nguy�n li?u ch?a ??t QC (Released) ho?c ?� h?t h?n.', 16, 1);
-        ROLLBACK TRANSACTION;
-    END
-END;
+﻿-- ============================================================================
+-- 🔬 MODULE: KIỂM TRA CHẤT LƯỢNG (QUALITY CONTROL - QC)
+-- 
+-- Lưu các bản ghi về việc xét duyệt chất lượng cho Lô ngueyên liệu và Thành phẩm.
+-- ============================================================================
+
+CREATE TABLE QualityTests (
+    TestId INT PRIMARY KEY IDENTITY(1,1),
+    InventoryLotId INT REFERENCES InventoryLots(LotId),
+    TestName NVARCHAR(100),         -- Tên chỉ tiêu kiểm tra
+    ResultValue NVARCHAR(200),      -- Kết quả thực tế
+    PassStatus BIT DEFAULT 1,       -- Đạt hay không đạt
+    TestedBy INT REFERENCES AppUsers(UserId),
+    TestDate DATETIME2 DEFAULT GETDATE()
+);
+GO

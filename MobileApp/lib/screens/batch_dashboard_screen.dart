@@ -1,108 +1,241 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
+import 'batch_detail_screen.dart';
 
-/// Màn hình [BatchDashboardScreen] hiển thị danh sách các công đoạn
-/// của một lô sản xuất. Hỗ trợ hiển thị trạng thái hoàn thành, đang chờ (Pending) hoặc bị khóa.
-class BatchDashboardScreen extends StatelessWidget {
+/// [BatchDashboardScreen] — Hiển thị danh sách mẻ sản xuất kéo từ API backend.
+/// Operator chọn mẻ → vào màn hình chi tiết công đoạn.
+class BatchDashboardScreen extends StatefulWidget {
   const BatchDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Sử dụng ListView để hiển thị danh sách các thẻ trạng thái công đoạn có thể cuộn dọc
-    // Padding 16 pixels giúp cách đều lề màn hình để giao diện thoáng hơn
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Tiêu đề của danh sách
-        const Text(
-          'DANH SÁCH CÔNG ĐOẠN',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black54),
-        ),
-        const SizedBox(height: 16), // Tạo khoảng trống 16px giữa Tiêu đề và Danh sách
-        
-        // Render tĩnh các bước thông qua hàm xây dựng widget cục bộ _buildStepItem
-        _buildStepItem(context, 'Step 1: Xử lý nguyên liệu - Sấy TD 8', 'Completed'),
-        _buildStepItem(context, 'Step 2: Xử lý nguyên liệu - Sấy NLC 3', 'Pending'),
-        _buildStepItem(context, 'Step 3: Pha chế - Cân nguyên liệu', 'Locked'),
-        _buildStepItem(context, 'Step 4: Pha chế - Trộn khô', 'Locked'),
-      ],
-    );
+  State<BatchDashboardScreen> createState() => _BatchDashboardScreenState();
+}
+
+class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
+  List<Map<String, dynamic>> _batches = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBatches();
   }
 
-  /// Hàm xây dựng giao diện cho từng bước công đoạn (Card)
-  /// Nhận vào [title] là tên bước và [status] là trạng thái để render icon và màu sắc tương ứng.
-  Widget _buildStepItem(BuildContext context, String title, String status) {
-    // Khai báo các biến lưu trữ style giao diện tùy theo trạng thái (status)
-    Color statusColor;
-    IconData statusIcon;
-    String statusText;
+  Future<void> _loadBatches() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    final data = await ApiService.getBatches();
+    if (mounted) {
+      setState(() {
+        _batches = data;
+        _isLoading = false;
+        if (data.isEmpty) _error = 'Không có mẻ sản xuất nào.';
+      });
+    }
+  }
 
-    // Phân tích tham số status để ánh xạ màu sắc, biểu tượng và nhãn Text tiếng Việt
+  Color _statusColor(String? status) {
     switch (status) {
       case 'Completed':
-        statusColor = Theme.of(context).primaryColor; // Màu chủ đạo (Xanh đậm) cho trạng thái hoàn thành
-        statusIcon = Icons.check_circle;
-        statusText = 'Hoàn thành';
-        break;
-      case 'Pending':
-        statusColor = Colors.orange.shade700; // Màu cam làm nổi bật trạng thái đang chờ xử lý
-        statusIcon = Icons.pending;
-        statusText = 'Đang chờ';
-        break;
-      case 'Locked':
+        return Colors.green.shade600;
+      case 'In-Process':
+        return Colors.blue.shade600;
+      case 'On-Hold':
+        return Colors.orange.shade600;
       default:
-        statusColor = Colors.grey; // Màu xám chìm biểu thị trạng thái chưa mở khóa (Locked)
-        statusIcon = Icons.lock;
-        statusText = 'Khóa';
-        break;
+        return Colors.grey.shade500;
+    }
+  }
+
+  String _statusLabel(String? status) {
+    switch (status) {
+      case 'Completed':
+        return 'Hoàn thành';
+      case 'In-Process':
+        return 'Đang sản xuất';
+      case 'On-Hold':
+        return 'Tạm dừng';
+      default:
+        return status ?? 'Không rõ';
+    }
+  }
+
+  IconData _statusIcon(String? status) {
+    switch (status) {
+      case 'Completed':
+        return Icons.check_circle;
+      case 'In-Process':
+        return Icons.pending;
+      case 'On-Hold':
+        return Icons.pause_circle;
+      default:
+        return Icons.lock;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
     }
 
-    // Wrap bằng Card để tạo khối có Material Design (đổ bóng, viền bo)
-    // - Khối Card này đóng vai trò bao bọc ListTile, tách biệt thẻ công đoạn hiện tại khỏi nền trắng (ListView)
-    return Card(
-      // margin: EdgeInsets.only(bottom: 12) tạo khoảng cách 12 pixels ở mép dưới
-      // Giúp các Card xếp hàng dọc không bị dính sát vào nhau.
-      margin: const EdgeInsets.only(bottom: 12),
-      // child: Khai báo thành phần cấu trúc bên trong. ListTile sinh ra để làm UI cho 1 hàng mục lục chuẩn, bao gồm Trái-Giữa-Phải.
-      child: ListTile(
-        // leading: Thuộc tính của ListTile dành riêng để đặt Widget nằm sát viền trái. Gắn Icon trạng thái vào đây.
-        leading: Icon(statusIcon, color: statusColor),
-        // title: Hiển thị đoạn chữ chính giữa của hàng (Tên công đoạn)
-        title: Text(
-          title, // Biến title lấy từ tham số truyền vào hàm
-          // style: Khai báo TextStyle để tuỳ chỉnh phông chữ, cỡ, độ đậm, màu sắc...
-          style: TextStyle(
-            fontSize: 14, // Kích thước chữ 14, đạt chuẩn dễ đọc cho Mobile.
-            // fontWeight: Dùng toán tử 3 ngôi (condition ? result_if_true : result_if_false).
-            // Nếu trạng thái là Khóa -> chữ mảnh hơn (normal). Nếu đang mở -> in đậm (bold) để nhấn mạnh.
-            fontWeight: status == 'Locked' ? FontWeight.normal : FontWeight.bold,
-            // color: Làm mờ màu (black54) thành xám nhạt nếu khóa. Nếu mở khóa thì dùng đen đậm rõ ràng (black87).
-            color: status == 'Locked' ? Colors.black54 : Colors.black87,
-          ),
-        ),
-        // trailing: Góc phải của ListTile, thường dùng để chứa label trạng thái, badge hoặc icon điều hướng.
-        trailing: Container(
-          // Kéo giãn mép trong (padding) sang 2 bên là 10px, trên dưới 4px để không bị ép chữ
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            // Pha 10% (alpha: 0.1) màu sắc gốc để làm mờ nền thành màu pastel dịu nhẹ (ví dụ Xanh nhạt, Cam nhạt)
-            color: statusColor.withValues(alpha: 0.1), 
-            borderRadius: BorderRadius.circular(12), // Bo các mép cong của Container để tạo hình Capsule (thuốc con nhộng)
-            // Kẻ 1 viền mỏng bao quanh với màu lấy 50% độ đậm nguyên bản
-            border: Border.all(color: statusColor.withValues(alpha: 0.5)), 
-          ),
-          child: Text(
-            statusText,
-            style: TextStyle(
-              fontSize: 12, // Badge nhỏ gọn nên chữ hẹp lại còn 12px
-              fontWeight: FontWeight.bold,
-              color: statusColor, // Chữ hiển thị phải sử dụng màu cực đậm (nguyên bản) mới ăn khớp với nền nhạt
+    if (_error != null && _batches.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox, size: 64, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            Text(_error!, style: const TextStyle(color: Colors.grey)),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _loadBatches,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tải lại'),
             ),
-          ),
+          ],
         ),
-        // onTap: Bắt sự kiện người dùng bấm vào dòng này. 
-        // Nếu dòng bị 'Locked', thuộc tính gán là null => Vô hiệu hóa tính năng bấm (ListTile không phát sáng khi click).
-        // Ngược lại, truyền một hàm rỗng `() {}` để tạo ra hiệu ứng sóng nhấn (ripple API).
-        onTap: status == 'Locked' ? null : () {},
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadBatches,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'DANH SÁCH MẺ SẢN XUẤT',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black54,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              Text(
+                '${_batches.length} mẻ',
+                style: const TextStyle(fontSize: 13, color: Colors.black45),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ..._batches.map((batch) {
+            final batchId = batch['batchId'] as int?;
+            final batchNumber = batch['batchNumber'] as String? ?? '-';
+            final status = batch['status'] as String?;
+            final productName = batch['order']?['recipe']?['material']?['materialName']
+                    as String? ??
+                batch['order']?['productName'] as String? ??
+                'Sản phẩm';
+            final orderCode =
+                batch['order']?['orderCode'] as String? ?? '#$batchId';
+
+            final color = _statusColor(status);
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: color.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: batchId == null
+                    ? null
+                    : () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => BatchDetailScreen(
+                              batchId: batchId,
+                              batchNumber: batchNumber,
+                            ),
+                          ),
+                        );
+                      },
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(_statusIcon(status), color: color, size: 24),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              batchNumber,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              productName,
+                              style: const TextStyle(
+                                  fontSize: 13, color: Colors.black54),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              'Lệnh: $orderCode',
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.black38),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border:
+                                  Border.all(color: color.withOpacity(0.5)),
+                            ),
+                            child: Text(
+                              _statusLabel(status),
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: color),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Icon(Icons.chevron_right,
+                              size: 18, color: Colors.black26),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 import '../components/sticky_batch_header.dart';
 import 'batch_dashboard_screen.dart';
 import 'drying_step_screen.dart';
 import 'weighing_step_screen.dart';
 import 'mixing_step_screen.dart';
+import 'login_screen.dart';
 
-/// Màn hình [MainNavigationScreen] đóng vai trò bộ khung (Scaffold) chính của ứng dụng.
-/// Điều hướng qua các công đoạn bằng `BottomNavigationBar` (Sấy, Cân, Trộn...).
-/// Khung hiển thị bao gồm `StickyBatchHeader` neo trên cùng và các màn hình thay đổi.
+/// [MainNavigationScreen] — Bộ khung (Scaffold) chính sau khi đăng nhập.
+/// Điều hướng giữa Tiến độ mẻ, Sấy, Cân, Trộn qua BottomNavigationBar.
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
 
@@ -18,23 +19,81 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
 
+  void _logout() {
+    AuthService.clearSession();
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (_) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final user = AuthService.currentUser;
+    final username = user?['username'] as String? ?? 'Operator';
+    final role = user?['role'] as String? ?? '';
+
     final List<Widget> pages = [
-       const BatchDashboardScreen(),
-       const DryingStepScreen(stepName: 'SẤY NLC 3 / TD 8'),
-       const WeighingStepScreen(),
-       const MixingStepScreen(),
+      const BatchDashboardScreen(),
+      const DryingStepScreen(stepName: 'SẤY NLC 3 / TD 8'),
+      const WeighingStepScreen(),
+      const MixingStepScreen(),
     ];
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('eBMR', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
-          IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {}),
-          const Padding(
-            padding: EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(radius: 16, child: Icon(Icons.person, size: 20)),
+          // User info chip
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.person, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    username,
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  if (role.isNotEmpty) ...[
+                    const SizedBox(width: 4),
+                    Text('($role)',
+                        style: const TextStyle(fontSize: 11, color: Colors.white70)),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          // Logout
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Đăng xuất',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Đăng xuất'),
+                  content: const Text('Bạn có chắc muốn đăng xuất?'),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Hủy')),
+                    FilledButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _logout();
+                        },
+                        child: const Text('Đồng ý')),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -61,9 +120,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         selectedIndex: _selectedIndex,
         onDestinationSelected: (i) => setState(() => _selectedIndex = i),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard_outlined), label: 'Tiến độ'),
-          NavigationDestination(icon: Icon(Icons.wb_sunny_outlined), label: 'Sấy'),
-          NavigationDestination(icon: Icon(Icons.scale_outlined), label: 'Cân'),
+          NavigationDestination(
+              icon: Icon(Icons.dashboard_outlined), label: 'Tiến độ'),
+          NavigationDestination(
+              icon: Icon(Icons.wb_sunny_outlined), label: 'Sấy'),
+          NavigationDestination(
+              icon: Icon(Icons.scale_outlined), label: 'Cân'),
           NavigationDestination(icon: Icon(Icons.cyclone), label: 'Trộn'),
         ],
       ),

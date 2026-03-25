@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'theme/app_theme.dart';
-import 'screens/main_navigation.dart';
+import 'screens/login_screen.dart';
 
 void main() {
   runApp(const GmpMobileApp());
 }
 
-/// [GmpMobileApp] là entry point của ứng dụng Mobile eBMR (Nhật ký sản xuất điện tử).
-/// Thiết lập [ThemeData] chung và khởi chạy [MainNavigationScreen] làm màn hình gốc.
+/// [GmpMobileApp] là entry point của ứng dụng Mobile eBMR.
+/// Bắt đầu từ [LoginScreen] để bảo mật truy cập.
 class GmpMobileApp extends StatelessWidget {
   const GmpMobileApp({super.key});
 
@@ -17,7 +17,7 @@ class GmpMobileApp extends StatelessWidget {
       title: 'eBMR - Nhật ký sản xuất điện tử',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const MainNavigationScreen(),
+      home: const LoginScreen(),
     );
   }
 }
