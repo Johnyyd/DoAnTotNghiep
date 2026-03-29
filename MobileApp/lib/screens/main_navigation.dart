@@ -11,7 +11,9 @@ import 'login_screen.dart';
 /// [MainNavigationScreen] — Bộ khung (Scaffold) chính sau khi đăng nhập.
 /// Điều hướng giữa Tiến độ mẻ, Sấy, Cân, Trộn qua BottomNavigationBar.
 class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
+  final Map<String, dynamic> orderData;
+
+  const MainNavigationScreen({super.key, required this.orderData});
 
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
@@ -28,7 +30,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   Future<void> _calculateProgress() async {
-    final batches = await ApiService.getBatches();
+    final batches =
+        await ApiService.getBatches(orderId: widget.orderData['orderId']);
     if (batches.isNotEmpty) {
       int completed = batches.where((b) => b['status'] == 'Completed').length;
       if (mounted) {
@@ -54,7 +57,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final role = user?['role'] as String? ?? '';
 
     final List<Widget> pages = [
-      const BatchDashboardScreen(),
+      BatchDashboardScreen(orderId: widget.orderData['orderId']),
       const DryingStepScreen(stepName: 'SẤY NLC 3 / TD 8'),
       const WeighingStepScreen(),
       const MixingStepScreen(),
@@ -62,7 +65,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('eBMR', style: TextStyle(fontWeight: FontWeight.bold)),
+        title:
+            const Text('eBMR', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           // User info chip
           Padding(
@@ -79,12 +83,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   const SizedBox(width: 4),
                   Text(
                     username,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                   if (role.isNotEmpty) ...[
                     const SizedBox(width: 4),
                     Text('($role)',
-                        style: const TextStyle(fontSize: 11, color: Colors.white70)),
+                        style: const TextStyle(
+                            fontSize: 11, color: Colors.white70)),
                   ],
                 ],
               ),
@@ -120,13 +126,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       body: Column(
         children: [
           StickyBatchHeader(
-            title: 'VIÊN NANG NLC 3',
-            batchNo: 'BATCH-NLC3-001',
-            sdk: 'VD-12345-21',
-            batchSize: '100 kg',
-            sizing: 'Thùng/ 80 chai/ 40 viên',
-            startDate: '18/03/2026',
-            endDate: '25/03/2026',
+            title: widget.orderData['productName'] ?? 'Sản phẩm',
+            batchNo: widget.orderData['orderCode'] ?? '-',
+            sdk: widget.orderData['sdk'] ?? '-',
+            batchSize: widget.orderData['batchSize'] ?? '-',
+            sizing: widget.orderData['sizing'] ?? '-',
+            startDate: widget.orderData['startDate'] ?? '-',
+            endDate: widget.orderData['endDate'] ?? '-',
             progress: _batchProgress,
           ),
           Expanded(
@@ -145,8 +151,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               icon: Icon(Icons.dashboard_outlined), label: 'Tiến độ'),
           NavigationDestination(
               icon: Icon(Icons.wb_sunny_outlined), label: 'Sấy'),
-          NavigationDestination(
-              icon: Icon(Icons.scale_outlined), label: 'Cân'),
+          NavigationDestination(icon: Icon(Icons.scale_outlined), label: 'Cân'),
           NavigationDestination(icon: Icon(Icons.cyclone), label: 'Trộn'),
         ],
       ),

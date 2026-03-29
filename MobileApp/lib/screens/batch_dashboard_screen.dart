@@ -5,7 +5,9 @@ import 'batch_detail_screen.dart';
 /// [BatchDashboardScreen] — Hiển thị danh sách mẻ sản xuất kéo từ API backend.
 /// Operator chọn mẻ → vào màn hình chi tiết công đoạn.
 class BatchDashboardScreen extends StatefulWidget {
-  const BatchDashboardScreen({super.key});
+  final int? orderId;
+
+  const BatchDashboardScreen({super.key, this.orderId});
 
   @override
   State<BatchDashboardScreen> createState() => _BatchDashboardScreenState();
@@ -27,7 +29,7 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
       _isLoading = true;
       _error = null;
     });
-    final data = await ApiService.getBatches();
+    final data = await ApiService.getBatches(orderId: widget.orderId);
     if (mounted) {
       setState(() {
         _batches = data;

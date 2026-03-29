@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
-import 'main_navigation.dart';
+import 'home_screen.dart';
 
 /// [LoginScreen] — Màn hình đăng nhập cho ứng dụng Mobile eBMR.
 /// Kết nối với backend GMP System qua [ApiService.login].
@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (token != null && user != null) {
         AuthService.setSession(token, user);
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
         );
         return;
       }
