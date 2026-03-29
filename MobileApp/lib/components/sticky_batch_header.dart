@@ -11,6 +11,7 @@ class StickyBatchHeader extends StatefulWidget {
   final String sizing;
   final String startDate;
   final String endDate;
+  final double progress; // Thêm progress bar
 
   const StickyBatchHeader({
     super.key,
@@ -21,6 +22,7 @@ class StickyBatchHeader extends StatefulWidget {
     required this.sizing,
     required this.startDate,
     required this.endDate,
+    this.progress = 0.0,
   });
 
   @override
@@ -61,6 +63,38 @@ class _StickyBatchHeaderState extends State<StickyBatchHeader> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Progress Bar
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: widget.progress,
+                                minHeight: 6,
+                                backgroundColor: Colors.grey.shade200,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  widget.progress >= 1.0 
+                                      ? Colors.green 
+                                      : Theme.of(context).primaryColor
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${(widget.progress * 100).toInt()}%',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: widget.progress >= 1.0 
+                                  ? Colors.green 
+                                  : Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
                       Text(
                         widget.title,
                         style: const TextStyle(

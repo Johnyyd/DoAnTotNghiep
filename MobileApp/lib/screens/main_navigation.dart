@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/api_service.dart';
 import '../components/sticky_batch_header.dart';
 import 'batch_dashboard_screen.dart';
 import 'drying_step_screen.dart';
@@ -18,6 +19,25 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
+  double _batchProgress = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateProgress();
+  }
+
+  Future<void> _calculateProgress() async {
+    final batches = await ApiService.getBatches();
+    if (batches.isNotEmpty) {
+      int completed = batches.where((b) => b['status'] == 'Completed').length;
+      if (mounted) {
+        setState(() {
+          _batchProgress = completed / batches.length;
+        });
+      }
+    }
+  }
 
   void _logout() {
     AuthService.clearSession();
@@ -99,7 +119,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
       body: Column(
         children: [
-          const StickyBatchHeader(
+          StickyBatchHeader(
             title: 'VIÊN NANG NLC 3',
             batchNo: 'BATCH-NLC3-001',
             sdk: 'VD-12345-21',
@@ -107,6 +127,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             sizing: 'Thùng/ 80 chai/ 40 viên',
             startDate: '18/03/2026',
             endDate: '25/03/2026',
+            progress: _batchProgress,
           ),
           Expanded(
             child: IndexedStack(

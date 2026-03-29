@@ -47,19 +47,77 @@ class ApiService {
   // ─── PRODUCTION BATCHES ────────────────────────────────────
 
   /// Lấy danh sách tất cả mẻ sản xuất
+  /// Lấy danh sách tất cả mẻ sản xuất (Hiển thị mock data để test Progress theo yêu cầu)
   static Future<List<Map<String, dynamic>>> getBatches() async {
-    final url = Uri.parse('$baseUrl/production-batches');
-    try {
-      final response = await http.get(url, headers: await _headers());
-      if (response.statusCode == 200) {
-        final body = jsonDecode(response.body) as Map<String, dynamic>;
-        final data = body['data'] as List<dynamic>? ?? [];
-        return data.cast<Map<String, dynamic>>();
+    // Thêm dữ liệu giả lập (mock data) để có thể test chuẩn hơn
+    await Future.delayed(const Duration(milliseconds: 600)); // Simulate network
+    return [
+      {
+        'batchId': 101,
+        'batchNumber': 'BATCH-NLC3-001',
+        'status': 'Completed',
+        'order': {
+          'orderCode': 'ORD-1025',
+          'recipe': {
+            'material': {
+              'materialName': 'Viên Nang NLC 3 (Lô 1)'
+            }
+          }
+        }
+      },
+      {
+        'batchId': 102,
+        'batchNumber': 'BATCH-NLC3-002',
+        'status': 'Completed',
+        'order': {
+          'orderCode': 'ORD-1025',
+          'recipe': {
+            'material': {
+              'materialName': 'Viên Nang NLC 3 (Lô 2)'
+            }
+          }
+        }
+      },
+      {
+        'batchId': 103,
+        'batchNumber': 'BATCH-NLC3-003',
+        'status': 'In-Process',
+        'order': {
+          'orderCode': 'ORD-1025',
+          'recipe': {
+            'material': {
+              'materialName': 'Viên Nang NLC 3 (Lô 3)'
+            }
+          }
+        }
+      },
+      {
+        'batchId': 104,
+        'batchNumber': 'BATCH-NLC3-004',
+        'status': 'Draft',
+        'order': {
+          'orderCode': 'ORD-1025',
+          'recipe': {
+            'material': {
+              'materialName': 'Viên Nang NLC 3 (Lô 4)'
+            }
+          }
+        }
+      },
+      {
+        'batchId': 105,
+        'batchNumber': 'BATCH-NLC3-005',
+        'status': 'Draft',
+        'order': {
+          'orderCode': 'ORD-1025',
+          'recipe': {
+            'material': {
+              'materialName': 'Viên Nang NLC 3 (Lô 5)'
+            }
+          }
+        }
       }
-      return [];
-    } catch (e) {
-      return [];
-    }
+    ];
   }
 
   /// Lấy chi tiết một mẻ sản xuất theo ID (kèm BOM, Routing)
