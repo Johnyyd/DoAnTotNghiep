@@ -22,6 +22,7 @@ namespace GMP_System.Controllers
         {
             var batchLogs = await _unitOfWork.BatchProcessLogs
                 .Query()
+                .Include(x => x.Routing)
                 .Where(x => x.BatchId == batchId)
                 .OrderBy(x => x.StartTime)
                 .ToListAsync();

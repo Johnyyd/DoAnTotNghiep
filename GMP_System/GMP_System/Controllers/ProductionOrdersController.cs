@@ -25,6 +25,7 @@ namespace GMP_System.Controllers
                 .Include(o => o.Recipe)
                     .ThenInclude(r => r!.Material)
                 .Include(o => o.CreatedByNavigation)
+                .Include(o => o.ProductionBatches)
                 .ToListAsync();
 
             return Ok(new { data = orders, totalCount = orders.Count, success = true, message = "Success" });

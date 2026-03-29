@@ -46,163 +46,72 @@ class ApiService {
 
   // ─── PRODUCTION ORDERS (LỆNH SẢN XUẤT) ─────────────────────
 
-  /// Lấy danh sách các lệnh sản xuất hiện tại (Mock data)
+  /// Lấy danh sách các lệnh sản xuất hiện tại từ CSDL
   static Future<List<Map<String, dynamic>>> getProductionOrders() async {
-    await Future.delayed(const Duration(milliseconds: 600));
-    return [
-      {
-        'orderId': 1001,
-        'orderCode': 'ORD-1025',
-        'productName': 'VIÊN NANG NLC 3',
-        'sdk': 'VD-12345-21',
-        'batchSize': '100 kg',
-        'sizing': 'Thùng/ 80 chai/ 40 viên',
-        'startDate': '18/03/2026',
-        'endDate': '25/03/2026',
-        'progress': 0.4, // 40% (2/5 mẻ done)
-        'totalBatches': 5,
-        'completedBatches': 2,
-        'status': 'In-Process',
-      },
-      {
-        'orderId': 1002,
-        'orderCode': 'ORD-1026',
-        'productName': 'SIRO HO THẢO DƯỢC',
-        'sdk': 'VD-54321-22',
-        'batchSize': '500 Lít',
-        'sizing': 'Thùng/ 50 chai/ 100ml',
-        'startDate': '20/03/2026',
-        'endDate': '30/03/2026',
-        'progress': 0.0, // 0%
-        'totalBatches': 3,
-        'completedBatches': 0,
-        'status': 'Draft',
-      },
-      {
-        'orderId': 1003,
-        'orderCode': 'ORD-1027',
-        'productName': 'PARACETAMOL 500',
-        'sdk': 'VD-99999-23',
-        'batchSize': '200 kg',
-        'sizing': 'Thùng/ 100 vỉ/ 10 viên',
-        'startDate': '10/03/2026',
-        'endDate': '15/03/2026',
-        'progress': 1.0, // 100%
-        'totalBatches': 4,
-        'completedBatches': 4,
-        'status': 'Completed',
+    final url = Uri.parse('$baseUrl/production-orders');
+    try {
+      final response = await http.get(url, headers: await _headers());
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final data = body['data'] as List<dynamic>? ?? [];
+        return data.map((e) {
+          final order = e as Map<String, dynamic>;
+          final batches = order['productionBatches'] as List<dynamic>? ?? [];
+          final totalBatches = batches.length;
+          final completedBatches = batches.where((b) => b['status'] == 'Completed').length;
+          final progress = totalBatches == 0 ? 0.0 : completedBatches / totalBatches;
+
+          final measureUnit = order['recipe']?['material']?['unitOfMeasure']?['uomName'] ?? 'kg';
+
+          return {
+            'orderId': order['orderId'],
+            'orderCode': order['orderCode'] ?? '-',
+            'productName': order['recipe']?['material']?['materialName'] ?? 'Sản phẩm',
+            'sdk': 'N/A', // Tạm để N/A vì Backend không trả SDK ở Order
+            'batchSize': '${order['plannedQuantity'] ?? 0} $measureUnit',
+            'sizing': '-', // N/A
+            'startDate': order['startDate'] != null ? _formatDate(order['startDate']) : '-',
+            'endDate': order['endDate'] != null ? _formatDate(order['endDate']) : '-',
+            'progress': progress,
+            'totalBatches': totalBatches,
+            'completedBatches': completedBatches,
+            'status': order['status'] ?? 'Draft',
+          };
+        }).toList();
       }
-    ];
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static String _formatDate(String iso) {
+    try {
+      final dt = DateTime.parse(iso).toLocal();
+      return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+    } catch (_) {
+      return iso;
+    }
   }
 
   // ─── PRODUCTION BATCHES ────────────────────────────────────
 
-  /// Lấy danh sách tất cả mẻ sản xuất (Hiển thị mock data để test Progress theo yêu cầu)
+  /// Lấy danh sách tất cả mẻ sản xuất từ CSDL
   static Future<List<Map<String, dynamic>>> getBatches({int? orderId}) async {
-    // Thêm dữ liệu giả lập (mock data) để có thể test chuẩn hơn
-    await Future.delayed(const Duration(milliseconds: 600)); // Simulate network
-    
-    // Nếu gọi cho order khác 1001 (VIÊN NANG NLC 3) thì mock dữ liệu riêng
-    if (orderId == 1002) {
-      return [
-        {
-          'batchId': 201,
-          'batchNumber': 'BATCH-SIRO-001',
-          'status': 'Draft',
-          'order': {'orderCode': 'ORD-1026', 'productName': 'SIRO HO THẢO DƯỢC (Lô 1)'}
-        },
-        {
-          'batchId': 202,
-          'batchNumber': 'BATCH-SIRO-002',
-          'status': 'Draft',
-          'order': {'orderCode': 'ORD-1026', 'productName': 'SIRO HO THẢO DƯỢC (Lô 2)'}
-        },
-        {
-          'batchId': 203,
-          'batchNumber': 'BATCH-SIRO-003',
-          'status': 'Draft',
-          'order': {'orderCode': 'ORD-1026', 'productName': 'SIRO HO THẢO DƯỢC (Lô 3)'}
-        }
-      ];
-    }
-    
-    if (orderId == 1003) {
-      return List.generate(4, (index) => {
-        'batchId': 300 + index,
-        'batchNumber': 'BATCH-PARA-00${index+1}',
-        'status': 'Completed',
-        'order': {'orderCode': 'ORD-1027', 'productName': 'PARACETAMOL 500 (Lô ${index+1})'}
-      });
-    }
-
-    // Mặc định trả về dữ liệu của VIÊN NANG NLC 3 (orderId = 1001)
-    return [
-      {
-        'batchId': 101,
-        'batchNumber': 'BATCH-NLC3-001',
-        'status': 'Completed',
-        'order': {
-          'orderCode': 'ORD-1025',
-          'recipe': {
-            'material': {
-              'materialName': 'Viên Nang NLC 3 (Lô 1)'
-            }
-          }
-        }
-      },
-      {
-        'batchId': 102,
-        'batchNumber': 'BATCH-NLC3-002',
-        'status': 'Completed',
-        'order': {
-          'orderCode': 'ORD-1025',
-          'recipe': {
-            'material': {
-              'materialName': 'Viên Nang NLC 3 (Lô 2)'
-            }
-          }
-        }
-      },
-      {
-        'batchId': 103,
-        'batchNumber': 'BATCH-NLC3-003',
-        'status': 'In-Process',
-        'order': {
-          'orderCode': 'ORD-1025',
-          'recipe': {
-            'material': {
-              'materialName': 'Viên Nang NLC 3 (Lô 3)'
-            }
-          }
-        }
-      },
-      {
-        'batchId': 104,
-        'batchNumber': 'BATCH-NLC3-004',
-        'status': 'Draft',
-        'order': {
-          'orderCode': 'ORD-1025',
-          'recipe': {
-            'material': {
-              'materialName': 'Viên Nang NLC 3 (Lô 4)'
-            }
-          }
-        }
-      },
-      {
-        'batchId': 105,
-        'batchNumber': 'BATCH-NLC3-005',
-        'status': 'Draft',
-        'order': {
-          'orderCode': 'ORD-1025',
-          'recipe': {
-            'material': {
-              'materialName': 'Viên Nang NLC 3 (Lô 5)'
-            }
-          }
-        }
+    final url = orderId != null
+        ? Uri.parse('$baseUrl/production-orders/$orderId/batches')
+        : Uri.parse('$baseUrl/production-batches');
+    try {
+      final response = await http.get(url, headers: await _headers());
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final data = body['data'] as List<dynamic>? ?? [];
+        return data.cast<Map<String, dynamic>>();
       }
-    ];
+      return [];
+    } catch (e) {
+      return [];
+    }
   }
 
   /// Lấy chi tiết một mẻ sản xuất theo ID (kèm BOM, Routing)
@@ -233,37 +142,46 @@ class ApiService {
 
   // ─── BATCH PROCESS LOGS ────────────────────────────────────
 
-  /// Lấy nhật ký công đoạn của một mẻ (Sử dụng Mock Data để hiển thị rõ lộ trình)
+  /// Lấy nhật ký công đoạn của một mẻ từ CSDL và mapping với định tuyến khung
   static Future<List<Map<String, dynamic>>> getProcessLogs(int batchId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    
-    // Tạo cấu trúc 3 công đoạn chuẩn (Routing Steps) theo quy trình: Sấy -> Cân -> Trộn
-    final stepDrying = {'stepId': 1, 'stepName': 'Công đoạn 1: Sấy NLC 3 / TD 8'};
-    final stepWeighing = {'stepId': 2, 'stepName': 'Công đoạn 2: Cân nguyên liệu'};
-    final stepMixing = {'stepId': 3, 'stepName': 'Công đoạn 3: Trộn đồng nhất'};
+    final url = Uri.parse('$baseUrl/batchprocesslogs/batch/$batchId');
+    try {
+      final response = await http.get(url, headers: await _headers());
+      List<Map<String, dynamic>> fetchedLogs = [];
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final data = body['data'] as List<dynamic>? ?? [];
+        fetchedLogs = data.cast<Map<String, dynamic>>();
+      }
 
-    // Trả về tiến độ khác nhau dựa theo ID của mẻ
-    if (batchId == 101 || batchId == 102 || batchId >= 300) {
-      // Các mẻ đã Hoàn thành (Completed)
-      return [
-        {'logId': 1, 'stepId': 1, 'step': stepDrying, 'resultStatus': 'Passed', 'endTime': '2026-03-25T08:30:00Z'},
-        {'logId': 2, 'stepId': 2, 'step': stepWeighing, 'resultStatus': 'Passed', 'endTime': '2026-03-25T11:45:00Z'},
-        {'logId': 3, 'stepId': 3, 'step': stepMixing, 'resultStatus': 'Passed', 'endTime': '2026-03-25T16:00:00Z'},
+      // Tạo cấu trúc 3 công đoạn chuẩn (Routing Steps) theo quy trình: Sấy -> Cân -> Trộn
+      final standardSteps = [
+        {'stepId': 1, 'stepName': 'Công đoạn 1: Sấy NLC 3 / TD 8'},
+        {'stepId': 2, 'stepName': 'Công đoạn 2: Cân nguyên liệu'},
+        {'stepId': 3, 'stepName': 'Công đoạn 3: Trộn đồng nhất'},
       ];
-    } else if (batchId == 103) {
-      // Mẻ đang Sản xuất (In-Process)
-      return [
-        {'logId': 4, 'stepId': 1, 'step': stepDrying, 'resultStatus': 'Passed', 'endTime': '2026-03-29T09:15:00Z'},
-        {'logId': 5, 'stepId': 2, 'step': stepWeighing, 'resultStatus': 'PendingQC', 'endTime': '2026-03-29T13:00:00Z'},
-        {'logId': 6, 'stepId': 3, 'step': stepMixing, 'resultStatus': null, 'endTime': null},
-      ];
-    } else {
-      // Mẻ chưa thực hiện (Draft)
-      return [
-         {'logId': 7, 'stepId': 1, 'step': stepDrying, 'resultStatus': null, 'endTime': null},
-         {'logId': 8, 'stepId': 2, 'step': stepWeighing, 'resultStatus': null, 'endTime': null},
-         {'logId': 9, 'stepId': 3, 'step': stepMixing, 'resultStatus': null, 'endTime': null},
-      ];
+
+      return standardSteps.map((step) {
+        // Tìm xem CSDL đã có log cho bước này chưa (map theo StepId)
+        // Vì List in Dart không có firstWhereOrNull một cách nhẹ nhàng nếu không dùng collection package, nên mình dùng cách duyệt an toàn.
+        Map<String, dynamic>? existLog;
+        for (var log in fetchedLogs) {
+          if (log['routingId'] == step['stepId']) {
+            existLog = log;
+          }
+        }
+        
+        return {
+          'logId': existLog?['logId'],
+          'stepId': step['stepId'],
+          'step': step, // Chứa StepName để giao diện hiển thị
+          'resultStatus': existLog?['resultStatus'],
+          'endTime': existLog?['endTime'],
+        };
+      }).toList();
+
+    } catch (e) {
+      return [];
     }
   }
 
@@ -278,7 +196,7 @@ class ApiService {
     final url = Uri.parse('$baseUrl/batchprocesslogs');
     final payload = {
       'batchId': batchId,
-      'stepId': stepId,
+      'routingId': stepId,
       'startTime': DateTime.now().toUtc().toIso8601String(),
       'endTime': DateTime.now().toUtc().toIso8601String(),
       'resultStatus': resultStatus,
