@@ -116,10 +116,11 @@ CREATE TABLE ProductionOrders (
     OrderId INT PRIMARY KEY IDENTITY(1,1),
     OrderCode VARCHAR(50) NOT NULL UNIQUE,          -- Mã lệnh cấp xuống xưởng (vd: PO-2026-001)
     RecipeId INT REFERENCES Recipes(RecipeId),      -- Sản xuất dựa trên hồ sơ công thức (Recipe) nào
-    PlannedQuantity DECIMAL(18, 2) NOT NULL,        -- Khối lượng yêu cầu trả hàng từ phòng kinh doanh
+    PlannedQuantity DECIMAL(18, 4) NOT NULL,        -- Khối lượng yêu cầu trả hàng từ phòng kinh doanh
+    ActualQuantity DECIMAL(18, 4),                  -- Khối lượng thực tế thu hồi
     StartDate DATETIME2 NOT NULL,                   -- Hạn lịch bắt đầu nổ máy
     EndDate DATETIME2,                              -- Lịch bàn giao sản phẩm dự kiến
-    Status NVARCHAR(50) DEFAULT 'Draft',            -- Luồng giám sát tiến độ (Draft, Approved, InProgress, Completed, Cancelled)
+    Status NVARCHAR(50) DEFAULT 'Draft',            -- Luồng giám sát tiến độ (Draft, Approved, InProcess, Completed, Hold, Cancelled)
     CreatedBy INT REFERENCES AppUsers(UserId),      -- Quản lý đã khai sinh lệnh
     CreatedAt DATETIME2 DEFAULT GETDATE(),
     Note NVARCHAR(500)                              -- Yêu cầu kèm theo lô này (Nhiệt độ phòng, Ưu tiên gấp...)
@@ -134,8 +135,9 @@ CREATE TABLE ProductionBatches (
     BatchId INT PRIMARY KEY IDENTITY(1,1),
     OrderId INT REFERENCES ProductionOrders(OrderId),-- Lô siêu nhỏ nhưng thuộc lệnh tổng nào
     BatchNumber VARCHAR(50) NOT NULL UNIQUE,         -- Số Lô thực tế in nổi lên hộp thuốc (Ví dụ: 112026)
-    Status NVARCHAR(50) DEFAULT 'Scheduled',         -- Tình trạng tác nghiệp của phần lô (Scheduled, InProgress, QA_Pending, Finished)
+    Status NVARCHAR(50) DEFAULT 'Scheduled',         -- Tình trạng tác nghiệp của phần lô (Scheduled, InProcess, Completed, OnHold)
     ManufactureDate DATETIME2,                       -- Ngày sản xuất thực tế dập trên vỏ chai
+    EndTime DATETIME2,                               -- Thời điểm kết thúc mẻ
     ExpiryDate DATETIME2,                            -- Hạn sử dụng của sản phẩm
     CurrentStep INT DEFAULT 1,                       -- Điểm chốt chặn: Lô đang xử lý, hoặc ách tắc ở bước quy trình thứ mấy
     CreatedAt DATETIME2 DEFAULT GETDATE()
@@ -146,15 +148,15 @@ CREATE TABLE ProductionBatches (
 -- Lưu trữ lại bằng chứng thao tác của người công nhân đối với từng công đoạn của mỗi mẻ.
 -- -------------------------------------------------------------------------
 CREATE TABLE BatchProcessLogs (
-    LogId INT PRIMARY KEY IDENTITY(1,1),
+    LogId BIGINT PRIMARY KEY IDENTITY(1,1),
     BatchId INT REFERENCES ProductionBatches(BatchId),-- Ghi chép này trích xuất từ phần lô sản xuất nào
-    StepNumber INT NOT NULL,                          -- Thao tác phản hồi ở bước số mấy
-    StepName NVARCHAR(100) NOT NULL,                  -- Trạng thái tên công đoạn (Cân, Trộn, Đóng lọ)
+    RoutingId INT REFERENCES RecipeRouting(RoutingId),-- Liên kết cứng tới công đoạn quy trình
     EquipmentId INT REFERENCES Equipments(EquipmentId),-- Máy thực tế người dùng đã chọn chạy mẻ
     OperatorId INT REFERENCES AppUsers(UserId),       -- Chữ ký điện tử đối chiếu nhân viên chịu trách nhiệm chạy máy
     StartTime DATETIME2,                              -- Ràng buộc thời gian bấm đồng hồ (Start)
     EndTime DATETIME2,                                -- Chốt thời khắc công đoạn kết thúc nghiệp thu
-    Status NVARCHAR(50),                              -- Tình cảnh (Đang làm, Xong xuôi)
+    ResultStatus NVARCHAR(50),                        -- Trạng thái kết quả (Passed, Failed, PendingQC)
+    ParametersData NVARCHAR(MAX),                     -- Dữ liệu JSON thông số vận hành máy
     Notes NVARCHAR(MAX)                               -- Phân trần, giải trình sự cố kỹ thuật hoặc hao hụt
 );
 

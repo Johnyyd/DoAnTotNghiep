@@ -8,6 +8,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading;
+using System.Text.RegularExpressions;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+using System;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,320 +24,166 @@ var builder = WebApplication.CreateBuilder(args);
 // ============================================================
 builder.Services.AddControllers(options =>
 {
-    // Áp dụng [Authorize] cho toàn bộ API — chỉ AllowAnonymous mới bypass được
     options.Filters.Add(new AuthorizeFilter());
-})
-.AddJsonOptions(options =>
+}).AddJsonOptions(x =>
 {
-    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
-// ============================================================
-// 2. JWT AUTHENTICATION
-// ============================================================
-var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? "GMP_WHO_Default_Secret_Key_Minimum_32_Characters_Long_123456789";
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "gmp-api";
-var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "gmp-frontend";
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtIssuer,
-        ValidAudience = jwtAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-        ClockSkew = TimeSpan.Zero
-    };
-    options.Events = new JwtBearerEvents
-    {
-        OnChallenge = context =>
-        {
-            context.HandleResponse();
-            context.Response.StatusCode = 401;
-            context.Response.ContentType = "application/json";
-            return context.Response.WriteAsync(
-                "{\"success\":false,\"message\":\"Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.\"}");
-        },
-        OnForbidden = context =>
-        {
-            context.Response.StatusCode = 403;
-            context.Response.ContentType = "application/json";
-            return context.Response.WriteAsync(
-                "{\"success\":false,\"message\":\"Bạn không có quyền truy cập chức năng này.\"}");
-        }
-    };
-});
-
-builder.Services.AddAuthorization();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // ============================================================
-// 3. CORS — cho phép frontend và mobile
+// 3. DATABASE: SQL SERVER
 // ============================================================
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend",
-        policy =>
-        {
-            policy.WithOrigins(
-                    "http://localhost:8080",   // Frontend DEV
-                    "http://localhost:8081",   // Mobile DEV
-                    "http://100.89.137.3:8080", // Frontend prod (Tailscale)
-                    "http://100.89.137.3:8081"  // Mobile prod (Tailscale)
-                )
-                .AllowAnyMethod()
-                .AllowAnyHeader();
-        });
-});
-
-// ============================================================
-// 4. DATABASE + UnitOfWork
-// ============================================================
-builder.Services.AddScoped<GMP_System.Interceptors.AuditLogInterceptor>();
-
-builder.Services.AddDbContext<GmpContext>((sp, options) =>
-{
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    var interceptor = sp.GetRequiredService<GMP_System.Interceptors.AuditLogInterceptor>();
-    options.AddInterceptors(interceptor);
-    options.UseSqlServer(connectionString);
-});
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<GmpContext>(options =>
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-// IHttpContextAccessor — cho AuditLogInterceptor lấy user từ JWT
-builder.Services.AddHttpContextAccessor();
+// ============================================================
+// 5. SECURITY: CORS + JWT
+// ============================================================
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:8080", "http://localhost:8081", "http://localhost")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "GMP_WHO_Default_Secret_Key_Minimum_32_Characters_Long_123456789";
+var key = Encoding.ASCII.GetBytes(jwtKey);
+
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(x =>
+{
+    x.RequireHttpsMetadata = false; 
+    x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
 var app = builder.Build();
 
-
 // ============================================================
-// 5. SEED DATABASE
+// 6. DB INITIALIZATION & ROBUST SEEDING
 // ============================================================
 using (var scope = app.Services.CreateScope())
 {
-    // ----- RETRY LOGIC FOR DATABASE CONNECTION -----
-    int maxRetries = 10;
-    int delay = 5000;
-    for (int i = 0; i < maxRetries; i++)
-    {
-        try
-        {
-            var db = scope.ServiceProvider.GetRequiredService<GmpContext>();
-            
-            // ----- MANUAL MIGRATION: Đảm bảo có cột PasswordHash -----
-            db.Database.ExecuteSqlRaw(@"
-                IF NOT EXISTS (SELECT * FROM sys.columns 
-                               WHERE object_id = OBJECT_ID(N'[AppUsers]') 
-                               AND name = 'PasswordHash')
-                BEGIN
-                    ALTER TABLE AppUsers ADD PasswordHash NVARCHAR(MAX) NULL;
-                END
-            ");
+    var services = scope.ServiceProvider;
+    var db = services.GetRequiredService<GmpContext>();
 
+    // 6.1. Connection Retry Logic
+    int maxConnectRetries = 15;
+    for (int i = 1; i <= maxConnectRetries; i++)
+    {
+        try {
+            Console.WriteLine($"[BACKEND] Connection attempt {i}/{maxConnectRetries}...");
+            db.Database.CanConnect();
             db.Database.EnsureCreated();
-            break; // Success
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Database connection attempt {i + 1} failed: {ex.Message}");
-            if (i == maxRetries - 1) throw;
-            Thread.Sleep(delay);
-        }
-    }
-
-    var dbFinal = scope.ServiceProvider.GetRequiredService<GmpContext>();
-
-    // ----- ĐẢM BẢO CÁC USER MẶC ĐỊNH LUÔN TỒN TẠI -----
-    Console.WriteLine("----- CHECKING DEFAULT USERS -----");
-    
-    void EnsureUser(string username, string fullName, string role, string password)
-    {
-        var user = dbFinal.AppUsers.FirstOrDefault(u => u.Username == username);
-        if (user == null)
-        {
-            dbFinal.AppUsers.Add(new GMP_System.Entities.AppUser
-            {
-                Username = username,
-                FullName = fullName,
-                Role = role,
-                IsActive = true,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
-                CreatedAt = DateTime.Now
-            });
-            Console.WriteLine($"Added missing user: {username}");
-        }
-        else
-        {
-            // Reset password để đảm bảo khớp tài liệu
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
-            Console.WriteLine($"Reset password for user: {username}");
+            Console.WriteLine("[BACKEND] Database is ONLINE.");
+            break;
+        } catch (Exception ex) {
+            Console.WriteLine($"[BACKEND] Connection failed: {ex.Message}");
+            if (i == maxConnectRetries) throw;
+            Thread.Sleep(5000);
         }
     }
 
-    EnsureUser("admin", "Quản trị viên", "Admin", "Admin@123");
-    EnsureUser("qc01", "Trần Kiểm Tra", "QA_QC", "Qc@123456");
-    EnsureUser("op01", "Nguyễn Công Nhân", "Operator", "Op@123456");
-
-    dbFinal.SaveChanges();
-    Console.WriteLine("----- SYSTEM SEEDING COMPLETE -----");
-
-    // ----- SEED MATERIALS DATA (nếu chưa có) -----
-    if (!dbFinal.Materials.Any())
+    // 6.2. Seed logic using EF Core (Full Scenario Set)
+    if (!db.Materials.Any())
     {
-        var unit1 = new GMP_System.Entities.UnitOfMeasure { UomName = "Kilogram", Description = "Kilogram" };
-        var unit2 = new GMP_System.Entities.UnitOfMeasure { UomName = "Gram", Description = "Gram" };
-        var unit3 = new GMP_System.Entities.UnitOfMeasure { UomName = "Tablet", Description = "Tablet" };
-        dbFinal.UnitOfMeasures.AddRange(unit1, unit2, unit3);
-        dbFinal.SaveChanges();
+        Console.WriteLine("[BACKEND] Starting Full Data Seeding (EF Core)...");
+        
+        // 1. Users
+        var admin = new AppUser { Username = "admin", FullName = "Admin System", Role = "Admin", PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"), IsActive = true };
+        var qc01 = new AppUser { Username = "qc01", FullName = "Trần Kiểm Tra", Role = "QA_QC", PasswordHash = BCrypt.Net.BCrypt.HashPassword("Qc@123456"), IsActive = true };
+        var op01 = new AppUser { Username = "op01", FullName = "Nguyễn Công Nhân", Role = "Operator", PasswordHash = BCrypt.Net.BCrypt.HashPassword("Op@123456"), IsActive = true };
+        db.AppUsers.AddRange(admin, qc01, op01);
+        db.SaveChanges();
+        Console.WriteLine("[BACKEND] Users seeded.");
 
-        var material1 = new GMP_System.Entities.Material
-        {
-            MaterialCode = "MAT-001",
-            MaterialName = "Paracetamol 500mg",
-            Type = "RawMaterial",
-            BaseUomId = unit3.UomId,
-            IsActive = true,
-            Description = "Active ingredient for pain relief",
-            CreatedAt = DateTime.Now
-        };
-        var material2 = new GMP_System.Entities.Material
-        {
-            MaterialCode = "MAT-002",
-            MaterialName = "Microcrystalline Cellulose",
-            Type = "RawMaterial",
-            BaseUomId = unit1.UomId,
-            IsActive = true,
-            Description = "Excipient binder",
-            CreatedAt = DateTime.Now
-        };
-        var material3 = new GMP_System.Entities.Material
-        {
-            MaterialCode = "MAT-003",
-            MaterialName = "Para Film",
-            Type = "Packaging",
-            BaseUomId = unit2.UomId,
-            IsActive = true,
-            Description = "Packaging film for blister packs",
-            CreatedAt = DateTime.Now
-        };
-        dbFinal.Materials.AddRange(material1, material2, material3);
-        dbFinal.SaveChanges();
+        // 2. Units
+        var uomKg = new UnitOfMeasure { UomName = "kg", Description = "Kilogram" };
+        var uomCap = new UnitOfMeasure { UomName = "Tablet/Capsule", Description = "Viên" };
+        var uomBox = new UnitOfMeasure { UomName = "Box", Description = "Hộp" };
+        db.UnitOfMeasures.AddRange(uomKg, uomCap, uomBox);
+        db.SaveChanges();
 
-        var recipe1 = new GMP_System.Entities.Recipe
-        {
-            MaterialId = material1.MaterialId,
-            BatchSize = 1000,
-            Status = "Draft",
-            VersionNumber = 1,
-            CreatedAt = DateTime.Now,
-            EffectiveDate = DateTime.Now.AddDays(1),
-            Note = "Initial draft"
+        // 3. Equipments
+        var eqpDry = new Equipment { EquipmentCode = "EQP-DRY-01", EquipmentName = "Máy sấy tầng sôi", Status = "Ready" };
+        var eqpMix = new Equipment { EquipmentCode = "EQP-MIX-01", EquipmentName = "Máy trộn lập phương", Status = "Ready" };
+        db.Equipments.AddRange(eqpDry, eqpMix);
+        db.SaveChanges();
+
+        // 4. Materials
+        var matNlc = new Material { MaterialCode = "MAT-NLC3", MaterialName = "Hoạt chất NLC 3", Type = "RawMaterial", BaseUomId = uomKg.UomId };
+        var matFg = new Material { MaterialCode = "FG-NLC3-CAP", MaterialName = "Viên nang NLC 3", Type = "FinishedGood", BaseUomId = uomBox.UomId };
+        db.Materials.AddRange(matNlc, matFg);
+        db.SaveChanges();
+
+        // 5. Recipe
+        var recipe = new Recipe { MaterialId = matFg.MaterialId, VersionNumber = 1, BatchSize = 100000, Status = "Approved", ApprovedBy = admin.UserId, ApprovedDate = DateTime.Now };
+        db.Recipes.Add(recipe);
+        db.SaveChanges();
+
+        // 6. Routing
+        var step1 = new RecipeRouting { RecipeId = recipe.RecipeId, StepNumber = 1, StepName = "Cân Nguyên Liệu" };
+        var step2 = new RecipeRouting { RecipeId = recipe.RecipeId, StepNumber = 2, StepName = "Sấy Nguyên Liệu", DefaultEquipmentId = eqpDry.EquipmentId };
+        var step3 = new RecipeRouting { RecipeId = recipe.RecipeId, StepNumber = 3, StepName = "Trộn Khô", DefaultEquipmentId = eqpMix.EquipmentId };
+        db.RecipeRoutings.AddRange(step1, step2, step3);
+        db.SaveChanges();
+
+        // 7. Production Orders (5 Scenarios)
+        var orders = new List<ProductionOrder> {
+            new ProductionOrder { OrderCode = "PO-2026-NLC-001", RecipeId = recipe.RecipeId, PlannedQuantity = 100000, Status = "Completed", CreatedBy = admin.UserId, StartDate = DateTime.Now.AddDays(-5), EndDate = DateTime.Now.AddDays(-4) },
+            new ProductionOrder { OrderCode = "PO-2026-NLC-002", RecipeId = recipe.RecipeId, PlannedQuantity = 200000, Status = "InProcess", CreatedBy = admin.UserId, StartDate = DateTime.Now },
+            new ProductionOrder { OrderCode = "PO-2026-NLC-003", RecipeId = recipe.RecipeId, PlannedQuantity = 150000, Status = "Hold", CreatedBy = admin.UserId, StartDate = DateTime.Now.AddDays(-2) },
+            new ProductionOrder { OrderCode = "PO-2026-NLC-004", RecipeId = recipe.RecipeId, PlannedQuantity = 300000, Status = "Approved", CreatedBy = admin.UserId, StartDate = DateTime.Now.AddDays(2) },
+            new ProductionOrder { OrderCode = "PO-2026-NLC-005", RecipeId = recipe.RecipeId, PlannedQuantity = 50000, Status = "Draft", CreatedBy = admin.UserId, StartDate = DateTime.Now.AddDays(10) }
         };
-        dbFinal.Recipes.Add(recipe1);
-        dbFinal.SaveChanges();
+        db.ProductionOrders.AddRange(orders);
+        db.SaveChanges();
 
-        dbFinal.RecipeBoms.Add(new GMP_System.Entities.RecipeBom
-        {
-            RecipeId = recipe1.RecipeId,
-            MaterialId = material2.MaterialId,
-            Quantity = 0.5m,
-            UomId = unit1.UomId
-        });
-        dbFinal.RecipeBoms.Add(new GMP_System.Entities.RecipeBom
-        {
-            RecipeId = recipe1.RecipeId,
-            MaterialId = material3.MaterialId,
-            Quantity = 0.1m,
-            UomId = unit2.UomId
-        });
+        // 8. Batches for InProcess Order
+        var batchRunning = new ProductionBatch { OrderId = orders[1].OrderId, BatchNumber = "B260302", Status = "InProcess", ManufactureDate = DateTime.Now, CurrentStep = 2 };
+        db.ProductionBatches.Add(batchRunning);
+        db.SaveChanges();
 
-        var lot1 = new GMP_System.Entities.InventoryLot
-        {
-            MaterialId = material2.MaterialId,
-            LotNumber = "LOT-MCC-001",
-            QuantityCurrent = 100,
-            ManufactureDate = DateTime.Now.AddMonths(-1),
-            ExpiryDate = DateTime.Now.AddMonths(11),
-            Qcstatus = "Released"
-        };
-        var lot2 = new GMP_System.Entities.InventoryLot
-        {
-            MaterialId = material3.MaterialId,
-            LotNumber = "LOT-FILM-001",
-            QuantityCurrent = 500,
-            ManufactureDate = DateTime.Now.AddMonths(-2),
-            ExpiryDate = DateTime.Now.AddMonths(10),
-            Qcstatus = "Released"
-        };
-        dbFinal.InventoryLots.AddRange(lot1, lot2);
-        dbFinal.SaveChanges();
-
-        var order1 = new GMP_System.Entities.ProductionOrder
-        {
-            OrderCode = "PO-001",
-            RecipeId = recipe1.RecipeId,
-            PlannedQuantity = 1000,
-            ActualQuantity = 980,
-            Status = "Completed",
-            CreatedAt = DateTime.Now,
-            StartDate = DateTime.Now.AddDays(-7),
-            EndDate = DateTime.Now.AddDays(-6)
-        };
-        dbFinal.ProductionOrders.Add(order1);
-        dbFinal.SaveChanges();
-
-        var batch1 = new GMP_System.Entities.ProductionBatch
-        {
-            OrderId = order1.OrderId,
-            BatchNumber = "BATCH-PCM-001",
-            ManufactureDate = DateTime.Now.AddDays(-7),
-            EndTime = DateTime.Now.AddDays(-6),
-            Status = "Completed"
-        };
-        dbFinal.ProductionBatches.Add(batch1);
-        dbFinal.SaveChanges();
-
-        dbFinal.MaterialUsages.Add(new GMP_System.Entities.MaterialUsage
-        {
-            BatchId = batch1.BatchId,
-            InventoryLotId = lot1.LotId,
-            ActualAmount = 50,
-            Timestamp = DateTime.Now.AddDays(-7),
-            Note = "Used in batch BATCH-PCM-001"
-        });
-        dbFinal.MaterialUsages.Add(new GMP_System.Entities.MaterialUsage
-        {
-            BatchId = batch1.BatchId,
-            InventoryLotId = lot2.LotId,
-            ActualAmount = 100,
-            Timestamp = DateTime.Now.AddDays(-7),
-            Note = "Used in batch BATCH-PCM-001"
-        });
-
-        dbFinal.SaveChanges();
+        Console.WriteLine("[BACKEND] All data seeded successfully (5 PO Scenarios).");
     }
 }
 
 // ============================================================
-// 6. MIDDLEWARE PIPELINE
+// 7. PIPELINE
 // ============================================================
-app.MapGet("/health", () => Results.Json(new { status = "healthy", timestamp = DateTime.UtcNow }))
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.MapGet("/health", () => Results.Json(new { status = "healthy", time = DateTime.UtcNow }))
    .AllowAnonymous();
 
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
-app.UseAuthentication();   // PHẢI trước UseAuthorization
+app.UseAuthentication();   
 app.UseAuthorization();
 app.MapControllers();
 

@@ -44,7 +44,7 @@ services: # Danh sách các services trong hệ thống
       - ASPNETCORE_ENVIRONMENT=Development # Đặt môi trường về dạng Dev giúp khởi phát các thông báo sửa lỗi chi tiết (Swagger UI)
       - DOTNET_USE_POLLING_FILE_WATCHER=1 # Cho phép ứng dụng theo dõi các thay đổi của tệp qua ổ đĩa Docker gắn kèm
       # Thông số chuỗi kết nối Database nhắm thẳng vào tên 'gmp-sqlserver' cùng LAN thay vì đánh qua localhost
-      - ConnectionStrings__DefaultConnection=Server=gmp-sqlserver;Database=GMP_WHO_DB;User Id=sa;Password=GMP_Strong@Passw0rd123;TrustServerCertificate=true
+      - ConnectionStrings__DefaultConnection=Server=gmp-sqlserver;Database=PharmaceuticalProcessingManagementSystem;User Id=sa;Password=GMP_Strong@Passw0rd123;TrustServerCertificate=true
       # Key phục vụ mã hoá chuẩn ký Server bảo mật cho JWT Access Token
       - Jwt__Key=GMP_WHO_Default_Secret_Key_Minimum_32_Characters_Long_123456789
     depends_on:

@@ -77,7 +77,7 @@ if ! docker ps --format '{{.Names}}' | grep -q '^gmp-api$'; then
         --network gmp-network \
         -p 5001:5000 \
         -v "$(pwd)/DATABASE:/app/DATABASE:ro" \
-        -e "ConnectionStrings__DefaultConnection=Server=gmp-sqlserver;Database=GMP_WHO_DB;User Id=sa;Password=GMP_Strong@Passw0rd123;TrustServerCertificate=true" \
+        -e "ConnectionStrings__DefaultConnection=Server=gmp-sqlserver;Database=PharmaceuticalProcessingManagementSystem;User Id=sa;Password=GMP_Strong@Passw0rd123;TrustServerCertificate=true" \
         -e "Jwt__Key=GMP_WHO_Default_Secret_Key_Minimum_32_Characters_Long_123456789" \
         -e "ASPNETCORE_ENVIRONMENT=Development" \
         gmp-who-api
