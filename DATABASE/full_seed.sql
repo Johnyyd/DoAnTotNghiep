@@ -1,168 +1,193 @@
--- PharmaceuticalProcessingManagementSystem Seed Data
--- Batch-friendly version (No GO, No USE)
+/* =========================================================================
+   HỆ THỐNG QUẢN LÝ SẢN XUẤT DƯỢC PHẨM (GMP-WHO)
+   DỮ LIỆU MẪU (FULL SEED DATA - 10 SCENARIOS)
+   Mục đích: Khởi tạo dữ liệu chuẩn cho 10 kịch bản sản xuất thực tế.
+   ========================================================================= */
 
-SET QUOTED_IDENTIFIER ON;
+USE [PharmaceuticalProcessingManagementSystem];
+GO
+
 SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
 
-PRINT '---------------------------------------------------------';
-PRINT '💊 DANG KHOI TAO DU LIEU MAU CHO HE THONG GMP-WHO';
-PRINT '---------------------------------------------------------';
-
--- 1. CLEANUP
-PRINT 'Dang xoa du lieu cu va reset ID...';
-EXEC sp_MSforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL';
-
-DELETE FROM MaterialUsage;
+-- XÓA DỮ LIỆU CŨ (THEO THỨ TỰ NGƯỢC LẠI CỦA KHÓA NGOẠI)
 DELETE FROM BatchProcessLogs;
 DELETE FROM ProductionBatches;
 DELETE FROM ProductionOrders;
-DELETE FROM RecipeBOM;
 DELETE FROM RecipeRouting;
+DELETE FROM RecipeBom;
 DELETE FROM Recipes;
-DELETE FROM InventoryLots;
 DELETE FROM Materials;
 DELETE FROM Equipments;
 DELETE FROM UnitOfMeasure;
-DELETE FROM SystemAuditLog;
-DELETE FROM UomConversions;
+DELETE FROM AppUsers;
+GO
 
-EXEC sp_MSforeachtable 'ALTER TABLE ? CHECK CONSTRAINT ALL';
+-- RESET IDENTITY
+DBCC CHECKIDENT ('AppUsers', RESEED, 0);
+DBCC CHECKIDENT ('UnitOfMeasure', RESEED, 0);
+DBCC CHECKIDENT ('Equipments', RESEED, 0);
+DBCC CHECKIDENT ('Materials', RESEED, 0);
+DBCC CHECKIDENT ('Recipes', RESEED, 0);
+DBCC CHECKIDENT ('RecipeRouting', RESEED, 0);
+DBCC CHECKIDENT ('ProductionOrders', RESEED, 0);
+DBCC CHECKIDENT ('ProductionBatches', RESEED, 0);
+GO
 
--- Reset Identity
-DECLARE @TableName NVARCHAR(255);
-DECLARE table_cursor CURSOR FOR 
-SELECT name FROM sys.tables WHERE OBJECTPROPERTY(object_id, 'TableHasIdentity') = 1;
+-- -------------------------------------------------------------------------
+-- 1. AppUsers (Passwords: Admin@123, Qc@123456, Op@123456)
+-- -------------------------------------------------------------------------
+SET IDENTITY_INSERT AppUsers ON;
+INSERT INTO AppUsers (UserId, Username, FullName, Role, IsActive, PasswordHash, CreatedAt)
+VALUES 
+(1, 'admin', N'Admin System', 'Admin', 1, '$2b$11$hyVSDA5K2Qg1FVUosjSk4e76FBcJhE7DbNG/KDELUBotFzcSt5xIW', GETDATE()),
+(2, 'qc01', N'Trần Kiểm Tra', 'QA_QC', 1, '$2b$11$f1zats7FFnLII0ru7JfcZu0uJsbE7DEsMLXooia8ZfAlbsj3bZKWK', GETDATE()),
+(3, 'op01', N'Nguyễn Công Nhân', 'Operator', 1, '$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW', GETDATE());
+SET IDENTITY_INSERT AppUsers OFF;
+GO
 
-OPEN table_cursor;
-FETCH NEXT FROM table_cursor INTO @TableName;
-WHILE @@FETCH_STATUS = 0
-BEGIN
-    EXEC('DBCC CHECKIDENT (''' + @TableName + ''', RESEED, 0)');
-    FETCH NEXT FROM table_cursor INTO @TableName;
-END
-CLOSE table_cursor;
-DEALLOCATE table_cursor;
+-- -------------------------------------------------------------------------
+-- 2. UnitOfMeasure
+-- -------------------------------------------------------------------------
+SET IDENTITY_INSERT UnitOfMeasure ON;
+INSERT INTO UnitOfMeasure (UomId, UomName, Description)
+VALUES 
+(1, 'kg', N'Kilogram'),
+(2, 'Tablets', N'Viên'),
+(3, 'Box', N'Hộp');
+SET IDENTITY_INSERT UnitOfMeasure OFF;
+GO
 
--- 2. UNIT OF MEASURE
-INSERT INTO UnitOfMeasure (UomName, Description) VALUES
-('mg', 'Milligram'), ('g', 'Gram'), ('kg', 'Kilogram'), ('ml', 'Milliliter'), ('L', 'Liter'),
-('Tablet/Capsule', N'Viên (nén/nang)'), ('Blister', N'Vỉ (10 viên)'), ('Box', N'Hộp');
+-- -------------------------------------------------------------------------
+-- 3. Equipments
+-- -------------------------------------------------------------------------
+SET IDENTITY_INSERT Equipments ON;
+INSERT INTO Equipments (EquipmentId, EquipmentCode, EquipmentName, Status)
+VALUES 
+(1, 'EQP-WGH-01', N'Cân điện tử', 'Ready'),
+(2, 'EQP-DRY-01', N'Máy sấy tầng sôi', 'Ready'),
+(3, 'EQP-MIX-01', N'Máy trộn lập phương', 'Ready');
+SET IDENTITY_INSERT Equipments OFF;
+GO
 
--- 4. EQUIPMENTS
-INSERT INTO Equipments (EquipmentCode, EquipmentName, Status) VALUES
-('EQP-DRY-02', N'Máy sấy tầng sôi KBC-TS-50', 'Ready'),
-('EQP-MIX-02', N'Máy trộn lập phương AD-LP-200', 'Ready'),
-('EQP-FIL-01', N'Máy đóng nang tự động NJP-1200 D', 'Ready'),
-('EQP-POL-01', N'Máy xát bóng IPJ', 'Ready'),
-('EQP-WGH-01', N'Cân điện tử PMA-5000', 'Ready'),
-('EQP-WGH-02', N'Cân phân tích IW2-60', 'Ready');
+-- -------------------------------------------------------------------------
+-- 4. Materials
+-- -------------------------------------------------------------------------
+SET IDENTITY_INSERT Materials ON;
+INSERT INTO Materials (MaterialId, MaterialCode, MaterialName, Type, BaseUomId, IsActive)
+VALUES 
+(1, 'MAT-NLC3', N'Hoạt chất NLC 3', 'RawMaterial', 1, 1),
+(2, 'FG-NLC3', N'Viên nang NLC 3', 'FinishedGood', 3, 1),
+(3, 'MAT-PARA', N'Bột Paracetamol', 'RawMaterial', 1, 1),
+(4, 'FG-PARA', N'Viên nén Paracetamol', 'FinishedGood', 3, 1);
+SET IDENTITY_INSERT Materials OFF;
+GO
 
--- 5. MATERIALS
-DECLARE @Uom_kg INT = (SELECT TOP 1 UomId FROM UnitOfMeasure WHERE UomName = 'kg');
-DECLARE @Uom_Capsule INT = (SELECT TOP 1 UomId FROM UnitOfMeasure WHERE UomName = 'Tablet/Capsule');
-DECLARE @Uom_Box INT = (SELECT TOP 1 UomId FROM UnitOfMeasure WHERE UomName = 'Box');
+-- -------------------------------------------------------------------------
+-- 5. Recipes & Routings
+-- -------------------------------------------------------------------------
+SET IDENTITY_INSERT Recipes ON;
+INSERT INTO Recipes (RecipeId, MaterialId, VersionNumber, BatchSize, Status, ApprovedBy, ApprovedDate, CreatedAt)
+VALUES 
+(1, 2, 1, 100000.00, 'Approved', 1, GETDATE(), GETDATE()),
+(2, 4, 1, 500000.00, 'Approved', 1, GETDATE(), GETDATE());
+SET IDENTITY_INSERT Recipes OFF;
+GO
 
-INSERT INTO Materials (MaterialCode, MaterialName, Type, BaseUomId, Description, IsActive) VALUES
-('MAT-NLC3', N'Hoạt chất NLC 3', 'RawMaterial', @Uom_kg, 'Medicinal powder', 1),
-('MAT-TD1', N'Tá dược rã (TD 1)', 'RawMaterial', @Uom_kg, 'Binder/Excipient', 1),
-('MAT-TD3', N'Tá dược độn (TD 3)', 'RawMaterial', @Uom_kg, 'Filler/Excipient', 1),
-('MAT-TD4', N'Tá dược trơn (TD 4)', 'RawMaterial', @Uom_kg, 'Glidant', 1),
-('MAT-TD5', N'Tá dược dính (TD 5)', 'RawMaterial', @Uom_kg, 'Disintegrant', 1),
-('MAT-TD8', N'Tá dược bóng (TD 8)', 'RawMaterial', @Uom_kg, 'Lubricant', 1),
-('MAT-NLP6', N'Vỏ nang số 0 (NLP 6)', 'Packaging', @Uom_Capsule, 'Hard capsule shells', 1),
-('FG-NLC3-CAP', N'Viên nang NLC 3 (Hộp 3200v)', 'FinishedGood', @Uom_Box, 'Finished product case', 1);
+SET IDENTITY_INSERT RecipeRouting ON;
+INSERT INTO RecipeRouting (RoutingId, RecipeId, StepNumber, StepName, DefaultEquipmentId)
+VALUES 
+(1, 1, 1, N'Cân Nguyên Liệu', 1),
+(2, 1, 2, N'Sấy Nguyên Liệu', 2),
+(3, 1, 3, N'Trộn Khô', 3),
+(4, 2, 1, N'Cân Bột', 1),
+(5, 2, 2, N'Dập Viên', 3);
+SET IDENTITY_INSERT RecipeRouting OFF;
+GO
 
--- 6. INVENTORY LOTS
-INSERT INTO InventoryLots (MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, QCStatus)
-SELECT MaterialId, 'LOT-' + MaterialCode + '-2026', 1000.0, GETDATE(), DATEADD(YEAR, 2, GETDATE()), 'Released'
-FROM Materials WHERE Type = 'RawMaterial';
+-- -------------------------------------------------------------------------
+-- 6. ProductionOrders (10 Scenarios)
+-- -------------------------------------------------------------------------
+SET IDENTITY_INSERT ProductionOrders ON;
+INSERT INTO ProductionOrders (OrderId, OrderCode, RecipeId, PlannedQuantity, ActualQuantity, Status, CreatedBy, StartDate, EndDate, CreatedAt)
+VALUES 
+(1, 'PO-001', 1, 100000.00, 100050.00, 'Completed', 1, DATEADD(DAY, -2, GETDATE()), DATEADD(DAY, -1, GETDATE()), GETDATE()),
+(2, 'PO-002', 1, 300000.00, NULL, 'In-Process', 1, GETDATE(), NULL, GETDATE()),
+(3, 'PO-003', 1, 150000.00, NULL, 'Hold', 1, GETDATE(), NULL, GETDATE()),
+(4, 'PO-004', 1, 200000.00, NULL, 'In-Process', 1, GETDATE(), NULL, GETDATE()),
+(5, 'PO-005', 1, 500000.00, NULL, 'Approved', 1, DATEADD(DAY, 7, GETDATE()), NULL, GETDATE()),
+(6, 'PO-006', 2, 500000.00, NULL, 'In-Process', 1, GETDATE(), NULL, GETDATE()),
+(7, 'PO-007', 2, 1000000.00, NULL, 'Approved', 1, DATEADD(DAY, 30, GETDATE()), NULL, GETDATE()),
+(8, 'PO-008', 1, 100000.00, NULL, 'Draft', 1, GETDATE(), NULL, GETDATE()),
+(9, 'PO-009', 1, 100000.00, NULL, 'Cancelled', 1, GETDATE(), NULL, GETDATE()),
+(10, 'PO-010', 1, 100000.00, NULL, 'Draft', 1, GETDATE(), NULL, GETDATE());
+SET IDENTITY_INSERT ProductionOrders OFF;
+GO
 
-INSERT INTO InventoryLots (MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, QCStatus)
-SELECT MaterialId, 'LOT-CAPS-2026', 1000000, GETDATE(), DATEADD(YEAR, 5, GETDATE()), 'Released'
-FROM Materials WHERE MaterialCode = 'MAT-NLP6';
+-- -------------------------------------------------------------------------
+-- 7. ProductionBatches
+-- -------------------------------------------------------------------------
+SET IDENTITY_INSERT ProductionBatches ON;
+INSERT INTO ProductionBatches (BatchId, OrderId, BatchNumber, Status, ManufactureDate, EndTime, CurrentStep)
+VALUES 
+(1, 1, 'B26001', 'Completed', DATEADD(DAY, -2, GETDATE()), DATEADD(DAY, -1, GETDATE()), 3),
+(2, 2, 'B26002-A', 'Completed', DATEADD(HOUR, -12, GETDATE()), DATEADD(HOUR, -10, GETDATE()), 3),
+(3, 2, 'B26002-B', 'Completed', DATEADD(HOUR, -8, GETDATE()), DATEADD(HOUR, -6, GETDATE()), 3),
+(4, 2, 'B26002-C', 'InProcess', GETDATE(), NULL, 2),
+(5, 3, 'B26003', 'OnHold', GETDATE(), NULL, 2),
+(6, 4, 'B26004-X', 'InProcess', GETDATE(), NULL, 2),
+(7, 6, 'BPARA-01', 'InProcess', GETDATE(), NULL, 1);
+SET IDENTITY_INSERT ProductionBatches OFF;
+GO
 
--- 7. RECIPES
-DECLARE @Mat_FG INT = (SELECT TOP 1 MaterialId FROM Materials WHERE MaterialCode = 'FG-NLC3-CAP');
-DECLARE @AdminID INT = (SELECT TOP 1 UserID FROM AppUsers WHERE Username = 'admin');
+-- -------------------------------------------------------------------------
+-- 8. BatchProcessLogs (Sequential Logic - GMP Standard)
+-- -------------------------------------------------------------------------
+SET IDENTITY_INSERT BatchProcessLogs ON;
+-- PO-001 / B26001 (All Passed)
+INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData)
+VALUES 
+(1, 1, 1, 1, 3, DATEADD(DAY, -2, GETDATE()), DATEADD(DAY, -1.9, GETDATE()), 'Passed', '{"weight": 100.05, "unit": "kg"}'),
+(2, 1, 2, 2, 3, DATEADD(DAY, -1.8, GETDATE()), DATEADD(DAY, -1.5, GETDATE()), 'Passed', '{"temp": 60.5, "humidity": 3.2}'),
+(3, 1, 3, 3, 3, DATEADD(DAY, -1.4, GETDATE()), DATEADD(DAY, -1.1, GETDATE()), 'Passed', '{"speed": 30, "time": 45}');
 
-INSERT INTO Recipes (MaterialId, VersionNumber, BatchSize, Status, ApprovedBy, ApprovedDate, CreatedAt) VALUES
-(@Mat_FG, 1, 100000, 'Approved', @AdminID, GETDATE(), GETDATE());
+-- PO-002 / B26002-A (All Passed)
+INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus)
+VALUES 
+(4, 2, 1, 1, 3, DATEADD(HOUR, -12, GETDATE()), DATEADD(HOUR, -11.5, GETDATE()), 'Passed'),
+(5, 2, 2, 2, 3, DATEADD(HOUR, -11.4, GETDATE()), DATEADD(HOUR, -10.5, GETDATE()), 'Passed'),
+(6, 2, 3, 3, 3, DATEADD(HOUR, -10.4, GETDATE()), DATEADD(HOUR, -10, GETDATE()), 'Passed');
 
-DECLARE @RecipeID INT = SCOPE_IDENTITY();
+-- PO-002 / B26002-B (All Passed)
+INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus)
+VALUES 
+(7, 3, 1, 1, 3, DATEADD(HOUR, -8, GETDATE()), DATEADD(HOUR, -7.5, GETDATE()), 'Passed'),
+(8, 3, 2, 2, 3, DATEADD(HOUR, -7.4, GETDATE()), DATEADD(HOUR, -6.5, GETDATE()), 'Passed'),
+(9, 3, 3, 3, 3, DATEADD(HOUR, -6.4, GETDATE()), DATEADD(HOUR, -6, GETDATE()), 'Passed');
 
-INSERT INTO RecipeBOM (RecipeId, MaterialId, Quantity, UomId, Note)
-SELECT @RecipeID, MaterialId, 50.0, @Uom_kg, 'Hoat chat chinh' FROM Materials WHERE MaterialCode = 'MAT-NLC3' UNION ALL
-SELECT @RecipeID, MaterialId, 10.0, @Uom_kg, 'Ta duoc 1' FROM Materials WHERE MaterialCode = 'MAT-TD1' UNION ALL
-SELECT @RecipeID, MaterialId, 5.0,  @Uom_kg, 'Ta duoc 3' FROM Materials WHERE MaterialCode = 'MAT-TD3' UNION ALL
-SELECT @RecipeID, MaterialId, 100000, @Uom_Capsule, 'Vo nang' FROM Materials WHERE MaterialCode = 'MAT-NLP6';
+-- PO-002 / B26002-C (Step 1 Passed, Step 2 Running)
+INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus)
+VALUES 
+(10, 4, 1, 1, 3, DATEADD(HOUR, -1, GETDATE()), DATEADD(HOUR, -0.5, GETDATE()), 'Passed'),
+(11, 4, 2, 2, 3, DATEADD(HOUR, -0.4, GETDATE()), NULL, 'Running');
 
--- 8. ROUTING
-DECLARE @Eqp_Dry INT = (SELECT TOP 1 EquipmentID FROM Equipments WHERE EquipmentCode = 'EQP-DRY-02');
-DECLARE @Eqp_Mix INT = (SELECT TOP 1 EquipmentID FROM Equipments WHERE EquipmentCode = 'EQP-MIX-02');
+-- PO-003 / B26003 (Step 1 Passed, Step 2 OnHold)
+INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus)
+VALUES 
+(12, 5, 1, 1, 3, DATEADD(HOUR, -2, GETDATE()), DATEADD(HOUR, -1.5, GETDATE()), 'Passed'),
+(13, 5, 2, 2, 3, DATEADD(HOUR, -1.4, GETDATE()), NULL, 'OnHold');
 
-INSERT INTO RecipeRouting (RecipeId, StepNumber, StepName, DefaultEquipmentID, EstimatedTimeMinutes, Description) VALUES
-(@RecipeID, 1, N'Cân Nguyên Liệu', NULL, 60, N'Cân nguyên liệu theo lệnh'),
-(@RecipeID, 2, N'Sấy Nguyên Liệu', @Eqp_Dry, 120, N'Sấy đạt ẩm quy định'),
-(@RecipeID, 3, N'Trộn Khô', @Eqp_Mix, 30, N'Trộn đều hỗn hợp bột');
+-- PO-004 / B26004-X (Step 1 Passed, Step 2 Failed)
+INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus)
+VALUES 
+(14, 6, 1, 1, 3, DATEADD(HOUR, -3, GETDATE()), DATEADD(HOUR, -2, GETDATE()), 'Passed'),
+(15, 6, 2, 2, 3, DATEADD(HOUR, -1.9, GETDATE()), NULL, 'Failed');
 
--- 9. MOCK PRODUCTION DATA
-DECLARE @Now DATETIME2 = GETDATE();
+-- PO-006 / BPARA-01 (Step 1 Running)
+INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus)
+VALUES 
+(16, 7, 4, 1, 3, GETDATE(), NULL, 'Running');
 
--- 9.1. PO-2026-NLC-001 (Completed)
-INSERT INTO ProductionOrders (OrderCode, RecipeId, PlannedQuantity, ActualQuantity, StartDate, EndDate, Status, CreatedBy, Note)
-VALUES ('PO-2026-NLC-001', @RecipeID, 100000, 99850, DATEADD(DAY, -5, @Now), DATEADD(DAY, -4, @Now), 'Completed', @AdminID, N'Lô sản xuất thử nghiệm thành công');
-
-DECLARE @OrderId_Done INT = SCOPE_IDENTITY();
-INSERT INTO ProductionBatches (OrderId, BatchNumber, Status, ManufactureDate, EndTime, ExpiryDate, CurrentStep)
-VALUES (@OrderId_Done, 'B260301', 'Completed', DATEADD(DAY, -5, @Now), DATEADD(DAY, -4, @Now), DATEADD(YEAR, 2, @Now), 3);
-
-DECLARE @BatchId_Done INT = SCOPE_IDENTITY();
-DECLARE @OpID INT = (SELECT TOP 1 UserID FROM AppUsers WHERE Username = 'op01');
-
-INSERT INTO BatchProcessLogs (BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData) VALUES
-(@BatchId_Done, 1, 5, @OpID, DATEADD(HOUR, -100, @Now), DATEADD(HOUR, -99, @Now), 'Passed', '{"weight": 50.2, "unit": "kg"}'),
-(@BatchId_Done, 2, 1, @OpID, DATEADD(HOUR, -98, @Now), DATEADD(HOUR, -96, @Now), 'Passed', '{"temp": 60, "moisture": 3.5}'),
-(@BatchId_Done, 3, 2, @OpID, DATEADD(HOUR, -95, @Now), DATEADD(HOUR, -94, @Now), 'Passed', '{"speed": 30, "time": 30}');
-
--- 9.2. PO-2026-NLC-002 (InProcess)
-INSERT INTO ProductionOrders (OrderCode, RecipeId, PlannedQuantity, StartDate, Status, CreatedBy, Note)
-VALUES ('PO-2026-NLC-002', @RecipeID, 200000, @Now, 'InProcess', @AdminID, N'Lệnh sản xuất chính thức tháng 3');
-
-DECLARE @OrderId_Running INT = SCOPE_IDENTITY();
-INSERT INTO ProductionBatches (OrderId, BatchNumber, Status, ManufactureDate, EndTime, ExpiryDate, CurrentStep)
-VALUES (@OrderId_Running, 'B260302', 'Completed', DATEADD(DAY, -1, @Now), @Now, DATEADD(YEAR, 2, @Now), 3);
-DECLARE @BatchId_Running1 INT = SCOPE_IDENTITY();
-INSERT INTO BatchProcessLogs (BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus) VALUES
-(@BatchId_Running1, 1, 5, @OpID, DATEADD(HOUR, -24, @Now), DATEADD(HOUR, -23, @Now), 'Passed'),
-(@BatchId_Running1, 2, 1, @OpID, DATEADD(HOUR, -22, @Now), DATEADD(HOUR, -20, @Now), 'Passed'),
-(@BatchId_Running1, 3, 2, @OpID, DATEADD(HOUR, -19, @Now), DATEADD(HOUR, -18, @Now), 'Passed');
-
-INSERT INTO ProductionBatches (OrderId, BatchNumber, Status, ManufactureDate, ExpiryDate, CurrentStep)
-VALUES (@OrderId_Running, 'B260303', 'InProcess', @Now, DATEADD(YEAR, 2, @Now), 2);
-DECLARE @BatchId_Running2 INT = SCOPE_IDENTITY();
-INSERT INTO BatchProcessLogs (BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData) VALUES
-(@BatchId_Running2, 1, 6, @OpID, DATEADD(HOUR, -2, @Now), DATEADD(HOUR, -1, @Now), 'Passed', '{"weight": 50.05, "deviation": 0.01}');
-
--- 9.3. PO-2026-NLC-003 (Hold)
-INSERT INTO ProductionOrders (OrderCode, RecipeId, PlannedQuantity, StartDate, Status, CreatedBy, Note)
-VALUES ('PO-2026-NLC-003', @RecipeID, 150000, DATEADD(DAY, -2, @Now), 'Hold', @AdminID, N'Tạm dừng do thiết bị lỗi');
-
-DECLARE @OrderId_Hold INT = SCOPE_IDENTITY();
-INSERT INTO ProductionBatches (OrderId, BatchNumber, Status, ManufactureDate, ExpiryDate, CurrentStep)
-VALUES (@OrderId_Hold, 'B260304', 'OnHold', DATEADD(DAY, -2, @Now), DATEADD(YEAR, 2, @Now), 2);
-DECLARE @BatchId_Hold INT = SCOPE_IDENTITY();
-INSERT INTO BatchProcessLogs (BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, Notes) VALUES
-(@BatchId_Hold, 1, 5, @OpID, DATEADD(DAY, -2, @Now), DATEADD(DAY, -2, @Now), 'Passed', 'OK'),
-(@BatchId_Hold, 2, 1, @OpID, DATEADD(DAY, -1, @Now), DATEADD(DAY, -1, @Now), 'Failed', N'Nhiệt độ không ổn định');
-
--- 9.4. PO-2026-NLC-004 (Approved)
-INSERT INTO ProductionOrders (OrderCode, RecipeId, PlannedQuantity, StartDate, Status, CreatedBy)
-VALUES ('PO-2026-NLC-004', @RecipeID, 300000, DATEADD(DAY, 2, @Now), 'Approved', @AdminID);
-
--- 9.5. PO-2026-NLC-005 (Draft)
-INSERT INTO ProductionOrders (OrderCode, RecipeId, PlannedQuantity, StartDate, Status, CreatedBy)
-VALUES ('PO-2026-NLC-005', @RecipeID, 50000, DATEADD(DAY, 10, @Now), 'Draft', @AdminID);
-
-PRINT '---------------------------------------------------------';
-PRINT '✅ KHOI TAO DU LIEU THANH CONG!';
-PRINT '---------------------------------------------------------';
+SET IDENTITY_INSERT BatchProcessLogs OFF;
+GO
