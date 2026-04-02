@@ -81,11 +81,13 @@ class _WorkerPrecheckNavigationState extends State<WorkerPrecheckNavigation> {
     final user = AuthService.currentUser;
     final username = user?['username'] as String? ?? 'Operator';
 
+    final recipeBoms = widget.orderData['recipe']?['recipeBoms'];
+
     final pages = [
       _buildOverviewTab(),
       const DryingStepScreen(stepName: 'SẤY NLC 3 / TD 8', isPrecheck: true),
-      const WeighingStepScreen(isPrecheck: true),
-      const MixingStepScreen(isPrecheck: true),
+      WeighingStepScreen(isPrecheck: true, initialBom: recipeBoms),
+      MixingStepScreen(isPrecheck: true, initialBom: recipeBoms),
     ];
 
     return Scaffold(

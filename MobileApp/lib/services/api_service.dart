@@ -76,6 +76,7 @@ class ApiService {
             'totalBatches': totalBatches,
             'completedBatches': completedBatches,
             'status': order['status'] ?? 'Draft',
+            'recipe': order['recipe'], // Keep full recipe for BOM access in pre-check
           };
         }).toList();
       }

@@ -10,6 +10,7 @@ class WeighingStepScreen extends StatefulWidget {
   final int? stepId;
   final bool isPrecheck;
   final bool isViewer;
+  final List<dynamic>? initialBom;
 
   const WeighingStepScreen({
     super.key,
@@ -17,6 +18,7 @@ class WeighingStepScreen extends StatefulWidget {
     this.stepId,
     this.isPrecheck = false,
     this.isViewer = false,
+    this.initialBom,
   });
 
   @override
@@ -46,11 +48,16 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
 
   Future<void> _fetchData() async {
     if (widget.batchId == null) {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _bom = widget.initialBom ?? [];
+          _isLoading = false;
+        });
+      }
       return;
     }
     final batch = await ApiService.getBatchById(widget.batchId!);
-    List<dynamic> newBom = batch?['order']?['recipe']?['recipeBoms'] ?? [];
+    List<dynamic> newBom = batch?['order']?['recipe']?['recipeBoms'] ?? widget.initialBom ?? [];
     
     if (widget.isViewer && widget.stepId != null) {
       try {
