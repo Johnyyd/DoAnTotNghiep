@@ -177,6 +177,7 @@ class ApiService {
           'step': step, // Chứa StepName để giao diện hiển thị
           'resultStatus': existLog?['resultStatus'],
           'endTime': existLog?['endTime'],
+          'parametersData': existLog?['parametersData'],
         };
       }).toList();
 

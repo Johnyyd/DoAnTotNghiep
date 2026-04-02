@@ -32,6 +32,7 @@ class SegmentedToggle extends StatefulWidget {
   final String optionA;
   final String optionB;
   final ValueChanged<String>? onChanged;
+  final bool disabled;
 
   const SegmentedToggle({
     super.key,
@@ -39,6 +40,7 @@ class SegmentedToggle extends StatefulWidget {
     required this.optionA,
     required this.optionB,
     this.onChanged,
+    this.disabled = false,
   });
 
   @override
@@ -86,7 +88,7 @@ class _SegmentedToggleState extends State<SegmentedToggle> {
                 Expanded(
                   // GestureDetector phủ lên widget con diện tích bắt sự kiện Tap của ngón tay
                   child: GestureDetector(
-                    onTap: () {
+                    onTap: widget.disabled ? null : () {
                       // SetState yêu cầu Flutter Redraw (vẽ lại UI Component này) ngay khi update Data
                       setState(() => _selected = widget.optionA);
                       // Gọi callback function do Cha (Parent component) cung cấp nếu không null
@@ -119,7 +121,7 @@ class _SegmentedToggleState extends State<SegmentedToggle> {
                 // Option B (Tương tự hệt logic Option A nhưng bind giá trị B)
                 Expanded(
                   child: GestureDetector(
-                    onTap: () {
+                    onTap: widget.disabled ? null : () {
                       setState(() => _selected = widget.optionB);
                       if (widget.onChanged != null) widget.onChanged!(widget.optionB);
                     },
@@ -193,6 +195,7 @@ class StandardInputField extends StatelessWidget {
   final Widget? suffixIcon;
   final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
+  final bool readOnly;
 
   const StandardInputField({
     super.key,
@@ -203,6 +206,7 @@ class StandardInputField extends StatelessWidget {
     this.suffixIcon,
     this.controller,
     this.onChanged,
+    this.readOnly = false,
   });
 
   @override
@@ -222,9 +226,12 @@ class StandardInputField extends StatelessWidget {
             controller: controller,
             keyboardType: keyboardType,
             onChanged: onChanged,
+            readOnly: readOnly,
             decoration: InputDecoration(
               hintText: hint,
               suffixIcon: suffixIcon,
+              filled: readOnly,
+              fillColor: readOnly ? Colors.grey.shade100 : null,
             ),
           ),
         ],
@@ -258,7 +265,8 @@ class ESignatureButton extends StatelessWidget {
 /// Component [DryingSampleField] dùng đễ nhập "Lấy mẫu kiểm tra" (g/túi x túi = g)
 class DryingSampleField extends StatefulWidget {
   final ValueChanged<String>? onResultChanged;
-  const DryingSampleField({super.key, this.onResultChanged});
+  final bool readOnly;
+  const DryingSampleField({super.key, this.onResultChanged, this.readOnly = false});
 
   @override
   State<DryingSampleField> createState() => _DryingSampleFieldState();
@@ -290,9 +298,9 @@ class _DryingSampleFieldState extends State<DryingSampleField> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Expanded(child: TextField(controller: _gController, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: const InputDecoration(hintText: 'g/túi', contentPadding: EdgeInsets.symmetric(horizontal: 8)))),
+            Expanded(child: TextField(controller: _gController, readOnly: widget.readOnly, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: InputDecoration(hintText: 'g/túi', contentPadding: const EdgeInsets.symmetric(horizontal: 8), filled: widget.readOnly, fillColor: widget.readOnly ? Colors.grey.shade100 : null))),
             const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('x', style: TextStyle(fontWeight: FontWeight.bold))),
-            Expanded(child: TextField(controller: _tuiController, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: const InputDecoration(hintText: 'số túi', contentPadding: EdgeInsets.symmetric(horizontal: 8)))),
+            Expanded(child: TextField(controller: _tuiController, readOnly: widget.readOnly, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: InputDecoration(hintText: 'số túi', contentPadding: const EdgeInsets.symmetric(horizontal: 8), filled: widget.readOnly, fillColor: widget.readOnly ? Colors.grey.shade100 : null))),
             const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('=', style: TextStyle(fontWeight: FontWeight.bold))),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -310,7 +318,8 @@ class _DryingSampleFieldState extends State<DryingSampleField> {
 /// Component [MixingPackagingField] dùng đề nhập "Số lượng đóng gói" ((túi x 10kg) + kg lẻ = kg)
 class MixingPackagingField extends StatefulWidget {
   final ValueChanged<String>? onResultChanged;
-  const MixingPackagingField({super.key, this.onResultChanged});
+  final bool readOnly;
+  const MixingPackagingField({super.key, this.onResultChanged, this.readOnly = false});
 
   @override
   State<MixingPackagingField> createState() => _MixingPackagingFieldState();
@@ -343,9 +352,9 @@ class _MixingPackagingFieldState extends State<MixingPackagingField> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Text('(', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w300)),
-            Expanded(flex: 2, child: TextField(controller: _tuiController, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: const InputDecoration(hintText: 'số túi', contentPadding: EdgeInsets.symmetric(horizontal: 8)))),
+            Expanded(flex: 2, child: TextField(controller: _tuiController, readOnly: widget.readOnly, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: InputDecoration(hintText: 'số túi', contentPadding: const EdgeInsets.symmetric(horizontal: 8), filled: widget.readOnly, fillColor: widget.readOnly ? Colors.grey.shade100 : null))),
             const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('x 10kg) +', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
-            Expanded(flex: 2, child: TextField(controller: _kgLeController, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: const InputDecoration(hintText: 'kg lẻ/túi', contentPadding: EdgeInsets.symmetric(horizontal: 8)))),
+            Expanded(flex: 2, child: TextField(controller: _kgLeController, readOnly: widget.readOnly, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: InputDecoration(hintText: 'kg lẻ/túi', contentPadding: const EdgeInsets.symmetric(horizontal: 8), filled: widget.readOnly, fillColor: widget.readOnly ? Colors.grey.shade100 : null))),
             const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('=', style: TextStyle(fontWeight: FontWeight.bold))),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),

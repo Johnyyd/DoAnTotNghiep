@@ -217,11 +217,11 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                             final stepType = log['step']?['stepName']?.toString().toLowerCase() ?? '';
                             
                             if (stepType.contains('cân') || stepType.contains('weigh')) {
-                              nextScreen = WeighingStepScreen(batchId: widget.batchId, stepId: log['stepId']);
+                              nextScreen = WeighingStepScreen(batchId: widget.batchId, stepId: log['stepId'], isViewer: true);
                             } else if (stepType.contains('trộn') || stepType.contains('mix')) {
-                              nextScreen = MixingStepScreen(batchId: widget.batchId, stepId: log['stepId']);
+                              nextScreen = MixingStepScreen(batchId: widget.batchId, stepId: log['stepId'], isViewer: true);
                             } else if (stepType.contains('sấy') || stepType.contains('dry')) {
-                              nextScreen = DryingStepScreen(batchId: widget.batchId, stepId: log['stepId'], stepName: log['step']?['stepName'] ?? 'SẤY');
+                              nextScreen = DryingStepScreen(batchId: widget.batchId, stepId: log['stepId'], stepName: log['step']?['stepName'] ?? 'SẤY', isViewer: true);
                             }
 
                             if (nextScreen != null) {

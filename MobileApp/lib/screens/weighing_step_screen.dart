@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../components/step_form_inputs.dart';
 import '../components/material_card.dart';
@@ -8,12 +9,14 @@ class WeighingStepScreen extends StatefulWidget {
   final int? batchId;
   final int? stepId;
   final bool isPrecheck;
+  final bool isViewer;
 
   const WeighingStepScreen({
     super.key,
     this.batchId,
     this.stepId,
     this.isPrecheck = false,
+    this.isViewer = false,
   });
 
   @override
@@ -47,9 +50,46 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
       return;
     }
     final batch = await ApiService.getBatchById(widget.batchId!);
+    List<dynamic> newBom = batch?['order']?['recipe']?['recipeBoms'] ?? [];
+    
+    if (widget.isViewer && widget.stepId != null) {
+      try {
+        final logs = await ApiService.getProcessLogs(widget.batchId!);
+        final log = logs.firstWhere((l) => l['stepId'] == widget.stepId, orElse: () => <String, dynamic>{});
+        if (log.isNotEmpty) {
+          final rawParams = log['parametersData'];
+          Map<String, dynamic> params = {};
+          if (rawParams is Map<String, dynamic>) {
+            params = rawParams;
+          } else if (rawParams is String && rawParams.isNotEmpty) {
+            try {
+              params = Map<String, dynamic>.from(jsonDecode(rawParams) ?? {});
+            } catch (_) {}
+          }
+          
+          _tempCtrl.text = params['temperature'] ?? '';
+          _humidCtrl.text = params['humidity'] ?? '';
+          _pressCtrl.text = params['pressure'] ?? '';
+          if (params['canIW2'] != null) _canIW2 = params['canIW2'];
+          if (params['canPMA'] != null) _canPMA = params['canPMA'];
+          if (params['dungCuCan'] != null) _dungCuCan = params['dungCuCan'];
+          
+          // Note control from DB might be inside notes field, but let's just make it read-only empty if not there
+          if (params['materials'] != null) {
+            final Map<dynamic, dynamic> parsedMats = params['materials'];
+            parsedMats.forEach((k, v) {
+              if (k is String && v is Map) {
+                _materialsData[k] = Map<String, String>.from(v);
+              }
+            });
+          }
+        }
+      } catch (_) {}
+    }
+
     if (mounted) {
       setState(() {
-        _bom = batch?['order']?['recipe']?['recipeBoms'] ?? [];
+        _bom = newBom;
         _isLoading = false;
       });
     }
@@ -201,6 +241,20 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
         else
           const Text('CÔNG ĐOẠN CÂN NGUYÊN LIỆU', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
         
+        if (widget.isViewer)
+          Container(
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.only(top: 8, bottom: 8),
+            decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.blue),
+                SizedBox(width: 8),
+                Expanded(child: Text('CHẾ ĐỘ HỒ SƠ LƯU (READ-ONLY)\nDữ liệu thông số đã được xác nhận.', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w600, fontSize: 13))),
+              ],
+            ),
+          ),
+        
         const FormSectionHeader('5.1 MÔI TRƯỜNG & THIẾT BỊ'),
         const ReadOnlyField(label: 'Phòng thực hiện', value: 'Phòng cân'),
         const SizedBox(height: 16), 
@@ -208,47 +262,55 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: StandardInputField(label: 'Nhiệt độ (°C)', hint: '23.0', controller: _tempCtrl, keyboardType: TextInputType.number)),
+            Expanded(child: StandardInputField(label: 'Nhiệt độ (°C)', hint: '23.0', controller: _tempCtrl, keyboardType: TextInputType.number, readOnly: widget.isViewer)),
             const SizedBox(width: 16), 
-            Expanded(child: StandardInputField(label: 'Độ ẩm (%)', hint: '60.0', controller: _humidCtrl, keyboardType: TextInputType.number)),
+            Expanded(child: StandardInputField(label: 'Độ ẩm (%)', hint: '60.0', controller: _humidCtrl, keyboardType: TextInputType.number, readOnly: widget.isViewer)),
           ],
         ),
-        StandardInputField(label: 'Áp lực (Pa)', hint: '15', controller: _pressCtrl, keyboardType: TextInputType.number),
+        StandardInputField(label: 'Áp lực (Pa)', hint: '15', controller: _pressCtrl, keyboardType: TextInputType.number, readOnly: widget.isViewer),
         
-        SegmentedToggle(label: 'Cân IW2-60', optionA: 'Tốt', optionB: 'Không ổn định', onChanged: (v) => _canIW2 = v),
-        SegmentedToggle(label: 'Cân PMA-5000', optionA: 'Tốt', optionB: 'Không ổn định', onChanged: (v) => _canPMA = v),
-        SegmentedToggle(label: 'Dụng cụ cân', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _dungCuCan = v),
+        SegmentedToggle(label: 'Cân IW2-60', optionA: 'Tốt', optionB: 'Không ổn định', onChanged: (v) => _canIW2 = v, disabled: widget.isViewer),
+        SegmentedToggle(label: 'Cân PMA-5000', optionA: 'Tốt', optionB: 'Không ổn định', onChanged: (v) => _canPMA = v, disabled: widget.isViewer),
+        SegmentedToggle(label: 'Dụng cụ cân', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _dungCuCan = v, disabled: widget.isViewer),
   
-        if (!widget.isPrecheck) ...[
-          const FormSectionHeader('5.2 DANH SÁCH NGUYÊN LIỆU QUY ĐỊNH'),
-          const Text('Nhập đúng khối lượng yêu cầu để xác nhận hoàn thành từng nguyên liệu.', style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic)),
-          const SizedBox(height: 12),
-          
-          if (_bom.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(20),
-              child: Text('Không có dữ liệu BOM cho mẻ này.', style: TextStyle(color: Colors.red)),
-            )
-          else
-            ..._bom.map((item) {
-              final materialName = item['material']?['materialName'] ?? 'N/A';
-              final requiredQty = item['quantity']?.toString() ?? '0.00';
-              return MaterialCard(
-                materialName: materialName, 
-                requiredWeightKg: requiredQty, 
-                onWeightChanged: (v) => _updateMaterial(materialName, 'actual', v), 
-                onPhieuKNChanged: (v) => _updateMaterial(materialName, 'phieuKN', v)
-              );
-            }),
-          
-          const FormSectionHeader('5.3 NHẬN XÉT'),
-          TextField(
-            controller: _noteCtrl,
-            maxLines: 4,
-            decoration: const InputDecoration(hintText: 'Nhập ghi chú hoặc nhận xét...'),
+        const FormSectionHeader('5.2 DANH SÁCH NGUYÊN LIỆU QUY ĐỊNH'),
+        const Text('Nhập đúng khối lượng yêu cầu để xác nhận hoàn thành từng nguyên liệu.', style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic)),
+        const SizedBox(height: 12),
+        
+        if (_bom.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(20),
+            child: Text('Không có dữ liệu BOM cho mẻ này.', style: TextStyle(color: Colors.red)),
+          )
+        else
+          ..._bom.map((item) {
+            final materialName = item['material']?['materialName'] ?? 'N/A';
+            final requiredQty = item['quantity']?.toString() ?? '0.00';
+            return MaterialCard(
+              materialName: materialName, 
+              requiredWeightKg: requiredQty, 
+              initialActualWeight: _materialsData[materialName]?['actual'] ?? '',
+              initialPhieuKN: _materialsData[materialName]?['phieuKN'] ?? '',
+              readOnly: widget.isViewer,
+              onWeightChanged: (v) => _updateMaterial(materialName, 'actual', v), 
+              onPhieuKNChanged: (v) => _updateMaterial(materialName, 'phieuKN', v)
+            );
+          }),
+        
+        const FormSectionHeader('5.3 NHẬN XÉT'),
+        TextField(
+          controller: _noteCtrl,
+          maxLines: 4,
+          readOnly: widget.isViewer,
+          decoration: InputDecoration(
+            hintText: 'Nhập ghi chú hoặc nhận xét...',
+            filled: widget.isViewer,
+            fillColor: widget.isViewer ? Colors.grey.shade100 : null,
           ),
+        ),
+        
+        if (!widget.isPrecheck && !widget.isViewer) ...[
           const SizedBox(height: 24),
-          
           _isSaving 
             ? const Center(child: CircularProgressIndicator()) 
             : ESignatureButton(title: 'KÝ XÁC NHẬN SỐ', onPressed: _verifyAndSubmit),

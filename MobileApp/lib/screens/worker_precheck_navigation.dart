@@ -167,7 +167,7 @@ class _WorkerPrecheckNavigationState extends State<WorkerPrecheckNavigation> {
               Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 40),
               SizedBox(height: 12),
               Text(
-                'Yêu cầu: Hãy điều hướng qua các tab Cân, Sấy, Trộn bên dưới để điền checklist môi trường và thiết bị.\n\nLưu ý: Bạn chỉ cần điền phần 4.1 đến 4.3 (kiểm tra ban đầu).',
+                'Yêu cầu: Điều hướng qua các bộ phận Cân, Sấy, Trộn bên dưới để khai báo đầy đủ các thông số ban đầu.\n\nSau khi rà soát tất cả công đoạn bên dưới, hãy ký tên điện tử tại trang Tổng quan này.',
                 textAlign: TextAlign.center,
                 style: TextStyle(height: 1.5),
               ),

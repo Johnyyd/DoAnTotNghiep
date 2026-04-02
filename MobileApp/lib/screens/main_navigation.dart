@@ -20,7 +20,6 @@ class MainNavigationScreen extends StatefulWidget {
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _selectedIndex = 0;
   double _batchProgress = 0.0;
 
   @override
@@ -56,12 +55,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final username = user?['username'] as String? ?? 'Operator';
     final role = user?['role'] as String? ?? '';
 
-    final List<Widget> pages = [
-      BatchDashboardScreen(orderId: widget.orderData['orderId']),
-      const DryingStepScreen(stepName: 'SẤY NLC 3 / TD 8'),
-      const WeighingStepScreen(),
-      const MixingStepScreen(),
-    ];
+    final Widget dashboard = BatchDashboardScreen(orderId: widget.orderData['orderId']);
 
     return Scaffold(
       appBar: AppBar(
@@ -136,23 +130,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             progress: _batchProgress,
           ),
           Expanded(
-            child: IndexedStack(
-              index: _selectedIndex,
-              children: pages,
-            ),
+            child: dashboard,
           ),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (i) => setState(() => _selectedIndex = i),
-        destinations: const [
-          NavigationDestination(
-              icon: Icon(Icons.dashboard_outlined), label: 'Tiến độ'),
-          NavigationDestination(
-              icon: Icon(Icons.wb_sunny_outlined), label: 'Sấy'),
-          NavigationDestination(icon: Icon(Icons.scale_outlined), label: 'Cân'),
-          NavigationDestination(icon: Icon(Icons.cyclone), label: 'Trộn'),
         ],
       ),
     );

@@ -10,12 +10,16 @@ class MaterialCard extends StatefulWidget {
   final String initialActualWeight;
   final ValueChanged<String>? onWeightChanged;
   final ValueChanged<String>? onPhieuKNChanged;
+  final String initialPhieuKN;
+  final bool readOnly;
   
   const MaterialCard({
     super.key,
     required this.materialName,
     required this.requiredWeightKg,
     this.initialActualWeight = '',
+    this.initialPhieuKN = '',
+    this.readOnly = false,
     this.onWeightChanged,
     this.onPhieuKNChanged,
   });
@@ -33,7 +37,7 @@ class _MaterialCardState extends State<MaterialCard> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialActualWeight);
-    _phieuKNController = TextEditingController();
+    _phieuKNController = TextEditingController(text: widget.initialPhieuKN);
     _phieuKNController.addListener(() {
       if (widget.onPhieuKNChanged != null) {
         widget.onPhieuKNChanged!(_phieuKNController.text);
@@ -127,9 +131,12 @@ class _MaterialCardState extends State<MaterialCard> {
                       const SizedBox(height: 4),
                       TextField(
                         controller: _phieuKNController,
-                        decoration: const InputDecoration(
+                        readOnly: widget.readOnly,
+                        decoration: InputDecoration(
                           hintText: 'Nhập số',
-                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          filled: widget.readOnly,
+                          fillColor: widget.readOnly ? Colors.grey.shade100 : null,
                         ),
                         style: const TextStyle(fontSize: 14),
                       ),
@@ -171,11 +178,14 @@ class _MaterialCardState extends State<MaterialCard> {
                       const SizedBox(height: 4),
                       TextField(
                         controller: _controller,
+                        readOnly: widget.readOnly,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         onChanged: _checkMatch,
                         decoration: InputDecoration(
                           hintText: '0.00',
                           contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          filled: widget.readOnly,
+                          fillColor: widget.readOnly ? Colors.grey.shade100 : null,
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide(
