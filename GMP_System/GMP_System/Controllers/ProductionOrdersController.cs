@@ -117,6 +117,24 @@ namespace GMP_System.Controllers
             return Ok(new { success = true, message = "Cập nhật thành công!", orderId = id });
         }
 
+        // PATCH: api/production-orders/5/status
+        [HttpPatch("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] string newStatus)
+        {
+            if (string.IsNullOrWhiteSpace(newStatus))
+                return BadRequest(new { success = false, message = "Status không được để trống." });
+
+            var existing = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
+            if (existing == null)
+                return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
+
+            existing.Status = newStatus;
+            _unitOfWork.ProductionOrders.Update(existing);
+            await _unitOfWork.CompleteAsync();
+
+            return Ok(new { success = true, message = "Cập nhật trạng thái thành công!", orderId = id, status = newStatus });
+        }
+
         // DELETE: api/production-orders/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)

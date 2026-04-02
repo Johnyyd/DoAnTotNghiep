@@ -85,6 +85,21 @@ class ApiService {
     }
   }
 
+  /// Cập nhật trạng thái của Order
+  static Future<bool> updateOrderStatus(int orderId, String newStatus) async {
+    final url = Uri.parse('$baseUrl/production-orders/$orderId/status');
+    try {
+      final response = await http.patch(
+        url,
+        headers: await _headers(),
+        body: jsonEncode(newStatus),
+      );
+      return response.statusCode >= 200 && response.statusCode < 300;
+    } catch (e) {
+      return false;
+    }
+  }
+
   static String _formatDate(String iso) {
     try {
       final dt = DateTime.parse(iso).toLocal();

@@ -7,8 +7,6 @@ import 'main_navigation.dart';
 class OrderVerificationScreen extends StatefulWidget {
   final Map<String, dynamic> orderData;
 
-  static Set<int> mockWorkerSignedOrders = {}; // Global mock state
-
   const OrderVerificationScreen({super.key, required this.orderData});
 
   @override
@@ -22,26 +20,25 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
   void _qcSign() async {
     final pin = await _showPinDialog('Chữ ký QC');
     if (pin != null && pin.isNotEmpty) {
-      if (pin != 'admin123' && pin != '123456') { // Mock logic
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Chữ ký QC không hợp lệ!')));
+      if (pin != 'admin123' && pin != '123456') {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Chữ ký không hợp lệ!')));
         return;
       }
+
       setState(() => _isLoading = true);
       
-      // MOCK BACKEND CALL: Chuyển Order sang InProcess
-      await Future.delayed(const Duration(seconds: 1)); // giả lập delay
-      // Thực tế cần gọi ApiService.updateOrderStatus(orderId, 'In-Process')
-      
-      setState(() {
-        _isQCSigned = true;
-        _isLoading = false;
-      });
+      // Gọi API cập nhật trạng thái
+      final success = await ApiService.updateOrderStatus(widget.orderData['orderId'], 'In-Process');
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✔ QC chứng nhận. Lệnh chính thức bắt đầu (In-Process).')),
-        );
-        Navigator.pop(context, true); // Pop out when done
+        setState(() => _isLoading = false);
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✔ Lệnh sản xuất đã được CẤP QUYỀN VÀ KHỞI ĐỘNG!')));
+          Navigator.pop(context); // Trở về Dashboard
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Lỗi DB: Không thể xác nhận lệnh.')));
+        }
       }
     }
   }
@@ -67,7 +64,7 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
           TextButton(onPressed: () => Navigator.pop(c, null), child: const Text('Hủy')),
           ElevatedButton(
             onPressed: () => Navigator.pop(c, ctrl.text), 
-            child: const Text('Ký xác nhận')
+            child: const Text('Xác nhận & Cấp quyền')
           ),
         ],
       )

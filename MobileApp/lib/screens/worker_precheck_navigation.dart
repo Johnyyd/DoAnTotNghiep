@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../components/step_form_inputs.dart'; // Nơi chứa ESignatureButton
-import 'order_verification_screen.dart'; // Để import mockWorkerSignedOrders
+
+import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 
@@ -19,18 +20,22 @@ class WorkerPrecheckNavigation extends StatefulWidget {
 
 class _WorkerPrecheckNavigationState extends State<WorkerPrecheckNavigation> {
   int _selectedIndex = 0;
+  bool _isSubmitting = false;
 
   void _workerSign() async {
     final pin = await _showPinDialog('Chữ ký Công nhân');
     if (pin != null && pin.isNotEmpty) {
-      if (widget.orderData['orderId'] != null) {
-        OrderVerificationScreen.mockWorkerSignedOrders.add(widget.orderData['orderId']);
-      }
+      setState(() => _isSubmitting = true);
+      final success = await ApiService.updateOrderStatus(widget.orderData['orderId'], 'Pending QC');
+      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✔ Đã ghi nhận kiểm tra môi trường & máy móc thành công.')),
-        );
-        Navigator.pop(context, true);
+        setState(() => _isSubmitting = false);
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✔ Hồ sơ đã gửi cho QC chờ duyệt!')));
+          Navigator.pop(context); // Quay về Home
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Lỗi DB: Không thể cập nhật trạng thái.')));
+        }
       }
     }
   }

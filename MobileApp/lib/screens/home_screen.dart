@@ -33,9 +33,8 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _inProcessOrders = data.where((o) => o['status'] == 'In-Process' || o['status'] == 'InProcess' || o['status'] == 'Completed').toList();
         
-        final allPending = data.where((o) => o['status'] == 'Approved' || o['status'] == 'Draft').toList();
-        _pendingWorkerOrders = allPending.where((o) => !OrderVerificationScreen.mockWorkerSignedOrders.contains(o['orderId'])).toList();
-        _pendingQCOrders = allPending.where((o) => OrderVerificationScreen.mockWorkerSignedOrders.contains(o['orderId'])).toList();
+        _pendingWorkerOrders = data.where((o) => o['status'] == 'Approved' || o['status'] == 'Draft').toList();
+        _pendingQCOrders = data.where((o) => o['status'] == 'Pending QC').toList();
         
         _errorOrders = data.where((o) => o['status'] == 'On-Hold' || o['status'] == 'Hold' || o['status'] == 'Error').toList();
         _isLoading = false;
