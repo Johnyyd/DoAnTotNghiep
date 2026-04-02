@@ -18,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> _pendingWorkerOrders = [];
   List<Map<String, dynamic>> _pendingQCOrders = [];
   List<Map<String, dynamic>> _errorOrders = [];
+  List<Map<String, dynamic>> _completedOrders = [];
   bool _isLoading = true;
 
   @override
@@ -31,12 +32,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final data = await ApiService.getProductionOrders();
     if (mounted) {
       setState(() {
-        _inProcessOrders = data.where((o) => o['status'] == 'In-Process' || o['status'] == 'InProcess' || o['status'] == 'Completed').toList();
-        
+        _inProcessOrders = data.where((o) => o['status'] == 'In-Process' || o['status'] == 'InProcess').toList();
         _pendingWorkerOrders = data.where((o) => o['status'] == 'Approved' || o['status'] == 'Draft').toList();
         _pendingQCOrders = data.where((o) => o['status'] == 'Pending QC').toList();
-        
         _errorOrders = data.where((o) => o['status'] == 'On-Hold' || o['status'] == 'Hold' || o['status'] == 'Error').toList();
+        _completedOrders = data.where((o) => o['status'] == 'Completed').toList();
         _isLoading = false;
       });
     }
@@ -228,6 +228,124 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildCompletedList(List<Map<String, dynamic>> orders) {
+    if (orders.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.check_circle_outline, size: 64, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            Text('Chưa có lệnh nào hoàn thành', style: TextStyle(color: Colors.grey.shade500)),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadOrders,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: orders.length,
+        itemBuilder: (context, index) {
+          final order = orders[index];
+          final progress = (order['progress'] ?? 0.0) as double;
+
+          return Card(
+            margin: const EdgeInsets.only(bottom: 16),
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.green.shade200, width: 1),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => MainNavigationScreen(orderData: order),
+                  ),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.check_circle, color: Colors.green.shade600, size: 22),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            order['productName'] ?? 'Sản phẩm',
+                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.green.shade300),
+                          ),
+                          child: Text(
+                            'Hoàn thành',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green.shade700),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Lệnh: ${order['orderCode']} · Cỡ lô: ${order['batchSize']}',
+                      style: const TextStyle(color: Colors.black54, fontSize: 13),
+                    ),
+                    if (order['endDate'] != null && order['endDate'] != '-') ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.calendar_today, size: 12, color: Colors.green.shade500),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Kết thúc: ${order['endDate']}',
+                            style: TextStyle(color: Colors.green.shade700, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 6,
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Đã hoàn thành: ${order['completedBatches']} / ${order['totalBatches']} mẻ  ·  ${(progress * 100).toInt()}%',
+                      style: const TextStyle(color: Colors.black45, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
@@ -235,7 +353,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final role = user?['role'] as String? ?? '';
 
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Trang Chủ', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -250,6 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Tab(text: 'Chờ nhập liệu (CN)'),
               Tab(text: 'Chờ QC duyệt'),
               Tab(text: 'Gặp lỗi / Dừng'),
+              Tab(text: 'Hoàn thành'),
             ],
           ),
           actions: [
@@ -311,6 +430,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildOrderList(_pendingWorkerOrders, true, isQC: false),
                   _buildOrderList(_pendingQCOrders, true, isQC: true),
                   _buildOrderList(_errorOrders, false),
+                  _buildCompletedList(_completedOrders),
                 ],
               ),
       ),
