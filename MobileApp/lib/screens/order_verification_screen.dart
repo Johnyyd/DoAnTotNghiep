@@ -7,6 +7,8 @@ import 'main_navigation.dart';
 class OrderVerificationScreen extends StatefulWidget {
   final Map<String, dynamic> orderData;
 
+  static Set<int> mockWorkerSignedOrders = {}; // Global mock state
+
   const OrderVerificationScreen({super.key, required this.orderData});
 
   @override
@@ -14,23 +16,8 @@ class OrderVerificationScreen extends StatefulWidget {
 }
 
 class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
-  bool _isWorkerSigned = false;
   bool _isQCSigned = false;
   bool _isLoading = false;
-
-  void _workerSign() async {
-    final pin = await _showPinDialog('Chữ ký Công nhân');
-    if (pin != null && pin.isNotEmpty) {
-      setState(() {
-        _isWorkerSigned = true;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✔ Công nhân đã xác nhận thành công.')),
-        );
-      }
-    }
-  }
 
   void _qcSign() async {
     final pin = await _showPinDialog('Chữ ký QC');
@@ -134,24 +121,22 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
           SegmentedToggle(label: 'Tình trạng thiết bị điện:', optionA: 'Sẵn sàng', optionB: 'Báo lỗi', onChanged: (v){}),
           
           const SizedBox(height: 32),
-          // Flow chữ ký kép
-          if (!_isWorkerSigned)
-            ESignatureButton(title: 'CÔNG NHÂN KÝ XÁC NHẬN', onPressed: _workerSign)
-          else ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8)),
-              child: const Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green),
-                  SizedBox(width: 8),
-                  Text('Công nhân đã ký duyệt lúc 08:30 AM', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))
-                ],
-              ),
+          // Flow chữ ký (chỉ hiển thị QC vì công nhân đã ký ở tab riêng)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8)),
+            child: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('Công nhân đã khai báo trên toàn bộ công đoạn và ký xác nhận', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))
+                )
+              ],
             ),
-            const SizedBox(height: 16),
-            ESignatureButton(title: 'QC KIỂM TRA & DUYỆT (START)', onPressed: _qcSign),
-          ]
+          ),
+          const SizedBox(height: 16),
+          ESignatureButton(title: 'QC KIỂM TRA TỔNG QUAN & DUYỆT (START)', onPressed: _qcSign),
         ],
       ),
     );

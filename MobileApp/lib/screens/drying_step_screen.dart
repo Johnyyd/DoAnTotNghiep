@@ -7,12 +7,14 @@ class DryingStepScreen extends StatefulWidget {
   final int? batchId;
   final int? stepId;
   final String stepName;
+  final bool isPrecheck;
 
   const DryingStepScreen({
     super.key, 
     this.batchId,
     this.stepId,
     required this.stepName,
+    this.isPrecheck = false,
   });
 
   @override
@@ -131,14 +133,18 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.stepName)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
+    final content = ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        if (widget.isPrecheck) 
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text('ĐIỀN CHECKLIST KIỂM TRA MÔI TRƯỜNG & THIẾT BỊ', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 16)),
+          )
+        else
           Text(widget.stepName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-          
-          const FormSectionHeader('4.1 THÔNG TIN CHUNG'),
+        
+        const FormSectionHeader('4.1 THÔNG TIN CHUNG'),
           const StandardInputField(label: 'Phòng thực hiện', hint: 'Pha chế'),
           StandardInputField(label: 'Ngày', controller: _ngayCtrl, suffixIcon: const Icon(Icons.calendar_today)),
           StandardInputField(label: 'Người thực hiện & Người kiểm tra', controller: _nguoiCtrl, hint: 'Chọn nhân viên', suffixIcon: const Icon(Icons.person_add)),
@@ -160,6 +166,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
           StandardInputField(label: 'Thời gian kiểm tra', controller: _timeCtrl, hint: '08:00 AM', suffixIcon: const Icon(Icons.access_time)),
           StandardInputField(label: 'Áp lực phòng đọc (Pa)', controller: _pressCtrl, hint: '15', standardText: 'Standard: >= 10', keyboardType: TextInputType.number),
   
+        if (!widget.isPrecheck) ...[
           const FormSectionHeader('4.4 THÔNG SỐ SẤY & KẾT QUẢ'),
           SegmentedToggle(label: 'Tình trạng máy chạy không tải', optionA: 'Ổn định', optionB: 'Không ổn định', onChanged: (v) => _mayKhongTai = v),
           Row(
@@ -194,8 +201,15 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
            ? const Center(child: CircularProgressIndicator())
            : ESignatureButton(title: 'KÝ & LƯU CÔNG ĐOẠN', onPressed: _verifyAndSubmit),
           const SizedBox(height: 32),
-        ],
-      ),
+        ]
+      ],
+    );
+
+    if (widget.isPrecheck) return content;
+    
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.stepName)),
+      body: content,
     );
   }
 }

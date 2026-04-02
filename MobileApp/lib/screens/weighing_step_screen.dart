@@ -7,11 +7,13 @@ import '../services/api_service.dart';
 class WeighingStepScreen extends StatefulWidget {
   final int? batchId;
   final int? stepId;
+  final bool isPrecheck;
 
   const WeighingStepScreen({
     super.key,
     this.batchId,
     this.stepId,
+    this.isPrecheck = false,
   });
 
   @override
@@ -182,33 +184,42 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_isLoading) {
+      return widget.isPrecheck 
+        ? const Center(child: CircularProgressIndicator()) 
+        : const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('CÔNG ĐOẠN CÂN')),
-      body: ListView(
-        padding: const EdgeInsets.all(16), 
-        children: [
+    final content = ListView(
+      padding: const EdgeInsets.all(16), 
+      children: [
+        if (widget.isPrecheck) 
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text('ĐIỀN CHECKLIST KIỂM TRA MÔI TRƯỜNG & THIẾT BỊ', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 16)),
+          )
+        else
           const Text('CÔNG ĐOẠN CÂN NGUYÊN LIỆU', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-          
-          const FormSectionHeader('5.1 MÔI TRƯỜNG & THIẾT BỊ'),
-          const ReadOnlyField(label: 'Phòng thực hiện', value: 'Phòng cân'),
-          const SizedBox(height: 16), 
-          
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: StandardInputField(label: 'Nhiệt độ (°C)', hint: '23.0', controller: _tempCtrl, keyboardType: TextInputType.number)),
-              const SizedBox(width: 16), 
-              Expanded(child: StandardInputField(label: 'Độ ẩm (%)', hint: '60.0', controller: _humidCtrl, keyboardType: TextInputType.number)),
-            ],
-          ),
-          StandardInputField(label: 'Áp lực (Pa)', hint: '15', controller: _pressCtrl, keyboardType: TextInputType.number),
-          
-          SegmentedToggle(label: 'Cân IW2-60', optionA: 'Tốt', optionB: 'Không ổn định', onChanged: (v) => _canIW2 = v),
-          SegmentedToggle(label: 'Cân PMA-5000', optionA: 'Tốt', optionB: 'Không ổn định', onChanged: (v) => _canPMA = v),
-          SegmentedToggle(label: 'Dụng cụ cân', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _dungCuCan = v),
+        
+        const FormSectionHeader('5.1 MÔI TRƯỜNG & THIẾT BỊ'),
+        const ReadOnlyField(label: 'Phòng thực hiện', value: 'Phòng cân'),
+        const SizedBox(height: 16), 
+        
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: StandardInputField(label: 'Nhiệt độ (°C)', hint: '23.0', controller: _tempCtrl, keyboardType: TextInputType.number)),
+            const SizedBox(width: 16), 
+            Expanded(child: StandardInputField(label: 'Độ ẩm (%)', hint: '60.0', controller: _humidCtrl, keyboardType: TextInputType.number)),
+          ],
+        ),
+        StandardInputField(label: 'Áp lực (Pa)', hint: '15', controller: _pressCtrl, keyboardType: TextInputType.number),
+        
+        SegmentedToggle(label: 'Cân IW2-60', optionA: 'Tốt', optionB: 'Không ổn định', onChanged: (v) => _canIW2 = v),
+        SegmentedToggle(label: 'Cân PMA-5000', optionA: 'Tốt', optionB: 'Không ổn định', onChanged: (v) => _canPMA = v),
+        SegmentedToggle(label: 'Dụng cụ cân', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _dungCuCan = v),
   
+        if (!widget.isPrecheck) ...[
           const FormSectionHeader('5.2 DANH SÁCH NGUYÊN LIỆU QUY ĐỊNH'),
           const Text('Nhập đúng khối lượng yêu cầu để xác nhận hoàn thành từng nguyên liệu.', style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic)),
           const SizedBox(height: 12),
@@ -242,8 +253,15 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
             ? const Center(child: CircularProgressIndicator()) 
             : ESignatureButton(title: 'KÝ XÁC NHẬN SỐ', onPressed: _verifyAndSubmit),
           const SizedBox(height: 32),
-        ],
-      ),
+        ]
+      ],
+    );
+
+    if (widget.isPrecheck) return content;
+    
+    return Scaffold(
+      appBar: AppBar(title: const Text('CÔNG ĐOẠN CÂN')),
+      body: content,
     );
   }
 }

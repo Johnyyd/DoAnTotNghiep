@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import 'login_screen.dart';
 import 'main_navigation.dart';
 import 'order_verification_screen.dart';
+import 'worker_precheck_navigation.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,7 +15,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> _inProcessOrders = [];
-  List<Map<String, dynamic>> _pendingOrders = [];
+  List<Map<String, dynamic>> _pendingWorkerOrders = [];
+  List<Map<String, dynamic>> _pendingQCOrders = [];
   List<Map<String, dynamic>> _errorOrders = [];
   bool _isLoading = true;
 
@@ -30,7 +32,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) {
       setState(() {
         _inProcessOrders = data.where((o) => o['status'] == 'In-Process' || o['status'] == 'InProcess' || o['status'] == 'Completed').toList();
-        _pendingOrders = data.where((o) => o['status'] == 'Approved' || o['status'] == 'Draft').toList();
+        
+        final allPending = data.where((o) => o['status'] == 'Approved' || o['status'] == 'Draft').toList();
+        _pendingWorkerOrders = allPending.where((o) => !OrderVerificationScreen.mockWorkerSignedOrders.contains(o['orderId'])).toList();
+        _pendingQCOrders = allPending.where((o) => OrderVerificationScreen.mockWorkerSignedOrders.contains(o['orderId'])).toList();
+        
         _errorOrders = data.where((o) => o['status'] == 'On-Hold' || o['status'] == 'Hold' || o['status'] == 'Error').toList();
         _isLoading = false;
       });
@@ -63,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Widget _buildOrderList(List<Map<String, dynamic>> orders, bool isPendingTab) {
+  Widget _buildOrderList(List<Map<String, dynamic>> orders, bool isPendingTab, {bool isQC = false}) {
     if (orders.isEmpty) {
       return Center(
         child: Column(
@@ -98,14 +104,26 @@ class _HomeScreenState extends State<HomeScreen> {
               borderRadius: BorderRadius.circular(16),
               onTap: () async {
                 if (isPendingTab) {
-                  // Mở màn hình xác nhận kép
-                  final result = await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => OrderVerificationScreen(orderData: order),
-                    ),
-                  );
-                  if (result == true) {
-                    _loadOrders(); // Tải lại danh sách nếu chứng nhận thành công
+                  if (!isQC) {
+                    // Mở màn hình dành riêng cho Công nhân (có tab bar Cân, Sấy, Trộn)
+                    final result = await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => WorkerPrecheckNavigation(orderData: order),
+                      ),
+                    );
+                    if (result == true) {
+                      _loadOrders(); // Tải lại để đẩy lệnh sang Tab 3
+                    }
+                  } else {
+                    // Mở màn hình QC duyệt tổng quát
+                    final result = await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => OrderVerificationScreen(orderData: order),
+                      ),
+                    );
+                    if (result == true) {
+                      _loadOrders(); // Tải lại để đẩy lệnh sang đang sản xuất
+                    }
                   }
                 } else {
                   // Mở màn hình thao tác sản xuất bình thường
@@ -143,7 +161,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Text(
                             (order['status'] == 'In-Process' || order['status'] == 'InProcess') ? 'Đang sản xuất' : 
                             order['status'] == 'Completed' ? 'Hoàn thành' : 
-                            (order['status'] == 'On-Hold' || order['status'] == 'Hold') ? 'Đang tạm dừng' : 'Chờ xác nhận',
+                            (order['status'] == 'On-Hold' || order['status'] == 'Hold') ? 'Đang tạm dừng' : 
+                            (isQC ? 'Chờ QC duyệt' : 'Chờ công nhân ký'),
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
                           ),
                         ),
@@ -189,13 +208,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: const TextStyle(color: Colors.black45, fontSize: 12),
                       ),
                     ] else ...[
-                      const Row(
+                      Row(
                         children: [
-                          Icon(Icons.info_outline, size: 14, color: Colors.orange),
-                          SizedBox(width: 4),
+                          Icon(isQC ? Icons.admin_panel_settings : Icons.engineering, size: 14, color: Colors.orange),
+                          const SizedBox(width: 4),
                           Text(
-                            'Cần xác nhận chuẩn bị trước khi sản xuất',
-                            style: TextStyle(color: Colors.orange, fontSize: 12, fontStyle: FontStyle.italic),
+                            isQC ? 'Công nhân đã ký, chờ QC đối chiếu...' : 'Chờ công nhân nhập liệu môi trường, máy móc...',
+                            style: const TextStyle(color: Colors.orange, fontSize: 12, fontStyle: FontStyle.italic),
                           ),
                         ],
                       )
@@ -217,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final role = user?['role'] as String? ?? '';
 
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Trang Chủ', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -229,7 +248,8 @@ class _HomeScreenState extends State<HomeScreen> {
             indicatorWeight: 3,
             tabs: [
               Tab(text: 'Đang sản xuất'),
-              Tab(text: 'Chờ xác nhận'),
+              Tab(text: 'Chờ nhập liệu (CN)'),
+              Tab(text: 'Chờ QC duyệt'),
               Tab(text: 'Gặp lỗi / Dừng'),
             ],
           ),
@@ -288,9 +308,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ? const Center(child: CircularProgressIndicator())
             : TabBarView(
                 children: [
-                  _buildOrderList(_inProcessOrders, false), // Đang sản xuất
-                  _buildOrderList(_pendingOrders, true),    // Chờ xác nhận
-                  _buildOrderList(_errorOrders, false),     // Lỗi / Dừng
+                  _buildOrderList(_inProcessOrders, false),
+                  _buildOrderList(_pendingWorkerOrders, true, isQC: false),
+                  _buildOrderList(_pendingQCOrders, true, isQC: true),
+                  _buildOrderList(_errorOrders, false),
                 ],
               ),
       ),

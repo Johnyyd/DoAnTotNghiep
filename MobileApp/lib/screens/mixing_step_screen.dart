@@ -6,11 +6,13 @@ import '../services/api_service.dart';
 class MixingStepScreen extends StatefulWidget {
   final int? batchId;
   final int? stepId;
+  final bool isPrecheck;
 
   const MixingStepScreen({
     super.key,
     this.batchId,
     this.stepId,
+    this.isPrecheck = false,
   });
 
   @override
@@ -215,32 +217,41 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_isLoading) {
+      return widget.isPrecheck 
+        ? const Center(child: CircularProgressIndicator()) 
+        : const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('CÔNG ĐOẠN TRỘN')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
+    final content = ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        if (widget.isPrecheck) 
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text('ĐIỀN CHECKLIST KIỂM TRA MÔI TRƯỜNG & THIẾT BỊ', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 16)),
+          )
+        else
           const Text('CÔNG ĐOẠN TRỘN KHÔ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-          
-          const FormSectionHeader('6.1 MÔI TRƯỜNG & THIẾT BỊ'),
-          const ReadOnlyField(label: 'Phòng thực hiện', value: 'Trộn khô'),
-          SegmentedToggle(label: 'Phòng trộn khô', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _phongSach = v),
-          SegmentedToggle(label: 'Máy trộn lập phương AD-LP-200', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _mayTron = v),
-          SegmentedToggle(label: 'Dụng cụ sản xuất', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _dungCu = v),
+        
+        const FormSectionHeader('6.1 MÔI TRƯỜNG & THIẾT BỊ'),
+        const ReadOnlyField(label: 'Phòng thực hiện', value: 'Trộn khô'),
+        SegmentedToggle(label: 'Phòng trộn khô', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _phongSach = v),
+        SegmentedToggle(label: 'Máy trộn lập phương AD-LP-200', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _mayTron = v),
+        SegmentedToggle(label: 'Dụng cụ sản xuất', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _dungCu = v),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: StandardInputField(label: 'Nhiệt độ (°C)', controller: _tempCtrl, hint: '23.0', standardText: 'Standard: 21 - 25', keyboardType: TextInputType.number)),
+            const SizedBox(width: 16),
+            Expanded(child: StandardInputField(label: 'Độ ẩm (%)', controller: _humidCtrl, hint: '60.0', standardText: 'Standard: 45 - 70', keyboardType: TextInputType.number)),
+          ],
+        ),
+        StandardInputField(label: 'Thời gian kiểm tra', controller: _timeCtrl, hint: '08:00 AM', suffixIcon: const Icon(Icons.access_time)),
+        StandardInputField(label: 'Áp lực phòng (Pa)', controller: _pressCtrl, hint: '15', standardText: 'Standard: >= 10', keyboardType: TextInputType.number),
   
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: StandardInputField(label: 'Nhiệt độ (°C)', controller: _tempCtrl, hint: '23.0', standardText: 'Standard: 21 - 25', keyboardType: TextInputType.number)),
-              const SizedBox(width: 16),
-              Expanded(child: StandardInputField(label: 'Độ ẩm (%)', controller: _humidCtrl, hint: '60.0', standardText: 'Standard: 45 - 70', keyboardType: TextInputType.number)),
-            ],
-          ),
-          StandardInputField(label: 'Thời gian kiểm tra', controller: _timeCtrl, hint: '08:00 AM', suffixIcon: const Icon(Icons.access_time)),
-          StandardInputField(label: 'Áp lực phòng (Pa)', controller: _pressCtrl, hint: '15', standardText: 'Standard: >= 10', keyboardType: TextInputType.number),
-  
+        if (!widget.isPrecheck) ...[
           const FormSectionHeader('6.2 THÔNG SỐ VẬN HÀNH'),
           Row(
             children: [
@@ -292,8 +303,15 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
             ? const Center(child: CircularProgressIndicator())
             : ESignatureButton(title: 'HOÀN THÀNH CÔNG ĐOẠN TRỘN', onPressed: _verifyAndSubmit),
           const SizedBox(height: 32),
-        ],
-      ),
+        ]
+      ],
+    );
+
+    if (widget.isPrecheck) return content;
+    
+    return Scaffold(
+      appBar: AppBar(title: const Text('CÔNG ĐOẠN TRỘN')),
+      body: content,
     );
   }
 }
