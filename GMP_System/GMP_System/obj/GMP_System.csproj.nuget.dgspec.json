@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/src/GMP_System.csproj": {}
+    "D:\\codes\\Codex\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj": {}
   },
   "projects": {
-    "/src/GMP_System.csproj": {
+    "D:\\codes\\Codex\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/src/GMP_System.csproj",
+        "projectUniqueName": "D:\\codes\\Codex\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
         "projectName": "GMP_System",
-        "projectPath": "/src/GMP_System.csproj",
-        "packagesPath": "/root/.nuget/packages/",
-        "outputPath": "/src/obj/",
+        "projectPath": "D:\\codes\\Codex\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
+        "packagesPath": "C:\\Users\\GIGABYTE\\.nuget\\packages\\",
+        "outputPath": "D:\\codes\\Codex\\DoAnTotNghiep\\GMP_System\\GMP_System\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/root/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\GIGABYTE\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -32,11 +32,6 @@
           "warnAsError": [
             "NU1605"
           ]
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
         }
       },
       "frameworks": {
@@ -48,6 +43,10 @@
               "version": "[4.0.3, )"
             },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[8.0.10, )"
+            },
+            "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[8.0.10, )"
             },
@@ -66,6 +65,10 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[8.0.10, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[6.9.0, )"
             }
           },
           "imports": [
@@ -87,7 +90,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.419/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.125/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
