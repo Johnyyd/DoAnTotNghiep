@@ -21,21 +21,18 @@ namespace GMP_System.Controllers
         [HttpGet("batch/{batchId}")]
         public async Task<IActionResult> GetLogsByBatch(int batchId)
         {
-            // 1. Lấy mẻ sản xuất kèm Recipe và Định tuyến đầy đủ
-            var batch = await _unitOfWork.ProductionBatches.Query()
-                .Include(b => b.Order)
-                    .ThenInclude(o => o!.Recipe)
-                        .ThenInclude(r => r!.RecipeRoutings)
-                            .ThenInclude(rr => rr.StepParameters) 
-                .Include(b => b.Order)
-                    .ThenInclude(o => o!.Recipe)
-                        .ThenInclude(r => r!.Material) // Đảm bảo lấy được Material
-                .FirstOrDefaultAsync(b => b.BatchId == batchId);
-
+            // 1. Lấy mẻ sản xuất
+            var batch = await _unitOfWork.ProductionBatches.GetByIdAsync(batchId);
             if (batch == null) return NotFound(new { success = false, message = "Không tìm thấy mẻ." });
 
-            // 2. Lấy danh sách các bước định nghĩa trong Recipe
-            var routings = batch.Order?.Recipe?.RecipeRoutings
+            // 2. Lấy thông tin Recipe từ Order liên kết
+            var order = await _unitOfWork.ProductionOrders.Query()
+                .Include(o => o.Recipe)
+                    .ThenInclude(r => r!.RecipeRoutings)
+                        .ThenInclude(rr => rr.StepParameters)
+                .FirstOrDefaultAsync(o => o.OrderId == batch.OrderId);
+
+            var routings = order?.Recipe?.RecipeRoutings
                 .OrderBy(r => r.StepNumber)
                 .ToList() ?? new List<RecipeRouting>();
 
@@ -43,8 +40,6 @@ namespace GMP_System.Controllers
             var existingLogs = await _unitOfWork.BatchProcessLogs.Query()
                 .Include(x => x.Routing)
                     .ThenInclude(r => r!.StepParameters)
-                .Include(x => x.ParameterValues)
-                    .ThenInclude(pv => pv.Parameter!)
                 .Where(x => x.BatchId == batchId)
                 .ToListAsync();
 
@@ -52,7 +47,6 @@ namespace GMP_System.Controllers
             var workflow = routings.Select(r => {
                 var log = existingLogs.FirstOrDefault(l => l.RoutingId == r.RoutingId);
                 return new {
-                    // Cấp độ gốc
                     stepId = r.RoutingId,
                     logId = log?.LogId,
                     resultStatus = log?.ResultStatus ?? "None",
@@ -60,17 +54,22 @@ namespace GMP_System.Controllers
                     endTime = log?.EndTime,
                     parametersData = log?.ParametersData,
                     isDeviation = log?.IsDeviation ?? false,
-                    // Đối tượng step (Tương thích với mobile UI hiện tại)
                     step = new {
                         stepId = r.RoutingId,
                         stepName = r.StepName,
                         stepNumber = r.StepNumber
                     },
-                    // Đối tượng routing (Chứa thông số chuẩn cho Min-Max)
                     routing = new {
                         routingId = r.RoutingId,
                         stepName = r.StepName,
-                        stepParameters = r.StepParameters ?? new List<StepParameter>() 
+                        stepParameters = (r.StepParameters ?? new List<StepParameter>()).Select(sp => new {
+                            sp.ParameterId,
+                            sp.ParameterName,
+                            sp.Unit,
+                            sp.MinValue,
+                            sp.MaxValue,
+                            sp.IsCritical
+                        }).ToList()
                     }
                 };
             });

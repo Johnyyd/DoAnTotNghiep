@@ -1,13 +1,22 @@
+import 'package:flutter/foundation.dart'; // Added for kIsWeb
+import 'auth_service.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'auth_service.dart';
 
 /// [ApiService] — Lớp trung gian kết nối giao tiếp HTTP với Backend GMP System.
 /// Mọi request đều tự động gắn JWT token từ [AuthService].
 class ApiService {
   // Khi chạy trong Docker Compose (Nginx proxy), baseUrl nên là đường dẫn tương đối '/api'
   // Khi chạy dev local Windows thì dùng 'http://localhost:5001/api' hoặc IP Tailscale
-  static const String baseUrl = '/api'; 
+  static String get baseUrl {
+    if (kIsWeb) {
+      // Trên Web, dùng origin hiện tại (vd http://localhost:8081) + /api
+      final origin = Uri.base.origin;
+      return '$origin/api';
+    }
+    // Mobile/Emulator fallback
+    return 'http://localhost:5001/api';
+  }
 
   /// Headers mặc định kèm JWT token
   static Future<Map<String, String>> _headers() async {
@@ -173,9 +182,9 @@ class ApiService {
     try {
       final url = Uri.parse('$baseUrl/batch-process-logs/batch/$batchId');
       final response = await http.get(url, headers: await _headers());
-      
+
       print('ApiService.getProcessLogs status: ${response.statusCode}');
-      
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final List<dynamic> workflow = data['data'] ?? [];

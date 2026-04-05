@@ -22,16 +22,38 @@ namespace GMP_System.Controllers
         {
             var orders = await _unitOfWork.ProductionOrders
                 .Query()
-                .Include(o => o.Recipe)
-                    .ThenInclude(r => r!.Material)
-                .Include(o => o.Recipe)
-                    .ThenInclude(r => r!.RecipeBoms)
-                        .ThenInclude(b => b.Material)
-                .Include(o => o.Recipe)
-                    .ThenInclude(r => r!.RecipeBoms)
-                        .ThenInclude(b => b.Uom)
-                .Include(o => o.CreatedByNavigation)
-                .Include(o => o.ProductionBatches)
+                .Select(o => new {
+                    o.OrderId,
+                    o.OrderCode,
+                    o.PlannedQuantity,
+                    o.ActualQuantity,
+                    o.Status,
+                    o.StartDate,
+                    o.EndDate,
+                    o.CreatedAt,
+                    Recipe = o.Recipe == null ? null : new {
+                        o.Recipe.RecipeId,
+                        o.Recipe.BatchSize,
+                        Material = o.Recipe.Material == null ? null : new {
+                            o.Recipe.Material.MaterialName,
+                            UnitOfMeasure = o.Recipe.Material.BaseUom == null ? null : new {
+                                o.Recipe.Material.BaseUom.UomName
+                            }
+                        },
+                        RecipeBoms = o.Recipe.RecipeBoms.Select(b => new {
+                            b.BomId,
+                            b.Quantity,
+                            Material = b.Material == null ? null : new { b.Material.MaterialName },
+                            Uom = b.Uom == null ? null : new { b.Uom.UomName }
+                        })
+                    },
+                    ProductionBatches = o.ProductionBatches.Select(b => new {
+                        b.BatchId,
+                        b.BatchNumber,
+                        b.Status
+                    })
+                })
+                .AsNoTracking()
                 .ToListAsync();
 
             return Ok(new { data = orders, totalCount = orders.Count, success = true, message = "Success" });
@@ -43,17 +65,41 @@ namespace GMP_System.Controllers
         {
             var order = await _unitOfWork.ProductionOrders
                 .Query()
-                .Include(o => o.Recipe)
-                    .ThenInclude(r => r!.Material)
-                .Include(o => o.Recipe)
-                    .ThenInclude(r => r!.RecipeBoms)
-                        .ThenInclude(b => b.Material)
-                .Include(o => o.Recipe)
-                    .ThenInclude(r => r!.RecipeBoms)
-                        .ThenInclude(b => b.Uom)
-                .Include(o => o.ProductionBatches)
-                .Include(o => o.CreatedByNavigation)
-                .FirstOrDefaultAsync(o => o.OrderId == id);
+                .Where(o => o.OrderId == id)
+                .Select(o => new {
+                    o.OrderId,
+                    o.OrderCode,
+                    o.PlannedQuantity,
+                    o.ActualQuantity,
+                    o.Status,
+                    o.StartDate,
+                    o.EndDate,
+                    o.CreatedAt,
+                    Recipe = o.Recipe == null ? null : new {
+                        o.Recipe.RecipeId,
+                        o.Recipe.BatchSize,
+                        o.Recipe.Note,
+                        Material = o.Recipe.Material == null ? null : new {
+                            o.Recipe.Material.MaterialName,
+                            UnitOfMeasure = o.Recipe.Material.BaseUom == null ? null : new {
+                                o.Recipe.Material.BaseUom.UomName
+                            }
+                        },
+                        RecipeBoms = o.Recipe.RecipeBoms.Select(b => new {
+                            b.BomId,
+                            b.Quantity,
+                            Material = b.Material == null ? null : new { b.Material.MaterialName },
+                            Uom = b.Uom == null ? null : new { b.Uom.UomName }
+                        })
+                    },
+                    ProductionBatches = o.ProductionBatches.Select(b => new {
+                        b.BatchId,
+                        b.BatchNumber,
+                        b.Status
+                    })
+                })
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
 
             if (order == null)
                 return NotFound(new { success = false, message = $"Không tìm thấy lệnh sản xuất ID={id}" });

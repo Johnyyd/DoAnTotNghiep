@@ -115,14 +115,18 @@ SET IDENTITY_INSERT Materials ON;
 INSERT INTO Materials (MaterialId, MaterialCode, MaterialName, Type, BaseUomId, IsActive, Description) VALUES
 (1,  'MAT-NLC3',   N'Hoạt chất NLC 3 (Cao khô Trinh nữ)', 'RawMaterial',  1, 1, N'Bảo quản 15-25°C, tránh ánh sáng'),
 (2,  'MAT-PARA',   N'Bột Paracetamol tinh khiết',         'RawMaterial',  1, 1, N'USP Grade, bảo quản nơi khô ráo'),
-(3,  'MAT-TD8',    N'Tinh bột (Filler)',                  'RawMaterial',  1, 1, N'TD 8 - Tá dược độn bù trừ'),
-(12, 'MAT-TD1',    N'Aerosil',                            'RawMaterial',  2, 1, N'TD 1 - TD trơn chảy'),
-(13, 'MAT-TD3',    N'Sodium starch glycolate',            'RawMaterial',  1, 1, N'TD 3 - Tá dược rã'),
-(14, 'MAT-TD4',    N'Talc',                               'RawMaterial',  2, 1, N'TD 4 - Tá dược trơn'),
+(3,  'MAT-TD8',    N'Tinh bột ngô (Filler)',              'RawMaterial',  1, 1, N'TD 8 - Tá dược độn bù trừ'),
+(4,  'MAT-LAC',    N'Lactose kết dính',                   'RawMaterial',  1, 1, N'Tá dược độn kết dính'),
 (5,  'MAT-TD5',    N'Magie Stearat',                      'RawMaterial',  2, 1, N'TD 5 - Tá dược trơn'),
 (6,  'MAT-NLP6',   N'Vỏ nang cứng (Cỡ 0)',                'RawMaterial',  4, 1, N'NLP 6 - Vỏ nang gelatin'),
+(7,  'MAT-PVP',    N'PVP K30',                            'RawMaterial',  1, 1, N'Tá dược tạo hạt ướt'),
+(8,  'MAT-ALU',    N'Màng nhôm ép vỉ',                    'PackagingMaterial', 1, 1, N'Màng ép vỉ nhôm'),
+(9,  'MAT-PVC',    N'Màng PVC trong suốt',                'PackagingMaterial', 1, 1, N'Màng PVC ép vỉ'),
 (10, 'FG-NLC3-CAP',N'Viên nang NLC 3 (540mg)',            'FinishedGood', 4, 1, N'Thành phẩm đầu ra'),
-(11, 'FG-PARA-TAB',N'Viên nén Paracetamol 500mg',         'FinishedGood', 4, 1, N'Finished Good');
+(11, 'FG-PARA-TAB',N'Viên nén Paracetamol 500mg',         'FinishedGood', 4, 1, N'Finished Good'),
+(12, 'MAT-TD1',    N'Aerosil',                            'RawMaterial',  2, 1, N'TD 1 - TD trơn chảy'),
+(13, 'MAT-TD3',    N'Sodium starch glycolate',            'RawMaterial',  1, 1, N'TD 3 - Tá dược rã'),
+(14, 'MAT-TD4',    N'Talc',                               'RawMaterial',  2, 1, N'TD 4 - Tá dược trơn');
 SET IDENTITY_INSERT Materials OFF;
 GO
 

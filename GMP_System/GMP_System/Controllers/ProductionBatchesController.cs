@@ -22,23 +22,27 @@ namespace GMP_System.Controllers
         {
             var batches = await _unitOfWork.ProductionBatches
                 .Query()
-                .Include(b => b.Order)
-                    .ThenInclude(o => o!.Recipe)
-                        .ThenInclude(r => r!.RecipeRoutings)
-                .Include(b => b.Order)
-                    .ThenInclude(o => o!.Recipe)
-                        .ThenInclude(r => r!.Material) // Added Material
-                .Include(b => b.Order)
-                    .ThenInclude(o => o!.Recipe)
-                        .ThenInclude(r => r!.RecipeBoms)
-                            .ThenInclude(bom => bom.Material)
-                .Include(b => b.Order)
-                    .ThenInclude(o => o!.Recipe)
-                        .ThenInclude(r => r!.RecipeBoms)
-                            .ThenInclude(bom => bom.Uom)
-                .Include(b => b.MaterialUsages)
-                    .ThenInclude(u => u.InventoryLot)
-                        .ThenInclude(l => l!.Material)
+                .Select(b => new {
+                    b.BatchId,
+                    b.OrderId,
+                    b.BatchNumber,
+                    b.Status,
+                    b.ManufactureDate,
+                    b.EndTime,
+                    b.ExpiryDate,
+                    b.CurrentStep,
+                    Order = b.Order == null ? null : new {
+                        b.Order.OrderId,
+                        b.Order.OrderCode,
+                        Recipe = b.Order.Recipe == null ? null : new {
+                            b.Order.Recipe.RecipeId,
+                            Material = b.Order.Recipe.Material == null ? null : new {
+                                b.Order.Recipe.Material.MaterialName
+                            }
+                        }
+                    }
+                })
+                .AsNoTracking()
                 .ToListAsync();
 
             return Ok(new { data = batches, success = true, message = "Success" });
@@ -50,14 +54,53 @@ namespace GMP_System.Controllers
         {
             var batch = await _unitOfWork.ProductionBatches
                 .Query()
-                .Include(b => b.Order)
-                    .ThenInclude(o => o!.Recipe)
-                        .ThenInclude(r => r!.RecipeRoutings)
-                .Include(b => b.MaterialUsages)
-                    .ThenInclude(u => u.InventoryLot)
-                        .ThenInclude(l => l!.Material)
-                .Include(b => b.BatchProcessLogs)
-                .FirstOrDefaultAsync(b => b.BatchId == id);
+                .Where(b => b.BatchId == id)
+                .Select(b => new {
+                    b.BatchId,
+                    b.OrderId,
+                    b.BatchNumber,
+                    b.Status,
+                    b.ManufactureDate,
+                    b.EndTime,
+                    b.ExpiryDate,
+                    b.CurrentStep,
+                    Order = b.Order == null ? null : new {
+                        b.Order.OrderCode,
+                        Recipe = b.Order.Recipe == null ? null : new {
+                            b.Order.Recipe.RecipeId,
+                            Material = b.Order.Recipe.Material == null ? null : new {
+                                b.Order.Recipe.Material.MaterialName,
+                                UnitOfMeasure = b.Order.Recipe.Material.BaseUom == null ? null : new {
+                                    b.Order.Recipe.Material.BaseUom.UomName
+                                }
+                            },
+                            RecipeBoms = b.Order.Recipe.RecipeBoms.Select(bom => new {
+                                bom.BomId,
+                                bom.Quantity,
+                                Material = bom.Material == null ? null : new { bom.Material.MaterialName },
+                                Uom = bom.Uom == null ? null : new { bom.Uom.UomName }
+                            }),
+                            RecipeRoutings = b.Order.Recipe.RecipeRoutings.Select(r => new {
+                                r.RoutingId,
+                                r.StepNumber,
+                                r.StepName,
+                                r.Description,
+                                r.EstimatedTimeMinutes,
+                                r.DefaultEquipmentId
+                            })
+                        }
+                    },
+                    BatchProcessLogs = b.BatchProcessLogs.Select(l => new {
+                        l.LogId,
+                        l.RoutingId,
+                        l.Status,
+                        l.ResultStatus,
+                        l.StartTime,
+                        l.EndTime
+                    })
+                })
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
 
             if (batch == null) return NotFound(new { success = false, message = "Không tìm thấy mẻ sản xuất." });
             return Ok(new { data = batch, success = true, message = "Success" });

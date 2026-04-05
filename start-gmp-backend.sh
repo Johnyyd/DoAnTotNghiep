@@ -55,10 +55,12 @@ if [ "$DB_EXISTS" = "0" ]; then
     echo "Initializing GMP database..."
     docker exec gmp-sqlserver /opt/mssql-tools/bin/sqlcmd \
         -S localhost -U SA -P 'GMP_Strong@Passw0rd123' \
+        -f 65001 \
         -i /var/opt/mssql/backup/init.sql
     docker exec gmp-sqlserver /opt/mssql-tools/bin/sqlcmd \
         -S localhost -U SA -P 'GMP_Strong@Passw0rd123' \
-        -i /var/opt/mssql/backup/seed.sql
+        -f 65001 \
+        -i /var/opt/mssql/backup/full_seed.sql
     echo "Database initialized"
 else
     echo "Database already exists"
