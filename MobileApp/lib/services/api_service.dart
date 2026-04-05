@@ -5,9 +5,9 @@ import 'auth_service.dart';
 /// [ApiService] — Lớp trung gian kết nối giao tiếp HTTP với Backend GMP System.
 /// Mọi request đều tự động gắn JWT token từ [AuthService].
 class ApiService {
-  // Trong Docker Compose: frontend (8081) gọi backend qua proxy nginx → /api
-  // Dev local: gọi thẳng port 5001
-  static const String baseUrl = 'http://100.89.137.3:5001/api';
+  // Khi chạy trong Docker Compose (Nginx proxy), baseUrl nên là đường dẫn tương đối '/api'
+  // Khi chạy dev local Windows thì dùng 'http://localhost:5001/api' hoặc IP Tailscale
+  static const String baseUrl = '/api'; 
 
   /// Headers mặc định kèm JWT token
   static Future<Map<String, String>> _headers() async {
@@ -168,45 +168,22 @@ class ApiService {
 
   // ─── BATCH PROCESS LOGS ────────────────────────────────────
 
-  /// Lấy nhật ký công đoạn của một mẻ từ CSDL và mapping với định tuyến khung
+  /// Lấy nhật ký công đoạn của một mẻ (Virtual Workflow: Routing + Logs)
   static Future<List<Map<String, dynamic>>> getProcessLogs(int batchId) async {
-    final url = Uri.parse('$baseUrl/batchprocesslogs/batch/$batchId');
     try {
+      final url = Uri.parse('$baseUrl/batch-process-logs/batch/$batchId');
       final response = await http.get(url, headers: await _headers());
-      List<Map<String, dynamic>> fetchedLogs = [];
+      
+      print('ApiService.getProcessLogs status: ${response.statusCode}');
+      
       if (response.statusCode == 200) {
-        final body = jsonDecode(response.body) as Map<String, dynamic>;
-        final data = body['data'] as List<dynamic>? ?? [];
-        fetchedLogs = data.cast<Map<String, dynamic>>();
+        final data = jsonDecode(response.body);
+        final List<dynamic> workflow = data['data'] ?? [];
+        return workflow.map((item) => Map<String, dynamic>.from(item)).toList();
       }
-
-      // Tạo cấu trúc 3 công đoạn chuẩn (Routing Steps) theo quy trình: Sấy -> Cân -> Trộn
-      final standardSteps = [
-        {'stepId': 1, 'stepName': 'Công đoạn 1: Sấy NLC 3 / TD 8'},
-        {'stepId': 2, 'stepName': 'Công đoạn 2: Cân nguyên liệu'},
-        {'stepId': 3, 'stepName': 'Công đoạn 3: Trộn đồng nhất'},
-      ];
-
-      return standardSteps.map((step) {
-        // Tìm xem CSDL đã có log cho bước này chưa (map theo StepId)
-        // Vì List in Dart không có firstWhereOrNull một cách nhẹ nhàng nếu không dùng collection package, nên mình dùng cách duyệt an toàn.
-        Map<String, dynamic>? existLog;
-        for (var log in fetchedLogs) {
-          if (log['routingId'] == step['stepId']) {
-            existLog = log;
-          }
-        }
-
-        return {
-          'logId': existLog?['logId'],
-          'stepId': step['stepId'],
-          'step': step, // Chứa StepName để giao diện hiển thị
-          'resultStatus': existLog?['resultStatus'],
-          'endTime': existLog?['endTime'],
-          'parametersData': existLog?['parametersData'],
-        };
-      }).toList();
+      return [];
     } catch (e) {
+      print('ApiService.getProcessLogs error: $e');
       return [];
     }
   }
@@ -219,7 +196,7 @@ class ApiService {
     Map<String, dynamic>? parametersData,
     String? notes,
   }) async {
-    final url = Uri.parse('$baseUrl/batchprocesslogs');
+    final url = Uri.parse('$baseUrl/batch-process-logs');
     final payload = {
       'batchId': batchId,
       'routingId': stepId,
@@ -227,6 +204,33 @@ class ApiService {
       'endTime': DateTime.now().toUtc().toIso8601String(),
       'resultStatus': resultStatus,
       if (parametersData != null) 'parametersData': jsonEncode(parametersData),
+      if (notes != null) 'notes': notes,
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: await _headers(),
+        body: jsonEncode(payload),
+      );
+      return response.statusCode >= 200 && response.statusCode < 300;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// QC Phê duyệt công đoạn
+  static Future<bool> verifyStepData({
+    required int logId,
+    required int verifierId,
+    required String status, // "Passed", "Failed"
+    String? notes,
+  }) async {
+    final url = Uri.parse('$baseUrl/batchprocesslogs/verify');
+    final payload = {
+      'logId': logId,
+      'verifierId': verifierId,
+      'status': status,
       if (notes != null) 'notes': notes,
     };
 

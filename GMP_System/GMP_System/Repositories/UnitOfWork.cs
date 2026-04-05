@@ -24,6 +24,9 @@ namespace GMP_System.Repositories
             Equipments = new GenericRepository<Equipment>(_context);
             UnitOfMeasures = new GenericRepository<UnitOfMeasure>(_context);
             UomConversions = new GenericRepository<UomConversion>(_context);
+            StepParameters = new GenericRepository<StepParameter>(_context);
+            BatchProcessParameterValues = new GenericRepository<BatchProcessParameterValue>(_context);
+            RecipeRoutings = new GenericRepository<RecipeRouting>(_context);
         }
 
         public IGenericRepository<Material> Materials { get; private set; }
@@ -38,6 +41,9 @@ namespace GMP_System.Repositories
         public IGenericRepository<Equipment> Equipments { get; private set; }
         public IGenericRepository<UnitOfMeasure> UnitOfMeasures { get; private set; }
         public IGenericRepository<UomConversion> UomConversions { get; private set; }
+        public IGenericRepository<StepParameter> StepParameters { get; private set; }
+        public IGenericRepository<BatchProcessParameterValue> BatchProcessParameterValues { get; private set; }
+        public IGenericRepository<RecipeRouting> RecipeRoutings { get; private set; }
 
         public async Task<int> CompleteAsync()
         {

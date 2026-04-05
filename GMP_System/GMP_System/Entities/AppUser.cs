@@ -27,4 +27,8 @@ public partial class AppUser
     public virtual ICollection<Recipe> Recipes { get; set; } = new List<Recipe>();
 
     public virtual ICollection<SystemAuditLog> SystemAuditLogs { get; set; } = new List<SystemAuditLog>();
+
+    public virtual ICollection<BatchProcessLog> BatchProcessLogOperators { get; set; } = new List<BatchProcessLog>();
+
+    public virtual ICollection<BatchProcessLog> BatchProcessLogVerifiers { get; set; } = new List<BatchProcessLog>();
 }

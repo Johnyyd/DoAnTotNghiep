@@ -98,11 +98,48 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
       case 'Passed':
         return 'Đạt';
       case 'Failed':
-        return 'Không đạt';
+        return 'Sự cố (Failed)';
       case 'PendingQC':
-        return 'Chờ QC';
+        return 'Đợi QC Duyệt';
       default:
         return 'Chưa thực hiện';
+    }
+  }
+
+  void _onStepTap(int index, Map<String, dynamic> log) {
+    final status = log['resultStatus'] as String?;
+    
+    // GMP Sequential Check
+    bool isBlocked = false;
+    if (index > 0) {
+      final prevStatus = _logs[index - 1]['resultStatus'];
+      if (prevStatus != 'Passed') {
+        isBlocked = true;
+      }
+    }
+
+    if (isBlocked) {
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('⚠ Bạn phải hoàn thành và được QC Duyệt bước trước đó mới có thể thực hiện bước này!'), backgroundColor: Colors.orange),
+       );
+       return;
+    }
+
+    Widget? nextScreen;
+    final stepType = log['step']?['stepName']?.toString().toLowerCase() ?? '';
+    // isViewer is true if the step is already finalized (Passed/Failed)
+    final bool isViewer = status == 'Passed' || status == 'Failed'; 
+
+    if (stepType.contains('cân') || stepType.contains('weigh')) {
+      nextScreen = WeighingStepScreen(batchId: widget.batchId, stepId: log['stepId'], isViewer: isViewer);
+    } else if (stepType.contains('trộn') || stepType.contains('mix')) {
+      nextScreen = MixingStepScreen(batchId: widget.batchId, stepId: log['stepId'], isViewer: isViewer);
+    } else if (stepType.contains('sấy') || stepType.contains('dry')) {
+      nextScreen = DryingStepScreen(batchId: widget.batchId, stepId: log['stepId'], stepName: log['step']?['stepName'] ?? 'SẤY', isViewer: isViewer);
+    }
+
+    if (nextScreen != null) {
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => nextScreen!)).then((_) => _load());
     }
   }
 
@@ -172,7 +209,7 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
 
                   // Process steps header
                   const Text(
-                    'NHẬT KÝ CÔNG ĐOẠN',
+                    'TIẾN ĐỘ CÔNG ĐOẠN (GMP SEQUENTIAL)',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -206,45 +243,41 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                       final status = log['resultStatus'] as String?;
                       final color = _logStatusColor(status);
                       final stepName = log['step']?['stepName'] as String? ??
-                          'Bước ${i + 1}';
+                          'Công đoạn ${i + 1}';
                       final endTime = log['endTime'] as String?;
+                      
+                      bool isClickable = true;
+                      if (i > 0) {
+                        final prevStatus = _logs[i - 1]['resultStatus'];
+                        if (prevStatus != 'Passed') isClickable = false;
+                      }
 
                       return Card(
                         margin: const EdgeInsets.only(bottom: 10),
+                        elevation: isClickable ? 1 : 0,
+                        color: isClickable ? Colors.white : Colors.grey.shade100,
                         child: ListTile(
-                          onTap: () {
-                            Widget? nextScreen;
-                            final stepType = log['step']?['stepName']?.toString().toLowerCase() ?? '';
-                            
-                            if (stepType.contains('cân') || stepType.contains('weigh')) {
-                              nextScreen = WeighingStepScreen(batchId: widget.batchId, stepId: log['stepId'], isViewer: true);
-                            } else if (stepType.contains('trộn') || stepType.contains('mix')) {
-                              nextScreen = MixingStepScreen(batchId: widget.batchId, stepId: log['stepId'], isViewer: true);
-                            } else if (stepType.contains('sấy') || stepType.contains('dry')) {
-                              nextScreen = DryingStepScreen(batchId: widget.batchId, stepId: log['stepId'], stepName: log['step']?['stepName'] ?? 'SẤY', isViewer: true);
-                            }
-
-                            if (nextScreen != null) {
-                              Navigator.of(context).push(MaterialPageRoute(builder: (_) => nextScreen!)).then((_) => _load());
-                            }
-                          },
+                          onTap: () => _onStepTap(i, log),
+                          enabled: isClickable || (status != null), 
                           leading: CircleAvatar(
-                            backgroundColor: color.withValues(alpha: 0.15),
+                            backgroundColor: isClickable ? color.withValues(alpha: 0.15) : Colors.grey.shade200,
                             child: Text(
                               '${i + 1}',
                               style: TextStyle(
-                                  color: color, fontWeight: FontWeight.bold),
+                                  color: isClickable ? color : Colors.grey, fontWeight: FontWeight.bold),
                             ),
                           ),
                           title: Text(stepName,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w600)),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: isClickable ? Colors.black87 : Colors.grey
+                              )),
                           subtitle: endTime != null
                               ? Text(
                                   'Hoàn thành: ${_formatDate(endTime)}',
                                   style: const TextStyle(fontSize: 12),
                                 )
-                              : null,
+                              : (isClickable ? const Text('Sẵn sàng thực hiện', style: TextStyle(fontSize: 12, color: Colors.blue)) : null),
                           trailing: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),

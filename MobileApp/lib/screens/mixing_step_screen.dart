@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../components/step_form_inputs.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
+import '../models/execution_phase.dart';
 
 /// Màn hình [MixingStepScreen] dành cho công đoạn trộn khô nguyên liệu.
 class MixingStepScreen extends StatefulWidget {
@@ -40,6 +42,12 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
   final _duPhamCtrl = TextEditingController();
   final _tyTrongCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
+  
+  // Expanded GMP Parameters
+  final _tgGiaiDoan1Ctrl = TextEditingController();
+  final _tgGiaiDoan2Ctrl = TextEditingController();
+  final _tieuChuanRSDCtrl = TextEditingController();
+  final _rsdThucTeCtrl = TextEditingController();
 
   String _phongSach = 'Sạch';
   String _mayTron = 'Sạch';
@@ -51,10 +59,40 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
   bool _isSaving = false;
   List<dynamic> _bom = [];
 
+  // GMP EBR Additions
+  final Map<String, String> _inputStatus = {};
+  List<dynamic> _standardParams = [];
+  Map<String, dynamic> _currentLog = {};
+  ExecutionPhase _currentPhase = ExecutionPhase.precheck;
+
   @override
   void initState() {
     super.initState();
     _fetchData();
+  }
+
+  String? _getStandardText(String paramName) {
+    if (_standardParams.isEmpty) return null;
+    try {
+      final sp = _standardParams.firstWhere(
+        (p) => (p['parameterName'] as String).toLowerCase().contains(paramName.toLowerCase()),
+        orElse: () => null,
+      );
+      if (sp != null) {
+        final min = sp['minValue'];
+        final max = sp['maxValue'];
+        final unit = sp['unit'] ?? '';
+        if (min != null && max != null) {
+          if (min == max) return "Chuẩn: ${min.toString().replaceAll('.0', '')} $unit";
+          return "Chuẩn: ${min.toString().replaceAll('.0', '')} - ${max.toString().replaceAll('.0', '')} $unit";
+        } else if (min != null) {
+          return "Chuẩn: >= ${min.toString().replaceAll('.0', '')} $unit";
+        } else if (max != null) {
+          return "Chuẩn: <= ${max.toString().replaceAll('.0', '')} $unit";
+        }
+      }
+    } catch (_) {}
+    return null;
   }
 
   Future<void> _fetchData() async {
@@ -70,11 +108,13 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     final batch = await ApiService.getBatchById(widget.batchId!);
     List<dynamic> newBom = batch?['order']?['recipe']?['recipeBoms'] ?? widget.initialBom ?? [];
     
-    if (widget.isViewer && widget.stepId != null) {
+    if (widget.stepId != null) {
       try {
         final logs = await ApiService.getProcessLogs(widget.batchId!);
         final log = logs.firstWhere((l) => l['stepId'] == widget.stepId, orElse: () => <String, dynamic>{});
         if (log.isNotEmpty) {
+          _currentLog = log;
+          _standardParams = log['routing']?['stepParameters'] ?? [];
           final rawParams = log['parametersData'];
           Map<String, dynamic> params = {};
           if (rawParams is Map<String, dynamic>) {
@@ -85,33 +125,54 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
             } catch (_) {}
           }
           
-          if (params['veSinhPhong'] != null) _phongSach = params['veSinhPhong'];
-          if (params['veSinhMay'] != null) _mayTron = params['veSinhMay'];
-          if (params['veSinhDungCu'] != null) _dungCu = params['veSinhDungCu'];
-          _tempCtrl.text = params['nhietDo'] ?? '';
-          _humidCtrl.text = params['doAm'] ?? '';
-          _timeCtrl.text = params['thoiGianKiemTra'] ?? '';
-          _pressCtrl.text = params['apLuc'] ?? '';
-          _timeStartCtrl.text = params['tgBatDau'] ?? '';
-          _timeEndCtrl.text = params['tgKetThuc'] ?? '';
-          _tgCaiDatCtrl.text = params['tgCaiDat'] ?? '';
-          _tocDoCaiDatCtrl.text = params['tocDoCaiDat'] ?? '';
-          _tgThucTeCtrl.text = params['tgThucTe'] ?? '';
-          _tocDoThucTeCtrl.text = params['tocDoThucTe'] ?? '';
-          _duPhamCtrl.text = params['duPhamLoSo'] ?? '';
-          _tyTrongCtrl.text = params['tyTrongGo'] ?? '';
-          _slDongGoi = params['slDongGoiKg'] ?? '0';
+          if (params.isNotEmpty) {
+            if (params['veSinhPhong'] != null) _phongSach = params['veSinhPhong'];
+            if (params['veSinhMay'] != null) _mayTron = params['veSinhMay'];
+            if (params['veSinhDungCu'] != null) _dungCu = params['veSinhDungCu'];
+            _tempCtrl.text = params['nhietDo'] ?? '';
+            _humidCtrl.text = params['doAm'] ?? '';
+            _timeCtrl.text = params['thoiGianKiemTra'] ?? '';
+            _pressCtrl.text = params['apLuc'] ?? '';
+            _timeStartCtrl.text = params['tgBatDau'] ?? '';
+            _timeEndCtrl.text = params['tgKetThuc'] ?? '';
+            _tgCaiDatCtrl.text = params['tgCaiDat'] ?? '';
+            _tocDoCaiDatCtrl.text = params['tocDoCaiDat'] ?? '';
+            _tgThucTeCtrl.text = params['tgThucTe'] ?? '';
+            _tocDoThucTeCtrl.text = params['tocDoThucTe'] ?? '';
+            _duPhamCtrl.text = params['duPhamLoSo'] ?? '';
+            _tyTrongCtrl.text = params['tyTrongGo'] ?? '';
+            _slDongGoi = params['slDongGoiKg'] ?? '0';
+            
+            _tgGiaiDoan1Ctrl.text = params['tgGiaiDoan1'] ?? '';
+            _tgGiaiDoan2Ctrl.text = params['tgGiaiDoan2'] ?? '';
+            _tieuChuanRSDCtrl.text = params['tieuChuanRSD'] ?? '';
+            _rsdThucTeCtrl.text = params['rsdThucTe'] ?? '';
 
-          if (params['khoiLuongThucTe'] != null) {
-            final Map<dynamic, dynamic> parsedMats = params['khoiLuongThucTe'];
-            parsedMats.forEach((k, v) {
-              if (k is String && v is String) {
-                _actualMaterials[k] = v;
-              }
-            });
+            if (params['khoiLuongThucTe'] != null) {
+              final Map<dynamic, dynamic> parsedMats = params['khoiLuongThucTe'];
+              parsedMats.forEach((k, v) {
+                if (k is String && v is String) {
+                  _actualMaterials[k] = v;
+                }
+              });
+            }
+          }
+
+          // Xác định phase hiện tại
+          final status = _currentLog['resultStatus'];
+          if (status == 'PendingQC') {
+            _currentPhase = ExecutionPhase.verification;
+          } else if (status == 'Approved') {
+            _currentPhase = ExecutionPhase.execution;
+          } else if (status == 'Passed') {
+            _currentPhase = ExecutionPhase.completed;
+          } else if (rawParams != null) {
+            _currentPhase = ExecutionPhase.input;
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint("Error fetching mixing data: $e");
+      }
     }
 
     if (mounted) {
@@ -119,6 +180,64 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
         _bom = newBom;
         _isLoading = false;
       });
+      _updateAllInputStatuses();
+    }
+  }
+
+  void _updateInputStatus(String fieldName, String value, {String? paramNameInStandard}) {
+    if (_standardParams.isEmpty) return;
+    final val = double.tryParse(value);
+    if (val == null) {
+      setState(() => _inputStatus[fieldName] = 'none');
+      return;
+    }
+    final sp = _standardParams.firstWhere(
+      (p) => (p['parameterName'] as String).toLowerCase().contains((paramNameInStandard ?? fieldName).toLowerCase()),
+      orElse: () => null,
+    );
+    if (sp != null) {
+      final min = sp['minValue'] != null ? (sp['minValue'] as num).toDouble() : null;
+      final max = sp['maxValue'] != null ? (sp['maxValue'] as num).toDouble() : null;
+      String status = 'none';
+      if (min != null && val < min) status = 'error';
+      if (max != null && val > max) status = 'error';
+      setState(() => _inputStatus[fieldName] = status);
+    }
+  }
+
+  void _updateAllInputStatuses() {
+    _updateInputStatus('nhietDo', _tempCtrl.text, paramNameInStandard: 'Nhiệt độ phòng');
+    _updateInputStatus('doAm', _humidCtrl.text, paramNameInStandard: 'Độ ẩm phòng');
+    _updateInputStatus('apLuc', _pressCtrl.text, paramNameInStandard: 'Áp lực phòng');
+    _updateInputStatus('tocDoThucTe', _tocDoThucTeCtrl.text, paramNameInStandard: 'Tốc độ trộn');
+    _updateInputStatus('tgThucTe', _tgThucTeCtrl.text, paramNameInStandard: 'Thời gian trộn');
+  }
+
+  Future<void> _approveByQC(String status) async {
+    final pin = await _showPinDialog();
+    if (pin == null || pin.isEmpty) return;
+    if (pin != '123456') {
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN xác nhận không đúng!')));
+       return;
+    }
+
+    setState(() => _isSaving = true);
+    final verifierId = AuthService.currentUser?['userId'] ?? 0;
+    
+    final success = await ApiService.verifyStepData(
+      logId: _currentLog['logId'],
+      verifierId: verifierId,
+      status: status,
+      notes: status == 'Failed' ? 'QC Rejected Mixing' : 'Approved via Mobile',
+    );
+
+    setState(() => _isSaving = false);
+    if (success && mounted) {
+      setState(() {
+        if (status == 'Approved') _currentPhase = ExecutionPhase.execution;
+      });
+      if (status != 'Approved') Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✔ QC đã xác nhận: $status')));
     }
   }
 
@@ -204,7 +323,39 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     );
   }
 
-  Future<void> _submit(String resultStatus, String? devNotes) async {
+  Future<void> _nextPhase() async {
+    if (_currentPhase == ExecutionPhase.precheck) {
+      setState(() => _currentPhase = ExecutionPhase.input);
+      await _submit('Running', null, isInternal: true);
+    } else if (_currentPhase == ExecutionPhase.input) {
+      await _verifyAndSubmit(); 
+    } else if (_currentPhase == ExecutionPhase.execution) {
+       await _submit('Passed', null);
+    }
+  }
+
+  Future<void> _prevPhase() async {
+    if (_currentPhase == ExecutionPhase.completed || _currentPhase == ExecutionPhase.precheck) return;
+    
+    String newStatus = 'Running';
+    final targetPhase = ExecutionPhase.values[_currentPhase.index - 1];
+    
+    if (targetPhase == ExecutionPhase.verification) {
+      newStatus = 'PendingQC';
+    } else if (targetPhase == ExecutionPhase.execution) {
+      newStatus = 'Approved';
+    } else if (targetPhase == ExecutionPhase.input || targetPhase == ExecutionPhase.precheck) {
+      newStatus = 'Running';
+    }
+
+    setState(() {
+      _currentPhase = targetPhase;
+    });
+
+    await _submit(newStatus, null, isInternal: true);
+  }
+
+  Future<void> _submit(String resultStatus, String? devNotes, {bool isInternal = false}) async {
     setState(() => _isSaving = true);
     final params = {
       "veSinhPhong": _phongSach,
@@ -224,6 +375,10 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
       "duPhamLoSo": _duPhamCtrl.text,
       "tyTrongGo": _tyTrongCtrl.text,
       "slDongGoiKg": _slDongGoi,
+      "tgGiaiDoan1": _tgGiaiDoan1Ctrl.text,
+      "tgGiaiDoan2": _tgGiaiDoan2Ctrl.text,
+      "tieuChuanRSD": _tieuChuanRSDCtrl.text,
+      "rsdThucTe": _rsdThucTeCtrl.text,
     };
     
     final finalNotes = devNotes != null 
@@ -246,24 +401,23 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     
     if (!mounted) return;
     if (success) {
-      Navigator.pop(context);
+      if (resultStatus == 'PendingQC') {
+        setState(() => _currentPhase = ExecutionPhase.verification);
+      } else if (resultStatus == 'Passed') {
+        setState(() => _currentPhase = ExecutionPhase.completed);
+        Navigator.pop(context);
+      }
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(success ? '✔ Lưu công đoạn trộn thành công!' : '❌ Lỗi khi lưu dữ liệu!'))
-    );
+    
+    if (!isInternal) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(success ? '✔ Cập nhật dữ liệu thành công!' : '❌ Lỗi khi lưu dữ liệu!'))
+      );
+    }
   }
 
   Widget _buildComparisonRow(String key, String label, String expected) {
     String initialValue = _actualMaterials[key] ?? '';
-    if (widget.isViewer && initialValue.isEmpty) {
-      // Create a temporary controller so that empty doesn't look undefined when parsed
-      initialValue = ''; 
-    }
-    
-    // We must rebuild controller once if data is fetched since we are creating it inline,
-    // actually StandardInputField accepts external controllers only, so we can just use `initialValue`
-    // Wait, StandardInputField uses controller. I will pass the controller logic internally or just use a local controller
-    // let's create a temporary controller:
     TextEditingController ctrl = TextEditingController(text: initialValue);
     
     return Padding(
@@ -288,119 +442,240 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return widget.isPrecheck 
-        ? const Center(child: CircularProgressIndicator()) 
-        : const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final content = ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        if (widget.isPrecheck) 
-          const Padding(
-            padding: EdgeInsets.only(bottom: 16),
-            child: Text('ĐIỀN CHECKLIST KIỂM TRA MÔI TRƯỜNG & THIẾT BỊ', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 16)),
-          )
-        else
-          const Text('CÔNG ĐOẠN TRỘN KHÔ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-        
-        if (widget.isViewer)
-          Container(
-            padding: const EdgeInsets.all(12),
-            margin: const EdgeInsets.only(top: 8, bottom: 8),
-            decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-            child: const Row(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('TRỘN: ${_currentPhase.label}'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(4),
+          child: LinearProgressIndicator(
+            value: _currentPhase.indexNumber / 5.0,
+            backgroundColor: Colors.white24,
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          _buildStatusHeader(),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(16),
               children: [
-                Icon(Icons.info_outline, color: Colors.blue),
-                SizedBox(width: 8),
-                Expanded(child: Text('CHẾ ĐỘ HỒ SƠ LƯU (READ-ONLY)\nDữ liệu thông số đã được xác nhận.', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w600, fontSize: 13))),
+                if (_currentPhase == ExecutionPhase.precheck) _buildPhase1(),
+                if (_currentPhase == ExecutionPhase.input) _buildPhase2(),
+                if (_currentPhase == ExecutionPhase.verification) _buildPhase3(),
+                if (_currentPhase == ExecutionPhase.execution) _buildPhase4(),
+                if (_currentPhase == ExecutionPhase.completed) _buildPhase5(),
+                const SizedBox(height: 100),
               ],
             ),
           ),
-        
-        const FormSectionHeader('6.1 MÔI TRƯỜNG & THIẾT BỊ'),
-        const ReadOnlyField(label: 'Phòng thực hiện', value: 'Trộn khô'),
-        SegmentedToggle(label: 'Phòng trộn khô', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _phongSach = v, disabled: widget.isViewer),
-        SegmentedToggle(label: 'Máy trộn lập phương AD-LP-200', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _mayTron = v, disabled: widget.isViewer),
-        SegmentedToggle(label: 'Dụng cụ sản xuất', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _dungCu = v, disabled: widget.isViewer),
+        ],
+      ),
+      floatingActionButton: _buildContextualFAB(),
+    );
+  }
 
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: StandardInputField(label: 'Nhiệt độ (°C)', controller: _tempCtrl, hint: '23.0', standardText: 'Standard: 21 - 25', keyboardType: TextInputType.number, readOnly: widget.isViewer)),
-            const SizedBox(width: 16),
-            Expanded(child: StandardInputField(label: 'Độ ẩm (%)', controller: _humidCtrl, hint: '60.0', standardText: 'Standard: 45 - 70', keyboardType: TextInputType.number, readOnly: widget.isViewer)),
-          ],
+  Widget _buildStatusHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      color: Colors.blue.shade50,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('Bước ${_currentPhase.indexNumber}/5', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+          Text(_currentPhase.label.toUpperCase(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Widget? _buildContextualFAB() {
+    if (widget.isViewer && _currentPhase != ExecutionPhase.verification) return null;
+    
+    if (_currentPhase == ExecutionPhase.verification) {
+      if (AuthService.currentUser?['role'] == 'QA_QC') {
+        return FloatingActionButton.extended(
+          heroTag: 'btnApproveM',
+          onPressed: () => _approveByQC('Approved'),
+          label: const Text('XÁC NHẬN QC'),
+          icon: const Icon(Icons.verified_user),
+          backgroundColor: Colors.green,
+        );
+      }
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 20, right: 10),
+        child: FloatingActionButton.extended(
+          heroTag: 'btnBackWaitM',
+          onPressed: _isSaving ? null : _prevPhase,
+          label: const Text('QUAY LẠI SỬA'),
+          icon: const Icon(Icons.arrow_back),
+          backgroundColor: Colors.grey.shade700,
         ),
-        StandardInputField(label: 'Thời gian kiểm tra', controller: _timeCtrl, hint: '08:00 AM', suffixIcon: const Icon(Icons.access_time), readOnly: widget.isViewer),
-        StandardInputField(label: 'Áp lực phòng (Pa)', controller: _pressCtrl, hint: '15', standardText: 'Standard: >= 10', keyboardType: TextInputType.number, readOnly: widget.isViewer),
-  
-        const FormSectionHeader('6.2 THÔNG SỐ VẬN HÀNH'),
-        Row(
-          children: [
-            Expanded(child: StandardInputField(label: 'Từ', controller: _timeStartCtrl, hint: '09:00', suffixIcon: const Icon(Icons.access_time), readOnly: widget.isViewer)),
-            const SizedBox(width: 16),
-            Expanded(child: StandardInputField(label: 'Đến', controller: _timeEndCtrl, hint: '09:15', suffixIcon: const Icon(Icons.access_time), readOnly: widget.isViewer)),
-          ],
-        ),
-        Row(
-          children: [
-            Expanded(child: StandardInputField(label: 'TG cài đặt (phút)', controller: _tgCaiDatCtrl, hint: '15', keyboardType: TextInputType.number, readOnly: widget.isViewer)),
-            const SizedBox(width: 16),
-            Expanded(child: StandardInputField(label: 'Tốc độ cài đặt (v/p)', controller: _tocDoCaiDatCtrl, hint: '15', keyboardType: TextInputType.number, readOnly: widget.isViewer)),
-          ],
-        ),
-        StandardInputField(label: 'Thời gian trộn thực tế (phút)', controller: _tgThucTeCtrl, hint: '15', standardText: 'Standard: 15 phút', keyboardType: TextInputType.number, readOnly: widget.isViewer),
-        StandardInputField(label: 'Tốc độ quay (vòng/phút)', controller: _tocDoThucTeCtrl, hint: '15', standardText: 'Standard: 15 vòng/phút', keyboardType: TextInputType.number, readOnly: widget.isViewer),
+      );
+    }
 
-        const FormSectionHeader('6.3 ĐỐI CHIẾU NGUYÊN LIỆU'),
-        const Text('Lý thuyết vs Thực sử dụng', style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.grey)),
-        const SizedBox(height: 8),
-        
-        if (_bom.isEmpty)
-          const Text('Không có dữ liệu BOM.', style: TextStyle(color: Colors.red))
-        else
-          ..._bom.map((item) {
-              final materialName = item['material']?['materialName'] ?? 'N/A';
-              final requiredQty = item['quantity']?.toString() ?? '0.00';
-              return _buildComparisonRow(materialName, '$materialName (kg)', requiredQty);
-          }),
+    if (_currentPhase == ExecutionPhase.completed) return null;
 
-        const SizedBox(height: 12),
-        StandardInputField(label: 'Dư phẩm lô số', controller: _duPhamCtrl, hint: 'Nhập số lô dư phẩm', readOnly: widget.isViewer),
+    String label = 'TIẾP TỤC';
+    IconData icon = Icons.arrow_forward;
+    if (_currentPhase == ExecutionPhase.input) label = 'GỬI DUYỆT QC';
+    if (_currentPhase == ExecutionPhase.execution) {
+      label = 'KẾT THÚC CÔNG ĐOẠN';
+      icon = Icons.check_circle;
+    }
 
-        const FormSectionHeader('6.4 KẾT QUẢ HẠT KHÔ'),
-        StandardInputField(label: 'Tỷ trọng gõ', controller: _tyTrongCtrl, hint: '0.8', keyboardType: TextInputType.number, readOnly: widget.isViewer),
-        MixingPackagingField(onResultChanged: (v) => _slDongGoi = v, readOnly: widget.isViewer),
-        const SizedBox(height: 12),
-        const Text('Nhận xét', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54)),
-        const SizedBox(height: 4),
-        TextField(
-          controller: _noteCtrl,
-          maxLines: 3,
-          readOnly: widget.isViewer,
-          decoration: InputDecoration(
-            hintText: 'Nhập ghi chú hoặc nhận xét...',
-            filled: widget.isViewer,
-            fillColor: widget.isViewer ? Colors.grey.shade100 : null,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20, right: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          if (_currentPhase != ExecutionPhase.precheck && _currentPhase != ExecutionPhase.completed)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: FloatingActionButton.extended(
+                heroTag: 'btnBackM',
+                onPressed: _isSaving ? null : _prevPhase,
+                label: const Text('QUAY LẠI'),
+                icon: const Icon(Icons.arrow_back),
+                backgroundColor: Colors.grey.shade700,
+              ),
+            ),
+          FloatingActionButton.extended(
+            heroTag: 'btnNextM',
+            onPressed: _isSaving ? null : _nextPhase,
+            label: Text(label),
+            icon: _isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : Icon(icon),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPhase1() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const FormSectionHeader('PHASE 1: KIỂM TRA MÔI TRƯỜNG & VỆ SINH'),
+        const StandardInputField(label: 'Phòng thực hiện', hint: 'Trộn khô', readOnly: true),
+        SegmentedToggle(label: 'Phòng trộn khô', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _phongSach = v),
+        SegmentedToggle(label: 'Máy trộn lập phương', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _mayTron = v),
+        SegmentedToggle(label: 'Dụng cụ sản xuất', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _dungCu = v),
+        Row(
+          children: [
+            Expanded(child: StandardInputField(
+              label: 'Nhiệt độ (°C)', 
+              controller: _tempCtrl, 
+              status: _inputStatus['nhietDo'] ?? 'none',
+              standardText: _getStandardText('Nhiệt độ phòng'),
+              keyboardType: TextInputType.number,
+              onChanged: (v) => _updateInputStatus('nhietDo', v, paramNameInStandard: 'Nhiệt độ phòng'),
+            )),
+            const SizedBox(width: 16),
+            Expanded(child: StandardInputField(
+              label: 'Độ ẩm (%)', 
+              controller: _humidCtrl, 
+              status: _inputStatus['doAm'] ?? 'none',
+              standardText: _getStandardText('Độ ẩm phòng'),
+              keyboardType: TextInputType.number,
+              onChanged: (v) => _updateInputStatus('doAm', v, paramNameInStandard: 'Độ ẩm phòng'),
+            )),
+          ],
         ),
-        
-        if (!widget.isPrecheck && !widget.isViewer) ...[
-          const SizedBox(height: 24),
-          _isSaving
-            ? const Center(child: CircularProgressIndicator())
-            : ESignatureButton(title: 'HOÀN THÀNH CÔNG ĐOẠN TRỘN', onPressed: _verifyAndSubmit),
-          const SizedBox(height: 32),
-        ]
+        StandardInputField(
+          label: 'Áp lực (Pa)', 
+          controller: _pressCtrl, 
+          status: _inputStatus['apLuc'] ?? 'none',
+          standardText: _getStandardText('Áp lực phòng'),
+          keyboardType: TextInputType.number,
+          onChanged: (v) => _updateInputStatus('apLuc', v, paramNameInStandard: 'Áp lực phòng'),
+        ),
       ],
     );
+  }
 
-    if (widget.isPrecheck) return content;
-    
-    return Scaffold(
-      appBar: AppBar(title: const Text('CÔNG ĐOẠN TRỘN')),
-      body: content,
+  Widget _buildPhase2() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const FormSectionHeader('PHASE 2: THÔNG SỐ VẬN HÀNH & ĐỐI CHIẾU'),
+        Row(
+          children: [
+            Expanded(child: StandardInputField(label: 'Giờ bắt đầu', controller: _timeStartCtrl, suffixIcon: const Icon(Icons.access_time))),
+            const SizedBox(width: 16),
+            Expanded(child: StandardInputField(label: 'Giờ kết thúc', controller: _timeEndCtrl, suffixIcon: const Icon(Icons.access_time))),
+          ],
+        ),
+        Row(
+          children: [
+            Expanded(child: StandardInputField(label: 'TG thực tế (phút)', controller: _tgThucTeCtrl, keyboardType: TextInputType.number)),
+            const SizedBox(width: 16),
+            Expanded(child: StandardInputField(label: 'Tốc độ thực tế (v/p)', controller: _tocDoThucTeCtrl, keyboardType: TextInputType.number)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        const Text('ĐỐI CHIẾU NGUYÊN LIỆU (Lý thuyết vs Thực tế)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 8),
+        if (_bom.isEmpty)
+          const Text('Không có dữ liệu BOM.')
+        else
+          ..._bom.map((item) {
+            final materialName = item['material']?['materialName'] ?? 'N/A';
+            final requiredQty = item['quantity']?.toString() ?? '0.00';
+            return _buildComparisonRow(materialName, materialName, requiredQty);
+          }),
+        const FormSectionHeader('THÔNG SỐ TRỘN CHI TIẾT'),
+        Row(
+          children: [
+            Expanded(child: StandardInputField(label: 'TG Gđ 1 (phút)', controller: _tgGiaiDoan1Ctrl, keyboardType: TextInputType.number)),
+            const SizedBox(width: 16),
+            Expanded(child: StandardInputField(label: 'TG Gđ 2 (phút)', controller: _tgGiaiDoan2Ctrl, keyboardType: TextInputType.number)),
+          ],
+        ),
+        Row(
+          children: [
+            Expanded(child: StandardInputField(label: 'Tiêu chuẩn RSD (%)', controller: _tieuChuanRSDCtrl, hint: '<5%')),
+            const SizedBox(width: 16),
+            Expanded(child: StandardInputField(label: 'RSD thực tế (%)', controller: _rsdThucTeCtrl, keyboardType: TextInputType.number)),
+          ],
+        ),
+        StandardInputField(label: 'Dư phẩm lô số', controller: _duPhamCtrl),
+        StandardInputField(label: 'Tỷ trọng gõ', controller: _tyTrongCtrl, keyboardType: TextInputType.number),
+        MixingPackagingField(onResultChanged: (v) => _slDongGoi = v),
+        const SizedBox(height: 12),
+        TextField(controller: _noteCtrl, maxLines: 2, decoration: const InputDecoration(hintText: 'Ghi chú...', border: OutlineInputBorder())),
+      ],
+    );
+  }
+
+  Widget _buildPhase3() {
+    return _buildCenteredStatus(Icons.hourglass_empty, Colors.orange, 'ĐANG ĐỢI QC XÁC NHẬN', 'Dữ liệu đã được khóa. Vui lòng báo QC ký xác nhận.');
+  }
+
+  Widget _buildPhase4() {
+    return _buildCenteredStatus(Icons.play_circle_fill, Colors.green, 'ĐANG THỰC HIỆN TRỘN', 'Máy đang quay. Nhấn KẾT THÚC sau khi hoàn thành.');
+  }
+
+  Widget _buildPhase5() {
+    return _buildCenteredStatus(Icons.check_circle, Colors.blue, 'ĐÃ HOÀN THÀNH', 'Công đoạn trộn đã kết thúc và được lưu trữ.');
+  }
+
+  Widget _buildCenteredStatus(IconData icon, Color color, String title, String desc) {
+    return Center(
+      child: Column(
+        children: [
+          const SizedBox(height: 40),
+          Icon(icon, size: 80, color: color),
+          const SizedBox(height: 20),
+          Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 12),
+          Text(desc, textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey)),
+        ],
+      ),
     );
   }
 }

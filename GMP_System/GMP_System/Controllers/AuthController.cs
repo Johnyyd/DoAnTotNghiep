@@ -33,7 +33,7 @@ namespace GMP_System.Controllers
             // Tìm user theo username
             var users = await _unitOfWork.AppUsers.GetAllAsync();
             var user = users.FirstOrDefault(u =>
-                u.Username.Equals(request.Username.Trim(), StringComparison.OrdinalIgnoreCase));
+                u.Username!.Equals(request.Username.Trim(), StringComparison.OrdinalIgnoreCase));
 
             if (user == null)
                 return Unauthorized(new { success = false, message = "Tên đăng nhập hoặc mật khẩu không đúng." });
@@ -44,7 +44,7 @@ namespace GMP_System.Controllers
             // Kiểm tra phân quyền truy cập nền tảng
             if (request.Platform?.Equals("Web", StringComparison.OrdinalIgnoreCase) == true)
             {
-                if (!user.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                if (!user.Role!.Equals("Admin", StringComparison.OrdinalIgnoreCase))
                 {
                     return Unauthorized(new { success = false, message = "Tài khoản này chỉ được phép đăng nhập trên ứng dụng Mobile." });
                 }

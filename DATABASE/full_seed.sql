@@ -12,34 +12,40 @@ GO
 -- =====================================================================
 -- XÓA DỮ LIỆU CŨ (THEO THỨ TỰ NGƯỢC KHÓA NGOẠI)
 -- =====================================================================
-DELETE FROM SystemAuditLog;
-DELETE FROM MaterialUsage;
-DELETE FROM BatchProcessLogs;
-DELETE FROM ProductionBatches;
-DELETE FROM ProductionOrders;
-DELETE FROM InventoryLots;
-DELETE FROM RecipeRouting;
-DELETE FROM RecipeBOM;
-DELETE FROM Recipes;
-DELETE FROM Materials;
-DELETE FROM Equipments;
-DELETE FROM UomConversions;
-DELETE FROM UnitOfMeasure;
-DELETE FROM AppUsers;
+IF OBJECT_ID('BatchProcessParameterValue', 'U') IS NOT NULL DELETE FROM BatchProcessParameterValue;
+IF OBJECT_ID('StepParameters', 'U') IS NOT NULL DELETE FROM StepParameters;
+IF OBJECT_ID('QualityTests', 'U') IS NOT NULL DELETE FROM QualityTests;
+IF OBJECT_ID('SystemAuditLog', 'U') IS NOT NULL DELETE FROM SystemAuditLog;
+IF OBJECT_ID('MaterialUsage', 'U') IS NOT NULL DELETE FROM MaterialUsage;
+IF OBJECT_ID('BatchProcessLogs', 'U') IS NOT NULL DELETE FROM BatchProcessLogs;
+IF OBJECT_ID('ProductionBatches', 'U') IS NOT NULL DELETE FROM ProductionBatches;
+IF OBJECT_ID('ProductionOrders', 'U') IS NOT NULL DELETE FROM ProductionOrders;
+IF OBJECT_ID('InventoryLots', 'U') IS NOT NULL DELETE FROM InventoryLots;
+IF OBJECT_ID('RecipeBom', 'U') IS NOT NULL DELETE FROM RecipeBom;
+IF OBJECT_ID('RecipeRouting', 'U') IS NOT NULL DELETE FROM RecipeRouting;
+IF OBJECT_ID('Recipes', 'U') IS NOT NULL DELETE FROM Recipes;
+IF OBJECT_ID('Materials', 'U') IS NOT NULL DELETE FROM Materials;
+IF OBJECT_ID('Equipments', 'U') IS NOT NULL DELETE FROM Equipments;
+IF OBJECT_ID('UomConversions', 'U') IS NOT NULL DELETE FROM UomConversions;
+IF OBJECT_ID('UnitOfMeasure', 'U') IS NOT NULL DELETE FROM UnitOfMeasure;
+IF OBJECT_ID('AppUsers', 'U') IS NOT NULL DELETE FROM AppUsers;
 GO
 
 -- RESET IDENTITY
-DBCC CHECKIDENT ('AppUsers', RESEED, 0);
-DBCC CHECKIDENT ('UnitOfMeasure', RESEED, 0);
-DBCC CHECKIDENT ('UomConversions', RESEED, 0);
-DBCC CHECKIDENT ('Equipments', RESEED, 0);
-DBCC CHECKIDENT ('Materials', RESEED, 0);
-DBCC CHECKIDENT ('Recipes', RESEED, 0);
-DBCC CHECKIDENT ('RecipeBOM', RESEED, 0);
-DBCC CHECKIDENT ('RecipeRouting', RESEED, 0);
-DBCC CHECKIDENT ('ProductionOrders', RESEED, 0);
-DBCC CHECKIDENT ('ProductionBatches', RESEED, 0);
-DBCC CHECKIDENT ('InventoryLots', RESEED, 0);
+IF OBJECT_ID('AppUsers', 'U') IS NOT NULL DBCC CHECKIDENT ('AppUsers', RESEED, 0);
+IF OBJECT_ID('UnitOfMeasure', 'U') IS NOT NULL DBCC CHECKIDENT ('UnitOfMeasure', RESEED, 0);
+IF OBJECT_ID('UomConversions', 'U') IS NOT NULL DBCC CHECKIDENT ('UomConversions', RESEED, 0);
+IF OBJECT_ID('Equipments', 'U') IS NOT NULL DBCC CHECKIDENT ('Equipments', RESEED, 0);
+IF OBJECT_ID('Materials', 'U') IS NOT NULL DBCC CHECKIDENT ('Materials', RESEED, 0);
+IF OBJECT_ID('Recipes', 'U') IS NOT NULL DBCC CHECKIDENT ('Recipes', RESEED, 0);
+IF OBJECT_ID('RecipeBom', 'U') IS NOT NULL DBCC CHECKIDENT ('RecipeBom', RESEED, 0);
+IF OBJECT_ID('RecipeRouting', 'U') IS NOT NULL DBCC CHECKIDENT ('RecipeRouting', RESEED, 0);
+IF OBJECT_ID('StepParameters', 'U') IS NOT NULL DBCC CHECKIDENT ('StepParameters', RESEED, 0);
+IF OBJECT_ID('BatchProcessParameterValue', 'U') IS NOT NULL DBCC CHECKIDENT ('BatchProcessParameterValue', RESEED, 0);
+IF OBJECT_ID('QualityTests', 'U') IS NOT NULL DBCC CHECKIDENT ('QualityTests', RESEED, 0);
+IF OBJECT_ID('ProductionOrders', 'U') IS NOT NULL DBCC CHECKIDENT ('ProductionOrders', RESEED, 0);
+IF OBJECT_ID('ProductionBatches', 'U') IS NOT NULL DBCC CHECKIDENT ('ProductionBatches', RESEED, 0);
+IF OBJECT_ID('InventoryLots', 'U') IS NOT NULL DBCC CHECKIDENT ('InventoryLots', RESEED, 0);
 GO
 
 -- =====================================================================
@@ -91,14 +97,14 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT Equipments ON;
 INSERT INTO Equipments (EquipmentId, EquipmentCode, EquipmentName, Status, LastMaintenanceDate) VALUES
-(1, 'EQP-WGH-01', N'Cân điện tử Mettler Toledo',        'Ready',       DATEADD(DAY,-15,GETDATE())),
-(2, 'EQP-DRY-01', N'Máy sấy tầng sôi Glatt (KBC-60)',   'Ready',       DATEADD(DAY,-20,GETDATE())),
-(3, 'EQP-MIX-01', N'Máy trộn lập phương IBC 500L',      'Ready',       DATEADD(DAY,-10,GETDATE())),
-(4, 'EQP-TAB-01', N'Máy dập viên tròn xoay Fette',      'Ready',       DATEADD(DAY,-5, GETDATE())),
-(5, 'EQP-BLS-01', N'Máy ép vỉ nhôm Uhlmann',            'Maintenance', DATEADD(DAY,-3, GETDATE())),
-(6, 'EQP-WGH-02', N'Cân kiểm tra trọng lượng Sartorius','Ready',       DATEADD(DAY,-7, GETDATE())),
-(7, 'EQP-DRY-02', N'Máy sấy tầng sôi KBC-30 (phụ)',     'Ready',       DATEADD(DAY,-25,GETDATE())),
-(8, 'EQP-MIX-02', N'Máy trộn lập phương IBC 200L (phụ)','Running',     DATEADD(DAY,-12,GETDATE()));
+(1, 'IW2-60',     N'Cân điện tử IW2-60 (Cân thô)',        'Ready',       DATEADD(DAY,-15,GETDATE())),
+(2, 'KBC-TS-50',  N'Máy sấy tầng sôi KBC-TS-50',          'Ready',       DATEADD(DAY,-20,GETDATE())),
+(3, 'AD-LP-200',  N'Máy trộn lập phương AD-LP-200',       'Ready',       DATEADD(DAY,-10,GETDATE())),
+(4, 'EQP-TAB-01', N'Máy dập viên tròn xoay Fette',         'Ready',       DATEADD(DAY,-5, GETDATE())),
+(5, 'EQP-BLS-01', N'Máy ép vỉ nhôm Uhlmann',               'Maintenance', DATEADD(DAY,-3, GETDATE())),
+(6, 'PMA-5000',   N'Cân điện tử PMA-5000 (Cân chính xác)', 'Ready',       DATEADD(DAY,-7, GETDATE())),
+(7, 'EQP-CAP-01', N'Máy đóng nang tự động NJP-1200',      'Ready',       DATEADD(DAY,-25,GETDATE())),
+(8, 'EQP-MIX-02', N'Máy trộn IBC 200L (phụ)',             'Running',     DATEADD(DAY,-12,GETDATE()));
 SET IDENTITY_INSERT Equipments OFF;
 GO
 
@@ -107,17 +113,16 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT Materials ON;
 INSERT INTO Materials (MaterialId, MaterialCode, MaterialName, Type, BaseUomId, IsActive, Description) VALUES
-(1,  'MAT-NLC3',   N'Hoạt chất NLC 3',            'RawMaterial',  1, 1, N'Bảo quản 15-25°C, tránh ánh sáng'),
-(2,  'MAT-PARA',   N'Bột Paracetamol tinh khiết',  'RawMaterial',  1, 1, N'USP Grade, bảo quản nơi khô ráo'),
-(3,  'MAT-TINBT',  N'Tinh bột ngô (Maize starch)', 'RawMaterial',  1, 1, N'Tá dược độn, %ẩm <14%'),
-(4,  'MAT-LACTO',  N'Lactose Monohydrate',         'RawMaterial',  1, 1, N'Tá dược độn/kết dính, %ẩm <0.5%'),
-(5,  'MAT-MGST',   N'Magie Stearat',               'RawMaterial',  2, 1, N'Tá dược trơn, dùng liều nhỏ'),
-(6,  'MAT-VANG',  N'Vỏ nang gelatin cứng (cỡ 0)', 'RawMaterial',  4, 1, N'Phân hủy sinh học, bảo quản <25°C'),
-(7,  'MAT-PVPK',   N'PVP K30 (Povidone)',          'RawMaterial',  1, 1, N'Tá dược kết dính, tan trong nước'),
-(8,  'PKG-ALU',    N'Màng nhôm ép vỉ (Alu foil)', 'Packaging',    2, 1, N'Cuộn 200m, dày 20 micron'),
-(9,  'PKG-PVC',    N'Màng PVC cứng (blister film)','Packaging',    2, 1, N'Cuộn 200m, dày 250 micron'),
-(10, 'FG-NLC3-CAP',N'Viên nang cứng NLC 3 (250mg)','FinishedGood', 4, 1, N'Thành phẩm đầu ra, đóng vỉ 10 viên'),
-(11, 'FG-PARA-TAB',N'Viên nén Paracetamol 500mg', 'FinishedGood', 4, 1, N'Thành phẩm đầu ra, đóng vỉ 10 viên');
+(1,  'MAT-NLC3',   N'Hoạt chất NLC 3 (Cao khô Trinh nữ)', 'RawMaterial',  1, 1, N'Bảo quản 15-25°C, tránh ánh sáng'),
+(2,  'MAT-PARA',   N'Bột Paracetamol tinh khiết',         'RawMaterial',  1, 1, N'USP Grade, bảo quản nơi khô ráo'),
+(3,  'MAT-TD8',    N'Tinh bột (Filler)',                  'RawMaterial',  1, 1, N'TD 8 - Tá dược độn bù trừ'),
+(12, 'MAT-TD1',    N'Aerosil',                            'RawMaterial',  2, 1, N'TD 1 - TD trơn chảy'),
+(13, 'MAT-TD3',    N'Sodium starch glycolate',            'RawMaterial',  1, 1, N'TD 3 - Tá dược rã'),
+(14, 'MAT-TD4',    N'Talc',                               'RawMaterial',  2, 1, N'TD 4 - Tá dược trơn'),
+(5,  'MAT-TD5',    N'Magie Stearat',                      'RawMaterial',  2, 1, N'TD 5 - Tá dược trơn'),
+(6,  'MAT-NLP6',   N'Vỏ nang cứng (Cỡ 0)',                'RawMaterial',  4, 1, N'NLP 6 - Vỏ nang gelatin'),
+(10, 'FG-NLC3-CAP',N'Viên nang NLC 3 (540mg)',            'FinishedGood', 4, 1, N'Thành phẩm đầu ra'),
+(11, 'FG-PARA-TAB',N'Viên nén Paracetamol 500mg',         'FinishedGood', 4, 1, N'Finished Good');
 SET IDENTITY_INSERT Materials OFF;
 GO
 
@@ -126,8 +131,8 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT Recipes ON;
 INSERT INTO Recipes (RecipeId, MaterialId, VersionNumber, BatchSize, Status, ApprovedBy, ApprovedDate, CreatedAt, Note) VALUES
-(1, 10, 1, 100000.00, 'Approved', 2, DATEADD(DAY,-30,GETDATE()), DATEADD(DAY,-45,GETDATE()), N'Công thức viên nang NLC 3 chuẩn GMP-WHO. Mẻ 100kg bột.'),
-(2, 11, 2, 500000.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), N'Công thức viên nén Paracetamol 500mg. Mẻ 500kg.'),
+(1, 10, 1, 54000.00, 'Approved', 2, DATEADD(DAY,-30,GETDATE()), DATEADD(DAY,-45,GETDATE()), N'Công thức viên nang NLC 3 chuẩn GMP-WHO. Mẻ 100,000 viên (54kg).'),
+(2, 11, 2, 500000.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), N'Công thức Paracetamol 500mg.'),
 (3, 10, 2, 100000.00, 'Draft',    NULL, NULL,                    DATEADD(DAY,-5, GETDATE()), N'Phiên bản thử nghiệm cải tiến tỷ lệ tá dược - Chưa phê duyệt.');
 SET IDENTITY_INSERT Recipes OFF;
 GO
@@ -137,19 +142,20 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT RecipeBOM ON;
 INSERT INTO RecipeBOM (BomId, RecipeId, MaterialId, Quantity, UomId, WastePercentage, Note) VALUES
--- Recipe 1: Viên nang NLC 3 (mẻ 100kg bột)
-(1,  1, 1,  30000.00, 2, 0.50, N'Hoạt chất chính, kiểm soát chặt chẽ'),
-(2,  1, 3,  40000.00, 2, 1.00, N'Tinh bột ngô làm chất độn'),
-(3,  1, 4,  20000.00, 2, 0.50, N'Lactose làm chất kết dính'),
-(4,  1, 5,   1000.00, 2, 0.10, N'Magie stearat bôi trơn, thêm sau cùng'),
-(5,  1, 7,   2000.00, 2, 0.20, N'PVP K30 kết dính hạt'),
-(6,  1, 6, 100200.00, 4, 0.20, N'Vỏ nang cứng cỡ 0, dư 200 viên đề phòng'),
--- Recipe 2: Viên nén Paracetamol 500mg (mẻ 500kg bột)
-(7,  2, 2, 250000.00, 2, 0.30, N'Paracetamol hoạt chất chính 50%'),
-(8,  2, 3, 150000.00, 2, 1.00, N'Tinh bột ngô làm chất độn'),
-(9,  2, 4,  80000.00, 2, 0.50, N'Lactose kết dính'),
-(10, 2, 5,   5000.00, 2, 0.10, N'Magie stearat bôi trơn'),
-(11, 2, 7,  10000.00, 2, 0.20, N'PVP K30 tạo hạt ướt');
+-- Recipe 1: Viên nang NLC 3 (100,000 viên x 540mg = 54,000g)
+(1,  1, 1,  25000.00, 2, 0.20, N'NLC 3 (250mg/viên)'),
+(2,  1, 12,   162.00, 2, 0.10, N'TD 1 - Aerosil (1.62mg/viên)'),
+(3,  1, 13,  2970.00, 2, 0.20, N'TD 3 - SSG (29.70mg/viên)'),
+(4,  1, 14,   405.00, 2, 0.10, N'TD 4 - Talc (4.05mg/viên)'),
+(5,  1, 5,    405.00, 2, 0.10, N'TD 5 - Magnesi stearat (4.05mg/viên)'),
+(6,  1, 3,  25058.00, 2, 0.50, N'TD 8 - Tinh bột (250.58mg/viên) - Bù trừ'),
+(7,  1, 6, 100000.00, 4, 0.10, N'NLP 6 - Vỏ nang cứng (1 viên/viên)'),
+-- Recipe 2: Paracetamol 500mg (mẻ 500kg bột)
+(8,  2, 2, 250000.00, 2, 0.30, N'Paracetamol hoạt chất chính 50%'),
+(9,  2, 3, 150000.00, 2, 1.00, N'Tinh bột ngô làm chất độn'),
+(10, 2, 4,  80000.00, 2, 0.50, N'Lactose kết dính'),
+(11, 2, 5,   5000.00, 2, 0.10, N'Magie stearat bôi trơn'),
+(12, 2, 7,  10000.00, 2, 0.20, N'PVP K30 tạo hạt ướt');
 SET IDENTITY_INSERT RecipeBOM OFF;
 GO
 
@@ -159,14 +165,56 @@ GO
 SET IDENTITY_INSERT RecipeRouting ON;
 INSERT INTO RecipeRouting (RoutingId, RecipeId, StepNumber, StepName, DefaultEquipmentId, EstimatedTimeMinutes, Description) VALUES
 -- Recipe 1: Viên nang NLC 3
-(1, 1, 1, N'Cân Nguyên Liệu',       1, 60,  N'Cân chính xác từng thành phần theo BOM. Đối chiếu phiếu cân 2 lần.'),
-(2, 1, 2, N'Sấy Nguyên Liệu NLC 3', 2, 120, N'Sấy hoạt chất ở 60°C đến khi %ẩm < 3.5%. Lấy mẫu kiểm tra mỗi 30 phút.'),
-(3, 1, 3, N'Trộn Khô',              3, 45,  N'Trộn tất cả bột khô trong IBC 500L. Tốc độ 15rpm trong 30 phút đầu.'),
--- Recipe 2: Viên nén Paracetamol
-(4, 2, 1, N'Cân Bột Paracetamol',   1, 90,  N'Cân và kiểm tra hàm lượng bột theo chứng nhận CoA của nhà cung cấp.'),
-(5, 2, 2, N'Tạo Hạt Ướt & Sấy',    2, 150, N'Hòa tan PVP K30 vào nước, phun lên bột, sấy ở 55°C đến ẩm < 2%.'),
-(6, 2, 3, N'Dập Viên',              4, 180, N'Dập viên hình tam giác, trọng lượng 550±10mg/viên, kiểm tra 20 viên/giờ.');
+(1, 1, 1, N'Sấy Tá Dược 8 (TD 8)',              2, 180, N'Sấy tinh bột TD 8 tại 75°C, 180p. Độ ẩm < 5%.'),
+(2, 1, 2, N'Sấy Cao Khô NLC 3',                2, 180, N'Sấy cao khô Trinh nữ tại 75°C, 180p. Độ ẩm < 3%.'),
+(3, 1, 3, N'Cân Nguyên Liệu',                  1, 90,  N'Cân chính xác 6 loại theo BOM động (Section 4 BMR). Đối chiếu nhãn phụ.'),
+(4, 1, 4, N'Trộn Khô',                         3, 15,  N'Trộn premix bột tá dược trước. Trộn chính 15 phút, 15 vòng/phút.'),
+(7, 1, 5, N'Đóng Nang',                        7, 120, N'Đóng nang số 0, khối lượng đích 540mg/viên.'),
+-- Recipe 2: Paracetamol
+(5, 2, 1, N'Cân Paracetamol',   1, 90,  NULL),
+(6, 2, 2, N'Dập Viên',          4, 180, NULL);
 SET IDENTITY_INSERT RecipeRouting OFF;
+GO
+
+-- =====================================================================
+-- 12. StepParameters (Dữ liệu chốt GMP - Cấu trúc bảng và Seeding)
+-- Bảng này thường thiếu trong seed cũ, cần nạp để Mobile check Deviation.
+-- =====================================================================
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='StepParameters' AND xtype='U')
+BEGIN
+    CREATE TABLE StepParameters (
+        ParameterId INT PRIMARY KEY IDENTITY(1,1),
+        RoutingId INT REFERENCES RecipeRouting(RoutingId),
+        ParameterName NVARCHAR(100) NOT NULL,
+        Unit NVARCHAR(50),
+        MinValue DECIMAL(18, 4),
+        MaxValue DECIMAL(18, 4),
+        IsCritical BIT DEFAULT 1,
+        Note NVARCHAR(200)
+    );
+END
+
+SET IDENTITY_INSERT StepParameters ON;
+INSERT INTO StepParameters (ParameterId, RoutingId, ParameterName, Unit, MinValue, MaxValue, IsCritical) VALUES
+-- Step 1 (Sấy TD 8) của Recipe 1
+(1, 1, N'Nhiệt độ phòng', '°C', 21, 25, 1),
+(2, 1, N'Độ ẩm phòng',   '%',  45, 70, 1),
+(3, 1, N'Áp lực phòng',  'Pa', 10, 50, 1),
+(4, 1, N'Nhiệt độ sấy',  '°C', 73, 77, 1),
+(20, 1, N'Thời gian sấy', 'phút', 170, 190, 1),
+-- Step 2 (Sấy NLC 3) của Recipe 1
+(21, 2, N'Nhiệt độ phòng', '°C', 21, 25, 1),
+(22, 2, N'Độ ẩm phòng',   '%',  45, 70, 1),
+(23, 2, N'Áp lực phòng',  'Pa', 10, 50, 1),
+(24, 2, N'Nhiệt độ sấy',  '°C', 73, 77, 1),
+(25, 2, N'Thời gian sấy', 'phút', 170, 190, 1),
+-- Step 3 (Weighing) của Recipe 1
+(5, 3, N'Nhiệt độ phòng', '°C', 21, 25, 1),
+(6, 3, N'Độ ẩm phòng',   '%',  45, 70, 1),
+-- Step 4 (Mixing) của Recipe 1
+(7, 4, N'Tốc độ trộn',   'v/p', 14, 16, 1),
+(8, 4, N'Thời gian trộn', 'phút', 14, 16, 1);
+SET IDENTITY_INSERT StepParameters OFF;
 GO
 
 -- =====================================================================
@@ -209,7 +257,9 @@ INSERT INTO ProductionBatches (BatchId, OrderId, BatchNumber, Status, Manufactur
 (9,  7,  'B26-007-01', 'Completed', DATEADD(DAY,-10,GETDATE()),   DATEADD(DAY,-8,GETDATE()),   DATEADD(YEAR,2,GETDATE()),  3),
 (10, 7,  'B26-007-02', 'Completed', DATEADD(DAY,-9,GETDATE()),    DATEADD(DAY,-7,GETDATE()),   DATEADD(YEAR,2,GETDATE()),  3),
 -- PO-005 (Pending QC): 1 mẻ chờ QC duyệt
-(11, 5,  'B26-005-01', 'InProcess', GETDATE(),                    NULL,                         NULL,                      1);
+(11, 5,  'B26-005-01', 'InProcess', GETDATE(),                    NULL,                         NULL,                      1),
+-- PO-008 (Draft): 1 mẻ dự thảo
+(12, 8,  'B26-008-01', 'Draft',     GETDATE(),                    NULL,                         NULL,                      1);
 SET IDENTITY_INSERT ProductionBatches OFF;
 GO
 
@@ -246,25 +296,12 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT MaterialUsage ON;
 INSERT INTO MaterialUsage (UsageId, BatchId, InventoryLotId, PlannedAmount, ActualAmount, Timestamp, DispensedBy, Note) VALUES
--- Batch 1 (B26-001-01, PO-001 Completed)
-(1,  1, 1,  30000.00,  30015.00, DATEADD(DAY,-5,GETDATE()), 3, N'Cân lần 1 theo BOM'),
-(2,  1, 5,  40000.00,  40200.00, DATEADD(DAY,-5,GETDATE()), 3, N'Tinh bột ngô, thêm 0.5% bù hao'),
-(3,  1, 6,  20000.00,  20100.00, DATEADD(DAY,-5,GETDATE()), 3, N'Lactose lô LOT-LAC-001'),
-(4,  1, 8,   1000.00,   1005.00, DATEADD(DAY,-5,GETDATE()), 3, N'Magie Stearat thêm sau trộn'),
-(5,  1, 9, 100200.00, 100200.00, DATEADD(DAY,-5,GETDATE()), 3, N'Vỏ nang Qualicaps số 0'),
--- Batch 2 (B26-002-01, PO-002 Completed)
-(6,  2, 1,  30000.00,  30010.00, DATEADD(HOUR,-24,GETDATE()), 3, NULL),
-(7,  2, 5,  40000.00,  40050.00, DATEADD(HOUR,-24,GETDATE()), 3, NULL),
-(8,  2, 6,  20000.00,  20080.00, DATEADD(HOUR,-24,GETDATE()), 3, NULL),
--- Batch 3 (B26-002-02, PO-002 Completed)
-(9,  3, 1,  30000.00,  30020.00, DATEADD(HOUR,-18,GETDATE()), 6, NULL),
-(10, 3, 5,  40000.00,  40100.00, DATEADD(HOUR,-18,GETDATE()), 6, NULL),
--- Batch 9 (B26-007-01, PO-007 Completed - Paracetamol)
-(11, 9, 3, 250000.00, 250300.00, DATEADD(DAY,-10,GETDATE()), 3, N'Paracetamol, bù 0.12% hao'),
-(12, 9, 5, 150000.00, 150500.00, DATEADD(DAY,-10,GETDATE()), 3, N'Tinh bột ngô'),
--- Batch 10 (B26-007-02, PO-007 Completed - Paracetamol)
-(13, 10, 3, 250000.00, 250000.00, DATEADD(DAY,-9,GETDATE()),  3, NULL),
-(14, 10, 4, 120000.00, 120000.00, DATEADD(DAY,-9,GETDATE()),  3, N'Dùng lô PARA-002 bổ sung');
+-- Batch 1 (B26-001-01)
+(1,  1, 1,  25000.00,  25015.00, DATEADD(DAY,-5,GETDATE()), 3, N'NLC 3 lot LOT-NLC3-001'),
+(2,  1, 5,  25058.00,  25100.00, DATEADD(DAY,-5,GETDATE()), 3, N'Tinh bột TD 8 lot LOT-STR-001'),
+(3,  1, 8,    405.00,    405.00, DATEADD(DAY,-5,GETDATE()), 3, N'Magie Stearat'),
+-- Batch 9 (B26-007-01 - Paracetamol)
+(4,  9, 3, 250000.00, 250300.00, DATEADD(DAY,-10,GETDATE()), 3, N'Paracetamol');
 SET IDENTITY_INSERT MaterialUsage OFF;
 GO
 
@@ -275,93 +312,68 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT BatchProcessLogs ON;
 
--- ▶ PO-2026-001 / B26-001-01 (Hoàn thành 3/3 công đoạn - Passed)
+-- ▶ PO-2026-001 / B26-001-01 (Hoàn thành 4/4 công đoạn - Passed)
 INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData)
 VALUES
-(1, 1, 1, 1, 3,
- DATEADD(HOUR,-120,GETDATE()), DATEADD(HOUR,-119,GETDATE()),
- 'Passed',
- N'{"maSanPham":"FG-NLC3-CAP","tenSanPham":"Viên nang NLC 3","soLo":"B26-001-01","ngaySanXuat":"2026-04-01","soLuongKe":"100000","mayCan":"EQP-WGH-01","soCan":1,"mauHieuCan":"MT-2601","nguoiCan":"op01","nguoiKiemTra":"qc01","nguyenLieu":[{"ten":"Hoạt chất NLC 3","loSX":"LOT-NLC3-001","khLT":30000,"khTT":30015,"saiSo":0.05,"ketQua":"Dat"},{"ten":"Tinh bột ngô","loSX":"LOT-STR-001","khLT":40000,"khTT":40200,"saiSo":0.50,"ketQua":"Dat"},{"ten":"Lactose Monohydrate","loSX":"LOT-LAC-001","khLT":20000,"khTT":20100,"saiSo":0.50,"ketQua":"Dat"},{"ten":"Magie Stearat","loSX":"LOT-MGS-001","khLT":1000,"khTT":1005,"saiSo":0.50,"ketQua":"Dat"}],"phieuKiemNghiem":"PN-B26001-001","trangThaiMoiTruong":"Dat","nhiemVuXuong":"Ky hop dong xuat khau"}'),
-
-(2, 1, 2, 2, 3,
- DATEADD(HOUR,-118,GETDATE()), DATEADD(HOUR,-116,GETDATE()),
- 'Passed',
- N'{"soLo":"B26-001-01","maySay":"EQP-DRY-01","loaiMay":"KBC-60","nhietDoGio":60,"nhietDoSay":65,"tgSay":120,"tocDoGio":1200,"nguoiVanHanh":"op01","nguoiKiemTra":"qc01","mauDo":[{"thoiGian":30,"doAm":5.20,"nhietDo":63.5,"datYeuCau":"Chua"},{"thoiGian":60,"doAm":4.10,"nhietDo":64.1,"datYeuCau":"Chua"},{"thoiGian":90,"doAm":3.20,"nhietDo":64.8,"datYeuCau":"Chua"},{"thoiGian":120,"doAm":2.85,"nhietDo":65.2,"datYeuCau":"Dat"}],"doAmCuoi":2.85,"doAmYeuCau":3.50,"ketQua":"Dat","nhiemVu":"Day kho NLC 3 den khi %am du tieu chuan"}'),
-
-(3, 1, 3, 3, 3,
- DATEADD(HOUR,-115,GETDATE()), DATEADD(HOUR,-114,GETDATE()),
- 'Passed',
- N'{"soLo":"B26-001-01","mayTron":"EQP-MIX-01","dungTich":"500L","tocDoTron":15,"tgGiaiDoan1":30,"tgGiaiDoan2":15,"nguoiVanHanh":"op01","nguoiKiemTra":"qc01","tieuChuanTron":"RSD <5%","kiemTraDongNhat":[{"vi_tri":"Tren","doAm":2.82,"tyLeHoatChat":30.05},{"vi_tri":"Giua","doAm":2.86,"tyLeHoatChat":29.98},{"vi_tri":"Duoi","doAm":2.81,"tyLeHoatChat":30.02}],"RSD":0.11,"ketQua":"Dat","ghiChu":"Them Magie Stearat o phut thu 30"}');
+(1, 1, 1, 2, 3, DATEADD(HOUR,-124,GETDATE()), DATEADD(HOUR,-122,GETDATE()), 'Passed', 
+ N'{"soLo":"B26-001-01","maySay":"KBC-TS-50","nhietDo":23.5,"doAm":52.0,"apLuc":25.0,"nhietDoSay":75.0,"tgSay":180,"ketQua":"Dat"}'),
+(2, 1, 2, 2, 3, DATEADD(HOUR,-122,GETDATE()), DATEADD(HOUR,-120,GETDATE()), 'Passed', 
+ N'{"soLo":"B26-001-01","maySay":"KBC-TS-50","nhietDo":23.8,"doAm":51.5,"apLuc":26.0,"nhietDoSay":75.2,"tgSay":180,"ketQua":"Dat"}'),
+(3, 1, 3, 1, 3, DATEADD(HOUR,-120,GETDATE()), DATEADD(HOUR,-119,GETDATE()), 'Passed',
+ N'{"soLo":"B26-001-01","mayCan":"IW2-60","nguoiCan":"op01","nguyenLieu":[{"ten":"Hoạt chất NLC 3","khTT":30015,"ketQua":"Dat"},{"ten":"Tinh bột ngô","khTT":40200,"ketQua":"Dat"}]}'),
+(4, 1, 4, 3, 3, DATEADD(HOUR,-118,GETDATE()), DATEADD(HOUR,-117,GETDATE()), 'Passed',
+ N'{"soLo":"B26-001-01","mayTron":"AD-LP-200","tocDoTron":15,"tgGiaiDoan1":30,"RSD":0.11,"ketQua":"Dat"}');
 
 -- ▶ PO-2026-002 / B26-002-01 (Hoàn thành)
 INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData)
 VALUES
-(4, 2, 1, 1, 6, DATEADD(HOUR,-24,GETDATE()), DATEADD(HOUR,-23,GETDATE()), 'Passed',
- N'{"soLo":"B26-002-01","mayCan":"EQP-WGH-01","danhSachCan":[{"ten":"Hoạt chất NLC 3","loSX":"LOT-NLC3-001","khLT":30000,"khTT":30010,"ketQua":"Dat"},{"ten":"Tinh bột ngô","loSX":"LOT-STR-001","khLT":40000,"khTT":40050,"ketQua":"Dat"},{"ten":"Lactose","loSX":"LOT-LAC-001","khLT":20000,"khTT":20080,"ketQua":"Dat"},{"ten":"Magie Stearat","loSX":"LOT-MGS-001","khLT":1000,"khTT":1003,"ketQua":"Dat"}],"nguoiCan":"op02","nguoiKiemTra":"qc01"}'),
-
-(5, 2, 2, 2, 6, DATEADD(HOUR,-23,GETDATE()), DATEADD(HOUR,-21,GETDATE()), 'Passed',
- N'{"soLo":"B26-002-01","maySay":"EQP-DRY-01","nhietDoSay":65,"tgSay":120,"mauDo":[{"thoiGian":60,"doAm":4.50,"datYeuCau":"Chua"},{"thoiGian":120,"doAm":3.10,"datYeuCau":"Dat"}],"doAmCuoi":3.10,"doAmYeuCau":3.50,"ketQua":"Dat"}'),
-
-(6, 2, 3, 3, 6, DATEADD(HOUR,-21,GETDATE()), DATEADD(HOUR,-20,GETDATE()), 'Passed',
- N'{"soLo":"B26-002-01","mayTron":"EQP-MIX-01","tocDoTron":15,"tgTong":45,"RSD":0.18,"ketQua":"Dat"}');
+(5, 2, 1, 2, 6, DATEADD(HOUR,-26,GETDATE()), DATEADD(HOUR,-24,GETDATE()), 'Passed', 
+ N'{"soLo":"B26-002-01","nhietDo":24.1,"doAm":48.0,"ketQua":"Dat"}'),
+(6, 2, 2, 2, 6, DATEADD(HOUR,-24,GETDATE()), DATEADD(HOUR,-22,GETDATE()), 'Passed', 
+ N'{"soLo":"B26-002-01","nhietDo":24.3,"doAm":47.5,"ketQua":"Dat"}'),
+(7, 2, 3, 1, 6, DATEADD(HOUR,-22,GETDATE()), DATEADD(HOUR,-21,GETDATE()), 'Passed', 
+ N'{"soLo":"B26-002-01","mayCan":"IW2-60","khTT":30010,"ketQua":"Dat"}'),
+(8, 2, 4, 3, 6, DATEADD(HOUR,-21,GETDATE()), DATEADD(HOUR,-20,GETDATE()), 'Passed', 
+ N'{"soLo":"B26-002-01","mayTron":"AD-LP-200","tocDoTron":15,"tgTong":45,"ketQua":"Dat"}');
 
 -- ▶ PO-2026-002 / B26-002-02 (Hoàn thành)
 INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData)
 VALUES
-(7,  3, 1, 1, 3, DATEADD(HOUR,-18,GETDATE()), DATEADD(HOUR,-17,GETDATE()), 'Passed',
- N'{"soLo":"B26-002-02","mayCan":"EQP-WGH-01","danhSachCan":[{"ten":"Hoạt chất NLC 3","khLT":30000,"khTT":30020,"ketQua":"Dat"},{"ten":"Tinh bột ngô","khLT":40000,"khTT":40100,"ketQua":"Dat"},{"ten":"Lactose","khLT":20000,"khTT":19980,"ketQua":"Dat"}],"nguoiCan":"op01","nguoiKiemTra":"qc02"}'),
-(8,  3, 2, 7, 3, DATEADD(HOUR,-17,GETDATE()), DATEADD(HOUR,-15,GETDATE()), 'Passed',
- N'{"soLo":"B26-002-02","maySay":"EQP-DRY-02","nhietDoSay":63,"tgSay":130,"doAmCuoi":3.05,"doAmYeuCau":3.50,"ketQua":"Dat"}'),
-(9,  3, 3, 8, 3, DATEADD(HOUR,-14,GETDATE()), DATEADD(HOUR,-13,GETDATE()), 'Passed',
- N'{"soLo":"B26-002-02","mayTron":"EQP-MIX-02","tocDoTron":15,"tgTong":45,"RSD":0.22,"ketQua":"Dat"}');
+(9,  3, 1, 2, 3, DATEADD(HOUR,-18,GETDATE()), DATEADD(HOUR,-17,GETDATE()), 'Passed', NULL),
+(10, 3, 2, 2, 3, DATEADD(HOUR,-17,GETDATE()), DATEADD(HOUR,-16,GETDATE()), 'Passed', NULL),
+(11, 3, 3, 1, 3, DATEADD(HOUR,-16,GETDATE()), DATEADD(HOUR,-15,GETDATE()), 'Passed', NULL),
+(12, 3, 4, 3, 3, DATEADD(HOUR,-15,GETDATE()), DATEADD(HOUR,-14,GETDATE()), 'Passed', NULL);
 
--- ▶ PO-2026-002 / B26-002-03 (Đang chạy - Bước 1 xong, bước 2 đang chạy)
+-- ▶ PO-2026-002 / B26-002-03 (Sấy TD 8 xong, đang Sấy NLC 3)
 INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData)
 VALUES
-(10, 4, 1, 6, 3, DATEADD(HOUR,-2,GETDATE()), DATEADD(HOUR,-1,GETDATE()), 'Passed',
- N'{"soLo":"B26-002-03","mayCan":"EQP-WGH-02","danhSachCan":[{"ten":"Hoạt chất NLC 3","khLT":30000,"khTT":30005,"ketQua":"Dat"},{"ten":"Tinh bột ngô","khLT":40000,"khTT":40060,"ketQua":"Dat"}],"nguoiCan":"op01","nguoiKiemTra":"qc01"}');
+(13, 4, 1, 2, 3, DATEADD(HOUR,-3,GETDATE()), DATEADD(HOUR,-2,GETDATE()), 'Passed', NULL),
+(14, 4, 2, 2, 3, DATEADD(HOUR,-2,GETDATE()), NULL, 'Running', NULL);
 
--- ▶ PO-2026-003 / B26-003-01 (OnHold - Bước 1 xong, bước 2 bị dừng vì Lactose reject)
+-- ▶ PO-2026-003 / B26-003-01 (Sấy TD 8 xong, Sấy NLC 3 bị dừng)
 INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData)
 VALUES
-(11, 5, 1, 1, 6, DATEADD(HOUR,-7,GETDATE()), DATEADD(HOUR,-6,GETDATE()), 'Passed',
- N'{"soLo":"B26-003-01","mayCan":"EQP-WGH-01","danhSachCan":[{"ten":"Hoạt chất NLC 3","khLT":30000,"khTT":30008,"ketQua":"Dat"},{"ten":"Lactose","loSX":"LOT-LAC-002","khLT":20000,"khTT":20000,"ketQua":"Dat"}],"ghiChu":"LOT-LAC-002 chua nhan reject QC luc can - CANH BAO: Phat hien bi reject sau khi can"}'),
-(12, 5, 2, 2, 6, DATEADD(HOUR,-5,GETDATE()), NULL, 'OnHold',
- N'{"soLo":"B26-003-01","lyDoDung":"Nguyen lieu Lactose LOT-LAC-002 khong dat QC. Cho phe duyet thay the tu QA."}');
+(15, 5, 1, 2, 6, DATEADD(HOUR,-8,GETDATE()), DATEADD(HOUR,-7,GETDATE()), 'Passed', NULL),
+(16, 5, 2, 2, 6, DATEADD(HOUR,-7,GETDATE()), NULL, 'OnHold', N'{"lyDoDung":"Lỗi máy sấy"}');
 
--- ▶ PO-2026-004 / B26-004-01 (Paracetamol - Bước 1+2 đang chạy, bước 3 đang dập viên)
+-- ▶ PO-2026-004 / B26-004-01 (Paracetamol - Recipe 2)
 INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData)
 VALUES
-(13, 6, 4, 1, 3, DATEADD(HOUR,-9,GETDATE()), DATEADD(HOUR,-8,GETDATE()), 'Passed',
- N'{"soLo":"B26-004-01","tenSanPham":"Viên nén Paracetamol 500mg","mayCan":"EQP-WGH-01","danhSachCan":[{"ten":"Bột Paracetamol","loSX":"LOT-PARA-001","khLT":250000,"khTT":250300,"ketQua":"Dat"},{"ten":"Tinh bột ngô","loSX":"LOT-STR-001","khLT":150000,"khTT":150500,"ketQua":"Dat"},{"ten":"Lactose","loSX":"LOT-LAC-001","khLT":80000,"khTT":80050,"ketQua":"Dat"},{"ten":"PVP K30","loSX":"LOT-PVP-001","khLT":10000,"khTT":10020,"ketQua":"Dat"}],"nguoiCan":"op01","nguoiKiemTra":"qc02"}'),
-(14, 6, 5, 2, 3, DATEADD(HOUR,-7,GETDATE()), DATEADD(HOUR,-4,GETDATE()), 'Passed',
- N'{"soLo":"B26-004-01","maySay":"EQP-DRY-01","nhietDoSay":55,"tgSay":150,"mucPVP":"2% trong nuoc","mauDo":[{"thoiGian":50,"doAm":3.50,"datYeuCau":"Chua"},{"thoiGian":100,"doAm":2.10,"datYeuCau":"Chua"},{"thoiGian":150,"doAm":1.75,"datYeuCau":"Dat"}],"doAmCuoi":1.75,"doAmYeuCau":2.00,"ketQua":"Dat"}'),
-(15, 6, 6, 4, 3, DATEADD(HOUR,-3,GETDATE()), NULL, 'Running',
- NULL);
+(17, 6, 5, 1, 3, DATEADD(HOUR,-9,GETDATE()), DATEADD(HOUR,-8,GETDATE()), 'Passed', NULL),
+(18, 6, 6, 4, 3, DATEADD(HOUR,-7,GETDATE()), NULL, 'Running', NULL);
 
--- ▶ PO-2026-006 / B26-006-01 (Bước 1 cân đang chạy)
-INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus)
-VALUES
-(16, 8, 4, 6, 6, DATEADD(MINUTE,-30,GETDATE()), NULL, 'Running');
-
--- ▶ PO-2026-007 / B26-007-01 (Hoàn thành - Paracetamol)
+-- ▶ PO-2026-007 / B26-007-01 (Paracetamol)
 INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData)
 VALUES
-(17, 9,  4, 1, 3, DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-10,GETDATE()), 'Passed',
- N'{"soLo":"B26-007-01","mayCan":"EQP-WGH-01","danhSachCan":[{"ten":"Bột Paracetamol","loSX":"LOT-PARA-001","khLT":250000,"khTT":250300,"ketQua":"Dat"},{"ten":"Tinh bột ngô","khLT":150000,"khTT":150500,"ketQua":"Dat"}],"nguoiCan":"op01","nguoiKiemTra":"qc01"}'),
-(18, 9,  5, 2, 3, DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-9,GETDATE()),  'Passed',
- N'{"soLo":"B26-007-01","nhietDoSay":55,"tgSay":145,"doAmCuoi":1.90,"ketQua":"Dat"}'),
-(19, 9,  6, 4, 3, DATEADD(DAY,-9,GETDATE()),  DATEADD(DAY,-8,GETDATE()),  'Passed',
- N'{"soLo":"B26-007-01","mayDapVien":"EQP-TAB-01","troiLuongMucTieu":550,"troiLuongDCC":552.3,"kiemTraDinhKy":[{"gio":0,"tbTroi":551.2,"datTC":"Dat"},{"gio":1,"tbTroi":550.8,"datTC":"Dat"},{"gio":2,"tbTroi":552.5,"datTC":"Dat"}],"soVienDap":1000200,"soVienKhongDat":125,"tyLeKhongDat":"0.012%","ketQua":"Dat"}');
+(19, 9, 5, 1, 3, DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-10,GETDATE()), 'Passed', NULL),
+(20, 9, 6, 4, 3, DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-9,GETDATE()), 'Passed', NULL);
 
--- PO-2026-007 / B26-007-02 (Hoàn thành)
+-- ▶ PO-2026-007 / B26-007-02 (Paracetamol)
 INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData)
 VALUES
-(20, 10, 4, 1, 6, DATEADD(DAY,-9,GETDATE()), DATEADD(DAY,-9,GETDATE()), 'Passed',
+(21, 10, 5, 1, 6, DATEADD(DAY,-9,GETDATE()), DATEADD(DAY,-9,GETDATE()), 'Passed',
  N'{"soLo":"B26-007-02","mayCan":"EQP-WGH-01","danhSachCan":[{"ten":"Bột Paracetamol","loSX":"LOT-PARA-002","khLT":250000,"khTT":250000,"ketQua":"Dat"},{"ten":"Lactose","loSX":"LOT-LAC-001","khLT":80000,"khTT":80000,"ketQua":"Dat"}],"nguoiCan":"op02","nguoiKiemTra":"qc02"}'),
-(21, 10, 5, 7, 6, DATEADD(DAY,-9,GETDATE()), DATEADD(DAY,-8,GETDATE()), 'Passed',
- N'{"soLo":"B26-007-02","nhrietDoSay":56,"doAmCuoi":1.82,"ketQua":"Dat"}'),
-(22, 10, 6, 4, 6, DATEADD(DAY,-8,GETDATE()), DATEADD(DAY,-7,GETDATE()), 'Passed',
+(22, 10, 6, 4, 6, DATEADD(DAY,-9,GETDATE()), DATEADD(DAY,-8,GETDATE()), 'Passed',
  N'{"soLo":"B26-007-02","mayDapVien":"EQP-TAB-01","troiLuongDCC":549.8,"ketQua":"Dat"}');
 
 SET IDENTITY_INSERT BatchProcessLogs OFF;

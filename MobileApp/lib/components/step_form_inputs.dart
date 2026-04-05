@@ -207,7 +207,10 @@ class StandardInputField extends StatelessWidget {
     this.controller,
     this.onChanged,
     this.readOnly = false,
+    this.status = 'none', // 'none', 'warning', 'error'
   });
+
+  final String status;
 
   @override
   Widget build(BuildContext context) {
@@ -227,11 +230,29 @@ class StandardInputField extends StatelessWidget {
             keyboardType: keyboardType,
             onChanged: onChanged,
             readOnly: readOnly,
+            style: TextStyle(
+              color: status == 'error' ? Colors.red.shade900 : (status == 'warning' ? Colors.orange.shade900 : Colors.black87),
+              fontWeight: status != 'none' ? FontWeight.bold : FontWeight.normal,
+            ),
             decoration: InputDecoration(
               hintText: hint,
               suffixIcon: suffixIcon,
-              filled: readOnly,
-              fillColor: readOnly ? Colors.grey.shade100 : null,
+              filled: readOnly || status != 'none',
+              fillColor: readOnly 
+                ? Colors.grey.shade100 
+                : (status == 'error' ? Colors.red.shade50 : (status == 'warning' ? Colors.orange.shade50 : null)),
+              enabledBorder: status != 'none' 
+                ? OutlineInputBorder(
+                    borderSide: BorderSide(color: status == 'error' ? Colors.red : Colors.orange, width: 2),
+                    borderRadius: BorderRadius.circular(8),
+                  )
+                : null,
+              focusedBorder: status != 'none'
+                ? OutlineInputBorder(
+                    borderSide: BorderSide(color: status == 'error' ? Colors.red : Colors.orange, width: 2.5),
+                    borderRadius: BorderRadius.circular(8),
+                  )
+                : null,
             ),
           ),
         ],

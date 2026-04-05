@@ -17,6 +17,9 @@ namespace GMP_System.Interfaces
         IGenericRepository<Equipment> Equipments { get; }
         IGenericRepository<UnitOfMeasure> UnitOfMeasures { get; }
         IGenericRepository<UomConversion> UomConversions { get; }
+        IGenericRepository<StepParameter> StepParameters { get; }
+        IGenericRepository<BatchProcessParameterValue> BatchProcessParameterValues { get; }
+        IGenericRepository<RecipeRouting> RecipeRoutings { get; }
         // Hàm lưu thay đổi (Commit)
         Task<int> CompleteAsync();
     }

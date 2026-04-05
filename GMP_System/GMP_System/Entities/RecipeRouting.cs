@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace GMP_System.Entities;
@@ -24,4 +24,6 @@ public partial class RecipeRouting
     public virtual Equipment? DefaultEquipment { get; set; }
 
     public virtual Recipe? Recipe { get; set; }
+
+    public virtual ICollection<StepParameter> StepParameters { get; set; } = new List<StepParameter>();
 }

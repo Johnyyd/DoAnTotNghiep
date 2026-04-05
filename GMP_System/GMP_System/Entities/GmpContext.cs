@@ -43,6 +43,10 @@ public partial class GmpContext : DbContext
 
     public virtual DbSet<UomConversion> UomConversions { get; set; } = null!;
 
+    public virtual DbSet<StepParameter> StepParameters { get; set; } = null!;
+
+    public virtual DbSet<BatchProcessParameterValue> BatchProcessParameterValues { get; set; } = null!;
+
     // Configuration is now handled via Program.cs using AddDbContext.
     // Removed hardcoded LocalDB connection to support Docker/Linux.
 
@@ -89,6 +93,48 @@ public partial class GmpContext : DbContext
             entity.HasOne(d => d.Routing).WithMany(p => p.BatchProcessLogs)
                 .HasForeignKey(d => d.RoutingId)
                 .HasConstraintName("FK__BatchProc__Routi__7D439ABD");
+
+            entity.HasOne(d => d.Operator).WithMany(p => p.BatchProcessLogOperators)
+                .HasForeignKey(d => d.OperatorId)
+                .HasConstraintName("FK_BatchProcessLog_Operator");
+
+            entity.HasOne(d => d.VerifiedBy).WithMany(p => p.BatchProcessLogVerifiers)
+                .HasForeignKey(d => d.VerifiedById)
+                .HasConstraintName("FK_BatchProcessLog_Verifier");
+        });
+
+        modelBuilder.Entity<StepParameter>(entity =>
+        {
+            entity.HasKey(e => e.ParameterId);
+            entity.Property(e => e.ParameterId).HasColumnName("ParameterId");
+            entity.Property(e => e.RoutingId).HasColumnName("RoutingId");
+            entity.Property(e => e.ParameterName).HasMaxLength(100);
+            entity.Property(e => e.Unit).HasMaxLength(50);
+            entity.Property(e => e.MinValue).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.MaxValue).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.IsCritical).HasDefaultValue(true);
+
+            entity.HasOne(d => d.Routing).WithMany(p => p.StepParameters)
+                .HasForeignKey(d => d.RoutingId)
+                .HasConstraintName("FK_StepParameter_Routing");
+        });
+
+        modelBuilder.Entity<BatchProcessParameterValue>(entity =>
+        {
+            entity.HasKey(e => e.ValueId);
+            entity.Property(e => e.ValueId).HasColumnName("ValueId");
+            entity.Property(e => e.LogId).HasColumnName("LogId");
+            entity.Property(e => e.ParameterId).HasColumnName("ParameterId");
+            entity.Property(e => e.ActualValue).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.RecordedDate).HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(d => d.Log).WithMany(p => p.ParameterValues)
+                .HasForeignKey(d => d.LogId)
+                .HasConstraintName("FK_ParamValue_Log");
+
+            entity.HasOne(d => d.Parameter).WithMany(p => p.ParameterValues)
+                .HasForeignKey(d => d.ParameterId)
+                .HasConstraintName("FK_ParamValue_Parameter");
         });
 
         modelBuilder.Entity<Equipment>(entity =>

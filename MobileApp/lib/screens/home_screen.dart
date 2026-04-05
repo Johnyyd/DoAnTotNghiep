@@ -4,7 +4,6 @@ import '../services/api_service.dart';
 import 'login_screen.dart';
 import 'main_navigation.dart';
 import 'order_verification_screen.dart';
-import 'worker_precheck_navigation.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -105,14 +104,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (isPendingTab) {
                   if (!isQC) {
                     // Mở màn hình dành riêng cho Công nhân (có tab bar Cân, Sấy, Trộn)
-                    final result = await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => WorkerPrecheckNavigation(orderData: order),
-                      ),
-                    );
-                    if (result == true) {
-                      _loadOrders(); // Tải lại để đẩy lệnh sang Tab 3
-                    }
+                      // Mở màn hình thao tác sản xuất (Batch Dashboard)
+                      final result = await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => MainNavigationScreen(orderData: order),
+                        ),
+                      );
+                      if (result == true) {
+                        _loadOrders(); 
+                      }
                   } else {
                     // Mở màn hình QC duyệt tổng quát
                     final result = await Navigator.of(context).push(
@@ -209,10 +209,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ] else ...[
                       Row(
                         children: [
-                          Icon(isQC ? Icons.admin_panel_settings : Icons.engineering, size: 14, color: Colors.orange),
+                          Icon(Icons.engineering, size: 14, color: Colors.orange),
                           const SizedBox(width: 4),
                           Text(
-                            isQC ? 'Công nhân đã ký, chờ QC đối chiếu...' : 'Chờ công nhân nhập liệu môi trường, máy móc...',
+                            isQC ? 'Chờ QC kiểm tra hồ sơ mẻ...' : 'Nhấn để bắt đầu các mẻ (batch) sản xuất...',
                             style: const TextStyle(color: Colors.orange, fontSize: 12, fontStyle: FontStyle.italic),
                           ),
                         ],
