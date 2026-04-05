@@ -106,4 +106,61 @@
   .nav-item-active {
     @apply bg-primary-50 text-primary-600;
   }
+
+  .gmp-sheet {
+    background: #fffdf6;
+    border: 2px solid #d1d5db;
+    border-radius: 14px;
+    box-shadow: 0 6px 16px rgba(17, 24, 39, 0.08);
+    padding: 1rem;
+  }
+
+  .gmp-sheet-header {
+    @apply flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between;
+    border-bottom: 2px solid #1f2937;
+    padding-bottom: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  .gmp-title-row {
+    @apply text-sm font-bold tracking-wide text-neutral-900;
+    background: #f5f3ed;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0.55rem 0.75rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .gmp-grid-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #9ca3af;
+    background: #ffffff;
+  }
+
+  .gmp-grid-table th,
+  .gmp-grid-table td {
+    border: 1px solid #d1d5db;
+    padding: 0.5rem 0.6rem;
+    font-size: 0.82rem;
+    vertical-align: top;
+  }
+
+  .gmp-grid-table th {
+    background: #f9fafb;
+    color: #111827;
+    font-weight: 700;
+  }
+
+  .gmp-info-card {
+    @apply rounded-lg border border-neutral-300 bg-white p-3 flex items-start gap-3;
+  }
+
+  .progress-track {
+    @apply w-full rounded-full bg-neutral-200 overflow-hidden h-2;
+  }
+
+  .progress-fill {
+    @apply h-2 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500;
+  }
 }
