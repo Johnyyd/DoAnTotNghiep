@@ -7,7 +7,7 @@ import 'auth_service.dart';
 class ApiService {
   // Trong Docker Compose: frontend (8081) gọi backend qua proxy nginx → /api
   // Dev local: gọi thẳng port 5001
-  static const String baseUrl = '/api';
+  static const String baseUrl = 'http://100.89.137.3:5001/api';
 
   /// Headers mặc định kèm JWT token
   static Future<Map<String, String>> _headers() async {
@@ -20,9 +20,10 @@ class ApiService {
   }
 
   // ─── AUTHENTICATION ────────────────────────────────────────
-  
+
   /// Đăng nhập: trả về {token, user} nếu thành công
-  static Future<Map<String, dynamic>?> login(String username, String password) async {
+  static Future<Map<String, dynamic>?> login(
+      String username, String password) async {
     final url = Uri.parse('$baseUrl/auth/login');
     try {
       final response = await http.post(
@@ -58,25 +59,34 @@ class ApiService {
           final order = e as Map<String, dynamic>;
           final batches = order['productionBatches'] as List<dynamic>? ?? [];
           final totalBatches = batches.length;
-          final completedBatches = batches.where((b) => b['status'] == 'Completed').length;
-          final progress = totalBatches == 0 ? 0.0 : completedBatches / totalBatches;
+          final completedBatches =
+              batches.where((b) => b['status'] == 'Completed').length;
+          final progress =
+              totalBatches == 0 ? 0.0 : completedBatches / totalBatches;
 
-          final measureUnit = order['recipe']?['material']?['unitOfMeasure']?['uomName'] ?? 'kg';
+          final measureUnit = order['recipe']?['material']?['unitOfMeasure']
+                  ?['uomName'] ??
+              'kg';
 
           return {
             'orderId': order['orderId'],
             'orderCode': order['orderCode'] ?? '-',
-            'productName': order['recipe']?['material']?['materialName'] ?? 'Sản phẩm',
+            'productName':
+                order['recipe']?['material']?['materialName'] ?? 'Sản phẩm',
             'sdk': 'N/A', // Tạm để N/A vì Backend không trả SDK ở Order
             'batchSize': '${order['plannedQuantity'] ?? 0} $measureUnit',
             'sizing': '-', // N/A
-            'startDate': order['startDate'] != null ? _formatDate(order['startDate']) : '-',
-            'endDate': order['endDate'] != null ? _formatDate(order['endDate']) : '-',
+            'startDate': order['startDate'] != null
+                ? _formatDate(order['startDate'])
+                : '-',
+            'endDate':
+                order['endDate'] != null ? _formatDate(order['endDate']) : '-',
             'progress': progress,
             'totalBatches': totalBatches,
             'completedBatches': completedBatches,
             'status': order['status'] ?? 'Draft',
-            'recipe': order['recipe'], // Keep full recipe for BOM access in pre-check
+            'recipe':
+                order['recipe'], // Keep full recipe for BOM access in pre-check
           };
         }).toList();
       }
@@ -186,7 +196,7 @@ class ApiService {
             existLog = log;
           }
         }
-        
+
         return {
           'logId': existLog?['logId'],
           'stepId': step['stepId'],
@@ -196,7 +206,6 @@ class ApiService {
           'parametersData': existLog?['parametersData'],
         };
       }).toList();
-
     } catch (e) {
       return [];
     }

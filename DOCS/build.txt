@@ -1,0 +1,6 @@
+cd MobileApp
+adb -s 4pojjjfapzof5xwk push build/app/outputs/flutter-apk/app-release.apk /sdcard/Download/app-gmp-new.apk
+
+
+flutter build apk --release --device-id 4pojjjfapzof5xwk
+    
