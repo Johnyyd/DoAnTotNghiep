@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+﻿import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Pill,
@@ -14,6 +14,7 @@ import {
   LogOut,
   Settings,
   FileText,
+  BarChart3,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -28,6 +29,7 @@ const navigation = [
   { name: 'Tồn Kho', href: '/inventory', icon: Package, roles: ['Admin', 'Manager'] },
   { name: 'Thiết Bị', href: '/equipments', icon: Settings, roles: ['Admin', 'Manager'] },
   { name: 'Hồ Sơ Trưởng Phòng', href: '/manager-operations', icon: FileText, roles: ['Admin', 'Manager'] },
+  { name: 'Thống Kê Thành Phẩm', href: '/finished-goods-stats', icon: BarChart3, roles: ['Admin', 'Manager'] },
   { name: 'Tài Khoản', href: '/users', icon: Users, roles: ['Admin'] },
   { name: 'Nhật Ký Hệ Thống', href: '/audit-logs', icon: ClipboardList, roles: ['Admin', 'QualityControl'] },
 ];
@@ -137,9 +139,7 @@ export default function Layout() {
           </button>
 
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-neutral-900">
-              Quản Lý Sản Xuất Dược Phẩm
-            </h2>
+            <h2 className="text-lg font-semibold text-neutral-900">Quản Lý Sản Xuất Dược Phẩm</h2>
           </div>
 
           <div className="flex items-center space-x-4">

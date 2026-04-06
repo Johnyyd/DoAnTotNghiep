@@ -269,7 +269,7 @@ INSERT INTO ProductionBatches (BatchId, OrderId, BatchNumber, Status, Manufactur
 (11, 5,  'B26-005-01', 'InProcess', GETDATE(),                    NULL,                         NULL,                      1),
 -- PO-008 (Draft): 1 mẻ dự thảo
 (12, 8,  'B26-008-01', 'Draft',     GETDATE(),                    NULL,                         NULL,                      1);
-SET IDENTITY_INSERT ProductionBatches OFF;
+SET IDENTITY_INSERT ProductionBatches OFF;  
 GO
 
 -- =====================================================================

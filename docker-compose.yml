@@ -45,12 +45,14 @@ services: # Danh sách các services trong hệ thống
       - ConnectionStrings__DefaultConnection=Server=gmp-sqlserver;Database=PharmaceuticalProcessingManagementSystem;User Id=sa;Password=GMP_Strong@Passw0rd123;TrustServerCertificate=true
       # Key phục vụ mã hoá chuẩn ký Server bảo mật cho JWT Access Token
       - Jwt__Key=GMP_WHO_Default_Secret_Key_Minimum_32_Characters_Long_123456789
+      - Certificates__StoragePath=/app/certificates
     depends_on:
       gmp-sqlserver:
         # Bắt buộc đợi cho SQL Server báo trạng thái Health = OK (Healthy) rồi mới chạy gmp-api tiếp
         condition: service_healthy 
     volumes:
       - ./DATABASE:/app/DATABASE:ro # Liên kết thư mục Script nếu Controller có nhu cầu truy vấn tĩnh
+      - ./PharmaceuticalProcessingManagementSystem/certificates:/app/certificates
     restart: unless-stopped
     healthcheck:
       # Ping qua chuẩn HTTP thông thường kiểm tra EndPoint Kestrel đã Online chưa

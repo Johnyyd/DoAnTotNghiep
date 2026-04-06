@@ -16,6 +16,7 @@ import Inventory from '@/pages/Inventory';
 import AppUsers from '@/pages/AppUsers';
 import Equipments from '@/pages/Equipments';
 import ManagerOperations from '@/pages/ManagerOperations';
+import FinishedGoodsStats from '@/pages/FinishedGoodsStats';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,6 +57,7 @@ function App() {
               <Route path="users" element={<AppUsers />} />
               <Route path="equipments" element={<Equipments />} />
               <Route path="manager-operations" element={<ManagerOperations />} />
+              <Route path="finished-goods-stats" element={<FinishedGoodsStats />} />
             </Route>
 
             {/* Fallback */}

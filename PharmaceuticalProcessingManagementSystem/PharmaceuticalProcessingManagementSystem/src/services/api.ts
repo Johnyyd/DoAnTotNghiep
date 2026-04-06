@@ -187,6 +187,18 @@ export const equipmentsApi = {
   delete: (id: number) => api.delete<ApiResponse<any>>(`/equipments/${id}`),
 };
 
+export const certificatesApi = {
+  uploadMaterialCertificate: (materialCode: string, file: File) => {
+    const formData = new FormData();
+    formData.append('materialCode', materialCode);
+    formData.append('file', file);
+    return api.post<ApiResponse<{ fileName: string; filePath: string }>>('/certificates/material/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  getMaterialCertificateUrl: (materialCode: string) => `/api/certificates/material/${encodeURIComponent(materialCode)}`,
+};
+
 // ============== AUDIT LOGS ==============
 export const auditApi = {
   getAll: (params?: { entityType?: string; entityId?: number; limit?: number }) =>

@@ -1,4 +1,4 @@
-using GMP_System.Interfaces;
+﻿using GMP_System.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,50 +16,58 @@ namespace GMP_System.Controllers
         }
 
         // GET: /api/traceability/backward/{batchNumber}
-        // Truy xuất ngược: từ lô thành phẩm → tìm lại các lô nguyên liệu đã dùng
+        // Truy xuất ngược: từ lô thành phẩm -> tìm lại các lô nguyên liệu đã dùng
         [HttpGet("backward/{batchNumber}")]
         public async Task<IActionResult> Backward(string batchNumber)
         {
-            // Load batch kèm Order → Recipe → Material (chain Include)
+            var keyword = (batchNumber ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                return BadRequest(new { success = false, message = "Mã lô không hợp lệ." });
+            }
+
+            // Dùng EF.Functions.Like để tương thích SQL Server, tránh lỗi dịch LINQ -> SQL
             var targetBatch = await _unitOfWork.ProductionBatches
                 .Query()
                 .Include(b => b.Order)
                     .ThenInclude(o => o!.Recipe)
                         .ThenInclude(r => r!.Material)
-                .Where(b => b.BatchNumber != null &&
-                            b.BatchNumber.Contains(batchNumber, StringComparison.OrdinalIgnoreCase))
+                .Where(b => b.BatchNumber != null && EF.Functions.Like(b.BatchNumber, $"%{keyword}%"))
+                .OrderByDescending(b => b.BatchId)
                 .FirstOrDefaultAsync();
 
             if (targetBatch == null)
+            {
                 return NotFound(new { success = false, message = $"Không tìm thấy lô sản xuất: {batchNumber}" });
+            }
 
             var order = targetBatch.Order;
             var recipe = order?.Recipe;
 
-            // Load MaterialUsages của batch này, kèm InventoryLot → Material
             var batchUsages = await _unitOfWork.MaterialUsages
                 .Query()
                 .Include(u => u.InventoryLot)
                     .ThenInclude(l => l!.Material)
+                        .ThenInclude(m => m!.BaseUom)
                 .Where(u => u.BatchId == targetBatch.BatchId)
                 .ToListAsync();
 
+            // Chuẩn hóa key theo màn hình frontend Traceability.tsx đang dùng
             var result = new
             {
-                batchNumber = batchNumber,
-                finishedGood = new
-                {
-                    name = recipe?.Material?.MaterialName ?? "Unknown",
-                    batchNumber = batchNumber,
-                    producedDate = targetBatch.ManufactureDate?.ToString("yyyy-MM-dd") ?? "",
-                    quantity = order?.PlannedQuantity ?? 0
-                },
+                finishedGoodBatchNumber = targetBatch.BatchNumber,
+                productName = recipe?.Material?.MaterialName ?? "Unknown",
+                productionOrderId = targetBatch.OrderId,
+                quantityProduced = order?.PlannedQuantity ?? 0,
                 rawMaterials = batchUsages.Select(u => new
                 {
-                    name = u.InventoryLot?.Material?.MaterialName ?? "Unknown",
-                    batchNumber = u.InventoryLot?.LotNumber ?? "N/A",
-                    quantity = u.ActualAmount,
-                    supplier = "N/A",
+                    materialCode = u.InventoryLot?.Material?.MaterialCode ?? "N/A",
+                    materialName = u.InventoryLot?.Material?.MaterialName ?? "Unknown",
+                    inventoryLotNumber = u.InventoryLot?.LotNumber ?? "N/A",
+                    quantityUsed = u.ActualAmount,
+                    uom = u.InventoryLot?.Material?.BaseUom?.UomName ?? "",
+                    usedAt = u.Timestamp,
+                    usedBy = u.DispensedBy,
                     qcStatus = u.InventoryLot?.Qcstatus ?? "N/A"
                 }).ToList()
             };
@@ -68,22 +76,28 @@ namespace GMP_System.Controllers
         }
 
         // GET: /api/traceability/forward/{lotNumber}
-        // Truy xuất xuôi: từ số lô nguyên liệu → tìm các lô thành phẩm đã dùng nó
+        // Truy xuất xuôi: từ số lô nguyên liệu -> tìm các lô thành phẩm đã dùng nó
         [HttpGet("forward/{lotNumber}")]
         public async Task<IActionResult> Forward(string lotNumber)
         {
-            // Tìm inventory lot kèm Material info
+            var keyword = (lotNumber ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                return BadRequest(new { success = false, message = "Mã lô không hợp lệ." });
+            }
+
             var lot = await _unitOfWork.InventoryLots
                 .Query()
                 .Include(l => l.Material)
-                .Where(l => l.LotNumber != null &&
-                            l.LotNumber.Contains(lotNumber, StringComparison.OrdinalIgnoreCase))
+                .Where(l => l.LotNumber != null && EF.Functions.Like(l.LotNumber, $"%{keyword}%"))
+                .OrderByDescending(l => l.LotId)
                 .FirstOrDefaultAsync();
 
             if (lot == null)
+            {
                 return NotFound(new { success = false, message = $"Không tìm thấy lô nguyên liệu: {lotNumber}" });
+            }
 
-            // Tìm usages cho lot này kèm Batch → Order → Recipe → Material
             var usages = await _unitOfWork.MaterialUsages
                 .Query()
                 .Include(u => u.Batch)
@@ -95,7 +109,7 @@ namespace GMP_System.Controllers
 
             var result = new
             {
-                lotNumber = lotNumber,
+                lotNumber = lot.LotNumber,
                 materialName = lot.Material?.MaterialName ?? "Unknown",
                 supplier = "N/A",
                 quantityReceived = lot.QuantityCurrent,
@@ -112,3 +126,4 @@ namespace GMP_System.Controllers
         }
     }
 }
+
