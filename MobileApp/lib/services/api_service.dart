@@ -232,22 +232,24 @@ class ApiService {
   static Future<bool> verifyStepData({
     required int logId,
     required int verifierId,
-    required String status, // "Passed", "Failed"
+    required String status, // "Passed", "Failed", "Approved"
     String? notes,
   }) async {
-    final url = Uri.parse('$baseUrl/batchprocesslogs/verify');
-    final payload = {
-      'logId': logId,
-      'verifierId': verifierId,
+    // Backend: [HttpPut("{id}/verify")] 
+    // Query params: verifierId, status, notes
+    final queryParams = {
+      'verifierId': verifierId.toString(),
       'status': status,
       if (notes != null) 'notes': notes,
     };
+    
+    final url = Uri.parse('$baseUrl/batch-process-logs/$logId/verify')
+        .replace(queryParameters: queryParams);
 
     try {
-      final response = await http.post(
+      final response = await http.put(
         url,
         headers: await _headers(),
-        body: jsonEncode(payload),
       );
       return response.statusCode >= 200 && response.statusCode < 300;
     } catch (e) {

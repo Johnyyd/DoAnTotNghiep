@@ -191,19 +191,20 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
             _danNhan = params['checkDanNhan'] ?? false;
             _baoQuanKho = params['checkBaoQuanKho'] ?? false;
 
-            // Xác định phase hiện tại dựa trên dữ liệu từ DB
-            final status = _currentLog['resultStatus'];
-            if (status == 'PendingQC') {
+            // Xác định phase hiện tại dựa trên dữ liệu từ DB (Chuẩn hóa so sánh)
+            final rawStatus = _currentLog['resultStatus']?.toString().replaceAll(' ', '').toUpperCase() ?? '';
+            
+            if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
               _currentPhase = ExecutionPhase.verification;
-            } else if (status == 'Approved') {
+            } else if (rawStatus == 'APPROVED') {
               _currentPhase = ExecutionPhase.execution;
-              // TỰ ĐỘNG BẮT ĐẦU ĐẾM NGƯỢC NẾU VỪA ĐƯỢC DUYỆT
+              // TỰ ĐỘNG BẮT ĐẦU ĐẾM NGƯỢC NẾU VỪA ĐƯỢC DUYỆT TRÊN DB
               if (_secondsRemaining == 15 && _timer == null) {
                 Future.delayed(const Duration(milliseconds: 500), () => _startTimer());
               }
-            } else if (status == 'Passed') {
+            } else if (rawStatus == 'PASSED') {
               _currentPhase = ExecutionPhase.completed;
-            } else if (rawParams != null) {
+            } else if (rawStatus == 'RUNNING' || rawParams != null) {
               _currentPhase = ExecutionPhase.input;
             }
           });
@@ -406,69 +407,73 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
     await _submit(newStatus, null, isInternal: true);
   }
 
-  Future<void> _submit(String resultStatus, String? devNotes, {bool isInternal = false}) async {
-    setState(() => _isSaving = true);
-    final params = {
-      "ngay": _ngayCtrl.text,
-      "nguoiThucHien": _nguoiCtrl.text,
-      "veSinhPhong": _phongSach,
-      "veSinhMay": _maySay,
-      "veSinhDungCu": _dungCuSay,
-      "nhietDo": _tempCtrl.text,
-      "doAm": _humidCtrl.text,
-      "thoiGianKiemTra": _timeCtrl.text,
-      "apLuc": _pressCtrl.text,
-      "mayKhongTai": _mayKhongTai,
-      "nhietDoKhiVao": _tempInCtrl.text,
-      "nhietDoKhiRa": _tempOutCtrl.text,
-      "batDauSay": _timeStartCtrl.text,
-      "ketThucSay": _timeEndCtrl.text,
-      "doAmSauSay": _humidAfterCtrl.text,
-      "mauKiemTraGams": _mauKiemTra,
-      "slTruocSay": _slTruocCtrl.text,
-      "slSauSay": _slSauCtrl.text,
-      "tgSayCaiDat": _tgSayCaiDatCtrl.text,
-      "tocDoGio": _tocDoGioCtrl.text,
-      "apSuatTuiLoc": _apSuatTuiLocCtrl.text,
-      "tanSoSay": _tanSoSayCtrl.text,
-      "viTriCuaGio": _cuaGioCtrl.text,
-      "doAmDauVao": _inputMoistureCtrl.text,
-      "checkTuiLoc": _tuiLoc,
-      "checkLapRap": _lapRap,
-      "checkRaiNhe": _raiNhe,
-      "checkKhoaBang": _khoaBang,
-      "checkDayThung": _dayThung,
-      "checkDongGoiPE": _dongGoiPE,
-      "checkCotChat": _cotChat,
-      "checkDanNhan": _danNhan,
-      "checkBaoQuanKho": _baoQuanKho,
-    };
+  Future<void> _submit(String resultStatus, String? signature, {bool isInternal = false}) async {
+    if (widget.batchId == null || widget.stepId == null) return;
     
-    if (widget.batchId == null || widget.stepId == null) {
-      setState(() => _isSaving = false);
-      return;
-    }
+    setState(() => _isSaving = true);
+    final now = DateTime.now();
+    
+    // Gói dữ liệu vào 'rawInputs' để màn hình QC đọc được
+    final payload = {
+      'rawInputs': {
+        'ngay': _ngayCtrl.text,
+        'nguoiThucHien': _nguoiCtrl.text,
+        'checkPhong': _phongSach,
+        'checkMay': _maySay,
+        'checkDungCu': _dungCuSay,
+        'nhietDo': _tempCtrl.text,
+        'doAm': _humidCtrl.text,
+        'thoiGianCheck': _timeCtrl.text,
+        'apLuc': _pressCtrl.text,
+        'checkKhongTai': _mayKhongTai,
+        'batDauSay': _timeStartCtrl.text,
+        'ketThucSay': _timeEndCtrl.text,
+        'nhietDoKhiVao': _tempInCtrl.text,
+        'nhietDoKhiRa': _tempOutCtrl.text,
+        'tgSayCaiDat': _tgSayCaiDatCtrl.text,
+        'tocDoGio': _tocDoGioCtrl.text,
+        'apSuatTuiLoc': _apSuatTuiLocCtrl.text,
+        'tanSoSay': _tanSoSayCtrl.text,
+        'slTruocSay': _slTruocCtrl.text,
+        'slSauSay': _slSauCtrl.text,
+        'mauKiemTra': _mauKiemTra,
+        'viTriCuaGio': _cuaGioCtrl.text,
+        'doAmDauVao': _inputMoistureCtrl.text,
+        'doAmSauSay': _humidAfterCtrl.text,
+        'checkTuiLoc': _tuiLoc,
+        'checkLapRap': _lapRap,
+        'checkRaiNhe': _raiNhe,
+        'checkKhoaBang': _khoaBang,
+        'checkDayThung': _dayThung,
+        'checkDongGoiPE': _dongGoiPE,
+        'checkCotChat': _cotChat,
+        'checkDanNhan': _danNhan,
+        'checkBaoQuanKho': _baoQuanKho,
+      },
+      'signature': signature,
+      'timestamp': now.toIso8601String(),
+    };
 
-    bool success = await ApiService.submitStepData(
+    final success = await ApiService.submitStepData(
       batchId: widget.batchId!,
       stepId: widget.stepId!,
       resultStatus: resultStatus,
-      parametersData: params,
-      notes: devNotes,
+      parametersData: payload,
+      notes: isInternal ? null : (signature ?? 'Worker Confirm'),
     );
+
     setState(() => _isSaving = false);
     
-    if (!mounted) return;
-    if (success) {
+    if (success && mounted) {
       if (resultStatus == 'PendingQC') {
         setState(() => _currentPhase = ExecutionPhase.verification);
       } else if (resultStatus == 'Passed') {
         setState(() => _currentPhase = ExecutionPhase.completed);
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       }
     }
     
-    if (!isInternal) {
+    if (!isInternal && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(success ? '✔ Cập nhật dữ liệu thành công!' : '❌ Lỗi khi lưu dữ liệu!'))
       );

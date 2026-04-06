@@ -90,6 +90,9 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
         return Colors.red.shade600;
       case 'PendingQC':
         return Colors.orange.shade600;
+      case 'Approved':
+      case 'Running':
+        return Colors.blue.shade600;
       default:
         return Colors.grey.shade400;
     }
@@ -103,6 +106,10 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
         return 'Sự cố (Failed)';
       case 'PendingQC':
         return 'Đợi QC Duyệt';
+      case 'Approved':
+        return 'Đang sản xuất';
+      case 'Running':
+        return 'Đang thực hiện';
       default:
         return 'Chưa thực hiện';
     }
