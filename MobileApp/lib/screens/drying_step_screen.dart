@@ -204,15 +204,17 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
             if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
               _currentPhase = ExecutionPhase.verification;
             } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
+              // APPROVED -> Chuyển qua giai đoạn EXECUTION (Sấy)
               _currentPhase = ExecutionPhase.execution;
               // TỰ ĐỘNG BẮT ĐẦU ĐẾM NGƯỢC NẾU VỪA ĐƯỢC DUYỆT TRÊN DB
               if (_secondsRemaining == 15 && _timer == null) {
                 Future.delayed(const Duration(milliseconds: 500), () => _startTimer());
               }
-            } else if (rawStatus == 'PASSED') {
-              _currentPhase = ExecutionPhase.completed;
             } else if (rawStatus == 'RUNNING' || rawParams != null) {
               _currentPhase = ExecutionPhase.input;
+            } else {
+              // Mặc định cho status NONE, null hoặc bất kỳ gì khác -> Kiểm tra ban đầu
+              _currentPhase = ExecutionPhase.precheck;
             }
           });
           

@@ -106,76 +106,79 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
   }
 
   Future<void> _loadDataFromDB() async {
-    final batch = await ApiService.getBatchById(widget.batchId!);
-    List<dynamic> newBom = batch?['order']?['recipe']?['recipeBoms'] ?? widget.initialBom ?? [];
-    
-    if (widget.stepId != null) {
-      try {
-        final logs = await ApiService.getProcessLogs(widget.batchId!);
-        final log = logs.firstWhere((l) => l['stepId'] == widget.stepId, orElse: () => <String, dynamic>{});
-        if (log.isNotEmpty) {
-          _currentLog = log;
-          _standardParams = log['routing']?['stepParameters'] ?? [];
-          
-          final rawParams = log['parametersData'];
-          Map<String, dynamic> params = {};
-          if (rawParams is Map<String, dynamic>) {
-            params = rawParams;
-          } else if (rawParams is String && rawParams.isNotEmpty) {
-            try {
-              params = Map<String, dynamic>.from(jsonDecode(rawParams) ?? {});
-            } catch (_) {}
-          }
-          
-          if (params.isNotEmpty) {
-            _tempCtrl.text = params['temperature'] ?? '';
-            _humidCtrl.text = params['humidity'] ?? '';
-            _pressCtrl.text = params['pressure'] ?? '';
-            if (params['canIW2'] != null) _canIW2 = params['canIW2'];
-            if (params['canPMA'] != null) _canPMA = params['canPMA'];
-            if (params['dungCuCan'] != null) _dungCuCan = params['dungCuCan'];
-            _hieuChuanCanCtrl.text = params['hieuChuanCan'] ?? '';
-            
-            if (params['materials'] != null) {
-              final Map<dynamic, dynamic> parsedMats = params['materials'];
-              parsedMats.forEach((k, v) {
-                if (k is String && v is Map) {
-                  _materialsData[k] = Map<String, String>.from(v);
-                }
-              });
-            }
-          }
-        }
-      } catch (_) {}
+    if (widget.batchId == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
     }
+    setState(() => _isLoading = true);
+    try {
+      // Load Batch for BOM
+      final batch = await ApiService.getBatchById(widget.batchId!);
+      if (batch != null && batch['order'] != null) {
+        _bom = batch['order']?['recipe']?['recipeBoms'] ?? [];
+      } else {
+        _bom = widget.initialBom ?? [];
+      }
 
-    if (mounted) {
-      setState(() {
-        _bom = newBom;
-        _isLoading = false;
+      // Load Logs for Phase Sync
+      final logs = await ApiService.getProcessLogs(widget.batchId!);
+      final log = logs.firstWhere((l) => l['stepId'] == widget.stepId, orElse: () => {});
+      
+      if (log.isNotEmpty) {
+        _currentLog = log;
+        _standardParams = log['routing']?['stepParameters'] ?? [];
         
-        if (_currentLog.isNotEmpty) {
-          final rawStatus = _currentLog['resultStatus']?.toString().replaceAll(' ', '').toUpperCase() ?? '';
-          final rawParams = _currentLog['parametersData'];
+        final rawParams = log['parametersData'];
+        Map<String, dynamic> params = {};
+        if (rawParams is Map<String, dynamic>) {
+          params = rawParams;
+        } else if (rawParams is String && rawParams.isNotEmpty) {
+          try {
+            params = Map<String, dynamic>.from(jsonDecode(rawParams) ?? {});
+          } catch (_) {}
+        }
+        
+        if (params.isNotEmpty) {
+          _tempCtrl.text = params['temperature'] ?? '';
+          _humidCtrl.text = params['humidity'] ?? '';
+          _pressCtrl.text = params['pressure'] ?? '';
+          if (params['canIW2'] != null) _canIW2 = params['canIW2'];
+          if (params['canPMA'] != null) _canPMA = params['canPMA'];
+          if (params['dungCuCan'] != null) _dungCuCan = params['dungCuCan'];
+          _hieuChuanCanCtrl.text = params['hieuChuanCan'] ?? '';
           
-          if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
-            _currentPhase = ExecutionPhase.verification;
-          } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
-            _currentPhase = ExecutionPhase.execution;
-          } else if (rawStatus == 'RUNNING' || rawParams != null) {
-            _currentPhase = ExecutionPhase.input;
-          } else {
-            _currentPhase = ExecutionPhase.precheck;
-          }
-
-          if (_currentPhase == ExecutionPhase.verification) {
-            _startPolling();
-          } else {
-            _stopPolling();
+          if (params['materials'] != null) {
+            final Map<String, dynamic> parsedMats = Map<String, dynamic>.from(params['materials']);
+            parsedMats.forEach((k, v) {
+              if (v is Map) {
+                _materialsData[k] = Map<String, String>.from(v);
+              }
+            });
           }
         }
-      });
+
+        // Phase Logic
+        final rawStatus = (log['resultStatus'] ?? '').toString().replaceAll(' ', '').toUpperCase();
+        if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
+          _currentPhase = ExecutionPhase.verification;
+          _startPolling();
+        } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
+          _currentPhase = ExecutionPhase.execution;
+          _stopPolling();
+        } else if (rawStatus == 'RUNNING') {
+          _currentPhase = ExecutionPhase.input;
+          _stopPolling();
+        } else {
+          _currentPhase = ExecutionPhase.precheck;
+          _stopPolling();
+        }
+      }
+      
       _updateAllInputStatuses();
+    } catch (e) {
+      debugPrint("Error loading Weighing data: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -241,7 +244,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
     final verifierId = AuthService.currentUser?['userId'] ?? 0;
     
     final success = await ApiService.verifyStepData(
-      logId: _currentLog['logId'],
+      logId: _currentLog['logId'] ?? _currentLog['id'],
       verifierId: verifierId,
       status: status,
       notes: status == 'Failed' ? 'QC Rejected Weighing' : 'Approved via Mobile',

@@ -105,18 +105,6 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
                     status: 'Approved'
                   );
                 }
-              } else if (st == 'NONE' || st == '') {
-                // Nếu bước đầu tiên chưa được công nhân khởi tạo (null log)
-                // ta sẽ tự động tạo log 'Approved' để thông luồng
-                if (sId != null) {
-                  debugPrint("--- QC AUTO-STARTING/APPROVING STEP ID: $sId ---");
-                  await ApiService.submitStepData(
-                    batchId: bId,
-                    stepId: sId,
-                    resultStatus: 'Approved',
-                    notes: 'Auto-approved during Order Pre-check'
-                  );
-                }
               }
             }
           }

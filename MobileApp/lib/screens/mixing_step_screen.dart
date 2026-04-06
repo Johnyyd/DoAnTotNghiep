@@ -72,18 +72,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.batchId != null) {
-      _loadDataFromDB().then((_) {
-        if (_currentPhase == ExecutionPhase.verification) {
-          _startPolling();
-        }
-      });
-    } else {
-      setState(() {
-        _bom = widget.initialBom ?? [];
-        _isLoading = false;
-      });
-    }
+    _loadDataFromDB();
   }
 
   String? _getStandardText(String paramName) {
@@ -112,99 +101,91 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
 
   Future<void> _loadDataFromDB() async {
     if (widget.batchId == null) {
-      if (mounted) {
-        setState(() {
-          _bom = widget.initialBom ?? [];
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
       return;
     }
-    final batch = await ApiService.getBatchById(widget.batchId!);
-    List<dynamic> newBom = batch?['order']?['recipe']?['recipeBoms'] ?? widget.initialBom ?? [];
     
-    if (widget.stepId != null) {
-      try {
-        final logs = await ApiService.getProcessLogs(widget.batchId!);
-        final log = logs.firstWhere((l) => l['stepId'] == widget.stepId, orElse: () => <String, dynamic>{});
-        if (log.isNotEmpty) {
-          _currentLog = log;
-          _standardParams = log['routing']?['stepParameters'] ?? [];
-          final rawParams = log['parametersData'];
-          Map<String, dynamic> params = {};
-          if (rawParams is Map<String, dynamic>) {
-            params = rawParams;
-          } else if (rawParams is String && rawParams.isNotEmpty) {
-            try {
-              params = Map<String, dynamic>.from(jsonDecode(rawParams) ?? {});
-            } catch (_) {}
-          }
+    setState(() => _isLoading = true);
+    try {
+      // Load Batch for BOM
+      final batch = await ApiService.getBatchById(widget.batchId!);
+      if (batch != null && batch['order'] != null) {
+        _bom = batch['order']?['recipe']?['recipeBoms'] ?? [];
+      } else {
+        _bom = widget.initialBom ?? [];
+      }
+
+      // Load Logs for Phase Sync
+      final logs = await ApiService.getProcessLogs(widget.batchId!);
+      final log = logs.firstWhere((l) => l['stepId'] == widget.stepId, orElse: () => {});
+      
+      if (log.isNotEmpty) {
+        _currentLog = log;
+        _standardParams = log['routing']?['stepParameters'] ?? [];
+        
+        final rawParams = log['parametersData'];
+        Map<String, dynamic> params = {};
+        if (rawParams is Map<String, dynamic>) {
+          params = rawParams;
+        } else if (rawParams is String && rawParams.isNotEmpty) {
+          try {
+            params = Map<String, dynamic>.from(jsonDecode(rawParams) ?? {});
+          } catch (_) {}
+        }
+        
+        if (params.isNotEmpty) {
+          if (params['veSinhPhong'] != null) _phongSach = params['veSinhPhong'];
+          if (params['veSinhMay'] != null) _mayTron = params['veSinhMay'];
+          if (params['veSinhDungCu'] != null) _dungCu = params['veSinhDungCu'];
+          _tempCtrl.text = params['nhietDo'] ?? '';
+          _humidCtrl.text = params['doAm'] ?? '';
+          _timeCtrl.text = params['thoiGianKiemTra'] ?? '';
+          _pressCtrl.text = params['apLuc'] ?? '';
+          _timeStartCtrl.text = params['tgBatDau'] ?? '';
+          _timeEndCtrl.text = params['tgKetThuc'] ?? '';
+          _tgCaiDatCtrl.text = params['tgCaiDat'] ?? '';
+          _tocDoCaiDatCtrl.text = params['tocDoCaiDat'] ?? '';
+          _tgThucTeCtrl.text = params['tgThucTe'] ?? '';
+          _tocDoThucTeCtrl.text = params['tocDoThucTe'] ?? '';
+          _duPhamCtrl.text = params['duPhamLoSo'] ?? '';
+          _tyTrongCtrl.text = params['tyTrongGo'] ?? '';
+          _slDongGoi = params['slDongGoiKg'] ?? '0';
           
-          if (params.isNotEmpty) {
-            if (params['veSinhPhong'] != null) _phongSach = params['veSinhPhong'];
-            if (params['veSinhMay'] != null) _mayTron = params['veSinhMay'];
-            if (params['veSinhDungCu'] != null) _dungCu = params['veSinhDungCu'];
-            _tempCtrl.text = params['nhietDo'] ?? '';
-            _humidCtrl.text = params['doAm'] ?? '';
-            _timeCtrl.text = params['thoiGianKiemTra'] ?? '';
-            _pressCtrl.text = params['apLuc'] ?? '';
-            _timeStartCtrl.text = params['tgBatDau'] ?? '';
-            _timeEndCtrl.text = params['tgKetThuc'] ?? '';
-            _tgCaiDatCtrl.text = params['tgCaiDat'] ?? '';
-            _tocDoCaiDatCtrl.text = params['tocDoCaiDat'] ?? '';
-            _tgThucTeCtrl.text = params['tgThucTe'] ?? '';
-            _tocDoThucTeCtrl.text = params['tocDoThucTe'] ?? '';
-            _duPhamCtrl.text = params['duPhamLoSo'] ?? '';
-            _tyTrongCtrl.text = params['tyTrongGo'] ?? '';
-            _slDongGoi = params['slDongGoiKg'] ?? '0';
-            
-            _tgGiaiDoan1Ctrl.text = params['tgGiaiDoan1'] ?? '';
-            _tgGiaiDoan2Ctrl.text = params['tgGiaiDoan2'] ?? '';
-            _tieuChuanRSDCtrl.text = params['tieuChuanRSD'] ?? '';
-            _rsdThucTeCtrl.text = params['rsdThucTe'] ?? '';
+          _tgGiaiDoan1Ctrl.text = params['tgGiaiDoan1'] ?? '';
+          _tgGiaiDoan2Ctrl.text = params['tgGiaiDoan2'] ?? '';
+          _tieuChuanRSDCtrl.text = params['tieuChuanRSD'] ?? '';
+          _rsdThucTeCtrl.text = params['rsdThucTe'] ?? '';
 
-            if (params['khoiLuongThucTe'] != null) {
-              final Map<dynamic, dynamic> parsedMats = params['khoiLuongThucTe'];
-              parsedMats.forEach((k, v) {
-                if (k is String && v is String) {
-                  _actualMaterials[k] = v;
-                }
-              });
-            }
-          }
-
-          // Chuẩn hóa status
-          final rawStatus = _currentLog['resultStatus']?.toString().replaceAll(' ', '').toUpperCase() ?? '';
-          final rawParamsData = _currentLog['parametersData'];
-
-          if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
-            _currentPhase = ExecutionPhase.verification;
-          } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
-            _currentPhase = ExecutionPhase.execution;
-          } else if (rawStatus == 'RUNNING' || rawParamsData != null) {
-            _currentPhase = ExecutionPhase.input;
-          } else {
-            _currentPhase = ExecutionPhase.precheck;
-          }
-
-          // QUẢN LÝ AUTO-POLLING
-          if (_currentPhase == ExecutionPhase.verification) {
-            _startPolling();
-          } else {
-            _stopPolling();
+          if (params['khoiLuongThucTe'] != null) {
+            final Map<String, dynamic> parsedMats = Map<String, dynamic>.from(params['khoiLuongThucTe']);
+            parsedMats.forEach((k, v) {
+              _actualMaterials[k] = v.toString();
+            });
           }
         }
-      } catch (e) {
-        debugPrint("Error fetching mixing data: $e");
-      }
-    }
 
-    if (mounted) {
-      setState(() {
-        _bom = newBom;
-        _isLoading = false;
-      });
+        // Phase Logic
+        final rawStatus = (log['resultStatus'] ?? '').toString().replaceAll(' ', '').toUpperCase();
+        if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
+          _currentPhase = ExecutionPhase.verification;
+          _startPolling();
+        } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
+          _currentPhase = ExecutionPhase.execution;
+          _stopPolling();
+        } else if (rawStatus == 'RUNNING') {
+          _currentPhase = ExecutionPhase.input;
+          _stopPolling();
+        } else {
+          _currentPhase = ExecutionPhase.precheck;
+          _stopPolling();
+        }
+      }
+      
       _updateAllInputStatuses();
+    } catch (e) {
+      debugPrint("Error loading Mixing data: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -272,13 +253,9 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
 
   Future<void> _approveByQC(String status) async {
     final pin = await _showPinDialog();
-    if (pin == null || pin.isEmpty) {
-      return;
-    }
+    if (pin == null || pin.isEmpty) return;
     if (pin != '123456') {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN xác nhận không đúng!')));
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN xác nhận không đúng!')));
       return;
     }
 
@@ -286,7 +263,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     final verifierId = AuthService.currentUser?['userId'] ?? 0;
     
     final success = await ApiService.verifyStepData(
-      logId: _currentLog['logId'],
+      logId: _currentLog['logId'] ?? _currentLog['id'],
       verifierId: verifierId,
       status: status,
       notes: status == 'Failed' ? 'QC Rejected Mixing' : 'Approved via Mobile',
@@ -295,22 +272,11 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     if (mounted) {
       setState(() => _isSaving = false);
       if (success) {
-        // Cập nhật Order status nếu cần
         if (status == 'Approved' && widget.orderId != null) {
           await ApiService.updateOrderStatus(widget.orderId!, 'In-Process');
         }
-        
-        if (mounted) {
-          setState(() {
-            if (status == 'Approved') {
-              _currentPhase = ExecutionPhase.execution;
-            }
-          });
-          if (status != 'Approved') {
-            Navigator.pop(context, true);
-          }
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✔ QC đã xác nhận: $status')));
-        }
+        await _loadDataFromDB();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✔ QC đã xác nhận: $status')));
       }
     }
   }
@@ -354,27 +320,17 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
           ],
         )
       );
-      if (proceed != true) {
-        return;
-      }
+      if (proceed != true) return;
     }
 
-    if (!mounted) {
-      return;
-    }
     final pin = await _showPinDialog();
-    if (pin == null || pin.isEmpty) {
-      return;
-    }
-
+    if (pin == null || pin.isEmpty) return;
     if (pin != '123456') {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN không đúng!')));
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN không đúng!')));
       return;
     }
 
-    await _submit(hasDeviation ? 'Failed' : 'Passed', hasDeviation ? deviationMsg : null);
+    await _submit(hasDeviation ? 'Failed' : 'PendingQC', hasDeviation ? deviationMsg : null);
   }
 
   Future<String?> _showPinDialog() {
@@ -408,7 +364,6 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
 
   Future<void> _nextPhase() async {
     if (_currentPhase == ExecutionPhase.precheck) {
-      setState(() => _currentPhase = ExecutionPhase.input);
       await _submit('Running', null, isInternal: true);
     } else if (_currentPhase == ExecutionPhase.input) {
       await _verifyAndSubmit(); 
@@ -420,21 +375,12 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
   Future<void> _prevPhase() async {
     if (_currentPhase == ExecutionPhase.completed || _currentPhase == ExecutionPhase.precheck) return;
     
-    String newStatus = 'Running';
     final targetPhase = ExecutionPhase.values[_currentPhase.index - 1];
-    
-    if (targetPhase == ExecutionPhase.verification) {
-      newStatus = 'PendingQC';
-    } else if (targetPhase == ExecutionPhase.execution) {
-      newStatus = 'Approved';
-    } else if (targetPhase == ExecutionPhase.input || targetPhase == ExecutionPhase.precheck) {
-      newStatus = 'Running';
-    }
+    String newStatus = 'Running';
+    if (targetPhase == ExecutionPhase.verification) newStatus = 'PendingQC';
+    if (targetPhase == ExecutionPhase.execution) newStatus = 'Approved';
 
-    setState(() {
-      _currentPhase = targetPhase;
-    });
-
+    setState(() => _currentPhase = targetPhase);
     await _submit(newStatus, null, isInternal: true);
   }
 
@@ -480,19 +426,15 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
       parametersData: params,
       notes: finalNotes.isNotEmpty ? finalNotes : null,
     );
-    setState(() => _isSaving = false);
     
-    if (!mounted) return;
-    if (success && mounted) {
-      if (resultStatus == 'PendingQC') {
-        setState(() => _currentPhase = ExecutionPhase.verification);
-      } else if (resultStatus == 'Passed') {
-        setState(() => _currentPhase = ExecutionPhase.completed);
-        Navigator.pop(context, true);
-      }
+    if (success) {
+      await _loadDataFromDB();
+      if (resultStatus == 'Passed') Navigator.pop(context, true);
     }
     
-    if (!isInternal) {
+    if (mounted) setState(() => _isSaving = false);
+    
+    if (!isInternal && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(success ? '✔ Cập nhật dữ liệu thành công!' : '❌ Lỗi khi lưu dữ liệu!'))
       );
@@ -531,10 +473,17 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('TRỘN: ${_currentPhase.label}'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadDataFromDB,
+            tooltip: 'Làm mới dữ liệu',
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: LinearProgressIndicator(
-            value: _currentPhase.indexNumber / 5.0,
+            value: _currentPhase.indexNumber / 4.0,
             backgroundColor: Colors.white24,
             valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
           ),
