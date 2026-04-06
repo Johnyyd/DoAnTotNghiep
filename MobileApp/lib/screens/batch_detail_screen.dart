@@ -140,9 +140,19 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
     final bool isViewer = status == 'Passed' || status == 'Failed'; 
 
     if (stepType.contains('cân') || stepType.contains('weigh')) {
-      nextScreen = WeighingStepScreen(batchId: widget.batchId, stepId: log['stepId'], isViewer: isViewer);
+      nextScreen = WeighingStepScreen(
+        batchId: widget.batchId, 
+        stepId: log['stepId'], 
+        orderId: widget.orderId,
+        isViewer: isViewer
+      );
     } else if (stepType.contains('trộn') || stepType.contains('mix')) {
-      nextScreen = MixingStepScreen(batchId: widget.batchId, stepId: log['stepId'], isViewer: isViewer);
+      nextScreen = MixingStepScreen(
+        batchId: widget.batchId, 
+        stepId: log['stepId'], 
+        orderId: widget.orderId,
+        isViewer: isViewer
+      );
     } else if (stepType.contains('sấy') || stepType.contains('dry')) {
       nextScreen = DryingStepScreen(
         batchId: widget.batchId, 

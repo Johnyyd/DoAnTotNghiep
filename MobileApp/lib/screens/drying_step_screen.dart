@@ -78,11 +78,14 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   bool _isSaving = false;
 
   Timer? _timer;
+  Timer? _pollTimer; 
   int _secondsRemaining = 15;
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _timer?.cancel();
+    _ngayCtrl.dispose();
     super.dispose();
   }
 
@@ -98,7 +101,11 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
     }
     
     if (widget.batchId != null) {
-      _loadDataFromDB();
+      _loadDataFromDB().then((_) {
+        if (_currentPhase == ExecutionPhase.verification) {
+          _startPolling();
+        }
+      });
     }
   }
 
@@ -196,7 +203,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
             
             if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
               _currentPhase = ExecutionPhase.verification;
-            } else if (rawStatus == 'APPROVED') {
+            } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
               _currentPhase = ExecutionPhase.execution;
               // TỰ ĐỘNG BẮT ĐẦU ĐẾM NGƯỢC NẾU VỪA ĐƯỢC DUYỆT TRÊN DB
               if (_secondsRemaining == 15 && _timer == null) {
@@ -208,11 +215,33 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
               _currentPhase = ExecutionPhase.input;
             }
           });
+          
+          // QUẢN LÝ AUTO-POLLING KHI ĐANG ĐỢI QC
+          if (_currentPhase == ExecutionPhase.verification) {
+            _startPolling();
+          } else {
+            _stopPolling();
+          }
+
           _updateAllInputStatuses();
         }
       }
     } catch (e) {
       debugPrint("Error loading data: $e");
+    }
+  }
+
+  void _startPolling() {
+    if (_pollTimer != null && _pollTimer!.isActive) return;
+    debugPrint("--- START AUTO-POLLING FOR QC STATUS ---");
+    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _loadDataFromDB());
+  }
+
+  void _stopPolling() {
+    if (_pollTimer != null) {
+      debugPrint("--- STOP AUTO-POLLING ---");
+      _pollTimer!.cancel();
+      _pollTimer = null;
     }
   }
 
@@ -279,13 +308,17 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
 
   Future<void> _approveByQC(String status) async {
     final pin = await _showPinDialog();
-    if (pin == null || pin.isEmpty) return;
-    if (pin != '123456') {
-       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN xác nhận không đúng!')));
-       return;
+    if (pin == null || pin.isEmpty) {
+      return;
+    }
+    if (mounted && pin != '123456') {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN xác nhận không đúng!')));
+      return;
     }
 
-    setState(() => _isSaving = true);
+    if (mounted) {
+      setState(() => _isSaving = true);
+    }
     final verifierId = AuthService.currentUser?['userId'] ?? 0;
     
     final success = await ApiService.verifyStepData(
@@ -295,22 +328,37 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       notes: status == 'Failed' ? 'QC Rejected' : 'Approved via Mobile',
     );
 
-    setState(() => _isSaving = false);
-    if (success && mounted) {
-      setState(() {
-        _currentPhase = (status == 'Approved') ? ExecutionPhase.execution : _currentPhase;
-      });
-      if (status != 'Approved') Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✔ QC đã xác nhận: $status')));
+    if (mounted) {
+      setState(() => _isSaving = false);
+      if (success) {
+        // Nếu duyệt trực tiếp trên máy công nhân, cũng cần update trạng thái Lệnh
+        if (status == 'Approved' && widget.orderId != null) {
+          await ApiService.updateOrderStatus(widget.orderId!, 'In-Process');
+        }
+
+        if (mounted) {
+          setState(() {
+            if (status == 'Approved') {
+              _currentPhase = ExecutionPhase.execution;
+            }
+          });
+          if (status != 'Approved') {
+            Navigator.pop(context, true);
+          }
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✔ QC đã xác nhận: $status')));
+        }
+      }
     }
   }
 
   Future<void> _verifyAndSubmit() async {
     final pin = await _showPinDialog();
-    if (pin == null || pin.isEmpty) return;
+    if (pin == null || pin.isEmpty) {
+      return;
+    }
 
-    if (pin != '123456') {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN không đúng!')));
+    if (mounted && pin != '123456') {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN không đúng!')));
       return;
     }
 
@@ -385,7 +433,9 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   }
 
   Future<void> _prevPhase() async {
-    if (_currentPhase == ExecutionPhase.completed || _currentPhase == ExecutionPhase.precheck) return;
+    if (_currentPhase == ExecutionPhase.completed || _currentPhase == ExecutionPhase.precheck) {
+      return;
+    }
     
     // Logic lùi trạng thái dựa trên phase mới
     String newStatus = 'Running';
@@ -770,17 +820,17 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   }
 
   Widget _buildPhase3() {
-    return Column(
+    return const Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const SizedBox(height: 60),
-        const Icon(Icons.hourglass_bottom, size: 80, color: Colors.orange),
-        const SizedBox(height: 24),
-        const Text(
+        SizedBox(height: 60),
+        Icon(Icons.hourglass_bottom, size: 80, color: Colors.orange),
+        SizedBox(height: 24),
+        Text(
           'ĐANG ĐỢI QC XÁC NHẬN',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange),
         ),
-        const Padding(
+        Padding(
           padding: EdgeInsets.all(16.0),
           child: Text(
             'Lô hàng đã được gửi duyệt. Vui lòng chờ QC kiểm tra hồ sơ và ký xác nhận điện tử trước khi bắt đầu sấy.',
@@ -788,8 +838,8 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
             style: TextStyle(color: Colors.black54),
           ),
         ),
-        const SizedBox(height: 40),
-        const CircularProgressIndicator(color: Colors.orange),
+        SizedBox(height: 40),
+        CircularProgressIndicator(color: Colors.orange),
       ],
     );
   }

@@ -180,10 +180,10 @@ class ApiService {
   /// Lấy nhật ký công đoạn của một mẻ (Virtual Workflow: Routing + Logs)
   static Future<List<Map<String, dynamic>>> getProcessLogs(int batchId) async {
     try {
-      final url = Uri.parse('$baseUrl/batch-process-logs/batch/$batchId');
+      final url = Uri.parse('$baseUrl/batch-process-logs/batch/$batchId?t=${DateTime.now().millisecondsSinceEpoch}');
       final response = await http.get(url, headers: await _headers());
 
-      print('ApiService.getProcessLogs status: ${response.statusCode}');
+      debugPrint('ApiService.getProcessLogs status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -192,7 +192,7 @@ class ApiService {
       }
       return [];
     } catch (e) {
-      print('ApiService.getProcessLogs error: $e');
+      debugPrint('ApiService.getProcessLogs error: $e');
       return [];
     }
   }
@@ -224,6 +224,7 @@ class ApiService {
       );
       return response.statusCode >= 200 && response.statusCode < 300;
     } catch (e) {
+      debugPrint('ApiService.submitStepData error: $e');
       return false;
     }
   }
@@ -235,24 +236,24 @@ class ApiService {
     required String status, // "Passed", "Failed", "Approved"
     String? notes,
   }) async {
-    // Backend: [HttpPut("{id}/verify")] 
-    // Query params: verifierId, status, notes
-    final queryParams = {
-      'verifierId': verifierId.toString(),
+    final url = Uri.parse('$baseUrl/batch-process-logs/verify');
+    final payload = {
+      'logId': logId,
+      'verifierId': verifierId,
       'status': status,
       if (notes != null) 'notes': notes,
     };
-    
-    final url = Uri.parse('$baseUrl/batch-process-logs/$logId/verify')
-        .replace(queryParameters: queryParams);
 
     try {
-      final response = await http.put(
+      final response = await http.post(
         url,
         headers: await _headers(),
+        body: jsonEncode(payload),
       );
+      debugPrint('ApiService.verifyStepData status: ${response.statusCode}');
       return response.statusCode >= 200 && response.statusCode < 300;
     } catch (e) {
+      debugPrint('ApiService.verifyStepData error: $e');
       return false;
     }
   }

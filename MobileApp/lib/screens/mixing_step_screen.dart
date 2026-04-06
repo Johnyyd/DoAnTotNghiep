@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../components/step_form_inputs.dart';
 import '../services/api_service.dart';
@@ -9,6 +10,7 @@ import '../models/execution_phase.dart';
 class MixingStepScreen extends StatefulWidget {
   final int? batchId;
   final int? stepId;
+  final int? orderId;
   final bool isPrecheck;
   final bool isViewer;
   final List<dynamic>? initialBom;
@@ -17,6 +19,7 @@ class MixingStepScreen extends StatefulWidget {
     super.key,
     this.batchId,
     this.stepId,
+    this.orderId,
     this.isPrecheck = false,
     this.isViewer = false,
     this.initialBom,
@@ -64,11 +67,23 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
   List<dynamic> _standardParams = [];
   Map<String, dynamic> _currentLog = {};
   ExecutionPhase _currentPhase = ExecutionPhase.precheck;
+  Timer? _pollTimer; 
 
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    if (widget.batchId != null) {
+      _loadDataFromDB().then((_) {
+        if (_currentPhase == ExecutionPhase.verification) {
+          _startPolling();
+        }
+      });
+    } else {
+      setState(() {
+        _bom = widget.initialBom ?? [];
+        _isLoading = false;
+      });
+    }
   }
 
   String? _getStandardText(String paramName) {
@@ -95,7 +110,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     return null;
   }
 
-  Future<void> _fetchData() async {
+  Future<void> _loadDataFromDB() async {
     if (widget.batchId == null) {
       if (mounted) {
         setState(() {
@@ -158,16 +173,25 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
             }
           }
 
-          // Xác định phase hiện tại
-          final status = _currentLog['resultStatus'];
-          if (status == 'PendingQC') {
+          // Chuẩn hóa status
+          final rawStatus = _currentLog['resultStatus']?.toString().replaceAll(' ', '').toUpperCase() ?? '';
+          final rawParamsData = _currentLog['parametersData'];
+
+          if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
             _currentPhase = ExecutionPhase.verification;
-          } else if (status == 'Approved') {
+          } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
             _currentPhase = ExecutionPhase.execution;
-          } else if (status == 'Passed') {
-            _currentPhase = ExecutionPhase.completed;
-          } else if (rawParams != null) {
+          } else if (rawStatus == 'RUNNING' || rawParamsData != null) {
             _currentPhase = ExecutionPhase.input;
+          } else {
+            _currentPhase = ExecutionPhase.precheck;
+          }
+
+          // QUẢN LÝ AUTO-POLLING
+          if (_currentPhase == ExecutionPhase.verification) {
+            _startPolling();
+          } else {
+            _stopPolling();
           }
         }
       } catch (e) {
@@ -182,6 +206,39 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
       });
       _updateAllInputStatuses();
     }
+  }
+
+  void _startPolling() {
+    if (_pollTimer != null && _pollTimer!.isActive) return;
+    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _loadDataFromDB());
+  }
+
+  void _stopPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    _tempCtrl.dispose();
+    _humidCtrl.dispose();
+    _timeCtrl.dispose();
+    _pressCtrl.dispose();
+    _timeStartCtrl.dispose();
+    _timeEndCtrl.dispose();
+    _tgCaiDatCtrl.dispose();
+    _tocDoCaiDatCtrl.dispose();
+    _tgThucTeCtrl.dispose();
+    _tocDoThucTeCtrl.dispose();
+    _duPhamCtrl.dispose();
+    _tyTrongCtrl.dispose();
+    _noteCtrl.dispose();
+    _tgGiaiDoan1Ctrl.dispose();
+    _tgGiaiDoan2Ctrl.dispose();
+    _tieuChuanRSDCtrl.dispose();
+    _rsdThucTeCtrl.dispose();
+    super.dispose();
   }
 
   void _updateInputStatus(String fieldName, String value, {String? paramNameInStandard}) {
@@ -215,10 +272,14 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
 
   Future<void> _approveByQC(String status) async {
     final pin = await _showPinDialog();
-    if (pin == null || pin.isEmpty) return;
+    if (pin == null || pin.isEmpty) {
+      return;
+    }
     if (pin != '123456') {
-       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN xác nhận không đúng!')));
-       return;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN xác nhận không đúng!')));
+      }
+      return;
     }
 
     setState(() => _isSaving = true);
@@ -231,13 +292,26 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
       notes: status == 'Failed' ? 'QC Rejected Mixing' : 'Approved via Mobile',
     );
 
-    setState(() => _isSaving = false);
-    if (success && mounted) {
-      setState(() {
-        if (status == 'Approved') _currentPhase = ExecutionPhase.execution;
-      });
-      if (status != 'Approved') Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✔ QC đã xác nhận: $status')));
+    if (mounted) {
+      setState(() => _isSaving = false);
+      if (success) {
+        // Cập nhật Order status nếu cần
+        if (status == 'Approved' && widget.orderId != null) {
+          await ApiService.updateOrderStatus(widget.orderId!, 'In-Process');
+        }
+        
+        if (mounted) {
+          setState(() {
+            if (status == 'Approved') {
+              _currentPhase = ExecutionPhase.execution;
+            }
+          });
+          if (status != 'Approved') {
+            Navigator.pop(context, true);
+          }
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✔ QC đã xác nhận: $status')));
+        }
+      }
     }
   }
 
@@ -280,14 +354,23 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
           ],
         )
       );
-      if (proceed != true) return;
+      if (proceed != true) {
+        return;
+      }
     }
 
+    if (!mounted) {
+      return;
+    }
     final pin = await _showPinDialog();
-    if (pin == null || pin.isEmpty) return;
+    if (pin == null || pin.isEmpty) {
+      return;
+    }
 
     if (pin != '123456') {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN không đúng!')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN không đúng!')));
+      }
       return;
     }
 
@@ -400,12 +483,12 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     setState(() => _isSaving = false);
     
     if (!mounted) return;
-    if (success) {
+    if (success && mounted) {
       if (resultStatus == 'PendingQC') {
         setState(() => _currentPhase = ExecutionPhase.verification);
       } else if (resultStatus == 'Passed') {
         setState(() => _currentPhase = ExecutionPhase.completed);
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       }
     }
     

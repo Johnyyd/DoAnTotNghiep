@@ -427,6 +427,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ],
         ),
+        floatingActionButton: const FloatingActionButton(
+          onPressed: null,
+          child: Icon(Icons.add),
+        ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : TabBarView(

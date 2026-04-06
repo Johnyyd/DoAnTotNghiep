@@ -35,7 +35,7 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
       Map<String, dynamic>? foundLog;
       
       for (var b in batches) {
-        final bId = b['batchId'];
+        final bId = b['batchId'] ?? b['id'] as int?;
         if (bId == null) continue;
         
         final logs = await ApiService.getProcessLogs(bId);
@@ -84,22 +84,39 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
         // 1. Lấy danh sách mẻ của lệnh này
         final batches = await ApiService.getBatches(orderId: widget.orderData['orderId']);
         if (batches.isNotEmpty) {
-          final batchId = batches.first['batchId'];
-          
           // 2. Lấy log công đoạn của mẻ
           for (var batch in batches) {
-            // 2. Lấy log công đoạn của mẻ
-            final logs = await ApiService.getProcessLogs(batch['batchId']);
+            final bId = batch['batchId'] ?? batch['id'] as int?;
+            if (bId == null) continue;
+
+            final logs = await ApiService.getProcessLogs(bId);
             
-            // 3. Tìm và duyệt các bước đang đợi QC
             for (var log in logs) {
               final st = log['resultStatus']?.toString().replaceAll(' ', '').toUpperCase() ?? '';
+              final lId = log['logId'] ?? log['id'] as int?;
+              final sId = log['stepId'] ?? log['id'] as int?; // RoutingId phục vụ Create mới
+
               if (st == 'PENDINGQC' || st == 'PENDING_QC') {
-                await ApiService.verifyStepData(
-                  logId: log['logId'], 
-                  verifierId: AuthService.currentUser?['userId'] ?? 1, 
-                  status: 'Approved'
-                );
+                if (lId != null) {
+                  debugPrint("--- QC AUTO-APPROVING LOG ID: $lId ---");
+                  await ApiService.verifyStepData(
+                    logId: lId, 
+                    verifierId: AuthService.currentUser?['userId'] ?? 1, 
+                    status: 'Approved'
+                  );
+                }
+              } else if (st == 'NONE' || st == '') {
+                // Nếu bước đầu tiên chưa được công nhân khởi tạo (null log)
+                // ta sẽ tự động tạo log 'Approved' để thông luồng
+                if (sId != null) {
+                  debugPrint("--- QC AUTO-STARTING/APPROVING STEP ID: $sId ---");
+                  await ApiService.submitStepData(
+                    batchId: bId,
+                    stepId: sId,
+                    resultStatus: 'Approved',
+                    notes: 'Auto-approved during Order Pre-check'
+                  );
+                }
               }
             }
           }
@@ -109,6 +126,9 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
         final success = await ApiService.updateOrderStatus(widget.orderData['orderId'], 'In-Process');
         
         if (mounted) {
+          // Thêm delay nhỏ để DB kịp commit trước khi refresh ở Dashboard
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (!mounted) return;
           setState(() => _isLoading = false);
           if (success) {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✔ Đã DUYỆT CẤP QUYỀN: Lệnh đã chuyển sang tab Đang sản xuất!')));

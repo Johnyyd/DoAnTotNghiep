@@ -204,8 +204,11 @@ namespace GMP_System.Controllers
             string status = body.TryGetProperty("status", out var s) ? s.GetString() ?? "Passed" : "Passed";
             string? notes = body.TryGetProperty("notes", out var n) ? n.GetString() : null;
 
-            var log = await _unitOfWork.BatchProcessLogs.GetByIdAsync((int)logId);
-            if (log == null) return NotFound("Không tìm thấy nhật ký.");
+            // Sửa lỗi int vs long: LogId trong DB là long
+            var log = await _unitOfWork.BatchProcessLogs.Query()
+                .FirstOrDefaultAsync(x => x.LogId == logId);
+            
+            if (log == null) return NotFound("Không tìm thấy nhật ký mẻ.");
 
             log.VerifiedById = verifierId;
             log.VerifiedDate = DateTime.Now;

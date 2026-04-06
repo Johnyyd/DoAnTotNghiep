@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../components/step_form_inputs.dart';
 import '../components/material_card.dart';
@@ -10,6 +11,7 @@ import '../models/execution_phase.dart';
 class WeighingStepScreen extends StatefulWidget {
   final int? batchId;
   final int? stepId;
+  final int? orderId;
   final bool isPrecheck;
   final bool isViewer;
   final List<dynamic>? initialBom;
@@ -18,6 +20,7 @@ class WeighingStepScreen extends StatefulWidget {
     super.key,
     this.batchId,
     this.stepId,
+    this.orderId,
     this.isPrecheck = false,
     this.isViewer = false,
     this.initialBom,
@@ -38,7 +41,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
   final _lotWeightACtrl = TextEditingController();
   final _purityCCtrl = TextEditingController();
   double? _targetYieldQ;
-  Map<String, double> _dynamicTargets = {};
+  final Map<String, double> _dynamicTargets = {};
   bool _isCalculated = false;
 
   String _canIW2 = 'Tốt';
@@ -55,15 +58,29 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
   List<dynamic> _standardParams = [];
   Map<String, dynamic> _currentLog = {};
   ExecutionPhase _currentPhase = ExecutionPhase.precheck;
+  Timer? _pollTimer; 
 
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    if (widget.batchId != null) {
+      _loadDataFromDB().then((_) {
+        if (_currentPhase == ExecutionPhase.verification) {
+          _startPolling();
+        }
+      });
+    } else {
+      setState(() {
+        _bom = widget.initialBom ?? [];
+        _isLoading = false;
+      });
+    }
   }
 
   String? _getStandardText(String paramName) {
-    if (_standardParams.isEmpty) return null;
+    if (_standardParams.isEmpty) {
+      return null;
+    }
     try {
       final sp = _standardParams.firstWhere(
         (p) => (p['parameterName'] as String).toLowerCase().contains(paramName.toLowerCase()),
@@ -74,7 +91,9 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
         final max = sp['maxValue'];
         final unit = sp['unit'] ?? '';
         if (min != null && max != null) {
-          if (min == max) return "Chuẩn: ${min.toString().replaceAll('.0', '')} $unit";
+          if (min == max) {
+            return "Chuẩn: ${min.toString().replaceAll('.0', '')} $unit";
+          }
           return "Chuẩn: ${min.toString().replaceAll('.0', '')} - ${max.toString().replaceAll('.0', '')} $unit";
         } else if (min != null) {
           return "Chuẩn: >= ${min.toString().replaceAll('.0', '')} $unit";
@@ -86,16 +105,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
     return null;
   }
 
-  Future<void> _fetchData() async {
-    if (widget.batchId == null) {
-      if (mounted) {
-        setState(() {
-          _bom = widget.initialBom ?? [];
-          _isLoading = false;
-        });
-      }
-      return;
-    }
+  Future<void> _loadDataFromDB() async {
     final batch = await ApiService.getBatchById(widget.batchId!);
     List<dynamic> newBom = batch?['order']?['recipe']?['recipeBoms'] ?? widget.initialBom ?? [];
     
@@ -105,7 +115,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
         final log = logs.firstWhere((l) => l['stepId'] == widget.stepId, orElse: () => <String, dynamic>{});
         if (log.isNotEmpty) {
           _currentLog = log;
-          // Load standards even if not viewing (needed for annotations during entry)
           _standardParams = log['routing']?['stepParameters'] ?? [];
           
           final rawParams = log['parametersData'];
@@ -146,23 +155,51 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
         _isLoading = false;
         
         if (_currentLog.isNotEmpty) {
-          final status = _currentLog['resultStatus'];
-          if (status == 'PendingQC') {
+          final rawStatus = _currentLog['resultStatus']?.toString().replaceAll(' ', '').toUpperCase() ?? '';
+          final rawParams = _currentLog['parametersData'];
+          
+          if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
             _currentPhase = ExecutionPhase.verification;
-          } else if (status == 'Approved') {
+          } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
             _currentPhase = ExecutionPhase.execution;
-          } else if (status == 'Passed') {
-            _currentPhase = ExecutionPhase.completed;
+          } else if (rawStatus == 'RUNNING' || rawParams != null) {
+            _currentPhase = ExecutionPhase.input;
           } else {
-            final rawParams = _currentLog['parametersData'];
-            if (rawParams != null) {
-               _currentPhase = ExecutionPhase.input;
-            }
+            _currentPhase = ExecutionPhase.precheck;
+          }
+
+          if (_currentPhase == ExecutionPhase.verification) {
+            _startPolling();
+          } else {
+            _stopPolling();
           }
         }
       });
       _updateAllInputStatuses();
     }
+  }
+
+  void _startPolling() {
+    if (_pollTimer != null && _pollTimer!.isActive) return;
+    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _loadDataFromDB());
+  }
+
+  void _stopPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    _tempCtrl.dispose();
+    _humidCtrl.dispose();
+    _pressCtrl.dispose();
+    _noteCtrl.dispose();
+    _hieuChuanCanCtrl.dispose();
+    _lotWeightACtrl.dispose();
+    _purityCCtrl.dispose();
+    super.dispose();
   }
 
   void _updateInputStatus(String fieldName, String value, {String? paramNameInStandard}) {
@@ -212,18 +249,20 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
 
     setState(() => _isSaving = false);
     if (success && mounted) {
+      if (status == 'Approved' && widget.orderId != null) {
+        await ApiService.updateOrderStatus(widget.orderId!, 'In-Process');
+      }
+      if (!mounted) return;
       setState(() {
         _currentPhase = (status == 'Approved') ? ExecutionPhase.execution : _currentPhase;
       });
-      if (status != 'Approved') Navigator.pop(context);
+      if (status != 'Approved') Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✔ QC đã xác nhận: $status')));
     }
   }
 
   void _updateMaterial(String name, String field, String value) {
-    if (!_materialsData.containsKey(name)) {
-      _materialsData[name] = {};
-    }
+    if (!_materialsData.containsKey(name)) _materialsData[name] = {};
     _materialsData[name]![field] = value;
   }
 
@@ -237,10 +276,9 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
     }
 
     setState(() {
-      // BMR Formulas Section 4
-      double X = (A * C) / 100; // Tổng hoạt chất (g)
-      double Y = (A * 1.250) / (X * 1000); // Khối lượng NLC 3 per capsules (g)
-      double Q = A / Y; // Tổng số viên sản xuất được
+      double X = (A * C) / 100;
+      double Y = (A * 1.250) / (X * 1000);
+      double Q = A / Y;
 
       _targetYieldQ = Q;
       _isCalculated = true;
@@ -252,14 +290,10 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
       _dynamicTargets['MAT-TD4'] = (0.00405 * Q);
       _dynamicTargets['MAT-TD5'] = (0.00405 * Q);
       
-      // TD 8 Compensation: 540mg total - Y(mg) - Fixed TDs(mg)
       double yMg = Y * 1000;
       double fixedTDsMg = 1.62 + 29.70 + 4.05 + 4.05;
       double td8Mg = 540 - yMg - fixedTDsMg;
-      _dynamicTargets['MAT-TD8'] = (td8Mg * Q) / 1000; // Convert to grams since others are matching
-      
-      // Fix units: if base quantity in BOM is grams, we should use grams. 
-      // Q is count. Others are weight in grams.
+      _dynamicTargets['MAT-TD8'] = (td8Mg * Q) / 1000;
       _dynamicTargets['MAT-NLP6'] = Q; 
       
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✔ Đã tính toán: ${Q.toStringAsFixed(0)} viên.')));
@@ -267,25 +301,21 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
   }
 
   Future<void> _verifyAndSubmit() async {
-    // 1. Validate Deviation (Optional for BMR, but good for GMP)
     bool hasDeviation = false;
     String deviationMsg = '';
 
     for (var item in _bom) {
       final name = item['material']?['materialName'] ?? 'N/A';
       final code = item['material']?['materialCode'] ?? '';
-      
       double requiredQty = (item['quantity'] as num?)?.toDouble() ?? 0.0;
-      if (_isCalculated && _dynamicTargets.containsKey(code)) {
-        requiredQty = _dynamicTargets[code]!;
-      }
+      if (_isCalculated && _dynamicTargets.containsKey(code)) requiredQty = _dynamicTargets[code]!;
       
       final actualStr = _materialsData[name]?['actual'] ?? '0';
       final actualQty = double.tryParse(actualStr) ?? 0.0;
       
       if (requiredQty > 0) {
         final double diffPercent = ((actualQty - requiredQty).abs() / requiredQty) * 100;
-        if (diffPercent > 2.0) { // BMR stricter than 5%
+        if (diffPercent > 2.0) {
           hasDeviation = true;
           deviationMsg += '- $name: Y/c ${requiredQty.toStringAsFixed(2)}, Cân $actualQty (Lệch ${diffPercent.toStringAsFixed(1)}%)\n';
         }
@@ -312,7 +342,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
     }
 
     final pin = await _showPinDialog();
-    if (pin == null || pin.isEmpty) return; 
+    if (pin == null || pin.isEmpty) return;
     if (pin != '123456') {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Mã PIN không đúng!')));
       return;
@@ -397,20 +427,37 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
       if (resultStatus == 'PendingQC') setState(() => _currentPhase = ExecutionPhase.verification);
       else if (resultStatus == 'Passed') {
         setState(() => _currentPhase = ExecutionPhase.completed);
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       }
     }
-    if (!isInternal && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(success ? '✔ Thành công!' : '❌ Thất bại!')));
-    }
+    if (!isInternal && mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(success ? '✔ Thành công!' : '❌ Thất bại!')));
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text('CÂN: ${_currentPhase.label}'),
+        actions: [
+          IconButton(
+            onPressed: () {
+               debugPrint("--- MANUAL REFRESH ---");
+               _loadDataFromDB();
+            }, 
+            icon: const Icon(Icons.refresh)
+          ),
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Tự động cập nhật mỗi 5 giây khi chờ QC.'))
+              );
+            },
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: LinearProgressIndicator(value: _currentPhase.indexNumber / 5.0),
@@ -454,17 +501,25 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
   }
 
   Widget? _buildContextualFAB() {
-    if (widget.isViewer && _currentPhase != ExecutionPhase.verification) return null;
+    if (widget.isViewer && _currentPhase != ExecutionPhase.verification) {
+      return null;
+    }
     if (_currentPhase == ExecutionPhase.verification) {
       if (AuthService.currentUser?['role'] == 'QA_QC') {
         return FloatingActionButton.extended(onPressed: () => _approveByQC('Approved'), label: const Text('XÁC NHẬN QC'), icon: const Icon(Icons.verified_user), backgroundColor: Colors.green);
       }
       return FloatingActionButton.extended(onPressed: _isSaving ? null : _prevPhase, label: const Text('QUAY LẠI SỬA'), icon: const Icon(Icons.arrow_back), backgroundColor: Colors.grey);
     }
-    if (_currentPhase == ExecutionPhase.completed) return null;
+    if (_currentPhase == ExecutionPhase.completed) {
+      return null;
+    }
     String label = 'TIẾP TỤC';
-    if (_currentPhase == ExecutionPhase.input) label = 'GỬI DUYỆT QC';
-    if (_currentPhase == ExecutionPhase.execution) label = 'KẾT THÚC';
+    if (_currentPhase == ExecutionPhase.input) {
+      label = 'GỬI DUYỆT QC';
+    }
+    if (_currentPhase == ExecutionPhase.execution) {
+      label = 'KẾT THÚC';
+    }
     return FloatingActionButton.extended(onPressed: _isSaving ? null : _nextPhase, label: Text(label), icon: const Icon(Icons.arrow_forward));
   }
 
