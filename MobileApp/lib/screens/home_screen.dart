@@ -12,7 +12,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   List<Map<String, dynamic>> _inProcessOrders = [];
   List<Map<String, dynamic>> _pendingWorkerOrders = [];
   List<Map<String, dynamic>> _pendingQCOrders = [];
@@ -23,7 +24,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 5, vsync: this);
     _loadOrders();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadOrders() async {
@@ -104,25 +112,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (isPendingTab) {
                   if (!isQC) {
                     // Mở màn hình dành riêng cho Công nhân (có tab bar Cân, Sấy, Trộn)
-                      // Mở màn hình thao tác sản xuất (Batch Dashboard)
-                      final result = await Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => MainNavigationScreen(orderData: order),
-                        ),
-                      );
-                      if (result == true) {
-                        _loadOrders(); 
-                      }
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => MainNavigationScreen(orderData: order),
+                      ),
+                    ).then((_) => _loadOrders()); // Luôn load lại khi quay về
                   } else {
                     // Mở màn hình QC duyệt tổng quát
-                    final result = await Navigator.of(context).push(
+                    Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => OrderVerificationScreen(orderData: order),
                       ),
-                    );
-                    if (result == true) {
-                      _loadOrders(); // Tải lại để đẩy lệnh sang đang sản xuất
-                    }
+                    ).then((result) {
+                      _loadOrders(); // Tải lại 
+                      if (result == true) {
+                        _tabController.animateTo(0); // Tự động nhảy sang tab "Đang sản xuất"
+                      }
+                    });
                   }
                 } else {
                   // Mở màn hình thao tác sản xuất bình thường
@@ -130,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     MaterialPageRoute(
                       builder: (_) => MainNavigationScreen(orderData: order),
                     ),
-                  );
+                  ).then((_) => _loadOrders()); // Luôn load lại khi quay về
                 }
               },
               child: Padding(
@@ -352,18 +358,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final username = user?['username'] as String? ?? 'Operator';
     final role = user?['role'] as String? ?? '';
 
-    return DefaultTabController(
-      length: 5,
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: const Text('Trang Chủ', style: TextStyle(fontWeight: FontWeight.bold)),
-          bottom: const TabBar(
+          bottom: TabBar(
+            controller: _tabController,
             isScrollable: true,
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
             indicatorColor: Colors.white,
             indicatorWeight: 3,
-            tabs: [
+            tabs: const [
               Tab(text: 'Đang sản xuất'),
               Tab(text: 'Chờ nhập liệu (CN)'),
               Tab(text: 'Chờ QC duyệt'),
@@ -425,6 +430,7 @@ class _HomeScreenState extends State<HomeScreen> {
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : TabBarView(
+                controller: _tabController,
                 children: [
                   _buildOrderList(_inProcessOrders, false),
                   _buildOrderList(_pendingWorkerOrders, true, isQC: false),
@@ -433,7 +439,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildCompletedList(_completedOrders),
                 ],
               ),
-      ),
-    );
+      );
   }
 }

@@ -206,12 +206,17 @@ INSERT INTO StepParameters (ParameterId, RoutingId, ParameterName, Unit, MinValu
 (3, 1, N'Áp lực phòng',  'Pa', 10, 50, 1),
 (4, 1, N'Nhiệt độ sấy',  '°C', 73, 77, 1),
 (20, 1, N'Thời gian sấy', 'phút', 170, 190, 1),
+(1001, 1, N'Vị trí cửa gió', N'Số', 4, 4, 1),
+(1002, 1, N'Sấy lượng mẻ tối đa', N'kg', NULL, 50, 1),
 -- Step 2 (Sấy NLC 3) của Recipe 1
 (21, 2, N'Nhiệt độ phòng', '°C', 21, 25, 1),
 (22, 2, N'Độ ẩm phòng',   '%',  45, 70, 1),
 (23, 2, N'Áp lực phòng',  'Pa', 10, 50, 1),
 (24, 2, N'Nhiệt độ sấy',  '°C', 73, 77, 1),
 (25, 2, N'Thời gian sấy', 'phút', 170, 190, 1),
+(1003, 2, N'Vị trí cửa gió', N'Số', 4, 4, 1),
+(1004, 2, N'Sấy lượng mẻ tối đa', N'kg', NULL, 50, 1),
+(1005, 2, N'Độ ẩm NLC 3 (Input)', N'%', 5.1, NULL, 1),
 -- Step 3 (Weighing) của Recipe 1
 (5, 3, N'Nhiệt độ phòng', '°C', 21, 25, 1),
 (6, 3, N'Độ ẩm phòng',   '%',  45, 70, 1),

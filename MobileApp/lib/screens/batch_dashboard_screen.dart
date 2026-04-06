@@ -161,6 +161,7 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
                             builder: (_) => BatchDetailScreen(
                               batchId: batchId,
                               batchNumber: batchNumber,
+                              orderId: batch['orderId'],
                             ),
                           ),
                         );

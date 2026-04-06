@@ -86,14 +86,20 @@ namespace GMP_System.Controllers
                                 r.StepName,
                                 r.Description,
                                 r.EstimatedTimeMinutes,
-                                r.DefaultEquipmentId
+                                r.DefaultEquipmentId,
+                                StepParameters = r.StepParameters.Select(sp => new {
+                                    sp.ParameterId,
+                                    sp.ParameterName,
+                                    sp.MinValue,
+                                    sp.MaxValue,
+                                    sp.Unit
+                                })
                             })
                         }
                     },
                     BatchProcessLogs = b.BatchProcessLogs.Select(l => new {
                         l.LogId,
                         l.RoutingId,
-                        l.Status,
                         l.ResultStatus,
                         l.StartTime,
                         l.EndTime

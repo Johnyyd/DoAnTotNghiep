@@ -1,8 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../components/step_form_inputs.dart'; // Mượn component UI cho ESignature
-import 'main_navigation.dart';
 
 class OrderVerificationScreen extends StatefulWidget {
   final Map<String, dynamic> orderData;
@@ -14,9 +14,61 @@ class OrderVerificationScreen extends StatefulWidget {
 }
 
 class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
-  bool _isQCSigned = false;
   bool _isLoading = false;
+  Map<String, dynamic>? _workerData;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadWorkerData();
+  }
+
+  Future<void> _loadWorkerData() async {
+    setState(() => _isLoading = true);
+    try {
+      // Chờ 500ms để CSDL kịp commit (Race Condition Prevention)
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Lấy TẤT CẢ các mẻ của lệnh này
+      final batches = await ApiService.getBatches(orderId: widget.orderData['orderId']);
+      
+      Map<String, dynamic>? foundLog;
+      
+      for (var b in batches) {
+        final bId = b['batchId'];
+        if (bId == null) continue;
+        
+        final logs = await ApiService.getProcessLogs(bId);
+        // Dò tìm log "Đang chờ QC" (Không phân biệt hoa thường/khoảng trắng)
+        final log = logs.firstWhere(
+          (l) {
+            final st = l['resultStatus']?.toString().replaceAll(' ', '').toUpperCase() ?? '';
+            return st == 'PENDINGQC' || st == 'PENDING_QC';
+          },
+          orElse: () => {},
+        );
+        
+        if (log.isNotEmpty) {
+          foundLog = log;
+          break; // Tìm thấy rồi thì thôi
+        }
+      }
+
+      if (foundLog != null) {
+        final paramsStr = foundLog['parametersData'] as String?;
+        if (paramsStr != null) {
+          final Map<String, dynamic> params = jsonDecode(paramsStr);
+          setState(() {
+            _workerData = params['rawInputs'];
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading worker data: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
   void _qcSign() async {
     final pin = await _showPinDialog('Chữ ký QC');
     if (pin != null && pin.isNotEmpty) {
@@ -28,16 +80,47 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
 
       setState(() => _isLoading = true);
       
-      // Gọi API cập nhật trạng thái
-      final success = await ApiService.updateOrderStatus(widget.orderData['orderId'], 'In-Process');
-      
-      if (mounted) {
-        setState(() => _isLoading = false);
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✔ Lệnh sản xuất đã được CẤP QUYỀN VÀ KHỞI ĐỘNG!')));
-          Navigator.pop(context); // Trở về Dashboard
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Lỗi DB: Không thể xác nhận lệnh.')));
+      try {
+        // 1. Lấy danh sách mẻ của lệnh này
+        final batches = await ApiService.getBatches(orderId: widget.orderData['orderId']);
+        if (batches.isNotEmpty) {
+          final batchId = batches.first['batchId'];
+          
+          // 2. Lấy log công đoạn của mẻ
+          for (var batch in batches) {
+            // 2. Lấy log công đoạn của mẻ
+            final logs = await ApiService.getProcessLogs(batch['batchId']);
+            
+            // 3. Tìm và duyệt các bước đang đợi QC
+            for (var log in logs) {
+              final st = log['resultStatus']?.toString().replaceAll(' ', '').toUpperCase() ?? '';
+              if (st == 'PENDINGQC' || st == 'PENDING_QC') {
+                await ApiService.verifyStepData(
+                  logId: log['logId'], 
+                  verifierId: AuthService.currentUser?['userId'] ?? 1, 
+                  status: 'Approved'
+                );
+              }
+            }
+          }
+        }
+
+        // 4. Cập nhật trạng thái lệnh sang Đang sản xuất
+        final success = await ApiService.updateOrderStatus(widget.orderData['orderId'], 'In-Process');
+        
+        if (mounted) {
+          setState(() => _isLoading = false);
+          if (success) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✔ Đã DUYỆT CẤP QUYỀN: Lệnh đã chuyển sang tab Đang sản xuất!')));
+            Navigator.pop(context, true); // Trở về Dashboard và báo refesh
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Lỗi DB: Không thể xác nhận lệnh.')));
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Lỗi hệ thống: $e')));
         }
       }
     }
@@ -76,6 +159,13 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kiểm tra ban đầu (Pre-check)', style: TextStyle(fontSize: 16)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => _loadWorkerData(),
+            tooltip: 'Tải lại dữ liệu',
+          ),
+        ],
       ),
       body: _isLoading 
         ? const Center(child: CircularProgressIndicator())
@@ -102,38 +192,55 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
           ),
           const SizedBox(height: 24),
           
-          const Text('THÔNG SỐ & THIẾT BỊ TỪ DB (READ-ONLY)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+          const Text('THÔNG SỐ THỰC TẾ TỪ CÔNG NHÂN (READ-ONLY)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
           const SizedBox(height: 12),
           
-          // Dữ liệu fix cứng từ DB
-          _buildReadOnlyParam('Nhiệt độ phòng (yêu cầu)', '21 - 25 °C'),
-          _buildReadOnlyParam('Độ ẩm (yêu cầu)', '45 - 70 %'),
-          _buildReadOnlyParam('Thiết bị sử dụng', 'Máy sấy TS KBC-50, Máy đánh chảo chữ V'),
-          _buildReadOnlyParam('Loại nguyên liệu', 'NLC 3 / TD 8, Bột Talc, Tinh bột mì'),
           
-          const SizedBox(height: 24),
-          const FormSectionHeader('CHECKLIST XÁC NHẬN TẠI XƯỞNG'),
-          SegmentedToggle(label: 'Tình trạng vệ sinh xưởng:', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v){}),
-          SegmentedToggle(label: 'Vệ sinh dụng cụ chứa:', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v){}),
-          SegmentedToggle(label: 'Tình trạng thiết bị điện:', optionA: 'Sẵn sàng', optionB: 'Báo lỗi', onChanged: (v){}),
+          _buildReadOnlyParam('Nhiệt độ đọc được:', '${_workerData?['nhietDo'] ?? '--'} °C'),
+          _buildReadOnlyParam('Độ ẩm đọc được:', '${_workerData?['doAm'] ?? '--'} %'),
+          _buildReadOnlyParam('Áp lực phòng:', '${_workerData?['apLuc'] ?? '--'} Pa'),
+          _buildReadOnlyParam('Thời gian kiểm tra:', '${_workerData?['thoiGianCheck'] ?? '--'}'),
+          
+          const SizedBox(height: 20),
+          const Text('KIỂM TRA VỆ SINH & ĐIỀU KIỆN', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+          const SizedBox(height: 8),
+          _buildReadOnlyParam('Phòng pha chế:', _workerData?['checkPhong'] ?? '--'),
+          _buildReadOnlyParam('Máy sấy tầng sôi:', _workerData?['checkMay'] ?? '--'),
+          _buildReadOnlyParam('Dụng cụ sấy:', _workerData?['checkDungCu'] ?? '--'),
+          _buildReadOnlyParam('Tình trạng không tải:', _workerData?['checkKhongTai'] ?? '--'),
+          
+          const SizedBox(height: 20),
+          const Text('QUY TRÌNH THAO TÁC (CHECKLIST)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+          const SizedBox(height: 8),
+          _buildCheckItem('Kiểm tra túi lọc (số 4, 5):', _workerData?['checkTuiLoc'] == true),
+          _buildCheckItem('Lắp ráp máy theo SOP:', _workerData?['checkLapRap'] == true),
+          _buildCheckItem('Rải nhẹ nhàng mẫu vào thùng:', _workerData?['checkRaiNhe'] == true),
+          _buildCheckItem('Khỏa bằng mặt mẫu:', _workerData?['checkKhoaBang'] == true),
+          _buildCheckItem('Đẩy thùng sấy vào máy:', _workerData?['checkDayThung'] == true),
+          
+          const SizedBox(height: 20),
+          const Text('SẢN LƯỢNG ĐẦU VÀO', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+          const SizedBox(height: 8),
+          _buildReadOnlyParam('Khối lượng nguyên liệu sấy:', '${_workerData?['slTruocSay'] ?? '--'} kg'),
           
           const SizedBox(height: 32),
-          // Flow chữ ký (chỉ hiển thị QC vì công nhân đã ký ở tab riêng)
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8)),
-            child: const Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.green),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text('Công nhân đã khai báo trên toàn bộ công đoạn và ký xác nhận', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))
-                )
-              ],
-            ),
-          ),
+          const FormSectionHeader('XÁC NHẬN CỦA QC'),
           const SizedBox(height: 16),
           ESignatureButton(title: 'QC KIỂM TRA TỔNG QUAN & DUYỆT (START)', onPressed: _qcSign),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCheckItem(String label, bool isChecked) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(isChecked ? Icons.check_box : Icons.check_box_outline_blank, color: isChecked ? Colors.green : Colors.grey, size: 20),
+          const SizedBox(width: 8),
+          Expanded(child: Text(label, style: const TextStyle(fontSize: 14))),
+          Text(isChecked ? 'ĐÃ CHECK' : 'CHƯA CHECK', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isChecked ? Colors.green : Colors.grey)),
         ],
       ),
     );

@@ -10,11 +10,13 @@ import 'drying_step_screen.dart';
 class BatchDetailScreen extends StatefulWidget {
   final int batchId;
   final String batchNumber;
+  final int? orderId;
 
   const BatchDetailScreen({
     super.key,
     required this.batchId,
     required this.batchNumber,
+    this.orderId,
   });
 
   @override
@@ -135,7 +137,13 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
     } else if (stepType.contains('trộn') || stepType.contains('mix')) {
       nextScreen = MixingStepScreen(batchId: widget.batchId, stepId: log['stepId'], isViewer: isViewer);
     } else if (stepType.contains('sấy') || stepType.contains('dry')) {
-      nextScreen = DryingStepScreen(batchId: widget.batchId, stepId: log['stepId'], stepName: log['step']?['stepName'] ?? 'SẤY', isViewer: isViewer);
+      nextScreen = DryingStepScreen(
+        batchId: widget.batchId, 
+        stepId: log['stepId'], 
+        orderId: widget.orderId,
+        stepName: log['step']?['stepName'] ?? 'SẤY', 
+        isViewer: isViewer
+      );
     }
 
     if (nextScreen != null) {

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../components/step_form_inputs.dart';
 import '../services/api_service.dart';
@@ -9,6 +10,7 @@ import '../models/execution_phase.dart';
 class DryingStepScreen extends StatefulWidget {
   final int? batchId;
   final int? stepId;
+  final int? orderId;
   final String stepName;
   final bool isPrecheck;
   final bool isViewer;
@@ -17,6 +19,7 @@ class DryingStepScreen extends StatefulWidget {
     super.key, 
     this.batchId,
     this.stepId,
+    this.orderId,
     required this.stepName,
     this.isPrecheck = false,
     this.isViewer = false,
@@ -47,6 +50,18 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   final _tocDoGioCtrl = TextEditingController();
   final _apSuatTuiLocCtrl = TextEditingController();
   final _tanSoSayCtrl = TextEditingController();
+  final _inputMoistureCtrl = TextEditingController();
+
+  // Checklist states
+  bool _tuiLoc = false;
+  bool _lapRap = false;
+  bool _raiNhe = false;
+  bool _khoaBang = false;
+  bool _dayThung = false;
+  bool _dongGoiPE = false;
+  bool _cotChat = false;
+  bool _danNhan = false;
+  bool _baoQuanKho = false;
 
   // Map lưu trữ trạng thái hiển thị (none, warning, error) cho từng input
   final Map<String, String> _inputStatus = {};
@@ -62,6 +77,15 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   
   bool _isSaving = false;
 
+  Timer? _timer;
+  int _secondsRemaining = 15;
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -69,6 +93,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
     if (!widget.isViewer) {
       final now = DateTime.now();
       _ngayCtrl.text = "${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}";
+      _timeCtrl.text = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
       _nguoiCtrl.text = AuthService.currentUser?['fullName'] ?? '';
     }
     
@@ -153,6 +178,18 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
             _apSuatTuiLocCtrl.text = params['apSuatTuiLoc'] ?? '';
             _tanSoSayCtrl.text = params['tanSoSay'] ?? '';
             _cuaGioCtrl.text = params['viTriCuaGio'] ?? '4';
+            _inputMoistureCtrl.text = params['doAmDauVao'] ?? '';
+
+            // Checklists
+            _tuiLoc = params['checkTuiLoc'] ?? false;
+            _lapRap = params['checkLapRap'] ?? false;
+            _raiNhe = params['checkRaiNhe'] ?? false;
+            _khoaBang = params['checkKhoaBang'] ?? false;
+            _dayThung = params['checkDayThung'] ?? false;
+            _dongGoiPE = params['checkDongGoiPE'] ?? false;
+            _cotChat = params['checkCotChat'] ?? false;
+            _danNhan = params['checkDanNhan'] ?? false;
+            _baoQuanKho = params['checkBaoQuanKho'] ?? false;
 
             // Xác định phase hiện tại dựa trên dữ liệu từ DB
             final status = _currentLog['resultStatus'];
@@ -160,6 +197,10 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
               _currentPhase = ExecutionPhase.verification;
             } else if (status == 'Approved') {
               _currentPhase = ExecutionPhase.execution;
+              // TỰ ĐỘNG BẮT ĐẦU ĐẾM NGƯỢC NẾU VỪA ĐƯỢC DUYỆT
+              if (_secondsRemaining == 15 && _timer == null) {
+                Future.delayed(const Duration(milliseconds: 500), () => _startTimer());
+              }
             } else if (status == 'Passed') {
               _currentPhase = ExecutionPhase.completed;
             } else if (rawParams != null) {
@@ -172,6 +213,32 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
     } catch (e) {
       debugPrint("Error loading data: $e");
     }
+  }
+
+  bool get _isPhase1Locked => widget.isViewer || _currentPhase.index > 0;
+  bool get _isPhase2Locked => widget.isViewer || _currentPhase.index > 1;
+  bool get _isPhase4Locked => widget.isViewer || (_currentPhase.index > 3) || (_currentPhase == ExecutionPhase.execution && _secondsRemaining > 0);
+
+  void _startTimer() {
+    _timer?.cancel();
+    setState(() {
+      _secondsRemaining = 15;
+    });
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_secondsRemaining > 0) {
+        setState(() => _secondsRemaining--);
+      } else {
+        _timer?.cancel();
+      }
+    });
+  }
+
+  void _setCurrentTime(TextEditingController ctrl) {
+    if (widget.isViewer) return;
+    final now = DateTime.now();
+    setState(() {
+      ctrl.text = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+    });
   }
 
   void _updateInputStatus(String fieldName, String value, {String? paramNameInStandard}) {
@@ -246,7 +313,18 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       return;
     }
 
-    await _submit('Passed', null);
+    await _submit('PendingQC', null);
+    
+    // Đảm bảo update Order status thành công rồi mới báo refresh
+    if (widget.orderId != null) {
+      await ApiService.updateOrderStatus(widget.orderId!, 'Pending QC');
+    }
+
+    if (mounted) {
+      setState(() => _currentPhase = ExecutionPhase.verification);
+      // Quay về dashboard để mẻ sấy hiện ra ở tab QC ngay
+      Navigator.of(context).pop(true);
+    }
   }
 
   Future<String?> _showPinDialog() {
@@ -280,12 +358,28 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
 
   Future<void> _nextPhase() async {
     if (_currentPhase == ExecutionPhase.precheck) {
+      final now = DateTime.now();
+      if (_timeStartCtrl.text.isEmpty) {
+        _timeStartCtrl.text = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+      }
       setState(() => _currentPhase = ExecutionPhase.input);
+      // Giữ status Running khi nhập liệu
       await _submit('Running', null, isInternal: true);
     } else if (_currentPhase == ExecutionPhase.input) {
+      // Chuyển sang giai đoạn Đợi QC (PendingQC)
       await _verifyAndSubmit(); 
     } else if (_currentPhase == ExecutionPhase.execution) {
-       await _submit('Passed', null);
+       // Kết thúc mẻ sấy (Passed)
+       if (_secondsRemaining > 0) return; // Bảo vệ nếu timer chưa xong
+       
+       final now = DateTime.now();
+       if (_timeEndCtrl.text.isEmpty) {
+         _timeEndCtrl.text = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+       }
+       if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✔ Đã hoàn thành mẻ sấy và lưu kết quả!')));
+         Navigator.of(context).pop(true);
+       }
     }
   }
 
@@ -338,6 +432,16 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       "apSuatTuiLoc": _apSuatTuiLocCtrl.text,
       "tanSoSay": _tanSoSayCtrl.text,
       "viTriCuaGio": _cuaGioCtrl.text,
+      "doAmDauVao": _inputMoistureCtrl.text,
+      "checkTuiLoc": _tuiLoc,
+      "checkLapRap": _lapRap,
+      "checkRaiNhe": _raiNhe,
+      "checkKhoaBang": _khoaBang,
+      "checkDayThung": _dayThung,
+      "checkDongGoiPE": _dongGoiPE,
+      "checkCotChat": _cotChat,
+      "checkDanNhan": _danNhan,
+      "checkBaoQuanKho": _baoQuanKho,
     };
     
     if (widget.batchId == null || widget.stepId == null) {
@@ -375,7 +479,9 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('SẤY: ${_currentPhase.label}'),
+        title: Text('SẤY ${_currentLog['order']?['orderCode'] ?? ''}: ${_currentPhase.label}'),
+        elevation: 0,
+        backgroundColor: Colors.blue.shade800,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: LinearProgressIndicator(
@@ -490,21 +596,48 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       key: const ValueKey('phase1'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        FormSectionHeader('PHASE 1: KIỂM TRA MÔI TRƯỜNG & VỆ SINH'),
+        if (widget.stepName.contains('NLC 3')) ...[
+          const FormSectionHeader('2.1 KIỂM TRA ĐẦU VÀO NGUYÊN LIỆU'),
+          StandardInputField(
+            label: 'Độ ẩm NLC 3 (%)', 
+            controller: _inputMoistureCtrl,
+            keyboardType: TextInputType.number,
+            readOnly: _isPhase1Locked,
+            hint: 'Tiêu chuẩn: > 5%',
+            standardText: _getStandardText('Độ ẩm NLC 3 (Input)'),
+          ),
+          const Divider(),
+        ],
+        const FormSectionHeader('1. THÔNG TIN CHUNG'),
         const StandardInputField(label: 'Phòng thực hiện', hint: 'Phòng Pha chế', readOnly: true),
-        StandardInputField(label: 'Ngày', controller: _ngayCtrl, suffixIcon: const Icon(Icons.calendar_today)),
-        StandardInputField(label: 'Người thực hiện', controller: _nguoiCtrl, hint: 'Chọn nhân viên', suffixIcon: const Icon(Icons.person_add)),
-        SegmentedToggle(label: 'Vệ sinh phòng pha chế', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _phongSach = v),
-        SegmentedToggle(label: 'Vệ sinh máy sấy tầng sôi', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _maySay = v),
-        SegmentedToggle(label: 'Vệ sinh dụng cụ sấy', optionA: 'Sạch', optionB: 'Không sạch', onChanged: (v) => _dungCuSay = v),
+        StandardInputField(label: 'Ngày thực hiện', controller: _ngayCtrl, readOnly: _isPhase1Locked, suffixIcon: const Icon(Icons.calendar_today)),
+        StandardInputField(label: 'Người thực hiện', controller: _nguoiCtrl, readOnly: _isPhase1Locked, hint: 'Tên nhân viên', suffixIcon: const Icon(Icons.person)),
+        
+        const FormSectionHeader('2.2 TÌNH TRẠNG VỆ SINH'),
+        SegmentedToggle(label: 'Phòng pha chế', optionA: 'Sạch', optionB: 'Không sạch', disabled: _isPhase1Locked, onChanged: (v) => _phongSach = v),
+        SegmentedToggle(label: 'Máy sấy tầng sôi KBC-TS-50', optionA: 'Sạch', optionB: 'Không sạch', disabled: _isPhase1Locked, onChanged: (v) => _maySay = v),
+        SegmentedToggle(label: 'Dụng cụ sấy', optionA: 'Sạch', optionB: 'Không sạch', disabled: _isPhase1Locked, onChanged: (v) => _dungCuSay = v),
+
+        const FormSectionHeader('2.3 ĐIỀU KIỆN MÔI TRƯỜNG'),
+        StandardInputField(
+          label: 'Thời gian kiểm tra', 
+          controller: _timeCtrl, 
+          hint: 'HH:mm', 
+          readOnly: _isPhase1Locked,
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.access_time),
+            onPressed: !_isPhase1Locked ? () => _setCurrentTime(_timeCtrl) : null,
+          ),
+        ),
         Row(
           children: [
             Expanded(child: StandardInputField(
               label: 'Nhiệt độ (°C)', 
               controller: _tempCtrl, 
               keyboardType: TextInputType.number,
+              readOnly: _isPhase1Locked,
               status: _inputStatus['nhietDo'] ?? 'none',
-              standardText: _getStandardText('Nhiệt độ phòng'),
+              standardText: 'Chuẩn: 21 - 25 °C',
               onChanged: (v) => _updateInputStatus('nhietDo', v, paramNameInStandard: 'Nhiệt độ phòng'),
             )),
             const SizedBox(width: 16),
@@ -512,19 +645,71 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
               label: 'Độ ẩm (%)', 
               controller: _humidCtrl, 
               keyboardType: TextInputType.number,
+              readOnly: _isPhase1Locked,
               status: _inputStatus['doAm'] ?? 'none',
-              standardText: _getStandardText('Độ ẩm phòng'),
+              standardText: 'Chuẩn: 45 - 70 %',
               onChanged: (v) => _updateInputStatus('doAm', v, paramNameInStandard: 'Độ ẩm phòng'),
             )),
           ],
         ),
         StandardInputField(
-          label: 'Áp lực (Pa)', 
+          label: 'Áp lực phòng (Pa)', 
           controller: _pressCtrl, 
           keyboardType: TextInputType.number,
+          readOnly: _isPhase1Locked,
           status: _inputStatus['apLuc'] ?? 'none',
-          standardText: _getStandardText('Áp lực phòng'),
+          standardText: 'Chuẩn: >= 10 Pa',
           onChanged: (v) => _updateInputStatus('apLuc', v, paramNameInStandard: 'Áp lực phòng'),
+        ),
+        
+        const FormSectionHeader('3.1 CHUẨN BỊ THIẾT BỊ'),
+        CheckboxListTile(
+          title: const Text('Kiểm tra tính nguyên vẹn túi lọc (số 4, 5)'),
+          subtitle: const Text('Đảm bảo túi sạch và không rách'),
+          value: _tuiLoc,
+          onChanged: !_isPhase1Locked ? (v) => setState(() => _tuiLoc = v ?? false) : null,
+          controlAffinity: ListTileControlAffinity.leading,
+        ),
+        CheckboxListTile(
+          title: const Text('Lắp ráp máy theo SOP'),
+          value: _lapRap,
+          onChanged: !_isPhase1Locked ? (v) => setState(() => _lapRap = v ?? false) : null,
+          controlAffinity: ListTileControlAffinity.leading,
+        ),
+        SegmentedToggle(
+          label: 'Kiểm tra tình trạng làm việc không tải', 
+          optionA: 'Ổn định', 
+          optionB: 'Không ổn định', 
+          disabled: _isPhase1Locked,
+          onChanged: (v) => _mayKhongTai = v
+        ),
+        const Divider(),
+        const FormSectionHeader('3.2 NẠP LIỆU'),
+        CheckboxListTile(
+          title: const Text('Rải nhẹ nhàng nguyên liệu vào thùng sấy'),
+          subtitle: const Text('Một mẻ sấy tối đa 50 kg'),
+          value: _raiNhe,
+          onChanged: !_isPhase1Locked ? (v) => setState(() => _raiNhe = v ?? false) : null,
+          controlAffinity: ListTileControlAffinity.leading,
+        ),
+        CheckboxListTile(
+          title: const Text('Khỏa bằng mặt nguyên liệu trong thùng'),
+          value: _khoaBang,
+          onChanged: !_isPhase1Locked ? (v) => setState(() => _khoaBang = v ?? false) : null,
+          controlAffinity: ListTileControlAffinity.leading,
+        ),
+        CheckboxListTile(
+          title: const Text('Đẩy thùng sấy vào máy, sấy theo SOP'),
+          value: _dayThung,
+          onChanged: !_isPhase1Locked ? (v) => setState(() => _dayThung = v ?? false) : null,
+          controlAffinity: ListTileControlAffinity.leading,
+        ),
+        StandardInputField(
+          label: 'KL trước sấy (kg)', 
+          controller: _slTruocCtrl, 
+          keyboardType: TextInputType.number,
+          readOnly: _isPhase1Locked,
+          hint: 'Nhập khối lượng TD 8 / NLC 3',
         ),
       ],
     );
@@ -534,29 +719,24 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const FormSectionHeader('PHASE 2: THÔNG SỐ VÀ KẾT QUẢ SẤY'),
-        SegmentedToggle(label: 'Tình trạng máy (Không tải)', optionA: 'Ổn định', optionB: 'Không ổn định', onChanged: (v) => _mayKhongTai = v),
+        const FormSectionHeader('PHASE 2: THÔNG SỐ VẬN HÀNH BẮT ĐẦU'),
         Row(
           children: [
-            Expanded(child: StandardInputField(label: 'Nhiệt độ khí vào (°C)', controller: _tempInCtrl, keyboardType: TextInputType.number)),
+            Expanded(child: StandardInputField(
+              label: 'Giờ bắt đầu', 
+              controller: _timeStartCtrl, 
+              suffixIcon: const Icon(Icons.access_time),
+              readOnly: true, // Auto-populated and locked
+              hint: 'Nhập HH:mm',
+            )),
             const SizedBox(width: 16),
-            Expanded(child: StandardInputField(label: 'Nhiệt độ khí ra (°C)', controller: _tempOutCtrl, keyboardType: TextInputType.number)),
-          ],
-        ),
-        Row(
-          children: [
-            Expanded(child: StandardInputField(label: 'Giờ bắt đầu', controller: _timeStartCtrl, suffixIcon: const Icon(Icons.access_time))),
-            const SizedBox(width: 16),
-            Expanded(child: StandardInputField(label: 'Giờ kết thúc', controller: _timeEndCtrl, suffixIcon: const Icon(Icons.access_time))),
-          ],
-        ),
-        StandardInputField(label: 'Độ ẩm sau sấy (%)', controller: _humidAfterCtrl, keyboardType: TextInputType.number),
-        DryingSampleField(onResultChanged: (v) => _mauKiemTra = v),
-        Row(
-          children: [
-            Expanded(child: StandardInputField(label: 'KL trước sấy (kg)', controller: _slTruocCtrl, keyboardType: TextInputType.number)),
-            const SizedBox(width: 16),
-            Expanded(child: StandardInputField(label: 'KL sau sấy (kg)', controller: _slSauCtrl, keyboardType: TextInputType.number)),
+            Expanded(child: StandardInputField(
+              label: 'Nhiệt độ khí vào (°C)', 
+              controller: _tempInCtrl, 
+              keyboardType: TextInputType.number,
+              readOnly: _isPhase2Locked,
+              standardText: _getStandardText('Nhiệt độ sấy'),
+            )),
           ],
         ),
         const FormSectionHeader('THÔNG SỐ VẬN HÀNH CHI TIẾT'),
@@ -566,19 +746,18 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
               label: 'TG sấy cài đặt (phút)', 
               controller: _tgSayCaiDatCtrl, 
               keyboardType: TextInputType.number,
+              readOnly: _isPhase2Locked,
               status: _inputStatus['tgSayCaiDat'] ?? 'none',
               standardText: _getStandardText('Thời gian sấy'),
               onChanged: (v) => _updateInputStatus('tgSayCaiDat', v, paramNameInStandard: 'Thời gian sấy'),
             )),
             const SizedBox(width: 16),
-            Expanded(child: StandardInputField(label: 'Tốc độ gió (Hz)', controller: _tocDoGioCtrl, keyboardType: TextInputType.number)),
-          ],
-        ),
-        Row(
-          children: [
-            Expanded(child: StandardInputField(label: 'Áp suất túi lọc (Pa)', controller: _apSuatTuiLocCtrl, keyboardType: TextInputType.number)),
-            const SizedBox(width: 16),
-            Expanded(child: StandardInputField(label: 'Tần số sấy (Hz)', controller: _tanSoSayCtrl, keyboardType: TextInputType.number)),
+            Expanded(child: StandardInputField(
+              label: 'Vị trí cửa gió', 
+              controller: _cuaGioCtrl, 
+              readOnly: true,
+              standardText: _getStandardText('Vị trí cửa gió'),
+            )),
           ],
         ),
       ],
@@ -586,15 +765,154 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   }
 
   Widget _buildPhase3() {
-    return _buildCenteredStatus(Icons.hourglass_empty, Colors.orange, 'ĐANG ĐỢI QC XÁC NHẬN', 'Số liệu đã được khóa. Mời QC kiểm tra và ký xác nhận.');
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(height: 60),
+        const Icon(Icons.hourglass_bottom, size: 80, color: Colors.orange),
+        const SizedBox(height: 24),
+        const Text(
+          'ĐANG ĐỢI QC XÁC NHẬN',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange),
+        ),
+        const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            'Lô hàng đã được gửi duyệt. Vui lòng chờ QC kiểm tra hồ sơ và ký xác nhận điện tử trước khi bắt đầu sấy.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.black54),
+          ),
+        ),
+        const SizedBox(height: 40),
+        const CircularProgressIndicator(color: Colors.orange),
+      ],
+    );
   }
 
   Widget _buildPhase4() {
-    return _buildCenteredStatus(Icons.play_circle_fill, Colors.green, 'ĐANG THỰC HIỆN SẤY', 'Máy đang vận hành. Nhấn KẾT THÚC sau khi sấy xong.');
+    double progress = (15 - _secondsRemaining) / 15;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_secondsRemaining > 0) ...[
+          _buildCenteredStatus(
+            Icons.settings_input_component, 
+            Colors.blue, 
+            'ĐANG TRONG QUÁ TRÌNH SẤY', 
+            'Vui lòng chờ máy sấy hoàn thành. Thời gian còn lại: $_secondsRemaining giây'
+          ),
+          const SizedBox(height: 20),
+          LinearProgressIndicator(
+            value: progress,
+            minHeight: 12,
+            backgroundColor: Colors.grey.shade200,
+            color: Colors.blue.shade700,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          const SizedBox(height: 40),
+        ] else ...[
+          _buildCenteredStatus(
+            Icons.check_circle, 
+            Colors.green, 
+            'CÔNG ĐOẠN SẤY ĐÃ XONG', 
+            'Mời nhập kết quả vận hành thực tế và gửi hồ sơ hoàn kỹ.'
+          ),
+          const Divider(height: 40),
+        ],
+        
+        const FormSectionHeader('KẾT QUẢ VẬN HÀNH THỰC TẾ (CHẾ ĐỘ SẤY)'),
+        Row(
+          children: [
+            Expanded(child: StandardInputField(
+              label: 'Giờ kết thúc', 
+              controller: _timeEndCtrl, 
+              readOnly: _isPhase4Locked || _secondsRemaining > 0, 
+              suffixIcon: const Icon(Icons.access_time_filled), 
+              hint: 'HH:mm'
+            )),
+            const SizedBox(width: 16),
+            Expanded(child: StandardInputField(
+              label: 'Nhiệt độ khí ra (°C)', 
+              controller: _tempOutCtrl, 
+              readOnly: _isPhase4Locked || _secondsRemaining > 0, 
+              keyboardType: TextInputType.number
+            )),
+          ],
+        ),
+        const Divider(),
+        const FormSectionHeader('4.1 KIỂM SOÁT CHẤT LƯỢNG (IN-PROCESS QC)'),
+        StandardInputField(
+          label: 'Độ ẩm sau sấy (%)', 
+          controller: _humidAfterCtrl, 
+          keyboardType: TextInputType.number,
+          readOnly: _isPhase4Locked || _secondsRemaining > 0,
+          status: _inputStatus['doAmSauSay'] ?? 'none',
+          standardText: _getStandardText('Độ ẩm thực tế'),
+          onChanged: (v) => _updateInputStatus('doAmSauSay', v, paramNameInStandard: 'Độ ẩm'),
+        ),
+        DryingSampleField(
+          onResultChanged: (v) => _mauKiemTra = v, 
+          readOnly: _isPhase4Locked || _secondsRemaining > 0
+        ),
+        const Divider(),
+        const FormSectionHeader('4.2 CÂN ĐỐI SẢN LƯỢNG'),
+        StandardInputField(
+          label: 'Số lượng sau sấy (kg)', 
+          controller: _slSauCtrl, 
+          keyboardType: TextInputType.number,
+          readOnly: _isPhase4Locked || _secondsRemaining > 0,
+          hint: 'Cân khối lượng thực tế sau sấy',
+        ),
+        const SizedBox(height: 20),
+        if (_secondsRemaining == 0)
+          ElevatedButton.icon(
+            onPressed: () => _submit('Passed', 'Operation Completed Successfully'),
+            icon: const Icon(Icons.check_circle_outline),
+            label: const Text('XÁC NHẬN HOÀN THÀNH LOG'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green.shade700,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(double.infinity, 54),
+            ),
+          ),
+      ],
+    );
   }
 
   Widget _buildPhase5() {
-    return _buildCenteredStatus(Icons.check_circle, Colors.blue, 'ĐÃ HOÀN THÀNH', 'Công đoạn sấy đã kết thúc thành công.');
+    return Column(
+      children: [
+        _buildCenteredStatus(Icons.check_circle, Colors.blue, 'ĐÃ HOÀN THÀNH', 'Công đoạn sấy đã kết thúc thành công.'),
+        const Divider(height: 40),
+        const FormSectionHeader('4.3 ĐÓNG GÓI & BẢO QUẢN'),
+        CheckboxListTile(
+          title: const Text('Đóng gói túi PE 2 lớp, cột chặt miệng túi'),
+          value: _dongGoiPE,
+          onChanged: (v) => setState(() => _dongGoiPE = v ?? false),
+          controlAffinity: ListTileControlAffinity.leading,
+        ),
+        CheckboxListTile(
+          title: const Text('Dán nhãn công đoạn & nhãn tình trạng'),
+          value: _danNhan,
+          onChanged: (v) => setState(() => _danNhan = v ?? false),
+          controlAffinity: ListTileControlAffinity.leading,
+        ),
+        CheckboxListTile(
+          title: const Text('Bảo quản trong kho cốm'),
+          value: _baoQuanKho,
+          onChanged: (v) => setState(() => _baoQuanKho = v ?? false),
+          controlAffinity: ListTileControlAffinity.leading,
+        ),
+        const SizedBox(height: 20),
+        ElevatedButton.icon(
+          onPressed: () => _submit('Passed', 'Final Packaging Confirmation'),
+          icon: const Icon(Icons.save),
+          label: const Text('LƯU XÁC NHẬN ĐÓNG GÓI'),
+          style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+        )
+      ],
+    );
   }
 
   Widget _buildCenteredStatus(IconData icon, Color color, String title, String desc) {
