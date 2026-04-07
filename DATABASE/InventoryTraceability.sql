@@ -28,5 +28,8 @@ CREATE TABLE MaterialUsage (
     UsedDate DATETIME2 DEFAULT GETDATE(),
     DispensedBy INT REFERENCES AppUsers(UserId), -- Người thực hiện xuất kho
     Note NVARCHAR(200)
+    -- Thêm cột, ai là người yêu cầu xuất kho
+    -- RequestedBy INT REFERENCES AppUsers(UserId),
+    -- RequestedDate DATETIME2 DEFAULT GETDATE()
 );
 GO

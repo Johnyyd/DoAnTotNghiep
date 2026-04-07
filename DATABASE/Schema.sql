@@ -109,6 +109,20 @@ CREATE TABLE RecipeRouting (
 );
 
 -- -------------------------------------------------------------------------
+-- 7b. Bảng StepParameters: Thông số kiểm tra tiêu chuẩn cho từng bước
+-- -------------------------------------------------------------------------
+CREATE TABLE StepParameters (
+    ParameterId INT PRIMARY KEY IDENTITY(1,1),
+    RoutingId INT REFERENCES RecipeRouting(RoutingId), -- Tham chiếu tới bước quy trình
+    ParameterName NVARCHAR(100) NOT NULL,             -- Tên thông số (vd: Nhiệt độ sấy)
+    Unit NVARCHAR(50),                                -- Đơn vị tính (vd: °C, v/p)
+    MinValue DECIMAL(18, 4),                          -- Ngưỡng dưới cho phép
+    MaxValue DECIMAL(18, 4),                          -- Ngưỡng trên cho phép
+    IsCritical BIT DEFAULT 1,                         -- Có phải thông số trọng yếu (CCP) hay không
+    Note NVARCHAR(200)                                -- Ghi chú hướng dẫn kiểm tra
+);
+
+-- -------------------------------------------------------------------------
 -- 8. Bảng ProductionOrders: Lệnh sản xuất do Kế hoạch sản xuất ban ra
 -- Văn bản pháp lý số hóa lệnh xưởng phải hoàn thành khối lượng sản phẩm cho trước.
 -- -------------------------------------------------------------------------
@@ -157,7 +171,22 @@ CREATE TABLE BatchProcessLogs (
     EndTime DATETIME2,                                -- Chốt thời khắc công đoạn kết thúc nghiệp thu
     ResultStatus NVARCHAR(50),                        -- Trạng thái kết quả (Passed, Failed, PendingQC)
     ParametersData NVARCHAR(MAX),                     -- Dữ liệu JSON thông số vận hành máy
-    Notes NVARCHAR(MAX)                               -- Phân trần, giải trình sự cố kỹ thuật hoặc hao hụt
+    Notes NVARCHAR(MAX),                              -- Phân trần, giải trình sự cố kỹ thuật hoặc hao hụt
+    IsDeviation BIT DEFAULT 0,                        -- Đánh dấu nếu có sai lệch thông số
+    VerifiedById INT REFERENCES AppUsers(UserId),     -- Người thẩm định (QA/QC)
+    VerifiedDate DATETIME2                            -- Ngày thẩm định
+);
+
+-- -------------------------------------------------------------------------
+-- 10b. Bảng BatchProcessParameterValue: Giá trị thực tế của thông số
+-- -------------------------------------------------------------------------
+CREATE TABLE BatchProcessParameterValue (
+    ValueId BIGINT PRIMARY KEY IDENTITY(1,1),
+    LogId BIGINT REFERENCES BatchProcessLogs(LogId), -- Tham chiếu tới nhật ký công đoạn
+    ParameterId INT REFERENCES StepParameters(ParameterId), -- Tham chiếu tới định nghĩa thông số
+    ActualValue DECIMAL(18, 4),                     -- Giá trị đo được thực tế
+    RecordedDate DATETIME2 DEFAULT GETDATE(),       -- Thời điểm ghi nhận
+    Note NVARCHAR(500)                              -- Ghi chú riêng cho từng thông số (nếu có)
 );
 
 -- -------------------------------------------------------------------------

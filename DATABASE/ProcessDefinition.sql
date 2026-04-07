@@ -1,4 +1,4 @@
-﻿-- ============================================================================
+-- ============================================================================
 -- 📝 MODULE: ĐỊNH NGHĨA QUY TRÌNH & CÔNG THỨC (RECIPES & BOM)
 -- 
 -- Theo GMP, mọi sản phẩm phải có công thức chính (Master Recipe) 
@@ -41,5 +41,19 @@ CREATE TABLE RecipeRouting (
     DefaultEquipmentId INT REFERENCES Equipments(EquipmentId), -- Thiết bị mặc định
     EstimatedTimeMinutes INT,                      -- Thời gian dự kiến (phút)
     Description NVARCHAR(500)                       -- Chi tiết nội dung công việc
+);
+GO
+
+-- 4. THÔNG SỐ KIỂM TRA CHO TỪNG BƯỚC (Step Parameters)
+-- Định nghĩa các ngưỡng Min/Max cho các thông số vận hành (Nhiệt độ, tốc độ...).
+CREATE TABLE StepParameters (
+    ParameterId INT PRIMARY KEY IDENTITY(1,1),
+    RoutingId INT REFERENCES RecipeRouting(RoutingId), -- Tham chiếu tới bước quy trình
+    ParameterName NVARCHAR(100) NOT NULL,             -- Tên thông số (vd: Nhiệt độ sấy)
+    Unit NVARCHAR(50),                                -- Đơn vị tính (vd: °C, v/p)
+    MinValue DECIMAL(18, 4),                          -- Ngưỡng dưới cho phép
+    MaxValue DECIMAL(18, 4),                          -- Ngưỡng trên cho phép
+    IsCritical BIT DEFAULT 1,                         -- Có phải thông số trọng yếu (CCP) hay không
+    Note NVARCHAR(200)                                -- Ghi chú hướng dẫn kiểm tra
 );
 GO

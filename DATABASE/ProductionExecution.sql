@@ -46,6 +46,21 @@ CREATE TABLE BatchProcessLogs (
     EndTime DATETIME2,
     ResultStatus NVARCHAR(50),               -- Trạng thái kết quả (Passed, Failed, PendingQC)
     ParametersData NVARCHAR(MAX),            -- Dữ liệu JSON thông số vận hành máy
-    Notes NVARCHAR(MAX)
+    Notes NVARCHAR(MAX),
+    IsDeviation BIT DEFAULT 0,               -- Đánh dấu nếu có sai lệch thông số
+    VerifiedById INT REFERENCES AppUsers(UserId), -- Người thẩm định (QA/QC)
+    VerifiedDate DATETIME2                   -- Ngày thẩm định
+);
+GO
+
+-- 4. GIÁ TRỊ THỰC TẾ CỦA THÔNG SỐ (Batch Process Parameter Values)
+-- Lưu trữ chi tiết từng giá trị thông số đã tách từ JSON để phục vụ báo cáo/truy vấn.
+CREATE TABLE BatchProcessParameterValue (
+    ValueId BIGINT PRIMARY KEY IDENTITY(1,1),
+    LogId BIGINT REFERENCES BatchProcessLogs(LogId), -- Tham chiếu tới nhật ký công đoạn
+    ParameterId INT REFERENCES StepParameters(ParameterId), -- Tham chiếu tới định nghĩa thông số
+    ActualValue DECIMAL(18, 4),                     -- Giá trị đo được thực tế
+    RecordedDate DATETIME2 DEFAULT GETDATE(),       -- Thời điểm ghi nhận
+    Note NVARCHAR(500)                              -- Ghi chú riêng cho từng thông số (nếu có)
 );
 GO
