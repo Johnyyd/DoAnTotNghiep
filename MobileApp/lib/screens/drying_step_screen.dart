@@ -79,7 +79,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
 
   Timer? _timer;
   Timer? _pollTimer; 
-  int _secondsRemaining = 15;
+  int _secondsRemaining = 60;
 
   @override
   void dispose() {
@@ -207,7 +207,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
               // APPROVED -> Chuyển qua giai đoạn EXECUTION (Sấy)
               _currentPhase = ExecutionPhase.execution;
               // TỰ ĐỘNG BẮT ĐẦU ĐẾM NGƯỢC NẾU VỪA ĐƯỢC DUYỆT TRÊN DB
-              if (_secondsRemaining == 15 && _timer == null) {
+              if (_secondsRemaining == 60 && _timer == null) {
                 Future.delayed(const Duration(milliseconds: 500), () => _startTimer());
               }
             } else if (rawStatus == 'RUNNING' || rawParams != null) {
@@ -254,13 +254,23 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   void _startTimer() {
     _timer?.cancel();
     setState(() {
-      _secondsRemaining = 15;
+      _secondsRemaining = 60;
     });
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_secondsRemaining > 0) {
         setState(() => _secondsRemaining--);
       } else {
         _timer?.cancel();
+        if (mounted && !widget.isViewer) {
+          final now = DateTime.now();
+          setState(() {
+            if (_timeEndCtrl.text.isEmpty) {
+              _timeEndCtrl.text = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+            }
+          });
+          // Tự động kết thúc mẻ sấy khi đếm ngược xong
+          _submit('Passed', null);
+        }
       }
     });
   }
@@ -342,6 +352,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
           setState(() {
             if (status == 'Approved') {
               _currentPhase = ExecutionPhase.execution;
+              _startTimer();
             }
           });
           if (status != 'Approved') {

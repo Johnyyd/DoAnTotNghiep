@@ -18,6 +18,8 @@ public partial class RecipeRouting
     public int? EstimatedTimeMinutes { get; set; }
 
     public int? DefaultEquipmentId { get; set; }
+    
+    public int? NumberOfRouting { get; set; } = 1;
 
     public virtual ICollection<BatchProcessLog> BatchProcessLogs { get; set; } = new List<BatchProcessLog>();
 

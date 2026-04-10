@@ -126,7 +126,10 @@ INSERT INTO Materials (MaterialId, MaterialCode, MaterialName, Type, BaseUomId, 
 (11, 'FG-PARA-TAB',N'Viên nén Paracetamol 500mg',         'FinishedGood', 4, 1, N'Finished Good'),
 (12, 'MAT-TD1',    N'Aerosil',                            'RawMaterial',  2, 1, N'TD 1 - TD trơn chảy'),
 (13, 'MAT-TD3',    N'Sodium starch glycolate',            'RawMaterial',  1, 1, N'TD 3 - Tá dược rã'),
-(14, 'MAT-TD4',    N'Talc',                               'RawMaterial',  2, 1, N'TD 4 - Tá dược trơn');
+(14, 'MAT-TD4',    N'Talc',                               'RawMaterial',  2, 1, N'TD 4 - Tá dược trơn'),
+(15, 'MAT-WATER',  N'Nước cất pha tiêm',                  'RawMaterial',  3, 1, N'Nước cất vô trùng'),
+(16, 'MAT-AMP',    N'Ống thủy tinh 2ml',                  'PackagingMaterial', 4, 1, N'Bao bì sơ cấp thuốc tiêm'),
+(17, 'FG-DIPY-AMP',N'Thuốc ống Dipyridamole 10mg/2ml',     'FinishedGood', 4, 1, N'Thành phẩm thuốc ống');
 SET IDENTITY_INSERT Materials OFF;
 GO
 
@@ -137,7 +140,9 @@ SET IDENTITY_INSERT Recipes ON;
 INSERT INTO Recipes (RecipeId, MaterialId, VersionNumber, BatchSize, Status, ApprovedBy, ApprovedDate, CreatedAt, Note) VALUES
 (1, 10, 1, 54000.00, 'Approved', 2, DATEADD(DAY,-30,GETDATE()), DATEADD(DAY,-45,GETDATE()), N'Công thức viên nang NLC 3 chuẩn GMP-WHO. Mẻ 100,000 viên (54kg).'),
 (2, 11, 2, 500000.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), N'Công thức Paracetamol 500mg.'),
-(3, 10, 2, 100000.00, 'Draft',    NULL, NULL,                    DATEADD(DAY,-5, GETDATE()), N'Phiên bản thử nghiệm cải tiến tỷ lệ tá dược - Chưa phê duyệt.');
+(3, 10, 2, 100000.00, 'Draft',    NULL, NULL,                    DATEADD(DAY,-5, GETDATE()), N'Phiên bản thử nghiệm cải tiến tỷ lệ tá dược - Chưa phê duyệt.'),
+(4, 17, 1, 10000.00, 'Approved', 2, DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Công thức thuốc ống Dipyridamole 10mg/2ml.'),
+(5, 11, 3, 200000.00, 'Approved', 2, DATEADD(DAY,-5,GETDATE()),  DATEADD(DAY,-10,GETDATE()), N'Quy trình sản xuất viên nén Paracetamol (Dây chuyền tầng sôi).');
 SET IDENTITY_INSERT Recipes OFF;
 GO
 
@@ -167,62 +172,59 @@ GO
 -- 8. RecipeRouting (Quy trình công đoạn)
 -- =====================================================================
 SET IDENTITY_INSERT RecipeRouting ON;
-INSERT INTO RecipeRouting (RoutingId, RecipeId, StepNumber, StepName, DefaultEquipmentId, EstimatedTimeMinutes, Description) VALUES
--- Recipe 1: Viên nang NLC 3
-(1, 1, 1, N'Sấy Tá Dược 8 (TD 8)',              2, 180, N'Sấy tinh bột TD 8 tại 75°C, 180p. Độ ẩm < 5%.'),
-(2, 1, 2, N'Sấy Cao Khô NLC 3',                2, 180, N'Sấy cao khô Trinh nữ tại 75°C, 180p. Độ ẩm < 3%.'),
-(3, 1, 3, N'Cân Nguyên Liệu',                  1, 90,  N'Cân chính xác 6 loại theo BOM động (Section 4 BMR). Đối chiếu nhãn phụ.'),
-(4, 1, 4, N'Trộn Khô',                         3, 15,  N'Trộn premix bột tá dược trước. Trộn chính 15 phút, 15 vòng/phút.'),
-(7, 1, 5, N'Đóng Nang',                        7, 120, N'Đóng nang số 0, khối lượng đích 540mg/viên.'),
--- Recipe 2: Paracetamol
-(5, 2, 1, N'Cân Paracetamol',   1, 90,  NULL),
-(6, 2, 2, N'Dập Viên',          4, 180, NULL);
+INSERT INTO RecipeRouting (RoutingId, RecipeId, StepNumber, StepName, DefaultEquipmentId, EstimatedTimeMinutes, Description, NumberOfRouting) VALUES
+-- Recipe 1: Viên nang NLC 3 (Existing)
+(1, 1, 1, N'Sấy Tá Dược 8 (TD 8)',              2, 180, N'Sấy tinh bột TD 8 tại 75°C, 180p. Độ ẩm < 5%.', 1),
+(2, 1, 2, N'Sấy Cao Khô NLC 3',                2, 180, N'Sấy cao khô Trinh nữ tại 75°C, 180p. Độ ẩm < 3%.', 1),
+(3, 1, 3, N'Cân Nguyên Liệu',                  1, 90,  N'Cân chính xác 6 loại theo BOM động (Section 4 BMR). Đối chiếu nhãn phụ.', 1),
+(4, 1, 4, N'Trộn Khô',                         3, 15,  N'Trộn premix bột tá dược trước. Trộn chính 15 phút, 15 vòng/phút.', 1),
+(7, 1, 5, N'Đóng Nang',                        7, 120, N'Đóng nang số 0, khối lượng đích 540mg/viên.', 1),
+-- Recipe 2: Paracetamol (Existing)
+(5, 2, 1, N'Cân Paracetamol',   1, 90,  NULL, 1),
+(6, 2, 2, N'Dập Viên',          4, 180, NULL, 1),
+-- Recipe 4: Thuốc ống Dipyridamole (New)
+(10, 4, 1, N'Pha chế dung dịch', 8, 60, N'Trộn hoạt chất Dipyridamole vào nước cất vô trùng.', 1),
+(11, 4, 2, N'Lọc vô trùng',      NULL, 45, N'Lọc qua màng lọc 0.22 micron.', 1),
+(12, 4, 3, N'Đóng ống - Hàn ống', NULL, 120, N'Đóng 2ml/ống, hàn kín bằng ngọn lửa.', 1),
+(13, 4, 4, N'Tiệt trùng',        NULL, 90, N'Tiệt trùng bằng hơi nước (Autoclave) 121°C.', 1),
+(14, 4, 5, N'Soi kiểm tra',      NULL, 180, N'Kiểm tra độ trong và các vật thể lạ bằng mắt.', 1),
+-- Recipe 5: Viên nén Paracetamol (New - Với bước Sấy hạt có thể lặp)
+(15, 5, 1, N'Cân nguyên liệu',   1, 90,  N'Cân Paracetamol và tá dược.', 1),
+(16, 5, 2, N'Trộn khô',          3, 15,  N'Trộn đều bột Paracetamol và tá dược độn.', 1),
+(17, 5, 3, N'Tạo hạt ướt',       NULL, 60, N'Thêm dung dịch PVP K30 tạo khối ẩm.', 1),
+(18, 5, 4, N'Sấy hạt tầng sôi',  2, 120, N'Sấy hạt đến khi độ ẩm đạt < 5%. CÓ THỂ LẶP LẠI NẾU CẦN.', 2),
+(19, 5, 5, N'Sửa hạt',           NULL, 60, N'Rây hạt qua lưới rây chuẩn.', 1),
+(20, 5, 6, N'Dập viên',          4, 180, N'Dập viên nén 500mg.', 1);
 SET IDENTITY_INSERT RecipeRouting OFF;
 GO
 
 -- =====================================================================
--- 12. StepParameters (Dữ liệu chốt GMP - Cấu trúc bảng và Seeding)
--- Bảng này thường thiếu trong seed cũ, cần nạp để Mobile check Deviation.
+-- 12. StepParameters (Dữ liệu chốt GMP)
 -- =====================================================================
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='StepParameters' AND xtype='U')
-BEGIN
-    CREATE TABLE StepParameters (
-        ParameterId INT PRIMARY KEY IDENTITY(1,1),
-        RoutingId INT REFERENCES RecipeRouting(RoutingId),
-        ParameterName NVARCHAR(100) NOT NULL,
-        Unit NVARCHAR(50),
-        MinValue DECIMAL(18, 4),
-        MaxValue DECIMAL(18, 4),
-        IsCritical BIT DEFAULT 1,
-        Note NVARCHAR(200)
-    );
-END
-
 SET IDENTITY_INSERT StepParameters ON;
 INSERT INTO StepParameters (ParameterId, RoutingId, ParameterName, Unit, MinValue, MaxValue, IsCritical) VALUES
--- Step 1 (Sấy TD 8) của Recipe 1
+-- Recipe 1: Viên nang NLC 3
 (1, 1, N'Nhiệt độ phòng', '°C', 21, 25, 1),
 (2, 1, N'Độ ẩm phòng',   '%',  45, 70, 1),
 (3, 1, N'Áp lực phòng',  'Pa', 10, 50, 1),
 (4, 1, N'Nhiệt độ sấy',  '°C', 73, 77, 1),
 (20, 1, N'Thời gian sấy', 'phút', 170, 190, 1),
-(1001, 1, N'Vị trí cửa gió', N'Số', 4, 4, 1),
-(1002, 1, N'Sấy lượng mẻ tối đa', N'kg', NULL, 50, 1),
--- Step 2 (Sấy NLC 3) của Recipe 1
 (21, 2, N'Nhiệt độ phòng', '°C', 21, 25, 1),
 (22, 2, N'Độ ẩm phòng',   '%',  45, 70, 1),
 (23, 2, N'Áp lực phòng',  'Pa', 10, 50, 1),
 (24, 2, N'Nhiệt độ sấy',  '°C', 73, 77, 1),
 (25, 2, N'Thời gian sấy', 'phút', 170, 190, 1),
-(1003, 2, N'Vị trí cửa gió', N'Số', 4, 4, 1),
-(1004, 2, N'Sấy lượng mẻ tối đa', N'kg', NULL, 50, 1),
-(1005, 2, N'Độ ẩm NLC 3 (Input)', N'%', 5.1, NULL, 1),
--- Step 3 (Weighing) của Recipe 1
 (5, 3, N'Nhiệt độ phòng', '°C', 21, 25, 1),
 (6, 3, N'Độ ẩm phòng',   '%',  45, 70, 1),
--- Step 4 (Mixing) của Recipe 1
 (7, 4, N'Tốc độ trộn',   'v/p', 14, 16, 1),
-(8, 4, N'Thời gian trộn', 'phút', 14, 16, 1);
+(8, 4, N'Thời gian trộn', 'phút', 14, 16, 1),
+-- Recipe 4: Thuốc ống Dipyridamole
+(40, 10, N'Tốc độ cánh khuấy', 'v/p', 50, 60, 1),
+(41, 10, N'Thời gian pha', 'phút', 30, 45, 1),
+(42, 13, N'Nhiệt độ tiệt trùng', '°C', 121, 122, 1),
+-- Recipe 5: Viên nén Paracetamol
+(50, 18, N'Nhiệt độ sấy tầng sôi', '°C', 60, 70, 1),
+(51, 18, N'Độ ẩm hạt sau sấy', '%', NULL, 5.0, 1); -- Mandatory repeat if > 5.0%
 SET IDENTITY_INSERT StepParameters OFF;
 GO
 

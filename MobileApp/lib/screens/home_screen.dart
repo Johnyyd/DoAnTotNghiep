@@ -14,12 +14,15 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  List<Map<String, dynamic>> _allOrdersRaw = [];
   List<Map<String, dynamic>> _inProcessOrders = [];
   List<Map<String, dynamic>> _pendingWorkerOrders = [];
   List<Map<String, dynamic>> _pendingQCOrders = [];
   List<Map<String, dynamic>> _errorOrders = [];
   List<Map<String, dynamic>> _completedOrders = [];
   bool _isLoading = true;
+  String _selectedCategory = 'Tất cả';
+  List<String> _categories = ['Tất cả'];
 
   @override
   void initState() {
@@ -38,23 +41,91 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     setState(() => _isLoading = true);
     final data = await ApiService.getProductionOrders();
     if (mounted) {
-      setState(() {
-        _inProcessOrders = data.where((o) => o['status'] == 'In-Process' || o['status'] == 'InProcess').toList();
-        _pendingWorkerOrders = data.where((o) => o['status'] == 'Approved' || o['status'] == 'Draft').toList();
-        _pendingQCOrders = data.where((o) => o['status'] == 'Pending QC').toList();
-        _errorOrders = data.where((o) => o['status'] == 'On-Hold' || o['status'] == 'Hold' || o['status'] == 'Error').toList();
-        _completedOrders = data.where((o) => o['status'] == 'Completed').toList();
-        _isLoading = false;
-      });
+      _allOrdersRaw = data;
+      _categories = _extractCategories(data);
+      if (!_categories.contains(_selectedCategory)) {
+        _selectedCategory = 'Tất cả';
+      }
+      _filterAndGroupOrders();
     }
   }
 
-  void _logout() {
-    AuthService.clearSession();
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (_) => false,
-    );
+  List<String> _extractCategories(List<dynamic> allOrders) {
+    final Set<String> cats = {'Tất cả'};
+    for (var o in allOrders) {
+      final name = o['productName']?.toString() ?? '';
+      cats.add(_getCategoryFromName(name));
+    }
+    return cats.toList();
+  }
+
+  String _getCategoryFromName(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('viên nang')) return 'Viên nang';
+    if (lower.contains('viên nén')) return 'Viên nén';
+    if (lower.contains('thuốc ống') || lower.contains('ống')) return 'Thuốc ống';
+    if (lower.contains('cốm')) return 'Cốm';
+    
+    final parts = name.split(' ');
+    if (parts.length >= 2) return '${parts[0]} ${parts[1]}';
+    return name.isNotEmpty ? name : 'Khác';
+  }
+
+  void _filterAndGroupOrders() {
+    final filtered = _allOrdersRaw.where((o) {
+      if (_selectedCategory == 'Tất cả') return true;
+      final cat = _getCategoryFromName(o['productName']?.toString() ?? '');
+      return cat == _selectedCategory;
+    }).toList();
+
+    setState(() {
+      _inProcessOrders = filtered.where((o) => _getOrderDisplayStatus(o) == 'In-Process').toList();
+      _pendingWorkerOrders = filtered.where((o) => _getOrderDisplayStatus(o) == 'Pending Worker').toList();
+      _pendingQCOrders = filtered.where((o) => _getOrderDisplayStatus(o) == 'Pending QC').toList();
+      _errorOrders = filtered.where((o) => _getOrderDisplayStatus(o) == 'On-Hold').toList();
+      _completedOrders = filtered.where((o) => _getOrderDisplayStatus(o) == 'Completed').toList();
+      _isLoading = false;
+    });
+  }
+
+  String _getOrderDisplayStatus(Map<String, dynamic> order) {
+    final status = order['status'] as String?;
+    if (status == 'Completed') return 'Completed';
+    if (status == 'On-Hold' || status == 'Hold' || status == 'Error') return 'On-Hold';
+    if (status == 'Draft') return 'Pending Worker';
+    if (status == 'Pending QC' || status == 'PendingQC') return 'Pending QC';
+
+    final batches = order['productionBatches'] as List<dynamic>? ?? [];
+    if (batches.isEmpty) return 'Pending Worker';
+    
+    bool hasPendingQC = false;
+    bool hasRunning = false;
+    bool hasFailed = false;
+
+    for (var b in batches) {
+      if (b['status'] == 'Completed') continue;
+      final logStatusRaw = b['latestLogStatus']?.toString() ?? '';
+      final logStatus = logStatusRaw.replaceAll(' ', '').toUpperCase();
+      
+      if (logStatus == 'PENDINGQC' || logStatus == 'PENDING_QC') hasPendingQC = true;
+      else if (logStatus == 'APPROVED') hasRunning = true; 
+      else if (logStatus == 'FAILED' || logStatus == 'REJECTED') hasFailed = true;
+    }
+
+    if (hasFailed) return 'On-Hold';
+    if (hasPendingQC) return 'Pending QC';
+    if (hasRunning) return 'In-Process';
+    return (status == 'In-Process' || status == 'InProcess') ? 'In-Process' : 'Pending Worker';
+  }
+
+  void _logout() async {
+    await AuthService.clearSession();
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (_) => false,
+      );
+    }
   }
 
   Color _statusColor(String? status) {
@@ -62,13 +133,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       case 'Completed':
         return Colors.green.shade600;
       case 'In-Process':
-      case 'InProcess':
         return Colors.blue.shade600;
-      case 'Draft':
-      case 'Approved':
+      case 'Pending Worker':
         return Colors.orange.shade600;
+      case 'Pending QC':
+        return Colors.purple.shade600;
       case 'On-Hold':
-      case 'Hold':
         return Colors.red.shade600;
       default:
         return Colors.grey.shade500;
@@ -96,7 +166,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         itemCount: orders.length,
         itemBuilder: (context, index) {
           final order = orders[index];
-          final color = _statusColor(order['status']);
+          final displayStatus = _getOrderDisplayStatus(order);
+          final color = _statusColor(displayStatus);
           final progress = (order['progress'] ?? 0.0) as double;
 
           return Card(
@@ -164,10 +235,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             border: Border.all(color: color.withValues(alpha: 0.5)),
                           ),
                           child: Text(
-                            (order['status'] == 'In-Process' || order['status'] == 'InProcess') ? 'Đang sản xuất' : 
-                            order['status'] == 'Completed' ? 'Hoàn thành' : 
-                            (order['status'] == 'On-Hold' || order['status'] == 'Hold') ? 'Đang tạm dừng' : 
-                            (isQC ? 'Chờ QC duyệt' : 'Chờ công nhân ký'),
+                            (displayStatus == 'In-Process') ? 'Đang sản xuất' : 
+                            (displayStatus == 'Completed') ? 'Hoàn thành' : 
+                            (displayStatus == 'On-Hold') ? 'Đang tạm dừng' : 
+                            (displayStatus == 'Pending QC') ? 'Chờ QC duyệt' : 'Chờ công nhân nhập',
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
                           ),
                         ),
@@ -352,6 +423,49 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
+  Widget _buildCategoryChips() {
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _categories.length,
+        itemBuilder: (context, index) {
+          final cat = _categories[index];
+          final isSelected = cat == _selectedCategory;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FilterChip(
+              label: Text(
+                cat,
+                style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? Theme.of(context).primaryColor : Colors.black87,
+                ),
+              ),
+              selected: isSelected,
+              onSelected: (selected) {
+                if (selected) {
+                  _selectedCategory = cat;
+                  _filterAndGroupOrders();
+                }
+              },
+              backgroundColor: Colors.grey.shade100,
+              selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.15),
+              checkmarkColor: Theme.of(context).primaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: isSelected ? Theme.of(context).primaryColor : Colors.grey.shade300,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
@@ -361,20 +475,29 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     return Scaffold(
         appBar: AppBar(
           title: const Text('Trang Chủ', style: TextStyle(fontWeight: FontWeight.bold)),
-          bottom: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            indicatorColor: Colors.white,
-            indicatorWeight: 3,
-            tabs: const [
-              Tab(text: 'Đang sản xuất'),
-              Tab(text: 'Chờ nhập liệu (CN)'),
-              Tab(text: 'Chờ QC duyệt'),
-              Tab(text: 'Gặp lỗi / Dừng'),
-              Tab(text: 'Hoàn thành'),
-            ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(100), // Height for chips + tabs
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildCategoryChips(),
+                TabBar(
+                  controller: _tabController,
+                  isScrollable: true,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.white70,
+                  indicatorColor: Colors.white,
+                  indicatorWeight: 3,
+                  tabs: const [
+                    Tab(text: 'Đang sản xuất'),
+                    Tab(text: 'Chờ nhập liệu (CN)'),
+                    Tab(text: 'Chờ QC duyệt'),
+                    Tab(text: 'Gặp lỗi / Dừng'),
+                    Tab(text: 'Hoàn thành'),
+                  ],
+                ),
+              ],
+            ),
           ),
           actions: [
             Padding(

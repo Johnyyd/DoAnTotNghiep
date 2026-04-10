@@ -105,7 +105,8 @@ CREATE TABLE RecipeRouting (
     StepName NVARCHAR(100) NOT NULL,                -- Tên vắn tắt công đoạn thao tác (vd: Trộn tá dược, sấy mẻ)
     DefaultEquipmentId INT REFERENCES Equipments(EquipmentId), -- Khuyến nghị dùng hệ thống loại thiết bị máy nào
     EstimatedTimeMinutes INT,                      -- Dự trù tổng thời gian gian chạy máy (Tính bằng Phút)
-    Description NVARCHAR(500)                       -- Mô tả văn bản các thao tác công nhân cần lấy làm chuẩn
+    Description NVARCHAR(500),                      -- Mô tả văn bản các thao tác công nhân cần lấy làm chuẩn
+    NumberOfRouting INT DEFAULT 1                   -- Số lần thực thực thi mặc định (Loop support)
 );
 
 -- -------------------------------------------------------------------------
@@ -174,7 +175,8 @@ CREATE TABLE BatchProcessLogs (
     Notes NVARCHAR(MAX),                              -- Phân trần, giải trình sự cố kỹ thuật hoặc hao hụt
     IsDeviation BIT DEFAULT 0,                        -- Đánh dấu nếu có sai lệch thông số
     VerifiedById INT REFERENCES AppUsers(UserId),     -- Người thẩm định (QA/QC)
-    VerifiedDate DATETIME2                            -- Ngày thẩm định
+    VerifiedDate DATETIME2,                           -- Ngày thẩm định
+    NumberOfRouting INT DEFAULT 1                     -- Số lần thực thi thực tế (Attempt/Iteration count)
 );
 
 -- -------------------------------------------------------------------------

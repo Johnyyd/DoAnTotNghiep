@@ -50,7 +50,8 @@ namespace GMP_System.Controllers
                     ProductionBatches = o.ProductionBatches.Select(b => new {
                         b.BatchId,
                         b.BatchNumber,
-                        b.Status
+                        b.Status,
+                        LatestLogStatus = b.BatchProcessLogs.OrderByDescending(l => l.LogId).Select(l => l.ResultStatus).FirstOrDefault()
                     })
                 })
                 .AsNoTracking()
@@ -95,7 +96,8 @@ namespace GMP_System.Controllers
                     ProductionBatches = o.ProductionBatches.Select(b => new {
                         b.BatchId,
                         b.BatchNumber,
-                        b.Status
+                        b.Status,
+                        LatestLogStatus = b.BatchProcessLogs.OrderByDescending(l => l.LogId).Select(l => l.ResultStatus).FirstOrDefault()
                     })
                 })
                 .AsNoTracking()

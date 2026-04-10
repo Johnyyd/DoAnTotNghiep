@@ -12,20 +12,32 @@ namespace GMP_System.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
 
+        private static readonly HashSet<string> RepeatableFailureStatuses = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Failed",
+            "Rejected",
+            "OnHold",
+            "Hold"
+        };
+
+        private static readonly HashSet<string> AttemptStartStatuses = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Running",
+            "PendingQC",
+            "Passed"
+        };
+
         public BatchProcessLogsController(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
 
-        // 1. Xem nhật ký của một Lô cụ thể (Virtual Workflow: Routing + Logs)
         [HttpGet("batch/{batchId}")]
         public async Task<IActionResult> GetLogsByBatch(int batchId)
         {
-            // 1. Lấy mẻ sản xuất
             var batch = await _unitOfWork.ProductionBatches.GetByIdAsync(batchId);
-            if (batch == null) return NotFound(new { success = false, message = "Không tìm thấy mẻ." });
+            if (batch == null) return NotFound(new { success = false, message = "KhÃ´ng tÃ¬m tháº¥y máº»." });
 
-            // 2. Lấy thông tin Recipe từ Order liên kết
             var order = await _unitOfWork.ProductionOrders.Query()
                 .Include(o => o.Recipe)
                     .ThenInclude(r => r!.RecipeRoutings)
@@ -36,33 +48,57 @@ namespace GMP_System.Controllers
                 .OrderBy(r => r.StepNumber)
                 .ToList() ?? new List<RecipeRouting>();
 
-            // 3. Lấy các log thực tế đã phát sinh
             var existingLogs = await _unitOfWork.BatchProcessLogs.Query()
                 .Include(x => x.Routing)
                     .ThenInclude(r => r!.StepParameters)
                 .Where(x => x.BatchId == batchId)
                 .ToListAsync();
 
-            // 4. Ghép nối (Join): Mỗi Routing Step phải xuất hiện, kèm theo Log nếu có
-            var workflow = routings.Select(r => {
-                var log = existingLogs.FirstOrDefault(l => l.RoutingId == r.RoutingId);
-                return new {
+            var workflow = routings.Select(r =>
+            {
+                var logsForStep = existingLogs.Where(l => l.RoutingId == r.RoutingId)
+                    .OrderBy(l => l.NumberOfRouting)
+                    .ThenBy(l => l.LogId)
+                    .Select(log => new
+                    {
+                        logId = log.LogId,
+                        resultStatus = log.ResultStatus,
+                        startTime = log.StartTime,
+                        endTime = log.EndTime,
+                        parametersData = log.ParametersData,
+                        isDeviation = log.IsDeviation,
+                        numberOfRouting = log.NumberOfRouting
+                    })
+                    .ToList();
+
+                var latestLog = logsForStep.LastOrDefault();
+                var configuredAttempts = Math.Max(1, r.NumberOfRouting ?? 1);
+
+                return new
+                {
                     stepId = r.RoutingId,
-                    logId = log?.LogId,
-                    resultStatus = log?.ResultStatus ?? "None",
-                    startTime = log?.StartTime,
-                    endTime = log?.EndTime,
-                    parametersData = log?.ParametersData,
-                    isDeviation = log?.IsDeviation ?? false,
-                    step = new {
+                    logId = latestLog?.logId,
+                    resultStatus = latestLog?.resultStatus ?? "None",
+                    startTime = latestLog?.startTime,
+                    endTime = latestLog?.endTime,
+                    parametersData = latestLog?.parametersData,
+                    isDeviation = latestLog?.isDeviation ?? false,
+                    numberOfRouting = latestLog?.numberOfRouting ?? 1,
+                    step = new
+                    {
                         stepId = r.RoutingId,
                         stepName = r.StepName,
                         stepNumber = r.StepNumber
                     },
-                    routing = new {
+                    numberOfRoutingConfig = configuredAttempts,
+                    logs = logsForStep,
+                    latestLog,
+                    routing = new
+                    {
                         routingId = r.RoutingId,
                         stepName = r.StepName,
-                        stepParameters = (r.StepParameters ?? new List<StepParameter>()).Select(sp => new {
+                        stepParameters = (r.StepParameters ?? new List<StepParameter>()).Select(sp => new
+                        {
                             sp.ParameterId,
                             sp.ParameterName,
                             sp.Unit,
@@ -80,12 +116,34 @@ namespace GMP_System.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] BatchProcessLog log)
         {
-            if (log == null) return BadRequest("Dữ liệu không hợp lệ.");
+            if (log == null) return BadRequest("Dá»¯ liá»‡u khÃ´ng há»£p lá»‡.");
+            if (!log.BatchId.HasValue || !log.RoutingId.HasValue)
+                return BadRequest("Thiáº¿u BatchId hoáº·c RoutingId.");
 
-            // --- UPSERT LOGIC (Sửa nếu đã tồn tại, tránh trùng lặp cho 5 bước nhỏ) ---
-            var existingLog = await _unitOfWork.BatchProcessLogs.Query()
+            var routing = await _unitOfWork.RecipeRoutings.GetByIdAsync(log.RoutingId.Value);
+            if (routing == null)
+                return BadRequest("KhÃ´ng tÃ¬m tháº¥y cÃ´ng Ä‘oáº¡n quy trÃ¬nh.");
+
+            var maxAttempts = Math.Max(1, routing.NumberOfRouting ?? 1);
+            var stepLogs = await _unitOfWork.BatchProcessLogs.Query()
                 .Include(x => x.ParameterValues)
-                .FirstOrDefaultAsync(x => x.BatchId == log.BatchId && x.RoutingId == log.RoutingId);
+                .Where(x => x.BatchId == log.BatchId && x.RoutingId == log.RoutingId)
+                .OrderBy(x => x.NumberOfRouting)
+                .ThenBy(x => x.LogId)
+                .ToListAsync();
+
+            var latestStepLog = stepLogs.LastOrDefault();
+            var resolvedAttempt = ResolveAttemptNumber(log.NumberOfRouting, latestStepLog, log.ResultStatus, maxAttempts);
+            if (resolvedAttempt > maxAttempts)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = $"CÃ´ng Ä‘oáº¡n nÃ y chá»‰ Ä‘Æ°á»£c thá»±c hiá»‡n tá»‘i Ä‘a {maxAttempts} láº§n."
+                });
+            }
+
+            var existingLog = stepLogs.FirstOrDefault(x => (x.NumberOfRouting ?? 1) == resolvedAttempt);
 
             BatchProcessLog activeLog = log;
             bool isNew = true;
@@ -94,8 +152,6 @@ namespace GMP_System.Controllers
             {
                 activeLog = existingLog;
                 isNew = false;
-                
-                // Cập nhật thông tin cơ bản
                 activeLog.OperatorId = log.OperatorId ?? activeLog.OperatorId;
                 activeLog.EquipmentId = log.EquipmentId ?? activeLog.EquipmentId;
                 activeLog.ParametersData = log.ParametersData ?? activeLog.ParametersData;
@@ -104,11 +160,11 @@ namespace GMP_System.Controllers
                 activeLog.EndTime = log.EndTime != default ? log.EndTime : activeLog.EndTime;
             }
 
+            activeLog.NumberOfRouting = resolvedAttempt;
+
             if (activeLog.StartTime == default) activeLog.StartTime = DateTime.Now;
             if (activeLog.EndTime == default) activeLog.EndTime = DateTime.Now;
 
-            // Nếu client truyền lên trang thái cụ thể (vd: Running, PendingQC) thì dùng,
-            // nếu không mặc định là PendingQC để giữ logic cũ.
             if (!string.IsNullOrEmpty(log.ResultStatus))
                 activeLog.ResultStatus = log.ResultStatus;
             else if (isNew)
@@ -116,16 +172,14 @@ namespace GMP_System.Controllers
 
             activeLog.IsDeviation = false;
 
-            // --- BÓC TÁCH & KIỂM TRA THÔNG SỐ (DEVIATION CHECK) ---
             if (!string.IsNullOrEmpty(log.ParametersData))
             {
-                // Xóa ParameterValues cũ để nạp lại từ ParametersData mới nhất
                 activeLog.ParameterValues.Clear();
-                
-                try 
+
+                try
                 {
                     var paramsDict = JsonSerializer.Deserialize<Dictionary<string, object>>(log.ParametersData);
-                    if (paramsDict != null && log.RoutingId.HasValue)
+                    if (paramsDict != null)
                     {
                         var standardParams = await _unitOfWork.StepParameters.Query()
                             .Where(sp => sp.RoutingId == log.RoutingId)
@@ -133,48 +187,63 @@ namespace GMP_System.Controllers
 
                         foreach (var sp in standardParams)
                         {
-                            // Tìm giá trị trong JSON có phím trùng tên hoặc chứa tên
-                            var entry = paramsDict.FirstOrDefault(p => 
+                            var entry = paramsDict.FirstOrDefault(p =>
                                 p.Key.Equals(sp.ParameterName, StringComparison.OrdinalIgnoreCase) ||
                                 sp.ParameterName.Contains(p.Key, StringComparison.OrdinalIgnoreCase));
-                            
-                            if (entry.Key != null)
-                            {
-                                decimal actualVal = 0;
-                                string valStr = entry.Value?.ToString() ?? "0";
-                                if (decimal.TryParse(valStr, out actualVal))
-                                {
-                                    // Lưu vào bảng Value
-                                    activeLog.ParameterValues.Add(new BatchProcessParameterValue
-                                    {
-                                        ParameterId = sp.ParameterId,
-                                        ActualValue = actualVal,
-                                        RecordedDate = DateTime.Now
-                                    });
 
-                                    // Kiểm tra sai lệch (Range check)
-                                    if (sp.MinValue.HasValue && actualVal < sp.MinValue.Value) activeLog.IsDeviation = true;
-                                    if (sp.MaxValue.HasValue && actualVal > sp.MaxValue.Value) activeLog.IsDeviation = true;
-                                }
+                            if (entry.Key == null) continue;
+                            if (!decimal.TryParse(entry.Value?.ToString() ?? "0", out var actualVal)) continue;
+
+                            activeLog.ParameterValues.Add(new BatchProcessParameterValue
+                            {
+                                ParameterId = sp.ParameterId,
+                                ActualValue = actualVal,
+                                RecordedDate = DateTime.Now
+                            });
+
+                            if (sp.MinValue.HasValue && actualVal < sp.MinValue.Value) activeLog.IsDeviation = true;
+                            if (sp.MaxValue.HasValue && actualVal > sp.MaxValue.Value) activeLog.IsDeviation = true;
+
+                            if (sp.ParameterName.Contains("Äá»™ áº©m", StringComparison.OrdinalIgnoreCase) &&
+                                sp.MaxValue.HasValue &&
+                                actualVal > sp.MaxValue.Value)
+                            {
+                                activeLog.ResultStatus = "Failed";
+                                activeLog.Notes = (activeLog.Notes ?? "") +
+                                    "\n[SYSTEM] Äá»™ áº©m cao quÃ¡ ngÆ°á»¡ng cho phÃ©p (> " + sp.MaxValue.Value +
+                                    "%). Báº®T BUá»˜C THá»°C HIá»†N Láº I CÃ”NG ÄOáº N.";
                             }
                         }
                     }
                 }
-                catch { /* Bỏ qua nếu JSON lỗi format */ }
+                catch
+                {
+                }
             }
 
-            // --- AUTO-PROGRESSION: Nếu công đoạn đã hoàn thành (Passed) -> Tăng CurrentStep cho mẻ ---
-            if (activeLog.ResultStatus == "Passed" && activeLog.BatchId.HasValue && activeLog.RoutingId.HasValue)
+            if (activeLog.BatchId.HasValue)
             {
                 var batch = await _unitOfWork.ProductionBatches.GetByIdAsync(activeLog.BatchId.Value);
                 if (batch != null)
                 {
-                    var currentRouting = await _unitOfWork.RecipeRoutings.GetByIdAsync(activeLog.RoutingId.Value);
-                    if (currentRouting != null)
+                    if (string.Equals(activeLog.ResultStatus, "Passed", StringComparison.OrdinalIgnoreCase))
                     {
-                        batch.CurrentStep = currentRouting.StepNumber + 1;
-                        _unitOfWork.ProductionBatches.Update(batch);
+                        batch.CurrentStep = routing.StepNumber + 1;
+                        if (string.Equals(batch.Status, "OnHold", StringComparison.OrdinalIgnoreCase))
+                        {
+                            batch.Status = "In-Process";
+                        }
                     }
+                    else
+                    {
+                        batch.CurrentStep = routing.StepNumber;
+                        if (IsFailureStatus(activeLog.ResultStatus) && resolvedAttempt >= maxAttempts)
+                        {
+                            batch.Status = "OnHold";
+                        }
+                    }
+
+                    _unitOfWork.ProductionBatches.Update(batch);
                 }
             }
 
@@ -185,38 +254,90 @@ namespace GMP_System.Controllers
 
             await _unitOfWork.CompleteAsync();
 
-            return Ok(new { 
-                Message = activeLog.IsDeviation == true ? "Ghi nhật ký thành công (CẢNH BÁO TỒN TẠI SAI LỆCH)!" : "Ghi nhật ký thành công!",
+            return Ok(new
+            {
+                Message = activeLog.IsDeviation == true
+                    ? "Ghi nháº­t kÃ½ thÃ nh cÃ´ng (Cáº¢NH BÃO Tá»’N Táº I SAI Lá»†CH)!"
+                    : "Ghi nháº­t kÃ½ thÃ nh cÃ´ng!",
                 LogId = activeLog.LogId,
-                IsDeviation = activeLog.IsDeviation
+                IsDeviation = activeLog.IsDeviation,
+                NumberOfRouting = activeLog.NumberOfRouting,
+                MaxNumberOfRouting = maxAttempts
             });
         }
 
-        // 3. QC Phê duyệt công đoạn
         [HttpPost("verify")]
         public async Task<IActionResult> Verify([FromBody] JsonElement body)
         {
             if (!body.TryGetProperty("logId", out var logIdProp) || !body.TryGetProperty("verifierId", out var verifierIdProp))
-                return BadRequest("Thiếu thông tin LogId hoặc VerifierId.");
+                return BadRequest("Thiáº¿u thÃ´ng tin LogId hoáº·c VerifierId.");
 
             long logId = logIdProp.GetInt64();
             int verifierId = verifierIdProp.GetInt32();
             string status = body.TryGetProperty("status", out var s) ? s.GetString() ?? "Passed" : "Passed";
             string? notes = body.TryGetProperty("notes", out var n) ? n.GetString() : null;
 
-            // Sửa lỗi int vs long: LogId trong DB là long
             var log = await _unitOfWork.BatchProcessLogs.Query()
                 .FirstOrDefaultAsync(x => x.LogId == logId);
-            
-            if (log == null) return NotFound("Không tìm thấy nhật ký mẻ.");
+
+            if (log == null) return NotFound("KhÃ´ng tÃ¬m tháº¥y nháº­t kÃ½ máº».");
 
             log.VerifiedById = verifierId;
             log.VerifiedDate = DateTime.Now;
-            log.ResultStatus = status; // Thường là Passed hoặc Failed
+            log.ResultStatus = status;
             if (!string.IsNullOrEmpty(notes)) log.Notes = (log.Notes ?? "") + "\nQC Note: " + notes;
 
+            if (log.BatchId.HasValue && log.RoutingId.HasValue)
+            {
+                var batch = await _unitOfWork.ProductionBatches.GetByIdAsync(log.BatchId.Value);
+                var routing = await _unitOfWork.RecipeRoutings.GetByIdAsync(log.RoutingId.Value);
+                if (batch != null && routing != null)
+                {
+                    batch.CurrentStep = routing.StepNumber;
+                    if (IsFailureStatus(status) && (log.NumberOfRouting ?? 1) >= Math.Max(1, routing.NumberOfRouting ?? 1))
+                    {
+                        batch.Status = "OnHold";
+                    }
+
+                    _unitOfWork.ProductionBatches.Update(batch);
+                }
+            }
+
             await _unitOfWork.CompleteAsync();
-            return Ok(new { Message = "Xác nhận QC thành công!", Status = log.ResultStatus });
+            return Ok(new { Message = "XÃ¡c nháº­n QC thÃ nh cÃ´ng!", Status = log.ResultStatus });
+        }
+
+        private static int ResolveAttemptNumber(int? requestedAttempt, BatchProcessLog? latestStepLog, string? incomingStatus, int maxAttempts)
+        {
+            if (requestedAttempt.HasValue && requestedAttempt.Value > 0)
+            {
+                return requestedAttempt.Value;
+            }
+
+            if (latestStepLog == null)
+            {
+                return 1;
+            }
+
+            var latestAttempt = Math.Max(1, latestStepLog.NumberOfRouting ?? 1);
+            if (latestAttempt < maxAttempts &&
+                IsFailureStatus(latestStepLog.ResultStatus) &&
+                IsAttemptStartStatus(incomingStatus))
+            {
+                return latestAttempt + 1;
+            }
+
+            return latestAttempt;
+        }
+
+        private static bool IsFailureStatus(string? status)
+        {
+            return !string.IsNullOrWhiteSpace(status) && RepeatableFailureStatuses.Contains(status);
+        }
+
+        private static bool IsAttemptStartStatus(string? status)
+        {
+            return !string.IsNullOrWhiteSpace(status) && AttemptStartStatuses.Contains(status);
         }
     }
-}
+}

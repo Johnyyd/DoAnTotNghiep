@@ -234,7 +234,16 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
           const SizedBox(height: 32),
           const FormSectionHeader('XÁC NHẬN CỦA QC'),
           const SizedBox(height: 16),
-          ESignatureButton(title: 'QC KIỂM TRA TỔNG QUAN & DUYỆT (START)', onPressed: _qcSign),
+          if (AuthService.currentUser?['role'] == 'QA_QC')
+            ESignatureButton(title: 'QC KIỂM TRA TỔNG QUAN & DUYỆT (START)', onPressed: _qcSign)
+          else
+            const Center(
+              child: Text(
+                'Tài khoản của bạn chỉ có quyền xem.\nĐang chờ bộ phận QC phê duyệt lô hàng.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.orange, fontStyle: FontStyle.italic),
+              ),
+            ),
         ],
       ),
     );

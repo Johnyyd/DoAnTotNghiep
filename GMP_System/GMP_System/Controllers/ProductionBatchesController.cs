@@ -87,6 +87,7 @@ namespace GMP_System.Controllers
                                 r.Description,
                                 r.EstimatedTimeMinutes,
                                 r.DefaultEquipmentId,
+                                r.NumberOfRouting,
                                 StepParameters = r.StepParameters.Select(sp => new {
                                     sp.ParameterId,
                                     sp.ParameterName,
@@ -102,7 +103,8 @@ namespace GMP_System.Controllers
                         l.RoutingId,
                         l.ResultStatus,
                         l.StartTime,
-                        l.EndTime
+                        l.EndTime,
+                        l.NumberOfRouting
                     })
                 })
                 .AsNoTracking()

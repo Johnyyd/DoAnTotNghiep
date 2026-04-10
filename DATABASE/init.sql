@@ -42,6 +42,7 @@ PRINT '-- Section 2: Recipes and BOM --'
 PRINT '-- Section 3: Production Orders & Batches --'
 
 :r ./ProductionExecution.sql
+:r ./AdditionalManufacturingProcesses.sql
 
 -- =====================================================
 -- 4. Inventory and Traceability

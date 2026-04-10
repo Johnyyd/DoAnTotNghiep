@@ -29,3 +29,4 @@ TestResults.xml
 *.suo
 *.userosscache
 *.sln.docstates
+.gitnexus

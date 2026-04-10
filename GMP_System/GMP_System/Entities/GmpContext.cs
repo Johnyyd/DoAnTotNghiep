@@ -77,6 +77,7 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.LogId).HasColumnName("LogID");
             entity.Property(e => e.BatchId).HasColumnName("BatchID");
             entity.Property(e => e.EquipmentId).HasColumnName("EquipmentID");
+            entity.Property(e => e.NumberOfRouting).HasDefaultValue(1);
             entity.Property(e => e.OperatorId).HasColumnName("OperatorID");
             entity.Property(e => e.ParametersData).HasColumnType("nvarchar(max)");
             entity.Property(e => e.ResultStatus).HasMaxLength(50);
@@ -336,6 +337,7 @@ public partial class GmpContext : DbContext
 
             entity.Property(e => e.RoutingId).HasColumnName("RoutingID");
             entity.Property(e => e.DefaultEquipmentId).HasColumnName("DefaultEquipmentID");
+            entity.Property(e => e.NumberOfRouting).HasDefaultValue(1);
             entity.Property(e => e.RecipeId).HasColumnName("RecipeID");
             entity.Property(e => e.StepName).HasMaxLength(200);
 
