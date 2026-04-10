@@ -233,16 +233,16 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT ProductionOrders ON;
 INSERT INTO ProductionOrders (OrderId, OrderCode, RecipeId, PlannedQuantity, ActualQuantity, Status, CreatedBy, StartDate, EndDate, CreatedAt) VALUES
-(1,  'PO-2026-001', 1, 100000.00, 100050.00, 'Completed',  4, DATEADD(DAY,-5,GETDATE()),  DATEADD(DAY,-2,GETDATE()),  DATEADD(DAY,-7,GETDATE())),
-(2,  'PO-2026-002', 1, 300000.00, NULL,       'In-Process', 4, DATEADD(DAY,-1,GETDATE()),  DATEADD(DAY,3, GETDATE()),  DATEADD(DAY,-2,GETDATE())),
-(3,  'PO-2026-003', 1, 150000.00, NULL,       'Hold',       4, GETDATE(),                  DATEADD(DAY,4, GETDATE()),  DATEADD(DAY,-1,GETDATE())),
-(4,  'PO-2026-004', 2, 200000.00, NULL,       'In-Process', 4, DATEADD(DAY,-2,GETDATE()),  DATEADD(DAY,2, GETDATE()),  DATEADD(DAY,-3,GETDATE())),
-(5,  'PO-2026-005', 1, 500000.00, NULL,       'Pending QC', 4, GETDATE(),                  DATEADD(DAY,7, GETDATE()),  GETDATE()),
-(6,  'PO-2026-006', 2, 500000.00, NULL,       'In-Process', 4, DATEADD(DAY,-3,GETDATE()),  DATEADD(DAY,5, GETDATE()),  DATEADD(DAY,-4,GETDATE())),
-(7,  'PO-2026-007', 2, 200000.00, 197800.00,  'Completed',  4, DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-7,GETDATE()),  DATEADD(DAY,-12,GETDATE())),
-(8,  'PO-2026-008', 1, 100000.00, NULL,       'Draft',      4, DATEADD(DAY,3, GETDATE()),  DATEADD(DAY,7, GETDATE()),  GETDATE()),
-(9,  'PO-2026-009', 1, 100000.00, NULL,       'Approved',   4, DATEADD(DAY,1, GETDATE()),  DATEADD(DAY,4, GETDATE()),  GETDATE()),
-(10, 'PO-2026-010', 1, 100000.00, NULL,       'Cancelled',  4, GETDATE(),                  NULL,                       GETDATE());
+(1,  'PO-CAP-26-001', 1, 100000.00, 100050.00, 'Completed',  4, DATEADD(DAY,-5,GETDATE()),  DATEADD(DAY,-2,GETDATE()),  DATEADD(DAY,-7,GETDATE())),
+(2,  'PO-CAP-26-002', 1, 300000.00, NULL,       'In-Process', 4, DATEADD(DAY,-1,GETDATE()),  DATEADD(DAY,3, GETDATE()),  DATEADD(DAY,-2,GETDATE())),
+(3,  'PO-CAP-26-003', 1, 150000.00, NULL,       'Hold',       4, GETDATE(),                  DATEADD(DAY,4, GETDATE()),  DATEADD(DAY,-1,GETDATE())),
+(4,  'PO-TAB-26-004', 2, 200000.00, NULL,       'In-Process', 4, DATEADD(DAY,-2,GETDATE()),  DATEADD(DAY,2, GETDATE()),  DATEADD(DAY,-3,GETDATE())),
+(5,  'PO-CAP-26-005', 1, 500000.00, NULL,       'Pending QC', 4, GETDATE(),                  DATEADD(DAY,7, GETDATE()),  GETDATE()),
+(6,  'PO-TAB-26-006', 2, 500000.00, NULL,       'In-Process', 4, DATEADD(DAY,-3,GETDATE()),  DATEADD(DAY,5, GETDATE()),  DATEADD(DAY,-4,GETDATE())),
+(7,  'PO-TAB-26-007', 2, 200000.00, 197800.00,  'Completed',  4, DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-7,GETDATE()),  DATEADD(DAY,-12,GETDATE())),
+(8,  'PO-CAP-26-008', 1, 100000.00, NULL,       'Draft',      4, DATEADD(DAY,3, GETDATE()),  DATEADD(DAY,7, GETDATE()),  GETDATE()),
+(9,  'PO-CAP-26-009', 1, 100000.00, NULL,       'Approved',   4, DATEADD(DAY,1, GETDATE()),  DATEADD(DAY,4, GETDATE()),  GETDATE()),
+(10, 'PO-CAP-26-010', 1, 100000.00, NULL,       'Cancelled',  4, GETDATE(),                  NULL,                       GETDATE());
 SET IDENTITY_INSERT ProductionOrders OFF;
 GO
 
