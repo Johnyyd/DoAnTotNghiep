@@ -107,15 +107,24 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       final logStatusRaw = b['latestLogStatus']?.toString() ?? '';
       final logStatus = logStatusRaw.replaceAll(' ', '').toUpperCase();
       
-      if (logStatus == 'PENDINGQC' || logStatus == 'PENDING_QC') hasPendingQC = true;
-      else if (logStatus == 'APPROVED') hasRunning = true; 
-      else if (logStatus == 'FAILED' || logStatus == 'REJECTED') hasFailed = true;
+      if (logStatus == 'PENDINGQC' || logStatus == 'PENDING_QC') {
+        hasPendingQC = true;
+      } else if (logStatus == 'APPROVED' || logStatus == 'RUNNING' || logStatus == 'PASSED') {
+        hasRunning = true; 
+      } else if (logStatus == 'FAILED' || logStatus == 'REJECTED') {
+        hasFailed = true;
+      }
     }
 
     if (hasFailed) return 'On-Hold';
     if (hasPendingQC) return 'Pending QC';
     if (hasRunning) return 'In-Process';
-    return (status == 'In-Process' || status == 'InProcess') ? 'In-Process' : 'Pending Worker';
+    
+    // Fallback based on order status
+    if (status == 'In-Process' || status == 'InProcess' || status == 'Running') return 'In-Process';
+    if (status == 'Pending QC' || status == 'PendingQC') return 'Pending QC';
+    
+    return 'Pending Worker';
   }
 
   void _logout() async {

@@ -94,6 +94,7 @@ class ApiService {
             'totalBatches': totalBatches,
             'completedBatches': completedBatches,
             'status': order['status'] ?? 'Draft',
+            'productionBatches': batches, // Include batches for status tracking
             'recipe':
                 order['recipe'], // Keep full recipe for BOM access in pre-check
           };
