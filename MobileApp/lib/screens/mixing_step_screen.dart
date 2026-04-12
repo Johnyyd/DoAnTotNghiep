@@ -66,6 +66,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
   final Map<String, String> _inputStatus = {};
   List<dynamic> _standardParams = [];
   Map<String, dynamic> _currentLog = {};
+  Map<String, dynamic>? _batchInfo;
   ExecutionPhase _currentPhase = ExecutionPhase.precheck;
   Timer? _pollTimer; 
 
@@ -109,6 +110,9 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     try {
       // Load Batch for BOM
       final batch = await ApiService.getBatchById(widget.batchId!);
+      if (batch != null) {
+        _batchInfo = batch;
+      }
       if (batch != null && batch['order'] != null) {
         _bom = batch['order']?['recipe']?['recipeBoms'] ?? [];
       } else {
@@ -197,6 +201,35 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
   void _stopPolling() {
     _pollTimer?.cancel();
     _pollTimer = null;
+  }
+
+  void _setCurrentTime(TextEditingController ctrl) {
+    if (widget.isViewer) return;
+    final now = DateTime.now();
+    setState(() {
+      ctrl.text = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+      if (ctrl == _timeStartCtrl) {
+        _autoCalcTimeEnd();
+      }
+    });
+  }
+
+  void _autoCalcTimeEnd() {
+    if (_timeStartCtrl.text.isNotEmpty && _tgCaiDatCtrl.text.isNotEmpty) {
+      try {
+        final parts = _timeStartCtrl.text.split(':');
+        if (parts.length == 2) {
+          final h = int.parse(parts[0]);
+          final m = int.parse(parts[1]);
+          final minutesToAdd = int.tryParse(_tgCaiDatCtrl.text) ?? 0;
+          if (minutesToAdd > 0) {
+            final timeStart = DateTime(2026, 1, 1, h, m);
+            final timeEnd = timeStart.add(Duration(minutes: minutesToAdd));
+            _timeEndCtrl.text = "${timeEnd.hour.toString().padLeft(2, '0')}:${timeEnd.minute.toString().padLeft(2, '0')}";
+          }
+        }
+      } catch (_) {}
+    }
   }
 
   @override
@@ -364,6 +397,11 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
 
   Future<void> _nextPhase() async {
     if (_currentPhase == ExecutionPhase.precheck) {
+      if (_timeStartCtrl.text.isEmpty) {
+        final now = DateTime.now();
+        _timeStartCtrl.text = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+        _autoCalcTimeEnd();
+      }
       await _submit('Running', null, isInternal: true);
     } else if (_currentPhase == ExecutionPhase.input) {
       await _verifyAndSubmit(); 
@@ -472,7 +510,14 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('TRỘN: ${_currentPhase.label}'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('TRỘN - ${_currentPhase.label}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('Công đoạn: TRỘN | Mẻ: ${_batchInfo?['batchNumber'] ?? "---"} | Lệnh: ${_batchInfo?['order']?['orderCode'] ?? "---"}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal)),
+            Text('Thuốc: ${_batchInfo?['order']?['recipe']?['material']?['materialName'] ?? "---"}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal)),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -637,9 +682,9 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
         const FormSectionHeader('PHASE 2: THÔNG SỐ VẬN HÀNH & ĐỐI CHIẾU'),
         Row(
           children: [
-            Expanded(child: StandardInputField(label: 'Giờ bắt đầu', controller: _timeStartCtrl, suffixIcon: const Icon(Icons.access_time))),
+            Expanded(child: StandardInputField(label: 'Giờ bắt đầu', controller: _timeStartCtrl, suffixIcon: IconButton(icon: const Icon(Icons.access_time), onPressed: widget.isViewer ? null : () => _setCurrentTime(_timeStartCtrl)))),
             const SizedBox(width: 16),
-            Expanded(child: StandardInputField(label: 'Giờ kết thúc', controller: _timeEndCtrl, suffixIcon: const Icon(Icons.access_time))),
+            Expanded(child: StandardInputField(label: 'Giờ kết thúc', controller: _timeEndCtrl, suffixIcon: IconButton(icon: const Icon(Icons.access_time), onPressed: widget.isViewer ? null : () => _setCurrentTime(_timeEndCtrl)))),
           ],
         ),
         Row(

@@ -30,3 +30,6 @@ TestResults.xml
 *.userosscache
 *.sln.docstates
 .gitnexus
+.claude
+AGENT.md
+CLAUDE.md

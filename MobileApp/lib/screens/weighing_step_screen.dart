@@ -57,6 +57,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
   final Map<String, String> _inputStatus = {};
   List<dynamic> _standardParams = [];
   Map<String, dynamic> _currentLog = {};
+  Map<String, dynamic>? _batchInfo;
   ExecutionPhase _currentPhase = ExecutionPhase.precheck;
   Timer? _pollTimer; 
 
@@ -114,6 +115,11 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
     try {
       // Load Batch for BOM
       final batch = await ApiService.getBatchById(widget.batchId!);
+      if (batch != null && mounted) {
+        setState(() {
+          _batchInfo = batch;
+        });
+      }
       if (batch != null && batch['order'] != null) {
         _bom = batch['order']?['recipe']?['recipeBoms'] ?? [];
       } else {
@@ -443,7 +449,14 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text('CÂN: ${_currentPhase.label}'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('CÂN - ${_currentPhase.label}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('Công đoạn: CÂN | Mẻ: ${_batchInfo?['batchNumber'] ?? "---"} | Lệnh: ${_batchInfo?['order']?['orderCode'] ?? "---"}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal)),
+            Text('Thuốc: ${_batchInfo?['order']?['recipe']?['material']?['materialName'] ?? "---"}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal)),
+          ],
+        ),
         actions: [
           IconButton(
             onPressed: () {

@@ -46,7 +46,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   final _cuaGioCtrl = TextEditingController(text: '4');
   
   // Expanded GMP Parameters
-  final _tgSayCaiDatCtrl = TextEditingController();
+  final _tgSayCaiDatCtrl = TextEditingController(text: '180');
   final _tocDoGioCtrl = TextEditingController();
   final _apSuatTuiLocCtrl = TextEditingController();
   final _tanSoSayCtrl = TextEditingController();
@@ -67,6 +67,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   final Map<String, String> _inputStatus = {};
   List<dynamic> _standardParams = [];
   Map<String, dynamic> _currentLog = {};
+  Map<String, dynamic>? _batchInfo;
   ExecutionPhase _currentPhase = ExecutionPhase.precheck;
 
   String _phongSach = 'Sạch';
@@ -135,6 +136,13 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
 
   Future<void> _loadDataFromDB() async {
     try {
+      final batch = await ApiService.getBatchById(widget.batchId!);
+      if (batch != null && mounted) {
+        setState(() {
+          _batchInfo = batch;
+        });
+      }
+
       final logs = await ApiService.getProcessLogs(widget.batchId!);
       final log = logs.firstWhere((l) => l['stepId'] == widget.stepId, orElse: () => <String, dynamic>{});
       
@@ -280,7 +288,26 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
     final now = DateTime.now();
     setState(() {
       ctrl.text = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+      if (ctrl == _timeStartCtrl) {
+        _autoCalcTimeEnd();
+      }
     });
+  }
+
+  void _autoCalcTimeEnd() {
+    if (_timeStartCtrl.text.isNotEmpty && _tgSayCaiDatCtrl.text.isNotEmpty) {
+      try {
+        final parts = _timeStartCtrl.text.split(':');
+        if (parts.length == 2) {
+          final h = int.parse(parts[0]);
+          final m = int.parse(parts[1]);
+          final minutesToAdd = int.tryParse(_tgSayCaiDatCtrl.text) ?? 180;
+          final timeStart = DateTime(2026, 1, 1, h, m);
+          final timeEnd = timeStart.add(Duration(minutes: minutesToAdd));
+          _timeEndCtrl.text = "${timeEnd.hour.toString().padLeft(2, '0')}:${timeEnd.minute.toString().padLeft(2, '0')}";
+        }
+      } catch (_) {}
+    }
   }
 
   void _updateInputStatus(String fieldName, String value, {String? paramNameInStandard}) {
@@ -365,6 +392,15 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   }
 
   Future<void> _verifyAndSubmit() async {
+    final slTruoc = double.tryParse(_slTruocCtrl.text) ?? 0;
+    final slSau = double.tryParse(_slSauCtrl.text) ?? 0;
+    if (slSau >= slTruoc && slSau > 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Lỗi: Khối lượng sau sấy phải nhỏ hơn khối lượng trước sấy!')));
+      }
+      return;
+    }
+
     final pin = await _showPinDialog();
     if (pin == null || pin.isEmpty) {
       return;
@@ -423,6 +459,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       final now = DateTime.now();
       if (_timeStartCtrl.text.isEmpty) {
         _timeStartCtrl.text = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+        _autoCalcTimeEnd();
       }
       setState(() => _currentPhase = ExecutionPhase.input);
       // Giữ status Running khi nhập liệu
@@ -547,7 +584,14 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('SẤY ${_currentLog['order']?['orderCode'] ?? ''}: ${_currentPhase.label}'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('SẤY - ${_currentPhase.label}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('Công đoạn: ${widget.stepName} | Mẻ: ${_batchInfo?['batchNumber'] ?? "---"} | Lệnh: ${_batchInfo?['order']?['orderCode'] ?? "---"}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal)),
+            Text('Thuốc: ${_batchInfo?['order']?['recipe']?['material']?['materialName'] ?? "---"}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal)),
+          ],
+        ),
         elevation: 0,
         backgroundColor: Colors.blue.shade800,
         bottom: PreferredSize(
@@ -793,7 +837,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
             Expanded(child: StandardInputField(
               label: 'Giờ bắt đầu', 
               controller: _timeStartCtrl, 
-              suffixIcon: const Icon(Icons.access_time),
+              suffixIcon: IconButton(icon: const Icon(Icons.access_time), onPressed: widget.isViewer ? null : () => _setCurrentTime(_timeStartCtrl)),
               readOnly: true, // Auto-populated and locked
               hint: 'Nhập HH:mm',
             )),
@@ -817,7 +861,10 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
               readOnly: _isPhase2Locked,
               status: _inputStatus['tgSayCaiDat'] ?? 'none',
               standardText: _getStandardText('Thời gian sấy'),
-              onChanged: (v) => _updateInputStatus('tgSayCaiDat', v, paramNameInStandard: 'Thời gian sấy'),
+              onChanged: (v) {
+                _updateInputStatus('tgSayCaiDat', v, paramNameInStandard: 'Thời gian sấy');
+                _autoCalcTimeEnd();
+              },
             )),
             const SizedBox(width: 16),
             Expanded(child: StandardInputField(
@@ -896,7 +943,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
               label: 'Giờ kết thúc', 
               controller: _timeEndCtrl, 
               readOnly: _isPhase4Locked || _secondsRemaining > 0, 
-              suffixIcon: const Icon(Icons.access_time_filled), 
+              suffixIcon: IconButton(icon: const Icon(Icons.access_time_filled), onPressed: (widget.isViewer || _secondsRemaining > 0) ? null : () => _setCurrentTime(_timeEndCtrl)), 
               hint: 'HH:mm'
             )),
             const SizedBox(width: 16),
