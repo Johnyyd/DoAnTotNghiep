@@ -167,6 +167,11 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
           } catch (_) {}
         }
 
+        // Bổ sung drilling vào rawInputs nếu có (do logic _submit đóng gói vào đây)
+        if (params['rawInputs'] != null && params['rawInputs'] is Map) {
+          params = Map<String, dynamic>.from(params['rawInputs']);
+        }
+
         if (mounted) {
           setState(() {
             // Chỉ ghi đè nếu trong DB có dữ liệu, nếu không giữ giá trị mặc định đã init ở initState
@@ -377,6 +382,37 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
         paramNameInStandard: 'Thời gian sấy');
     _updateInputStatus('doAmSauSay', _humidAfterCtrl.text,
         paramNameInStandard: 'Độ ẩm');
+
+    // Ràng buộc kiểm tra Khối lượng trước và sau sấy
+    _validateWeightStatus();
+  }
+
+  void _validateWeightStatus() {
+    final truocStr = _slTruocCtrl.text;
+    final sauStr = _slSauCtrl.text;
+
+    if (truocStr.isEmpty) {
+      if (mounted) setState(() => _inputStatus['slTruocSay'] = 'none');
+    } else {
+      final val = double.tryParse(truocStr) ?? 0;
+      if (mounted)
+        setState(() => _inputStatus['slTruocSay'] = val > 0 ? 'valid' : 'invalid');
+    }
+
+    if (sauStr.isEmpty) {
+      if (mounted) setState(() => _inputStatus['slSauSay'] = 'none');
+    } else {
+      final truocVal = double.tryParse(truocStr) ?? 0;
+      final sauVal = double.tryParse(sauStr) ?? 0;
+
+      if (sauVal <= 0) {
+        if (mounted) setState(() => _inputStatus['slSauSay'] = 'invalid');
+      } else if (truocVal > 0 && sauVal > truocVal) {
+        if (mounted) setState(() => _inputStatus['slSauSay'] = 'invalid');
+      } else {
+        if (mounted) setState(() => _inputStatus['slSauSay'] = 'valid');
+      }
+    }
   }
 
   Future<void> _approveByQC(String status) async {
@@ -950,6 +986,8 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
           keyboardType: TextInputType.number,
           readOnly: _isPhase1Locked,
           hint: 'Nhập khối lượng TD 8 / NLC 3',
+          status: _inputStatus['slTruocSay'] ?? 'none',
+          onChanged: (v) => _validateWeightStatus(),
         ),
       ],
     );
@@ -1117,6 +1155,8 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
           keyboardType: TextInputType.number,
           readOnly: _isPhase4Locked || _secondsRemaining > 0,
           hint: 'Cân khối lượng thực tế sau sấy',
+          status: _inputStatus['slSauSay'] ?? 'none',
+          onChanged: (v) => _validateWeightStatus(),
         ),
         const SizedBox(height: 20),
         if (_secondsRemaining == 0)
