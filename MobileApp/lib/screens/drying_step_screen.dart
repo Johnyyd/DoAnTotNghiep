@@ -126,8 +126,9 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
         final max = sp['maxValue'];
         final unit = sp['unit'] ?? '';
         if (min != null && max != null) {
-          if (min == max)
+          if (min == max) {
             return "Chuẩn: ${min.toString().replaceAll('.0', '')} $unit";
+          }
           return "Chuẩn: ${min.toString().replaceAll('.0', '')} - ${max.toString().replaceAll('.0', '')} $unit";
         } else if (min != null) {
           return "Chuẩn: >= ${min.toString().replaceAll('.0', '')} $unit";
@@ -184,17 +185,20 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
               _nguoiCtrl.text = params['nguoiThucHien'];
             }
 
-            if (params['veSinhPhong'] != null)
+            if (params['veSinhPhong'] != null) {
               _phongSach = params['veSinhPhong'];
+            }
             if (params['veSinhMay'] != null) _maySay = params['veSinhMay'];
-            if (params['veSinhDungCu'] != null)
+            if (params['veSinhDungCu'] != null) {
               _dungCuSay = params['veSinhDungCu'];
+            }
             _tempCtrl.text = params['nhietDo'] ?? '';
             _humidCtrl.text = params['doAm'] ?? '';
             _timeCtrl.text = params['thoiGianKiemTra'] ?? '';
             _pressCtrl.text = params['apLuc'] ?? '';
-            if (params['mayKhongTai'] != null)
+            if (params['mayKhongTai'] != null) {
               _mayKhongTai = params['mayKhongTai'];
+            }
             _tempInCtrl.text = params['nhietDoKhiVao'] ?? '';
             _tempOutCtrl.text = params['nhietDoKhiRa'] ?? '';
             _timeStartCtrl.text = params['batDauSay'] ?? '';
@@ -395,8 +399,10 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       if (mounted) setState(() => _inputStatus['slTruocSay'] = 'none');
     } else {
       final val = double.tryParse(truocStr) ?? 0;
-      if (mounted)
-        setState(() => _inputStatus['slTruocSay'] = val > 0 ? 'valid' : 'invalid');
+      if (mounted) {
+        setState(
+            () => _inputStatus['slTruocSay'] = val > 0 ? 'valid' : 'invalid');
+      }
     }
 
     if (sauStr.isEmpty) {
@@ -752,7 +758,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Mẻ sấy ${_currentPhase.indexNumber}/5',
+          Text('Công đoạn ${_currentPhase.indexNumber}/5',
               style: const TextStyle(
                   fontWeight: FontWeight.bold, color: Colors.blue)),
           Text(_currentPhase.label.toUpperCase(),
@@ -764,8 +770,9 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   }
 
   Widget? _buildContextualFAB() {
-    if (widget.isViewer && _currentPhase != ExecutionPhase.verification)
+    if (widget.isViewer && _currentPhase != ExecutionPhase.verification) {
       return null;
+    }
 
     if (_currentPhase == ExecutionPhase.verification) {
       if (AuthService.currentUser?['role'] == 'QA_QC') {

@@ -90,8 +90,9 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
         final max = sp['maxValue'];
         final unit = sp['unit'] ?? '';
         if (min != null && max != null) {
-          if (min == max)
+          if (min == max) {
             return "Chuẩn: ${min.toString().replaceAll('.0', '')} $unit";
+          }
           return "Chuẩn: ${min.toString().replaceAll('.0', '')} - ${max.toString().replaceAll('.0', '')} $unit";
         } else if (min != null) {
           return "Chuẩn: >= ${min.toString().replaceAll('.0', '')} $unit";
@@ -309,9 +310,10 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     final pin = await _showPinDialog();
     if (pin == null || pin.isEmpty) return;
     if (pin != '123456') {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('❌ Mã PIN xác nhận không đúng!')));
+      }
       return;
     }
 
@@ -392,9 +394,10 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     final pin = await _showPinDialog();
     if (pin == null || pin.isEmpty) return;
     if (pin != '123456') {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('❌ Mã PIN không đúng!')));
+      }
       return;
     }
 
@@ -450,7 +453,9 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
 
   Future<void> _prevPhase() async {
     if (_currentPhase == ExecutionPhase.completed ||
-        _currentPhase == ExecutionPhase.precheck) return;
+        _currentPhase == ExecutionPhase.precheck) {
+      return;
+    }
 
     final targetPhase = ExecutionPhase.values[_currentPhase.index - 1];
     String newStatus = 'Running';
@@ -633,8 +638,9 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
   }
 
   Widget? _buildContextualFAB() {
-    if (widget.isViewer && _currentPhase != ExecutionPhase.verification)
+    if (widget.isViewer && _currentPhase != ExecutionPhase.verification) {
       return null;
+    }
 
     if (_currentPhase == ExecutionPhase.verification) {
       if (AuthService.currentUser?['role'] == 'QA_QC') {
