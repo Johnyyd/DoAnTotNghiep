@@ -461,7 +461,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     await _submit(newStatus, null, isInternal: true);
   }
 
-  Future<void> _submit(String resultStatus, String? devNotes,
+  Future<bool> _submit(String resultStatus, String? devNotes,
       {bool isInternal = false}) async {
     setState(() => _isSaving = true);
     final params = {
@@ -494,7 +494,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
 
     if (widget.batchId == null || widget.stepId == null) {
       setState(() => _isSaving = false);
-      return;
+      return false;
     }
 
     bool success = await ApiService.submitStepData(
@@ -518,6 +518,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
               ? '✔ Cập nhật dữ liệu thành công!'
               : '❌ Lỗi khi lưu dữ liệu!')));
     }
+    return success;
   }
 
   Widget _buildComparisonRow(String key, String label, String expected) {
@@ -638,9 +639,9 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     if (_currentPhase == ExecutionPhase.verification) {
       if (AuthService.currentUser?['role'] == 'QA_QC') {
         return FloatingActionButton.extended(
-          heroTag: 'btnApproveM',
+          heroTag: 'btnApproveW',
           onPressed: () => _approveByQC('Approved'),
-          label: const Text('XÁC NHẬN QC'),
+          label: const Text('QC KÝ XÁC NHẬN'),
           icon: const Icon(Icons.verified_user),
           backgroundColor: Colors.green,
         );
@@ -705,7 +706,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const FormSectionHeader('PHASE 1: KIỂM TRA MÔI TRƯỜNG & VỆ SINH'),
+        const FormSectionHeader('GIAN ĐOẠN 1: KIỂM TRA GIÁ TRỊ ĐẦU VÀO'),
         const StandardInputField(
             label: 'Phòng thực hiện', hint: 'Trộn khô', readOnly: true),
         SegmentedToggle(

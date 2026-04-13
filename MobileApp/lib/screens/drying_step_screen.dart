@@ -294,15 +294,11 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       } else {
         _timer?.cancel();
         if (mounted && !widget.isViewer) {
-          final now = DateTime.now();
           setState(() {
-            if (_timeEndCtrl.text.isEmpty) {
-              _timeEndCtrl.text =
-                  "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
-            }
+            _autoCalcTimeEnd();
           });
-          // Tự động kết thúc mẻ sấy khi đếm ngược xong
-          _submit('Passed', null);
+          // Lưu trạng thái Running và giờ kết thúc dự kiến nhưng không chốt Log
+          _submit('Running', null, isInternal: true);
         }
       }
     });
@@ -513,18 +509,18 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       // Chuyển sang giai đoạn Đợi QC (PendingQC)
       await _verifyAndSubmit();
     } else if (_currentPhase == ExecutionPhase.execution) {
-      // Kết thúc mẻ sấy (Passed)
+      // Kết thúc mẻ sấy (Passed) - Chốt dữ liệu thủ công
       if (_secondsRemaining > 0) return; // Bảo vệ nếu timer chưa xong
 
-      final now = DateTime.now();
-      if (_timeEndCtrl.text.isEmpty) {
-        _timeEndCtrl.text =
-            "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
-      }
-      if (mounted) {
+      setState(() => _isSaving = true);
+      // Gửi bản chốt cuối cùng lên server
+      bool ok = await _submit('Passed', null);
+      if (ok && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('✔ Đã hoàn thành mẻ sấy và lưu kết quả!')));
         Navigator.of(context).pop(true);
+      } else if (mounted) {
+        setState(() => _isSaving = false);
       }
     }
   }
@@ -556,12 +552,38 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
     await _submit(newStatus, null, isInternal: true);
   }
 
-  Future<void> _submit(String resultStatus, String? signature,
+  Future<bool> _submit(String resultStatus, String? signature,
       {bool isInternal = false}) async {
-    if (widget.batchId == null || widget.stepId == null) return;
+    if (widget.batchId == null || widget.stepId == null) return false;
 
     setState(() => _isSaving = true);
     final now = DateTime.now();
+
+    // Ràng buộc kiểm tra Khối lượng trước và sau sấy
+    if (resultStatus == 'Passed' && _currentPhase == ExecutionPhase.execution) {
+      final truocVal = double.tryParse(_slTruocCtrl.text) ?? 0;
+      final sauVal = double.tryParse(_slSauCtrl.text) ?? 0;
+
+      if (truocVal <= 0 || sauVal <= 0) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content:
+                  Text('⚠ Vui lòng nhập đầy đủ Khối lượng trước và sau sấy!')));
+        }
+        setState(() => _isSaving = false);
+        return false;
+      }
+
+      if (sauVal > truocVal) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text(
+                  '⚠ Khối lượng sau sấy không thể lớn hơn khối lượng trước sấy!')));
+        }
+        setState(() => _isSaving = false);
+        return false;
+      }
+    }
 
     // Gói dữ liệu vào 'rawInputs' để màn hình QC đọc được
     final payload = {
@@ -629,6 +651,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
               ? '✔ Cập nhật dữ liệu thành công!'
               : '❌ Lỗi khi lưu dữ liệu!')));
     }
+    return success;
   }
 
   @override
@@ -693,7 +716,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Bước ${_currentPhase.indexNumber}/5',
+          Text('Mẻ sấy ${_currentPhase.indexNumber}/5',
               style: const TextStyle(
                   fontWeight: FontWeight.bold, color: Colors.blue)),
           Text(_currentPhase.label.toUpperCase(),
@@ -713,7 +736,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
         return FloatingActionButton.extended(
           heroTag: 'btnApprove',
           onPressed: () => _approveByQC('Approved'),
-          label: const Text('XÁC NHẬN QC'),
+          label: const Text('QC KÝ XÁC NHẬN'),
           icon: const Icon(Icons.verified_user),
           backgroundColor: Colors.green,
         );
@@ -733,13 +756,9 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
 
     if (_currentPhase == ExecutionPhase.completed) return null;
 
+    if (_currentPhase == ExecutionPhase.execution) return null;
+
     String label = 'TIẾP TỤC';
-    IconData icon = Icons.arrow_forward;
-    if (_currentPhase == ExecutionPhase.input) label = 'GỬI DUYỆT QC';
-    if (_currentPhase == ExecutionPhase.execution) {
-      label = 'KẾT THÚC CÔNG ĐOẠN';
-      icon = Icons.check_circle;
-    }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20, right: 10),
@@ -768,7 +787,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
                     height: 20,
                     child: CircularProgressIndicator(
                         color: Colors.white, strokeWidth: 2))
-                : Icon(icon),
+                : const Icon(Icons.arrow_forward),
           ),
         ],
       ),
@@ -781,7 +800,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.stepName.contains('NLC 3')) ...[
-          const FormSectionHeader('2.1 KIỂM TRA ĐẦU VÀO NGUYÊN LIỆU'),
+          const FormSectionHeader('PHẦN 1: KIỂM TRA GIÁ TRỊ ĐẦU VÀO'),
           StandardInputField(
             label: 'Độ ẩm NLC 3 (%)',
             controller: _inputMoistureCtrl,
@@ -1091,9 +1110,9 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
             onResultChanged: (v) => _mauKiemTra = v,
             readOnly: _isPhase4Locked || _secondsRemaining > 0),
         const Divider(),
-        const FormSectionHeader('4.2 CÂN ĐỐI SẢN LƯỢNG'),
+        const FormSectionHeader('4.2 KIỂM TRA SẢN LƯỢNG'),
         StandardInputField(
-          label: 'Số lượng sau sấy (kg)',
+          label: 'Khối lượng sau khi sấy (kg)',
           controller: _slSauCtrl,
           keyboardType: TextInputType.number,
           readOnly: _isPhase4Locked || _secondsRemaining > 0,
@@ -1105,7 +1124,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
             onPressed: () =>
                 _submit('Passed', 'Operation Completed Successfully'),
             icon: const Icon(Icons.check_circle_outline),
-            label: const Text('XÁC NHẬN HOÀN THÀNH LOG'),
+            label: const Text('XÁC NHẬN HOÀN TẤT CÔNG ĐOẠN'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green.shade700,
               foregroundColor: Colors.white,
@@ -1119,7 +1138,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   Widget _buildPhase5() {
     return Column(
       children: [
-        _buildCenteredStatus(Icons.check_circle, Colors.blue, 'ĐÃ HOÀN THÀNH',
+        _buildCenteredStatus(Icons.check_circle, Colors.blue, 'ĐÃ HOÀN TẤT',
             'Công đoạn sấy đã kết thúc thành công.'),
         const Divider(height: 40),
         const FormSectionHeader('4.3 ĐÓNG GÓI & BẢO QUẢN'),

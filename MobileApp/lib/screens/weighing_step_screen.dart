@@ -402,7 +402,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
     await _submit(newStatus, null, isInternal: true);
   }
 
-  Future<void> _submit(String resultStatus, String? devNotes, {bool isInternal = false}) async {
+  Future<bool> _submit(String resultStatus, String? devNotes, {bool isInternal = false}) async {
     setState(() => _isSaving = true);
     final params = {
       "temperature": _tempCtrl.text,
@@ -420,7 +420,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
     final finalNotes = devNotes != null ? 'DEVIATION:\n$devNotes\nNote: ${_noteCtrl.text}' : _noteCtrl.text;
     if (widget.batchId == null || widget.stepId == null) {
       setState(() => _isSaving = false);
-      return;
+      return false;
     }
 
     bool success = await ApiService.submitStepData(
@@ -440,6 +440,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
       }
     }
     if (!isInternal && mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(success ? '✔ Thành công!' : '❌ Thất bại!')));
+    return success;
   }
 
   @override
@@ -509,7 +510,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Bước ${_currentPhase.indexNumber}/5', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+          Text('Mẻ cân ${_currentPhase.indexNumber}/5', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
           Text(_currentPhase.label.toUpperCase(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
         ],
       ),
@@ -522,7 +523,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
     }
     if (_currentPhase == ExecutionPhase.verification) {
       if (AuthService.currentUser?['role'] == 'QA_QC') {
-        return FloatingActionButton.extended(onPressed: () => _approveByQC('Approved'), label: const Text('XÁC NHẬN QC'), icon: const Icon(Icons.verified_user), backgroundColor: Colors.green);
+        return FloatingActionButton.extended(onPressed: () => _approveByQC('Approved'), label: const Text('QC KÝ XÁC NHẬN'), icon: const Icon(Icons.verified_user), backgroundColor: Colors.green);
       }
       return FloatingActionButton.extended(onPressed: _isSaving ? null : _prevPhase, label: const Text('QUAY LẠI SỬA'), icon: const Icon(Icons.arrow_back), backgroundColor: Colors.grey);
     }
@@ -531,7 +532,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
     }
     String label = 'TIẾP TỤC';
     if (_currentPhase == ExecutionPhase.input) {
-      label = 'GỬI DUYỆT QC';
+      label = 'GỬI YÊU CẦU QC XÁC NHẬN';
     }
     if (_currentPhase == ExecutionPhase.execution) {
       label = 'KẾT THÚC';
@@ -541,7 +542,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
 
   Widget _buildPhase1() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const FormSectionHeader('PHASE 1: KIỂM TRA MÔI TRƯỜNG & THIẾT BỊ'),
+        const FormSectionHeader('PHẦN 1: KIỂM TRA GIÁ TRỊ ĐẦU VÀO'),
         Row(
           children: [
             Expanded(child: StandardInputField(
@@ -580,7 +581,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
 
   Widget _buildPhase2() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const FormSectionHeader('PHASE 2: NHẬP LIỆU KHỐI LƯỢNG THỰC TẾ'),
+        const FormSectionHeader('PHẦN 2: GHI NHẬN KHỐI LƯỢNG THỰC TẾ'),
         ExpansionTile(
           title: const Text('TÍNH TOÁN ĐỊNH MỨC ĐỘNG (BMR SECTION 4)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo)),
           subtitle: Text(_isCalculated ? 'Sản lượng: ${_targetYieldQ?.toStringAsFixed(0)} viên' : 'Nhập thông số lô NLC 3 để điều chỉnh'),
@@ -609,6 +610,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
   }
 
   Widget _buildPhase3() => const Center(child: Column(children: [SizedBox(height: 40), Icon(Icons.hourglass_empty, size: 80, color: Colors.orange), SizedBox(height: 24), Text('ĐANG ĐỢI QC XÁC NHẬN', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange))]));
-  Widget _buildPhase4() => const Column(children: [SizedBox(height: 20), Icon(Icons.play_circle_fill, size: 80, color: Colors.green), SizedBox(height: 20), Text('GIAI ĐOẠN THỰC THI', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))]);
-  Widget _buildPhase5() => const Center(child: Column(children: [SizedBox(height: 40), Icon(Icons.check_circle, size: 80, color: Colors.blue), SizedBox(height: 20), Text('HOÀN THÀNH', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))]));
+  Widget _buildPhase4() => const Column(children: [SizedBox(height: 20), Icon(Icons.play_circle_fill, size: 80, color: Colors.green), SizedBox(height: 20), Text('GIAI ĐOẠN VẬN HÀNH', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))]);
+  Widget _buildPhase5() => const Center(child: Column(children: [SizedBox(height: 40), Icon(Icons.check_circle, size: 80, color: Colors.blue), SizedBox(height: 20), Text('ĐÃ HOÀN TẤT', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))]));
 }

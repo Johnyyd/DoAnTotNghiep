@@ -245,9 +245,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           ),
                           child: Text(
                             (displayStatus == 'In-Process') ? 'Đang sản xuất' : 
-                            (displayStatus == 'Completed') ? 'Hoàn thành' : 
+                            (displayStatus == 'Completed') ? 'Đã hoàn tất' : 
                             (displayStatus == 'On-Hold') ? 'Đang tạm dừng' : 
-                            (displayStatus == 'Pending QC') ? 'Chờ QC duyệt' : 'Chờ công nhân nhập',
+                            (displayStatus == 'Pending QC') ? 'Chờ QC xét duyệt' : 'Chờ công nhân xử lý',
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
                           ),
                         ),
@@ -499,10 +499,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   indicatorWeight: 3,
                   tabs: const [
                     Tab(text: 'Đang sản xuất'),
-                    Tab(text: 'Chờ nhập liệu (CN)'),
-                    Tab(text: 'Chờ QC duyệt'),
-                    Tab(text: 'Gặp lỗi / Dừng'),
-                    Tab(text: 'Hoàn thành'),
+                    Tab(text: 'Chờ Công nhân'),
+                    Tab(text: 'Chờ QC xét duyệt'),
+                    Tab(text: 'Đang tạm dừng'),
+                    Tab(text: 'Đã hoàn tất'),
                   ],
                 ),
               ],
