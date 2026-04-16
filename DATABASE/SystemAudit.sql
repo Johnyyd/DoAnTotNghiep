@@ -1,5 +1,5 @@
 ﻿-- ============================================================================
--- 📜 MODULE: NHẬT KÝ HỆ THỐNG (SYSTEM AUDIT LOGS)
+-- MODULE: NHẬT KÝ HỆ THỐNG (SYSTEM AUDIT LOGS)
 -- 
 -- Chứa bảng tổng hợp mọi hành động thay đổi dữ liệu của người dùng.
 -- Đáp ứng yêu cầu truy vết ngược (Traceability) của GMP.

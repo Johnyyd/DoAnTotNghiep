@@ -27,11 +27,7 @@ PRINT '-- Section 1: Schema --'
 PRINT '-- Section 2: Audit Trail --'
 :r $(BaseDir)SystemAudit.sql
 
-PRINT '-- Section 3: Additional Manufacturing Processes --'
--- Nếu bạn có file này, hãy giữ lại, nếu không có hãy comment dòng dưới
-:r $(BaseDir)AdditionalManufacturingProcesses.sql
-
-PRINT '-- Section 4: Full Seed Data --'
+PRINT '-- Section 3: Full Seed Data --'
 :r $(BaseDir)full_seed.sql
 
 PRINT 'GMP Database Initialization & Seeding Completed Successfully!';
