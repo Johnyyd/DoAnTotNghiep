@@ -15,6 +15,7 @@ namespace GMP_System.Repositories
             Materials = new GenericRepository<Material>(_context);
             Recipes = new GenericRepository<Recipe>(_context);
             ProductionOrders = new GenericRepository<ProductionOrder>(_context);
+            ProductionAreas = new GenericRepository<ProductionArea>(_context);
             AppUsers = new GenericRepository<AppUser>(_context);
             ProductionBatches = new GenericRepository<ProductionBatch>(_context);
             BatchProcessLogs = new GenericRepository<BatchProcessLog>(_context);
@@ -32,6 +33,7 @@ namespace GMP_System.Repositories
         public IGenericRepository<Material> Materials { get; private set; }
         public IGenericRepository<Recipe> Recipes { get; private set; }
         public IGenericRepository<ProductionOrder> ProductionOrders { get; private set; }
+        public IGenericRepository<ProductionArea> ProductionAreas { get; private set; }
         public IGenericRepository<AppUser> AppUsers { get; private set; }
         public IGenericRepository<ProductionBatch> ProductionBatches { get; private set; }
         public IGenericRepository<BatchProcessLog> BatchProcessLogs { get; private set; }

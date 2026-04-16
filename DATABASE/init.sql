@@ -22,69 +22,20 @@ GO
 
 PRINT 'Starting GMP Database Initialization...';
 
--- =====================================================
--- 1. Master Data (Unit of Measure, Materials, Equipment, Users)
--- =====================================================
-PRINT '-- Section 1: Master Data --'
+PRINT '-- Section 1: Schema --'
 
-:r ./MasterData.sql
+:r ./Schema.sql
 
--- =====================================================
--- 2. Recipe and BOM Management
--- =====================================================
-PRINT '-- Section 2: Recipes and BOM --'
-
-:r ./ProcessDefinition.sql
-
--- =====================================================
--- 3. Production Orders and Batches
--- =====================================================
-PRINT '-- Section 3: Production Orders & Batches --'
-
-:r ./ProductionExecution.sql
-
--- =====================================================
--- 4. Inventory and Traceability
--- =====================================================
-PRINT '-- Section 4: Inventory & Traceability --'
-
-:r ./InventoryTraceability.sql
-
--- =====================================================
--- 5. Quality Control (QC)
--- =====================================================
-PRINT '-- Section 5: Quality Control --'
-
-:r ./MaterialQC.sql
-
--- =====================================================
--- 6. Audit Trail and System Logs
--- =====================================================
-PRINT '-- Section 6: Audit Trail --'
+PRINT '-- Section 2: Audit Trail --'
 
 :r ./SystemAudit.sql
-:r ./AuditTrail.sql
 
--- =====================================================
--- 7. Advanced Logic (Triggers, Stored Procedures)
--- =====================================================
-PRINT '-- Section 7: Advanced Logic --'
+PRINT '-- Section 3: Additional Manufacturing Processes --'
 
-:r ./AdvancedLogic.sql
-:r ./Immutability.sql
+:r ./AdditionalManufacturingProcesses.sql
 
--- =====================================================
--- 8. Unit Conversions
--- =====================================================
-PRINT '-- Section 8: Unit Conversions --'
+PRINT '-- Section 4: Full Seed Data --'
 
-:r ./UomConversion.sql
+:r ./full_seed.sql
 
--- =====================================================
--- 9. User Management
--- =====================================================
-PRINT '-- Section 9: User Management --'
-
-:r ./UserManagement.sql
-
-PRINT 'GMP Database Initialization Completed Successfully!';
+PRINT 'Full Seed Data Completed Successfully!';

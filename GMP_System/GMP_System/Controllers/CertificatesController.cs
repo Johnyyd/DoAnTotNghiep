@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GMP_System.Controllers
@@ -17,7 +17,7 @@ namespace GMP_System.Controllers
             _configuration = configuration;
         }
 
-        private string GetStorageDirectory()
+        private string GetMaterialStorageDirectory()
         {
             var configured = _configuration["Certificates:StoragePath"];
             if (!string.IsNullOrWhiteSpace(configured))
@@ -26,6 +26,28 @@ namespace GMP_System.Controllers
             }
 
             return Path.Combine(_env.ContentRootPath, "certificates");
+        }
+
+        private string GetFinishedStorageDirectory()
+        {
+            var configured = _configuration["Certificates:FinishedStoragePath"];
+            if (!string.IsNullOrWhiteSpace(configured))
+            {
+                return configured;
+            }
+
+            return Path.Combine(_env.ContentRootPath, "wwwroot", "certificates");
+        }
+
+        private string GetPublicMaterialsDirectory()
+        {
+            var configured = _configuration["Certificates:PublicMaterialsPath"];
+            if (!string.IsNullOrWhiteSpace(configured))
+            {
+                return configured;
+            }
+
+            return Path.Combine(_env.ContentRootPath, "wwwroot", "materials");
         }
 
         [HttpPost("material/upload")]
@@ -55,7 +77,7 @@ namespace GMP_System.Controllers
                 return BadRequest(new { success = false, message = "Mã nguyên liệu không hợp lệ." });
             }
 
-            var storageDir = GetStorageDirectory();
+            var storageDir = GetMaterialStorageDirectory();
             Directory.CreateDirectory(storageDir);
 
             var fileName = $"{safeCode}{ext}";
@@ -82,30 +104,58 @@ namespace GMP_System.Controllers
         [AllowAnonymous]
         public IActionResult GetMaterialCertificate(string materialCode)
         {
-            if (string.IsNullOrWhiteSpace(materialCode))
+            return ServeImageByCode(
+                new[]
+                {
+                    GetMaterialStorageDirectory(),
+                    GetPublicMaterialsDirectory()
+                },
+                materialCode
+            );
+        }
+
+        [HttpGet("finished/{materialCode}")]
+        [AllowAnonymous]
+        public IActionResult GetFinishedCertificate(string materialCode)
+        {
+            return ServeImageByCode(new[] { GetFinishedStorageDirectory() }, materialCode);
+        }
+
+        [HttpGet("lot/{batchNumber}")]
+        [AllowAnonymous]
+        public IActionResult GetLotCertificate(string batchNumber)
+        {
+            return ServeImageByCode(new[] { GetMaterialStorageDirectory() }, batchNumber);
+        }
+
+        private IActionResult ServeImageByCode(IEnumerable<string> storageDirs, string code)
+        {
+            if (string.IsNullOrWhiteSpace(code))
             {
-                return NotFound();
+                return NotFound(new { success = false, message = "Thiếu mã." });
             }
 
-            var safeCode = new string(materialCode.Where(ch => char.IsLetterOrDigit(ch) || ch == '-' || ch == '_').ToArray());
+            var safeCode = new string(code.Where(ch => char.IsLetterOrDigit(ch) || ch == '-' || ch == '_').ToArray());
             if (string.IsNullOrWhiteSpace(safeCode))
             {
-                return NotFound();
+                return NotFound(new { success = false, message = "Mã không hợp lệ." });
             }
 
-            var storageDir = GetStorageDirectory();
-            var candidates = new[]
-            {
-                Path.Combine(storageDir, $"{safeCode}.jpg"),
-                Path.Combine(storageDir, $"{safeCode}.jpeg"),
-                Path.Combine(storageDir, $"{safeCode}.png"),
-                Path.Combine(storageDir, $"{safeCode}.webp"),
-            };
+            var candidates = storageDirs
+                .Where(d => !string.IsNullOrWhiteSpace(d))
+                .SelectMany(storageDir => new[]
+                {
+                    Path.Combine(storageDir, $"{safeCode}.jpg"),
+                    Path.Combine(storageDir, $"{safeCode}.jpeg"),
+                    Path.Combine(storageDir, $"{safeCode}.png"),
+                    Path.Combine(storageDir, $"{safeCode}.webp"),
+                })
+                .ToArray();
 
             var found = candidates.FirstOrDefault(System.IO.File.Exists);
             if (found == null)
             {
-                return NotFound();
+                return NotFound(new { success = false, message = $"Không tìm thấy giấy kiểm nghiệm cho mã {safeCode}." });
             }
 
             var ext = Path.GetExtension(found).ToLowerInvariant();
@@ -120,4 +170,3 @@ namespace GMP_System.Controllers
         }
     }
 }
-

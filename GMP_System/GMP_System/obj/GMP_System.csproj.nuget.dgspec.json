@@ -1,25 +1,31 @@
 {
   "format": 1,
   "restore": {
-    "D:\\codes\\Codex\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj": {}
+    "D:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj": {}
   },
   "projects": {
-    "D:\\codes\\Codex\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj": {
+    "D:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\codes\\Codex\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
+        "projectUniqueName": "D:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
         "projectName": "GMP_System",
-        "projectPath": "D:\\codes\\Codex\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
+        "projectPath": "D:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
         "packagesPath": "C:\\Users\\GIGABYTE\\.nuget\\packages\\",
-        "outputPath": "D:\\codes\\Codex\\DoAnTotNghiep\\GMP_System\\GMP_System\\obj\\",
+        "outputPath": "D:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\GIGABYTE\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\GIGABYTE\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -32,7 +38,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -90,7 +102,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.125/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

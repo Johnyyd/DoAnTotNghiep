@@ -6,8 +6,9 @@ using Microsoft.EntityFrameworkCore;
 namespace GMP_System.Controllers
 {
     [Route("api/[controller]")]
+    [Route("api/audit-logs")]
     [ApiController]
-    [Authorize(Roles = "Admin,QA_QC")]
+    [Authorize]
     public class SystemAuditLogsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;

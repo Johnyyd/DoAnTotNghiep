@@ -7,6 +7,7 @@ import Layout from '@/components/Layout';
 import Login from '@/pages/Login';
 import Dashboard from '@/pages/Dashboard';
 import Materials from '@/pages/Materials';
+import FinishedProducts from '@/pages/FinishedProducts';
 import Recipes from '@/pages/Recipes';
 import ProductionOrders from '@/pages/ProductionOrders';
 import ProductionBatches from '@/pages/ProductionBatches';
@@ -51,6 +52,7 @@ function App() {
               <Route path="recipes" element={<Recipes />} />
               <Route path="production-orders" element={<ProductionOrders />} />
               <Route path="batches" element={<ProductionBatches />} />
+              <Route path="finished-products" element={<FinishedProducts />} />
               <Route path="traceability" element={<Traceability />} />
               <Route path="audit-logs" element={<AuditLogs />} />
               <Route path="inventory" element={<Inventory />} />

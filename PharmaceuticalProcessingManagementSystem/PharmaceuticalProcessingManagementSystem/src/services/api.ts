@@ -159,6 +159,10 @@ export const inventoryApi = {
     api.get<ApiResponse<any[]>>('/inventory-lots', { params }),
   receive: (data: any) =>
     api.post<ApiResponse<any>>('/inventory-lots', data),
+  updateLot: (lotId: number, data: any) =>
+    api.put<ApiResponse<any>>(`/inventory-lots/${lotId}`, data),
+  deleteLot: (lotId: number) =>
+    api.delete<ApiResponse<any>>(`/inventory-lots/${lotId}`),
   updateQc: (lotId: number, status: string) =>
     api.post<ApiResponse<any>>(`/inventory-lots/${lotId}/qc`, { status }),
 
@@ -187,6 +191,10 @@ export const equipmentsApi = {
   delete: (id: number) => api.delete<ApiResponse<any>>(`/equipments/${id}`),
 };
 
+export const areasApi = {
+  getAll: () => api.get<ApiResponse<any[]>>('/areas'),
+};
+
 export const certificatesApi = {
   uploadMaterialCertificate: (materialCode: string, file: File) => {
     const formData = new FormData();
@@ -197,6 +205,8 @@ export const certificatesApi = {
     });
   },
   getMaterialCertificateUrl: (materialCode: string) => `/api/certificates/material/${encodeURIComponent(materialCode)}`,
+  getFinishedCertificateUrl: (materialCode: string) => `/api/certificates/finished/${encodeURIComponent(materialCode)}`,
+  getLotCertificateUrl: (batchNumber: string) => `/api/certificates/lot/${encodeURIComponent(batchNumber)}`,
 };
 
 // ============== AUDIT LOGS ==============

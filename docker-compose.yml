@@ -1,109 +1,91 @@
-version: '3.8' # Phiên bản Docker Compose tương thích
+version: '3.8'
 
-services: # Danh sách các services trong hệ thống
-  # ==============================================================================================================================
-  # 1. DATABASE: SQL Server (Lưu trữ và quản lý dữ liệu hệ thống GMP)
-  # ==============================================================================================================================
+services:
   gmp-sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest # Image Docker chính thức của MS SQL 2022 Linux
-    container_name: gmp-sqlserver # Tên cố định cho vùng chứa giúp nhận diện dễ dàng
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: gmp-sqlserver
     networks:
-      - gmp-network # Đưa container vào mạng nội bộ chung
+      - gmp-network
     ports:
-      - "1434:1433" # Ánh xạ cổng 1433 trong container ra cổng 1434 trên máy host (để tráng trùng với SQL có sẵn)
-    environment: # Thông số cấu hình
-      - ACCEPT_EULA=Y # Bắt buộc chấp thuận EULA để chạy SQL Server
-      - SA_PASSWORD=GMP_Strong@Passw0rd123 # Mật khẩu của tài khoản quản trị viên root (SA)
+      - "1434:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=GMP_Strong@Passw0rd123
     volumes:
-      # Ánh xạ bộ nhớ giúp dữ liệu không bị xoá mất khi gỡ môi trường Docker
-      - ./DATABASE:/var/opt/mssql/backup:ro # Đưa thư mục code SQL vào container dưới dạng chỉ đọc
-      - gmp-sqlserver-data:/var/opt/mssql # Đưa ổ đĩa lưu trữ chính (mdf/ldf) vào volume của Docker
+      - ./DATABASE:/var/opt/mssql/backup:ro
+      - gmp-sqlserver-data:/var/opt/mssql
     healthcheck:
-      # Cơ chế kiểm tra nhằm xác nhận Database đã hoàn toàn sẵn sàng trước khi cho các dịch vụ khác gọi
       test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "GMP_Strong@Passw0rd123", "-C", "-Q", "SELECT 1"]
-      interval: 10s # Thời gian giữa các nhịp Ping kiểm tra
-      timeout: 5s # Thời gian chờ Ping bị huỷ
-      retries: 10 # Tổng số lần tái thử trong trường hợp máy có dấu hiệu lỗi
-      start_period: 30s # Thời gian Delay ban đầu chờ Database setup boot
-    restart: unless-stopped # Tự động hồi sinh container nếu có tiến trình lỗi đột xuất
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
 
-  # ==============================================================================================================================
-  # 2. BACKEND (.NET Core API): Lớp Controllers xử lý phiến logic nghiệp vụ chính
-  # ==============================================================================================================================
   gmp-api:
     build:
-      context: ./GMP_System/GMP_System # Chỉ định địa chỉ của thư mục C#
-      dockerfile: Dockerfile # Đường dẫn cụ thể trỏ vào file Build cấu trúc
-    container_name: gmp-api 
+      context: ./GMP_System/GMP_System
+      dockerfile: Dockerfile
+    container_name: gmp-api
     networks:
-      - gmp-network 
+      - gmp-network
     ports:
-      - "5001:5000" # Mở khoá cổng 5000 ngầm để host nhận ở 5001
+      - "5001:5000"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development # Đặt môi trường về dạng Dev giúp khởi phát các thông báo sửa lỗi chi tiết (Swagger UI)
-      # Thông số chuỗi kết nối Database nhắm thẳng vào tên 'gmp-sqlserver' cùng LAN thay vì đánh qua localhost
+      - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Server=gmp-sqlserver;Database=PharmaceuticalProcessingManagementSystem;User Id=sa;Password=GMP_Strong@Passw0rd123;TrustServerCertificate=true
-      # Key phục vụ mã hoá chuẩn ký Server bảo mật cho JWT Access Token
       - Jwt__Key=GMP_WHO_Default_Secret_Key_Minimum_32_Characters_Long_123456789
       - Certificates__StoragePath=/app/certificates
+      - Certificates__FinishedStoragePath=/app/finished-certificates
+      - Certificates__PublicMaterialsPath=/app/public-materials
     depends_on:
       gmp-sqlserver:
-        # Bắt buộc đợi cho SQL Server báo trạng thái Health = OK (Healthy) rồi mới chạy gmp-api tiếp
-        condition: service_healthy 
+        condition: service_healthy
     volumes:
-      - ./DATABASE:/app/DATABASE:ro # Liên kết thư mục Script nếu Controller có nhu cầu truy vấn tĩnh
+      - ./DATABASE:/app/DATABASE:ro
       - ./PharmaceuticalProcessingManagementSystem/certificates:/app/certificates
+      - ./PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem/public/certificates:/app/finished-certificates
+      - ./PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem/public/materials:/app/public-materials
     restart: unless-stopped
     healthcheck:
-      # Ping qua chuẩn HTTP thông thường kiểm tra EndPoint Kestrel đã Online chưa
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 20s
-    # Chú thích: Migrations được nhúng chung vào event Application Initializing khi app start
 
-  # ==============================================================================================================================
-  # 3. FRONTEND (React + TypeScript): Web quản trị hệ thống
-  # ==============================================================================================================================
   gmp-frontend:
     build:
       context: ./PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem
       dockerfile: Dockerfile
       args:
-        # Giới hạn API Base URL thành tương đối (relative path) truyền vào quá trình build
         - VITE_API_URL=/api
     container_name: gmp-frontend
     networks:
       - gmp-network
     ports:
-      - "8080:80" # Maps port chạy ứng dụng qua Host là 8080
+      - "8080:80"
     environment:
-      - VITE_API_URL=/api 
+      - VITE_API_URL=/api
     depends_on:
-      - gmp-api # Xếp loại phụ thuộc đợi tải Backend đằng trước
+      - gmp-api
     restart: unless-stopped
 
-  # ==============================================================================================================================
-  # 4. MOBILE APP (Flutter Web App): Môi trường truy cập thông qua máy tính Android/Tablet dành cho hoạt động sản xuất eBMR
-  # ==============================================================================================================================
-  gmp-mobile:
-    build:
-      context: ./MobileApp # Thư mục con của mã nguồn Flutter
-      dockerfile: Dockerfile
-    container_name: gmp-mobile # Đặt tên mảng ghép hình
-    networks:
-      - gmp-network
-    ports:
-      - "8081:80" # Trực tuyến Web Server dành riêng cho app flutter hoạt động qua 8081
-    depends_on:
-      - gmp-api # Xếp loại phụ thuộc đợi tải Backend đằng trước
-    restart: unless-stopped
+  # gmp-mobile:
+  #   build:
+  #     context: ./MobileApp
+  #     dockerfile: Dockerfile
+  #   container_name: gmp-mobile
+  #   networks:
+  #     - gmp-network
+  #   ports:
+  #     - "8081:80"
+  #   depends_on:
+  #     - gmp-api
+  #   restart: unless-stopped
 
-# KHAI BÁO BIẾN THỂ GLOBAL
 networks:
-  gmp-network: # Bộ định tuyến mạng LAN dùng chung cho 4 node kết nối 
-
+  gmp-network:
 
 volumes:
-  gmp-sqlserver-data: # Khởi tạo khối nhớ lưu trữ data thô cho mảng SQL Server
+  gmp-sqlserver-data:

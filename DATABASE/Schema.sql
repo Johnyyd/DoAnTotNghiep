@@ -3,7 +3,38 @@
    Schema Cơ sở dữ liệu cơ bản
    Mục đích: Định nghĩa toàn bộ các bảng, khóa chính, khóa ngoại 
    của hệ thống theo quy trình chuẩn của nhà máy Dược.
-========================================================================= */
+   ========================================================================= */
+
+USE [PharmaceuticalProcessingManagementSystem];
+GO
+
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
+-- -------------------------------------------------------------------------
+-- 0. DỌN DẸP DỮ LIỆU CŨ (THEO THỨ TỰ NGƯỢC KHÓA NGOẠI)
+-- -------------------------------------------------------------------------
+PRINT 'Cleaning up existing tables...';
+IF OBJECT_ID('BatchProcessParameterValue', 'U') IS NOT NULL DROP TABLE BatchProcessParameterValue;
+IF OBJECT_ID('QualityTests', 'U') IS NOT NULL DROP TABLE QualityTests;
+IF OBJECT_ID('SystemAuditLog', 'U') IS NOT NULL DROP TABLE SystemAuditLog;
+IF OBJECT_ID('MaterialUsage', 'U') IS NOT NULL DROP TABLE MaterialUsage;
+IF OBJECT_ID('BatchProcessLogs', 'U') IS NOT NULL DROP TABLE BatchProcessLogs;
+IF OBJECT_ID('ProductionBatches', 'U') IS NOT NULL DROP TABLE ProductionBatches;
+IF OBJECT_ID('ProductionOrders', 'U') IS NOT NULL DROP TABLE ProductionOrders;
+IF OBJECT_ID('InventoryLots', 'U') IS NOT NULL DROP TABLE InventoryLots;
+IF OBJECT_ID('RecipeBom', 'U') IS NOT NULL DROP TABLE RecipeBom;
+IF OBJECT_ID('StepParameters', 'U') IS NOT NULL DROP TABLE StepParameters;
+IF OBJECT_ID('RecipeRouting', 'U') IS NOT NULL DROP TABLE RecipeRouting;
+IF OBJECT_ID('Recipes', 'U') IS NOT NULL DROP TABLE Recipes;
+IF OBJECT_ID('Materials', 'U') IS NOT NULL DROP TABLE Materials;
+IF OBJECT_ID('Equipments', 'U') IS NOT NULL DROP TABLE Equipments;
+IF OBJECT_ID('ProductionAreas', 'U') IS NOT NULL DROP TABLE ProductionAreas;
+IF OBJECT_ID('UomConversions', 'U') IS NOT NULL DROP TABLE UomConversions;
+IF OBJECT_ID('UnitOfMeasure', 'U') IS NOT NULL DROP TABLE UnitOfMeasure;
+IF OBJECT_ID('AppUsers', 'U') IS NOT NULL DROP TABLE AppUsers;
+GO
 
 -- -------------------------------------------------------------------------
 -- 1. Bảng AppUsers: Quản lý người dùng, nhân viên trong nhà máy
@@ -27,21 +58,41 @@ CREATE TABLE AppUsers (
 -- -------------------------------------------------------------------------
 CREATE TABLE UnitOfMeasure (
     UomId INT PRIMARY KEY IDENTITY(1,1),
-    UomName NVARCHAR(50) NOT NULL, -- Ký hiệu đơn vị (kg, g, viên, vỉ, lọ, lít)
-    Description NVARCHAR(200)      -- Chú thích rõ ràng cho ký hiệu (vd: Kilogram)
+    UomName NVARCHAR(50) NOT NULL,
+    Description NVARCHAR(200)
 );
 
 -- -------------------------------------------------------------------------
--- 3. Bảng Equipments: Danh mục máy móc, thiết bị sản xuất
--- Là dữ liệu Master Data cực kỳ quan trọng đối với nhà máy dược phẩm,
--- các máy móc đều phải có mã để bảo trì và gán vào định mức công đoạn sản xuất.
+-- 15. Bảng UomConversions: Từ điển Đối soát tỷ lệ Đơn Vị Tính toán
+-- Giải quyết bài toán quy chiếu linh hoạt theo cấp số nhân lúc mua vật tư
+-- so với khối lượng cân xuất phát tính cấp số lẻ xuống dây chuyền phân xưởng.
 -- -------------------------------------------------------------------------
+CREATE TABLE UomConversions (
+    ConversionId INT PRIMARY KEY IDENTITY(1,1),
+    FromUomId INT REFERENCES UnitOfMeasure(UomId),    -- Đơn vị đầu cần quy chuẩn (Lớn)
+    ToUomId INT REFERENCES UnitOfMeasure(UomId),      -- Đơn vị tiếp nhận sau phép chia (Nhỏ)
+    ConversionFactor DECIMAL(18, 6) NOT NULL,         -- Tỉ lệ số lượng toán học (vd: Nếu quy đổi Kg ra Gram, ghi hệ số 1000)
+    Note NVARCHAR(200)                                -- Lời bình để giải phẫu tránh sai sót đơn vị
+);
+
+-- -------------------------------------------------------------------------
+-- 3. THIẾT BỊ SẢN XUẤT (Equipments)
+-- -------------------------------------------------------------------------
+CREATE TABLE ProductionAreas (
+    AreaId INT PRIMARY KEY IDENTITY(1,1),
+    AreaCode VARCHAR(50) NOT NULL UNIQUE,
+    AreaName NVARCHAR(200) NOT NULL,
+    Description NVARCHAR(500)
+);
+-- Theo tiêu chuẩn GMP, mọi công đoạn phải ghi rõ thực hiện trên máy móc nào.
 CREATE TABLE Equipments (
     EquipmentId INT PRIMARY KEY IDENTITY(1,1),
-    EquipmentCode VARCHAR(50) NOT NULL UNIQUE, -- Mã máy dán trên nhãn tài sản thiết bị (vd: EQP-DRY-01)
-    EquipmentName NVARCHAR(200) NOT NULL,      -- Tên thiết bị (vd: Máy sấy tầng sôi, Máy dập viên)
-    Status NVARCHAR(50) DEFAULT 'Ready',      -- Trạng thái máy (Ready: Sẵn sàng, Maintenance: Bảo trì, Running: Đang chạy)
-    LastMaintenanceDate DATETIME2            -- Lịch sử ngày bảo trì vệ sinh gần nhất
+    EquipmentCode VARCHAR(50) NOT NULL UNIQUE, -- Mã máy (vd: EQP-DRY-01)
+    EquipmentName NVARCHAR(200) NOT NULL,      -- Tên máy (vd: Máy sấy tầng sôi)
+    TechnicalSpecification NVARCHAR(300),      -- Đặc tính kỹ thuật/năng suất
+    UsagePurpose NVARCHAR(300),                -- Công dụng/sử dụng cho
+    AreaId INT REFERENCES ProductionAreas(AreaId), -- Khu vực đặt thiết bị
+    Status NVARCHAR(50) DEFAULT 'Ready',      -- Trạng thái (Sẵn sàng, Bảo trì, Đang chạy)
 );
 
 -- -------------------------------------------------------------------------
@@ -56,7 +107,7 @@ CREATE TABLE Materials (
     Type NVARCHAR(50) CHECK (Type IN ('RawMaterial', 'Packaging', 'FinishedGood', 'Intermediate')), -- Phân loại mục đích sử dụng
     BaseUomId INT REFERENCES UnitOfMeasure(UomId), -- Khóa liên kết tới bảng Đơn vị đo lường gốc của vật tư
     IsActive BIT DEFAULT 1,                   -- Đánh dấu trạng thái kinh doanh/sử dụng của vật tư
-    Description NVARCHAR(500),                -- Ghi chú cách bảo quản, thông tin phụ trợ
+    TechnicalSpecification NVARCHAR(500),                -- Tiêu chuẩn kĩ thuật
     CreatedAt DATETIME2 DEFAULT GETDATE(),
     UpdatedAt DATETIME2                       -- Lưu thời điểm diễn ra tác động cập nhật thuộc tính
 );
@@ -105,7 +156,23 @@ CREATE TABLE RecipeRouting (
     StepName NVARCHAR(100) NOT NULL,                -- Tên vắn tắt công đoạn thao tác (vd: Trộn tá dược, sấy mẻ)
     DefaultEquipmentId INT REFERENCES Equipments(EquipmentId), -- Khuyến nghị dùng hệ thống loại thiết bị máy nào
     EstimatedTimeMinutes INT,                      -- Dự trù tổng thời gian gian chạy máy (Tính bằng Phút)
-    Description NVARCHAR(500)                       -- Mô tả văn bản các thao tác công nhân cần lấy làm chuẩn
+    Description NVARCHAR(500),                      -- Mô tả văn bản các thao tác công nhân cần lấy làm chuẩn
+    NumberOfRouting INT DEFAULT 1,                   -- Số lần thực thực thi mặc định (Loop support)
+    CONSTRAINT CK_RecipeRouting_NumberOfRouting CHECK (NumberOfRouting >= 1)
+);
+
+-- -------------------------------------------------------------------------
+-- 7b. Bảng StepParameters: Thông số kiểm tra tiêu chuẩn cho từng bước
+-- -------------------------------------------------------------------------
+CREATE TABLE StepParameters (
+    ParameterId INT PRIMARY KEY IDENTITY(1,1),
+    RoutingId INT REFERENCES RecipeRouting(RoutingId), -- Tham chiếu tới bước quy trình
+    ParameterName NVARCHAR(100) NOT NULL,             -- Tên thông số (vd: Nhiệt độ sấy)
+    Unit NVARCHAR(50),                                -- Đơn vị tính (vd: °C, v/p)
+    MinValue DECIMAL(18, 4),                          -- Ngưỡng dưới cho phép
+    MaxValue DECIMAL(18, 4),                          -- Ngưỡng trên cho phép
+    IsCritical BIT DEFAULT 1,                         -- Có phải thông số trọng yếu (CCP) hay không
+    Note NVARCHAR(200)                                -- Ghi chú hướng dẫn kiểm tra
 );
 
 -- -------------------------------------------------------------------------
@@ -157,7 +224,23 @@ CREATE TABLE BatchProcessLogs (
     EndTime DATETIME2,                                -- Chốt thời khắc công đoạn kết thúc nghiệp thu
     ResultStatus NVARCHAR(50),                        -- Trạng thái kết quả (Passed, Failed, PendingQC)
     ParametersData NVARCHAR(MAX),                     -- Dữ liệu JSON thông số vận hành máy
-    Notes NVARCHAR(MAX)                               -- Phân trần, giải trình sự cố kỹ thuật hoặc hao hụt
+    Notes NVARCHAR(MAX),                              -- Phân trần, giải trình sự cố kỹ thuật hoặc hao hụt
+    IsDeviation BIT DEFAULT 0,                        -- Đánh dấu nếu có sai lệch thông số
+    VerifiedById INT REFERENCES AppUsers(UserId),     -- Người thẩm định (QA/QC)
+    VerifiedDate DATETIME2,                           -- Ngày thẩm định
+    NumberOfRouting INT DEFAULT 1                     -- Số lần thực thi thực tế (Attempt/Iteration count)
+);
+
+-- -------------------------------------------------------------------------
+-- 10b. Bảng BatchProcessParameterValue: Giá trị thực tế của thông số
+-- -------------------------------------------------------------------------
+CREATE TABLE BatchProcessParameterValue (
+    ValueId BIGINT PRIMARY KEY IDENTITY(1,1),
+    LogId BIGINT REFERENCES BatchProcessLogs(LogId), -- Tham chiếu tới nhật ký công đoạn
+    ParameterId INT REFERENCES StepParameters(ParameterId), -- Tham chiếu tới định nghĩa thông số
+    ActualValue DECIMAL(18, 4),                     -- Giá trị đo được thực tế
+    RecordedDate DATETIME2 DEFAULT GETDATE(),       -- Thời điểm ghi nhận
+    Note NVARCHAR(500)                              -- Ghi chú riêng cho từng thông số (nếu có)
 );
 
 -- -------------------------------------------------------------------------
@@ -224,15 +307,4 @@ CREATE TABLE SystemAuditLog (
     ChangedDate DATETIME2 DEFAULT GETDATE()    -- Lịch sử độ chi tiết thời gian tính tới mi-li-giây
 );
 
--- -------------------------------------------------------------------------
--- 15. Bảng UomConversions: Từ điển Đối soát tỷ lệ Đơn Vị Tính toán
--- Giải quyết bài toán quy chiếu linh hoạt theo cấp số nhân lúc mua vật tư
--- so với khối lượng cân xuất phát tính cấp số lẻ xuống dây chuyền phân xưởng.
--- -------------------------------------------------------------------------
-CREATE TABLE UomConversions (
-    ConversionId INT PRIMARY KEY IDENTITY(1,1),
-    FromUomId INT REFERENCES UnitOfMeasure(UomId),    -- Đơn vị đầu cần quy chuẩn (Lớn)
-    ToUomId INT REFERENCES UnitOfMeasure(UomId),      -- Đơn vị tiếp nhận sau phép chia (Nhỏ)
-    ConversionFactor DECIMAL(18, 6) NOT NULL,         -- Tỉ lệ số lượng toán học (vd: Nếu quy đổi Kg ra Gram, ghi hệ số 1000)
-    Note NVARCHAR(200)                                -- Lời bình để giải phẫu tránh sai sót đơn vị
-);
+PRINT 'Centralized Master Schema Created Successfully.';

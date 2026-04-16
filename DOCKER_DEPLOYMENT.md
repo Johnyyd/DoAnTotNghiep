@@ -156,6 +156,20 @@ docker rmi gmp-who-api gmp-who-frontend
 docker network rm gmp-network
 ```
 
+## 🔄 Resetting the Database
+
+Nếu bạn đã thay đổi các file SQL trong thư mục `DATABASE/` và muốn áp dụng lại từ đầu (xóa sạch dữ liệu cũ):
+
+```bash
+# 1. Dừng và xóa toàn bộ volume (Xóa dữ liệu cũ)
+docker-compose down -v
+
+# 2. Khởi động lại hệ thống
+docker-compose up -d --build
+```
+
+Sau khi chạy lệnh trên, hệ thống sẽ tạo lại database `PharmaceuticalProcessingManagementSystem` và chạy lần lượt các script trong thư mục `DATABASE/` để khởi tạo cấu trúc và dữ liệu mẫu.
+
 ## 🔐 Security Notes
 
 - Đây là môi trường development. Thay đổi passwords trong production:

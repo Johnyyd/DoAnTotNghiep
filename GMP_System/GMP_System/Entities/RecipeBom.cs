@@ -17,6 +17,8 @@ public partial class RecipeBom
 
     public decimal? WastePercentage { get; set; }
 
+    public string? TechnicalStandard { get; set; }
+
     public string? Note { get; set; }
 
     public virtual Material? Material { get; set; }
