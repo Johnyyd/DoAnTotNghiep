@@ -32,7 +32,7 @@ IF OBJECT_ID('UomConversions', 'U') IS NOT NULL DELETE FROM UomConversions;
 IF OBJECT_ID('UnitOfMeasure', 'U') IS NOT NULL DELETE FROM UnitOfMeasure;
 IF OBJECT_ID('AppUsers', 'U') IS NOT NULL DELETE FROM AppUsers;
 GO
-
+PRINT 'Delete Data Completed Successfully!';
 -- RESET IDENTITY
 IF OBJECT_ID('AppUsers', 'U') IS NOT NULL DBCC CHECKIDENT ('AppUsers', RESEED, 0);
 IF OBJECT_ID('UnitOfMeasure', 'U') IS NOT NULL DBCC CHECKIDENT ('UnitOfMeasure', RESEED, 0);
@@ -50,7 +50,7 @@ IF OBJECT_ID('ProductionOrders', 'U') IS NOT NULL DBCC CHECKIDENT ('ProductionOr
 IF OBJECT_ID('ProductionBatches', 'U') IS NOT NULL DBCC CHECKIDENT ('ProductionBatches', RESEED, 0);
 IF OBJECT_ID('InventoryLots', 'U') IS NOT NULL DBCC CHECKIDENT ('InventoryLots', RESEED, 0);
 GO
-
+PRINT 'Reset Identity Completed Successfully!';
 -- =====================================================================
 -- 1. AppUsers (6 users: Admin, 2 QC, 2 Operator, 1 Manager)
 -- Passwords: Admin@123 | Qc@123456 | Op@123456 | Mgr@123456
@@ -66,7 +66,7 @@ VALUES
 (6, 'op02',    N'Hoàng Văn Thao Tác',       'Operator',          1, '$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW', DATEADD(DAY,-30,GETDATE()), NULL);
 SET IDENTITY_INSERT AppUsers OFF;
 GO
-
+PRINT 'Insert AppUsers Completed Successfully!';
 -- =====================================================================
 -- 2. UnitOfMeasure (7 đơn vị)
 -- =====================================================================
@@ -81,7 +81,7 @@ INSERT INTO UnitOfMeasure (UomId, UomName, Description) VALUES
 (7, 'Thùng',   N'Thùng (12 hộp/thùng)');
 SET IDENTITY_INSERT UnitOfMeasure OFF;
 GO
-
+PRINT 'Insert UnitOfMeasure Completed Successfully!';
 -- =====================================================================
 -- 3. ProductionAreas
 -- =====================================================================
@@ -93,7 +93,7 @@ VALUES
 (3, 'TRON-KHO', N'Phòng trộn khô', N'Khu vực trộn');
 SET IDENTITY_INSERT ProductionAreas OFF;
 GO
-
+PRINT 'Insert ProductionAreas Completed Successfully!';
 -- =====================================================================
 -- 4. UomConversions
 -- =====================================================================
@@ -106,7 +106,7 @@ INSERT INTO UomConversions (ConversionId, FromUomId, ToUomId, ConversionFactor, 
 (5, 5, 4,  10.0,   N'1 vỉ = 10 viên');
 SET IDENTITY_INSERT UomConversions OFF;
 GO
-
+PRINT 'Insert UomConversions Completed Successfully!';
 -- =====================================================================
 -- 5. Equipments (8 thiết bị)
 -- =====================================================================
@@ -125,7 +125,7 @@ INSERT INTO Equipments (EquipmentId, EquipmentCode, EquipmentName, TechnicalSpec
 (11, 'F-262',         N'Máy gấp toa',            N'10.000 toa/ giờ',      N'Bế tờ HDSD',                  1, 'Ready');
 SET IDENTITY_INSERT Equipments OFF;
 GO
-
+PRINT 'Insert Equipments Completed Successfully!';
 -- =====================================================================
 -- 6. Materials (11 loại vật tư)
 -- =====================================================================
@@ -150,7 +150,7 @@ INSERT INTO Materials (MaterialId, MaterialCode, MaterialName, Type, BaseUomId, 
 (17, 'FG-DIPY-AMP', N'Thuốc ống Dipyridamole 10mg/2ml',    'FinishedGood', 4, 1, N'DĐVN V', GETDATE());
 SET IDENTITY_INSERT Materials OFF;
 GO
-
+PRINT 'Insert Materials Completed Successfully!';
 -- =====================================================================
 -- 7. Recipes (3 công thức)
 -- =====================================================================
@@ -163,7 +163,7 @@ INSERT INTO Recipes (RecipeId, MaterialId, VersionNumber, BatchSize, Status, App
 (5, 14, 3, 200000.00, 'Approved', 2, DATEADD(DAY,-5,GETDATE()),  DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,1, GETDATE()),  N'Paracetamol tầng sôi.');
 SET IDENTITY_INSERT Recipes OFF;
 GO
-
+PRINT 'Insert Recipes Completed Successfully!';
 -- =====================================================================
 -- 8. RecipeBOM (Định mức vật tư - BOM)
 -- =====================================================================
@@ -183,7 +183,7 @@ INSERT INTO RecipeBOM (BomId, RecipeId, MaterialId, Quantity, UomId, WastePercen
 (12, 2, 8,  10000.00, 2, 0.20, N'PVP K30');
 SET IDENTITY_INSERT RecipeBOM OFF;
 GO
-
+PRINT 'Insert RecipeBOM Completed Successfully!';
 -- =====================================================================
 -- 9. RecipeRouting (Quy trình công đoạn)
 -- =====================================================================
@@ -213,7 +213,7 @@ INSERT INTO RecipeRouting (RoutingId, RecipeId, StepNumber, StepName, DefaultEqu
 (20, 5, 6, N'Dập viên',          4, 180, N'Dập viên nén 500mg.', 1);
 SET IDENTITY_INSERT RecipeRouting OFF;
 GO
-
+PRINT 'Insert RecipeRouting Completed Successfully!';
 -- =====================================================================
 -- 10. StepParameters (Dữ liệu chốt GMP - Cấu trúc bảng và Seeding)
 -- Bảng này thường thiếu trong seed cũ, cần nạp để Mobile check Deviation.
@@ -229,7 +229,7 @@ INSERT INTO StepParameters (ParameterId, RoutingId, ParameterName, Unit, MinValu
 (50, 18, N'Nhiệt độ sấy', '°C', 60, 70, 1, NULL);
 SET IDENTITY_INSERT StepParameters OFF;
 GO
-
+PRINT 'Insert StepParameters Completed Successfully!';
 -- =====================================================================
 -- 11. ProductionOrders (10 kịch bản đa dạng)
 -- =====================================================================
@@ -241,7 +241,7 @@ INSERT INTO ProductionOrders (OrderId, OrderCode, RecipeId, PlannedQuantity, Act
 (7,  'PO-26-007', 2, 200000.00, 197800.00, DATEADD(DAY,-10,GETDATE()),DATEADD(DAY,-7,GETDATE()), 'Completed',  4, GETDATE(), N'Lô cũ.');
 SET IDENTITY_INSERT ProductionOrders OFF;
 GO
-
+PRINT 'Insert ProductionOrders Completed Successfully!';
 -- =====================================================================
 -- 12. ProductionBatches (11 mẻ sản xuất)
 -- =====================================================================
@@ -251,7 +251,7 @@ INSERT INTO ProductionBatches (BatchId, OrderId, BatchNumber, Status, Manufactur
 (2, 2, 'B26-002-01', 'Completed', DATEADD(HOUR,-24,GETDATE()),DATEADD(HOUR,-12,GETDATE()),DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
 (4, 2, 'B26-002-03', 'InProcess', GETDATE(), NULL, NULL, 2, GETDATE());
 SET IDENTITY_INSERT ProductionBatches OFF;
-
+PRINT 'Insert ProductionBatches Completed Successfully!';
 -- =====================================================================
 -- 13. InventoryLots (12 lô nguyên liệu)
 -- =====================================================================
@@ -261,7 +261,7 @@ INSERT INTO InventoryLots (LotId, MaterialId, LotNumber, QuantityCurrent, Manufa
 (3, 9, 'L-PARA-01', 250000.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'Released', N'Ấn Độ', GETDATE()),
 (5, 6, 'L-STR-01',  80000.00, DATEADD(DAY,-45,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'Released', N'Đồng Nai', GETDATE());
 SET IDENTITY_INSERT InventoryLots OFF;
-
+PRINT 'Insert InventoryLots Completed Successfully!';
 -- =====================================================================
 -- 14. MaterialUsage (Xuất kho cho các mẻ)
 -- =====================================================================
@@ -270,7 +270,7 @@ INSERT INTO MaterialUsage (UsageId, BatchId, InventoryLotId, QuantityUsed, UsedD
 (1, 1, 1, 25015.00, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất NLC3'),
 (2, 1, 5, 25100.00, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất Tinh bột');
 SET IDENTITY_INSERT MaterialUsage OFF;
-
+PRINT 'Insert MaterialUsage Completed Successfully!';
 -- (Bảng QualityTests không tồn tại trong schema thực tế của DB này - đã bỏ qua)
 
 -- =====================================================================
@@ -281,7 +281,7 @@ INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId
 (1, 1, 1, 2, 3, DATEADD(HOUR,-124,GETDATE()), DATEADD(HOUR,-122,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1),
 (2, 1, 2, 2, 3, DATEADD(HOUR,-122,GETDATE()), DATEADD(HOUR,-120,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1);
 SET IDENTITY_INSERT BatchProcessLogs OFF;
-
+PRINT 'Insert BatchProcessLogs Completed Successfully!';
 -- =====================================================================
 -- 16. SystemAuditLog (Dấu vết kiểm toán - minh họa)
 -- =====================================================================
@@ -290,5 +290,6 @@ INSERT INTO SystemAuditLog (AuditId, TableName, RecordId, Action, OldValue, NewV
 (1, 'Recipes', '1', 'UPDATE', N'{"Status":"Draft"}', N'{"Status":"Approved"}', 2, DATEADD(DAY,-30,GETDATE()));
 SET IDENTITY_INSERT SystemAuditLog OFF;
 GO
+PRINT 'Insert SystemAuditLog Completed Successfully!';
 
 PRINT 'GMP Database Initialization & Full Seeding Completed Successfully!';
