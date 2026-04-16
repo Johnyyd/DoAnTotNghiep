@@ -45,4 +45,12 @@ class AuthService {
     await prefs.remove('auth_token');
     await prefs.remove('auth_user');
   }
+
+  /// Xác thực PIN chữ ký cá nhân (GMP Electronic Signature)
+  /// Trong thực tế sẽ gọi API verify, hiện tại dùng mẫu test.
+  static bool verifyPin(String pin) {
+    if (pin.isEmpty) return false;
+    // Chấp nhận admin123 cho quyền admin/QC, và 123456 cho nhân viên sản xuất
+    return pin == 'admin123' || pin == '123456';
+  }
 }

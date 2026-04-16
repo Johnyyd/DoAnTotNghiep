@@ -7,15 +7,24 @@ import 'package:http/http.dart' as http;
 /// Mọi request đều tự động gắn JWT token từ [AuthService].
 class ApiService {
   // Khi chạy trong Docker Compose (Nginx proxy), baseUrl nên là đường dẫn tương đối '/api'
-  // Khi chạy dev local Windows thì dùng 'http://localhost:5001/api' hoặc IP Tailscale
+  // Khi chạy dev local Windows thì dùng 'http://localhost:5001/api' hoặc IP máy chủ
+  static String? _manualBaseUrl;
+  static void setManualBaseUrl(String url) => _manualBaseUrl = url;
+
   static String get baseUrl {
+    if (_manualBaseUrl != null) return _manualBaseUrl!;
     if (kIsWeb) {
       // Trên Web, dùng origin hiện tại (vd http://localhost:8081) + /api
       final origin = Uri.base.origin;
       return '$origin/api';
     }
-    // Mobile/Emulator fallback
-    return 'http://localhost:5001/api';
+    // Mobile/Emulator fallback. Chú ý: localhost không chạy được trên thiết bị thật.
+    return 'http://10.0.2.2:5001/api'; // Mặc định cho Android Emulator
+  }
+
+  /// Tiện ích log lỗi cho dev
+  static void _logError(String context, dynamic error) {
+    debugPrint('[ApiService Error] $context: $error');
   }
 
   /// Headers mặc định kèm JWT token

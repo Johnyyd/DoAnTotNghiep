@@ -107,41 +107,46 @@ class _HomeScreenState extends State<HomeScreen>
     if (status == 'On-Hold' || status == 'Hold' || status == 'Error') {
       return 'On-Hold';
     }
-    if (status == 'Draft') return 'Pending Worker';
-    if (status == 'Pending QC' || status == 'PendingQC') return 'Pending QC';
 
     final batches = order['productionBatches'] as List<dynamic>? ?? [];
     if (batches.isEmpty) return 'Pending Worker';
 
     bool hasPendingQC = false;
-    bool hasRunning = false;
+    bool hasPendingWorker = false;
+    bool hasInProcess = false;
     bool hasFailed = false;
 
     for (var b in batches) {
       if (b['status'] == 'Completed') continue;
+      
       final logStatusRaw = b['latestLogStatus']?.toString() ?? '';
       final logStatus = logStatusRaw.replaceAll(' ', '').toUpperCase();
 
       if (logStatus == 'PENDINGQC' || logStatus == 'PENDING_QC') {
         hasPendingQC = true;
-      } else if (logStatus == 'APPROVED' || logStatus == 'RUNNING') {
-        hasRunning = true;
+      } else if (logStatus == 'APPROVED') {
+        hasInProcess = true;
+      } else if (logStatus == 'RUNNING' || logStatus == 'PASSED' || logStatus == '') {
+        // RUNNING: Công nhân đang nhập liệu (Phase 2)
+        // PASSED: Vừa xong công đoạn trước, chưa bắt đầu công đoạn sau (Phase 1)
+        // '': Chưa có log nào (Phase 1)
+        hasPendingWorker = true;
       } else if (logStatus == 'FAILED' || logStatus == 'REJECTED') {
         hasFailed = true;
       }
     }
 
+    // Thứ tự ưu tiên hiển thị: On-Hold > Pending QC > Pending Worker > In-Process
     if (hasFailed) return 'On-Hold';
     if (hasPendingQC) return 'Pending QC';
-    if (hasRunning) return 'In-Process';
+    if (hasPendingWorker) return 'Pending Worker';
+    if (hasInProcess) return 'In-Process';
 
     // Fallback based on order status
-    if (status == 'In-Process' ||
-        status == 'InProcess' ||
-        status == 'Running') {
+    if (status == 'Draft') return 'Pending Worker';
+    if (status == 'In-Process' || status == 'InProcess' || status == 'Running') {
       return 'In-Process';
     }
-    if (status == 'Pending QC' || status == 'PendingQC') return 'Pending QC';
 
     return 'Pending Worker';
   }

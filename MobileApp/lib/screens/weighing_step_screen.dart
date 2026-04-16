@@ -6,6 +6,7 @@ import '../components/material_card.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../models/execution_phase.dart';
+import '../utils/gmp_step_mixin.dart';
 
 /// Màn hình [WeighingStepScreen] hiển thị giao diện cho công đoạn cân nguyên liệu.
 class WeighingStepScreen extends StatefulWidget {
@@ -30,7 +31,7 @@ class WeighingStepScreen extends StatefulWidget {
   State<WeighingStepScreen> createState() => _WeighingStepScreenState();
 }
 
-class _WeighingStepScreenState extends State<WeighingStepScreen> {
+class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMixin<WeighingStepScreen> {
   final _tempCtrl = TextEditingController();
   final _humidCtrl = TextEditingController();
   final _pressCtrl = TextEditingController();
@@ -50,7 +51,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
 
   final Map<String, Map<String, String>> _materialsData = {};
   bool _isLoading = true;
-  bool _isSaving = false;
   List<dynamic> _bom = [];
 
   // GMP EBR Additions
@@ -59,7 +59,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
   Map<String, dynamic> _currentLog = {};
   Map<String, dynamic>? _batchInfo;
   ExecutionPhase _currentPhase = ExecutionPhase.precheck;
-  Timer? _pollTimer;
 
   @override
   void initState() {
@@ -67,7 +66,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
     if (widget.batchId != null) {
       _loadDataFromDB().then((_) {
         if (_currentPhase == ExecutionPhase.verification) {
-          _startPolling();
+          startPolling(_loadDataFromDB);
         }
       });
     } else {
@@ -168,22 +167,19 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
         }
 
         // Phase Logic
-        final rawStatus = (log['resultStatus'] ?? '')
-            .toString()
-            .replaceAll(' ', '')
-            .toUpperCase();
+        final rawStatus = normalizeStatus(log['resultStatus']);
         if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
           _currentPhase = ExecutionPhase.verification;
-          _startPolling();
+          startPolling(_loadDataFromDB);
         } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
           _currentPhase = ExecutionPhase.execution;
-          _stopPolling();
+          stopPolling();
         } else if (rawStatus == 'RUNNING') {
           _currentPhase = ExecutionPhase.input;
-          _stopPolling();
+          stopPolling();
         } else {
           _currentPhase = ExecutionPhase.precheck;
-          _stopPolling();
+          stopPolling();
         }
       }
 
@@ -195,20 +191,10 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
     }
   }
 
-  void _startPolling() {
-    if (_pollTimer != null && _pollTimer!.isActive) return;
-    _pollTimer =
-        Timer.periodic(const Duration(seconds: 5), (_) => _loadDataFromDB());
-  }
 
-  void _stopPolling() {
-    _pollTimer?.cancel();
-    _pollTimer = null;
-  }
 
   @override
   void dispose() {
-    _pollTimer?.cancel();
     _tempCtrl.dispose();
     _humidCtrl.dispose();
     _pressCtrl.dispose();
@@ -255,15 +241,10 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
   }
 
   Future<void> _approveByQC(String status) async {
-    final pin = await _showPinDialog();
-    if (pin == null || pin.isEmpty) return;
-    if (pin != '123456') {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('❌ Mã PIN xác nhận không đúng!')));
-      return;
-    }
+    final pin = await showPinDialog();
+    if (pin == null) return;
 
-    setState(() => _isSaving = true);
+    setState(() => isSaving = true);
     final verifierId = AuthService.currentUser?['userId'] ?? 0;
 
     final success = await ApiService.verifyStepData(
@@ -274,7 +255,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
           status == 'Failed' ? 'QC Rejected Weighing' : 'Approved via Mobile',
     );
 
-    setState(() => _isSaving = false);
+    setState(() => isSaving = false);
     if (success && mounted) {
       if (status == 'Approved' && widget.orderId != null) {
         await ApiService.updateOrderStatus(widget.orderId!, 'In-Process');
@@ -383,44 +364,14 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
       if (proceed != true) return;
     }
 
-    final pin = await _showPinDialog();
-    if (pin == null || pin.isEmpty) return;
-    if (pin != '123456') {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('❌ Mã PIN không đúng!')));
-      }
-      return;
-    }
+    final pin = await showPinDialog();
+    if (pin == null) return;
 
     await _submit(hasDeviation ? 'Failed' : 'PendingQC',
         hasDeviation ? deviationMsg : null);
   }
 
-  Future<String?> _showPinDialog() {
-    final ctrl = TextEditingController();
-    return showDialog<String>(
-        context: context,
-        builder: (c) => AlertDialog(
-              title: const Text('XÁC NHẬN CHỮ KÝ ĐIỆN TỬ',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              content: TextField(
-                controller: ctrl,
-                obscureText: true,
-                keyboardType: TextInputType.number,
-                decoration:
-                    const InputDecoration(labelText: 'Mã PIN cá nhân (123456)'),
-              ),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(c, null),
-                    child: const Text('Hủy')),
-                ElevatedButton(
-                    onPressed: () => Navigator.pop(c, ctrl.text),
-                    child: const Text('Ký tên')),
-              ],
-            ));
-  }
+
 
   Future<void> _nextPhase() async {
     if (_currentPhase == ExecutionPhase.precheck) {
@@ -452,7 +403,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
 
   Future<bool> _submit(String resultStatus, String? devNotes,
       {bool isInternal = false}) async {
-    setState(() => _isSaving = true);
+    setState(() => isSaving = true);
     final params = {
       "temperature": _tempCtrl.text,
       "humidity": _humidCtrl.text,
@@ -470,7 +421,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
         ? 'DEVIATION:\n$devNotes\nNote: ${_noteCtrl.text}'
         : _noteCtrl.text;
     if (widget.batchId == null || widget.stepId == null) {
-      setState(() => _isSaving = false);
+      setState(() => isSaving = false);
       return false;
     }
 
@@ -481,7 +432,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
       parametersData: params,
       notes: finalNotes.isNotEmpty ? finalNotes : null,
     );
-    setState(() => _isSaving = false);
+    setState(() => isSaving = false);
 
     if (success && mounted) {
       if (resultStatus == 'PendingQC') {
@@ -597,7 +548,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
             backgroundColor: Colors.green);
       }
       return FloatingActionButton.extended(
-          onPressed: _isSaving ? null : _prevPhase,
+          onPressed: isSaving ? null : _prevPhase,
           label: const Text('QUAY LẠI SỬA'),
           icon: const Icon(Icons.arrow_back),
           backgroundColor: Colors.grey);
@@ -613,7 +564,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> {
       label = 'KẾT THÚC';
     }
     return FloatingActionButton.extended(
-        onPressed: _isSaving ? null : _nextPhase,
+        onPressed: isSaving ? null : _nextPhase,
         label: Text(label),
         icon: const Icon(Icons.arrow_forward));
   }

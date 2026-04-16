@@ -5,6 +5,7 @@ import '../components/step_form_inputs.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../models/execution_phase.dart';
+import '../utils/gmp_step_mixin.dart';
 
 /// Màn hình [MixingStepScreen] dành cho công đoạn trộn khô nguyên liệu.
 class MixingStepScreen extends StatefulWidget {
@@ -29,7 +30,7 @@ class MixingStepScreen extends StatefulWidget {
   State<MixingStepScreen> createState() => _MixingStepScreenState();
 }
 
-class _MixingStepScreenState extends State<MixingStepScreen> {
+class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<MixingStepScreen> {
   final _tempCtrl = TextEditingController();
   final _humidCtrl = TextEditingController();
   final _timeCtrl = TextEditingController();
@@ -59,7 +60,6 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
 
   final Map<String, String> _actualMaterials = {};
   bool _isLoading = true;
-  bool _isSaving = false;
   List<dynamic> _bom = [];
 
   // GMP EBR Additions
@@ -68,7 +68,6 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
   Map<String, dynamic> _currentLog = {};
   Map<String, dynamic>? _batchInfo;
   ExecutionPhase _currentPhase = ExecutionPhase.precheck;
-  Timer? _pollTimer;
 
   @override
   void initState() {
@@ -175,22 +174,19 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
         }
 
         // Phase Logic
-        final rawStatus = (log['resultStatus'] ?? '')
-            .toString()
-            .replaceAll(' ', '')
-            .toUpperCase();
+        final rawStatus = normalizeStatus(log['resultStatus']);
         if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
           _currentPhase = ExecutionPhase.verification;
-          _startPolling();
+          startPolling(_loadDataFromDB);
         } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
           _currentPhase = ExecutionPhase.execution;
-          _stopPolling();
+          stopPolling();
         } else if (rawStatus == 'RUNNING') {
           _currentPhase = ExecutionPhase.input;
-          _stopPolling();
+          stopPolling();
         } else {
           _currentPhase = ExecutionPhase.precheck;
-          _stopPolling();
+          stopPolling();
         }
       }
 
@@ -202,16 +198,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     }
   }
 
-  void _startPolling() {
-    if (_pollTimer != null && _pollTimer!.isActive) return;
-    _pollTimer =
-        Timer.periodic(const Duration(seconds: 5), (_) => _loadDataFromDB());
-  }
 
-  void _stopPolling() {
-    _pollTimer?.cancel();
-    _pollTimer = null;
-  }
 
   void _setCurrentTime(TextEditingController ctrl) {
     if (widget.isViewer) return;
@@ -246,7 +233,6 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
 
   @override
   void dispose() {
-    _pollTimer?.cancel();
     _tempCtrl.dispose();
     _humidCtrl.dispose();
     _timeCtrl.dispose();
@@ -307,17 +293,10 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
   }
 
   Future<void> _approveByQC(String status) async {
-    final pin = await _showPinDialog();
-    if (pin == null || pin.isEmpty) return;
-    if (pin != '123456') {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('❌ Mã PIN xác nhận không đúng!')));
-      }
-      return;
-    }
+    final pin = await showPinDialog();
+    if (pin == null) return;
 
-    setState(() => _isSaving = true);
+    setState(() => isSaving = true);
     final verifierId = AuthService.currentUser?['userId'] ?? 0;
 
     final success = await ApiService.verifyStepData(
@@ -328,7 +307,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
     );
 
     if (mounted) {
-      setState(() => _isSaving = false);
+      setState(() => isSaving = false);
       if (success) {
         if (status == 'Approved' && widget.orderId != null) {
           await ApiService.updateOrderStatus(widget.orderId!, 'In-Process');
@@ -391,49 +370,14 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
       if (proceed != true) return;
     }
 
-    final pin = await _showPinDialog();
-    if (pin == null || pin.isEmpty) return;
-    if (pin != '123456') {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('❌ Mã PIN không đúng!')));
-      }
-      return;
-    }
+    final pin = await showPinDialog();
+    if (pin == null) return;
 
     await _submit(hasDeviation ? 'Failed' : 'PendingQC',
         hasDeviation ? deviationMsg : null);
   }
 
-  Future<String?> _showPinDialog() {
-    final ctrl = TextEditingController();
-    return showDialog<String>(
-        context: context,
-        builder: (c) => AlertDialog(
-              title: const Text('CHỮ KÝ ĐIỆN TỬ GMP',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              content: TextField(
-                controller: ctrl,
-                obscureText: true,
-                keyboardType: TextInputType.number,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Mã PIN cá nhân',
-                  hintText: 'Nhập 123456 để test',
-                  prefixIcon: Icon(Icons.lock_outline),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(c, null),
-                    child: const Text('Hủy')),
-                ElevatedButton(
-                    onPressed: () => Navigator.pop(c, ctrl.text),
-                    child: const Text('Ký xác nhận')),
-              ],
-            ));
-  }
+
 
   Future<void> _nextPhase() async {
     if (_currentPhase == ExecutionPhase.precheck) {
@@ -468,7 +412,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
 
   Future<bool> _submit(String resultStatus, String? devNotes,
       {bool isInternal = false}) async {
-    setState(() => _isSaving = true);
+    setState(() => isSaving = true);
     final params = {
       "veSinhPhong": _phongSach,
       "veSinhMay": _mayTron,
@@ -498,7 +442,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
         : _noteCtrl.text;
 
     if (widget.batchId == null || widget.stepId == null) {
-      setState(() => _isSaving = false);
+      setState(() => isSaving = false);
       return false;
     }
 
@@ -515,7 +459,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
       if (resultStatus == 'Passed') Navigator.pop(context, true);
     }
 
-    if (mounted) setState(() => _isSaving = false);
+    if (mounted) setState(() => isSaving = false);
 
     if (!isInternal && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -656,7 +600,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
         padding: const EdgeInsets.only(bottom: 20, right: 10),
         child: FloatingActionButton.extended(
           heroTag: 'btnBackWaitM',
-          onPressed: _isSaving ? null : _prevPhase,
+          onPressed: isSaving ? null : _prevPhase,
           label: const Text('QUAY LẠI SỬA'),
           icon: const Icon(Icons.arrow_back),
           backgroundColor: Colors.grey.shade700,
@@ -685,7 +629,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
               padding: const EdgeInsets.only(right: 12),
               child: FloatingActionButton.extended(
                 heroTag: 'btnBackM',
-                onPressed: _isSaving ? null : _prevPhase,
+                onPressed: isSaving ? null : _prevPhase,
                 label: const Text('QUAY LẠI'),
                 icon: const Icon(Icons.arrow_back),
                 backgroundColor: Colors.grey.shade700,
@@ -693,9 +637,9 @@ class _MixingStepScreenState extends State<MixingStepScreen> {
             ),
           FloatingActionButton.extended(
             heroTag: 'btnNextM',
-            onPressed: _isSaving ? null : _nextPhase,
+            onPressed: isSaving ? null : _nextPhase,
             label: Text(label),
-            icon: _isSaving
+            icon: isSaving
                 ? const SizedBox(
                     width: 20,
                     height: 20,

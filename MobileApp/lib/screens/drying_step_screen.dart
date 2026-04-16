@@ -5,6 +5,7 @@ import '../components/step_form_inputs.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../models/execution_phase.dart';
+import '../utils/gmp_step_mixin.dart';
 
 /// Màn hình [DryingStepScreen] quản lý công đoạn sấy nguyên liệu.
 class DryingStepScreen extends StatefulWidget {
@@ -29,7 +30,7 @@ class DryingStepScreen extends StatefulWidget {
   State<DryingStepScreen> createState() => _DryingStepScreenState();
 }
 
-class _DryingStepScreenState extends State<DryingStepScreen> {
+class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<DryingStepScreen> {
   final _ngayCtrl = TextEditingController();
   final _nguoiCtrl = TextEditingController();
   final _tempCtrl = TextEditingController();
@@ -76,15 +77,11 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   String _mayKhongTai = 'Ổn định';
   String _mauKiemTra = '0';
 
-  bool _isSaving = false;
-
   Timer? _timer;
-  Timer? _pollTimer;
   int _secondsRemaining = 20;
 
   @override
   void dispose() {
-    _pollTimer?.cancel();
     _timer?.cancel();
     _ngayCtrl.dispose();
     super.dispose();
@@ -106,7 +103,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
     if (widget.batchId != null) {
       _loadDataFromDB().then((_) {
         if (_currentPhase == ExecutionPhase.verification) {
-          _startPolling();
+          startPolling(_loadDataFromDB);
         }
       });
     }
@@ -227,11 +224,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
             _baoQuanKho = params['checkBaoQuanKho'] ?? false;
 
             // Xác định phase hiện tại dựa trên dữ liệu từ DB (Chuẩn hóa so sánh)
-            final rawStatus = _currentLog['resultStatus']
-                    ?.toString()
-                    .replaceAll(' ', '')
-                    .toUpperCase() ??
-                '';
+            final rawStatus = normalizeStatus(_currentLog['resultStatus']);
 
             if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
               _currentPhase = ExecutionPhase.verification;
@@ -257,9 +250,9 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
 
           // QUẢN LÝ AUTO-POLLING KHI ĐANG ĐỢI QC
           if (_currentPhase == ExecutionPhase.verification) {
-            _startPolling();
+            startPolling(_loadDataFromDB);
           } else {
-            _stopPolling();
+            stopPolling();
           }
 
           _updateAllInputStatuses();
@@ -270,20 +263,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
     }
   }
 
-  void _startPolling() {
-    if (_pollTimer != null && _pollTimer!.isActive) return;
-    debugPrint("--- START AUTO-POLLING FOR QC STATUS ---");
-    _pollTimer =
-        Timer.periodic(const Duration(seconds: 5), (_) => _loadDataFromDB());
-  }
 
-  void _stopPolling() {
-    if (_pollTimer != null) {
-      debugPrint("--- STOP AUTO-POLLING ---");
-      _pollTimer!.cancel();
-      _pollTimer = null;
-    }
-  }
 
   bool get _isPhase1Locked => widget.isViewer || _currentPhase.index > 0;
   bool get _isPhase2Locked => widget.isViewer || _currentPhase.index > 1;
@@ -422,18 +402,11 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
   }
 
   Future<void> _approveByQC(String status) async {
-    final pin = await _showPinDialog();
-    if (pin == null || pin.isEmpty) {
-      return;
-    }
-    if (mounted && pin != '123456') {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('❌ Mã PIN xác nhận không đúng!')));
-      return;
-    }
+    final pin = await showPinDialog();
+    if (pin == null) return;
 
     if (mounted) {
-      setState(() => _isSaving = true);
+      setState(() => isSaving = true);
     }
     final verifierId = AuthService.currentUser?['userId'] ?? 0;
 
@@ -445,7 +418,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
     );
 
     if (mounted) {
-      setState(() => _isSaving = false);
+      setState(() => isSaving = false);
       if (success) {
         // Nếu duyệt trực tiếp trên máy công nhân, cũng cần update trạng thái Lệnh
         if (status == 'Approved' && widget.orderId != null) {
@@ -481,16 +454,8 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       return;
     }
 
-    final pin = await _showPinDialog();
-    if (pin == null || pin.isEmpty) {
-      return;
-    }
-
-    if (mounted && pin != '123456') {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('❌ Mã PIN không đúng!')));
-      return;
-    }
+    final pin = await showPinDialog();
+    if (pin == null) return;
 
     await _submit('PendingQC', null);
 
@@ -506,35 +471,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
     }
   }
 
-  Future<String?> _showPinDialog() {
-    final ctrl = TextEditingController();
-    return showDialog<String>(
-        context: context,
-        builder: (c) => AlertDialog(
-              title: const Text('CHỮ KÝ ĐIỆN TỬ GMP',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              content: TextField(
-                controller: ctrl,
-                obscureText: true,
-                keyboardType: TextInputType.number,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Mã PIN cá nhân',
-                  hintText: 'Nhập 123456 để test',
-                  prefixIcon: Icon(Icons.lock_outline),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(c, null),
-                    child: const Text('Hủy')),
-                ElevatedButton(
-                    onPressed: () => Navigator.pop(c, ctrl.text),
-                    child: const Text('Ký xác nhận')),
-              ],
-            ));
-  }
+
 
   Future<void> _nextPhase() async {
     if (_currentPhase == ExecutionPhase.precheck) {
@@ -554,7 +491,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       // Kết thúc mẻ sấy (Passed) - Chốt dữ liệu thủ công
       if (_secondsRemaining > 0) return; // Bảo vệ nếu timer chưa xong
 
-      setState(() => _isSaving = true);
+      setState(() => isSaving = true);
       // Gửi bản chốt cuối cùng lên server
       bool ok = await _submit('Passed', null);
       if (ok && mounted) {
@@ -562,7 +499,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
             content: Text('✔ Đã hoàn thành mẻ sấy và lưu kết quả!')));
         Navigator.of(context).pop(true);
       } else if (mounted) {
-        setState(() => _isSaving = false);
+        setState(() => isSaving = false);
       }
     }
   }
@@ -598,7 +535,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       {bool isInternal = false}) async {
     if (widget.batchId == null || widget.stepId == null) return false;
 
-    setState(() => _isSaving = true);
+    setState(() => isSaving = true);
     final now = DateTime.now();
 
     // Ràng buộc kiểm tra Khối lượng trước và sau sấy
@@ -612,7 +549,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
               content:
                   Text('⚠ Vui lòng nhập đầy đủ Khối lượng trước và sau sấy!')));
         }
-        setState(() => _isSaving = false);
+        setState(() => isSaving = false);
         return false;
       }
 
@@ -622,7 +559,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
               content: Text(
                   '⚠ Khối lượng sau sấy không thể lớn hơn khối lượng trước sấy!')));
         }
-        setState(() => _isSaving = false);
+        setState(() => isSaving = false);
         return false;
       }
     }
@@ -676,7 +613,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
       notes: isInternal ? null : (signature ?? 'Worker Confirm'),
     );
 
-    setState(() => _isSaving = false);
+    setState(() => isSaving = false);
 
     if (success && mounted) {
       if (resultStatus == 'PendingQC') {
@@ -789,7 +726,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
         padding: const EdgeInsets.only(bottom: 20, right: 10),
         child: FloatingActionButton.extended(
           heroTag: 'btnBackWait',
-          onPressed: _isSaving ? null : _prevPhase,
+          onPressed: isSaving ? null : _prevPhase,
           label: const Text('QUAY LẠI SỬA'),
           icon: const Icon(Icons.arrow_back),
           backgroundColor: Colors.grey.shade700,
@@ -800,8 +737,6 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
     if (_currentPhase == ExecutionPhase.completed) return null;
 
     if (_currentPhase == ExecutionPhase.execution) return null;
-
-    String label = 'TIẾP TỤC';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20, right: 10),
@@ -814,7 +749,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
               padding: const EdgeInsets.only(right: 12),
               child: FloatingActionButton.extended(
                 heroTag: 'btnBack',
-                onPressed: _isSaving ? null : _prevPhase,
+                onPressed: isSaving ? null : _prevPhase,
                 label: const Text('QUAY LẠI'),
                 icon: const Icon(Icons.arrow_back),
                 backgroundColor: Colors.grey.shade700,
@@ -822,14 +757,13 @@ class _DryingStepScreenState extends State<DryingStepScreen> {
             ),
           FloatingActionButton.extended(
             heroTag: 'btnNext',
-            onPressed: _isSaving ? null : _nextPhase,
-            label: Text(label),
-            icon: _isSaving
+            onPressed: isSaving ? null : _nextPhase,
+            label: Text(_currentPhase == ExecutionPhase.input ? 'GỬI DUYỆT QC' : 'TIẾP TỤC'),
+            icon: isSaving
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(
-                        color: Colors.white, strokeWidth: 2))
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                 : const Icon(Icons.arrow_forward),
           ),
         ],
