@@ -264,6 +264,8 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.PlannedQuantity).HasColumnType("decimal(18, 4)");
             entity.Property(e => e.RecipeId).HasColumnName("RecipeID");
             entity.Property(e => e.Status).HasMaxLength(50);
+            entity.Property(e => e.PlannedCartons).HasColumnName("PlannedCartons");
+            entity.Property(e => e.Note).HasMaxLength(500);
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.ProductionOrders)
                 .HasForeignKey(d => d.CreatedBy)

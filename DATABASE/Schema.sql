@@ -132,13 +132,17 @@ CREATE TABLE ProductionOrders (
     OrderCode VARCHAR(50) NOT NULL UNIQUE,          -- Mã lệnh cấp xuống xưởng (vd: PO-2026-001)
     RecipeId INT REFERENCES Recipes(RecipeId),      -- Sản xuất dựa trên hồ sơ công thức (Recipe) nào
     PlannedQuantity DECIMAL(18, 4) NOT NULL,        -- Khối lượng yêu cầu trả hàng từ phòng kinh doanh
+    PlannedCartons INT,                             -- [SYNC] Số thùng dự kiến sản xuất
     ActualQuantity DECIMAL(18, 4),                  -- Khối lượng thực tế thu hồi
     StartDate DATETIME2 NOT NULL,                   -- Hạn lịch bắt đầu nổ máy
     EndDate DATETIME2,                              -- Lịch bàn giao sản phẩm dự kiến
     Status NVARCHAR(50) DEFAULT 'Draft',            -- Luồng giám sát tiến độ (Draft, Approved, InProcess, Completed, Hold, Cancelled)
     CreatedBy INT REFERENCES AppUsers(UserId),      -- Quản lý đã khai sinh lệnh
     CreatedAt DATETIME2 DEFAULT GETDATE(),
-    Note NVARCHAR(500)                              -- Yêu cầu kèm theo lô này (Nhiệt độ phòng, Ưu tiên gấp...)
+    ApprovedBy INT REFERENCES AppUsers(UserId),     -- [SYNC] Người phê duyệt
+    ApprovedDate DATETIME2,                         -- [SYNC] Ngày phê duyệt
+    IsPriority BIT DEFAULT 0,
+    Note NVARCHAR(500)                              -- [SYNC] Ghi chú lệnh
 );
 
 -- -------------------------------------------------------------------------
@@ -155,6 +159,7 @@ CREATE TABLE ProductionBatches (
     EndTime DATETIME2,                               -- Thời điểm kết thúc mẻ
     ExpiryDate DATETIME2,                            -- Hạn sử dụng của sản phẩm
     CurrentStep INT DEFAULT 1,                       -- Điểm chốt chặn: Lô đang xử lý, hoặc ách tắc ở bước quy trình thứ mấy
+    PlannedQuantity DECIMAL(18, 4),                  -- Khối lượng/Số lượng mục tiêu của mẻ (đã chia từ lệnh tổng)
     CreatedAt DATETIME2 DEFAULT GETDATE()
 );
 
@@ -214,11 +219,12 @@ CREATE TABLE InventoryLots (
 -- đổ vào công đoạn của Mẻ thành phẩm cụ thể nào. Dữ liệu quý giá nhất quy trình truy vết (Trace).
 -- -------------------------------------------------------------------------
 CREATE TABLE MaterialUsage (
-    UsageId INT PRIMARY KEY IDENTITY(1,1),
+    UsageId BIGINT PRIMARY KEY IDENTITY(1,1), -- [SYNC] BIGINT to match long in C#
     BatchId INT REFERENCES ProductionBatches(BatchId),-- Xúc đi dùng cho đối tượng lô sản phẩm cụ thể nào?
     InventoryLotId INT REFERENCES InventoryLots(LotId),-- Xuất phát điểm lấy từ thùng chứa, lô nguyên vật liệu cụ thể nào?
-    QuantityUsed DECIMAL(18, 4) NOT NULL,             -- Cấp phát đúng bao nhiêu ký (Làm cơ sở trừ hao Inventory gốc)
-    UsedDate DATETIME2 DEFAULT GETDATE(),             -- Lịch sử thời điểm cấp phép xuất
+    PlannedAmount DECIMAL(18, 4),                     -- [SYNC] Lượng dự kiến xuất
+    ActualAmount DECIMAL(18, 4) NOT NULL,             -- [SYNC] Lượng thực tế đã lấy
+    Timestamp DATETIME2 DEFAULT GETDATE(),            -- [SYNC] Thời điểm ghi nhận
     DispensedBy INT REFERENCES AppUsers(UserId),      -- Xác thực Nhân viên ký mã quét màng co/thủ kho xuất đồ
     Note NVARCHAR(200)                                -- Lý do sai lệch (nếu xuất dư hỏng hóc đánh đổ)
 );
@@ -264,6 +270,6 @@ CREATE TABLE UomConversions (
     ConversionId INT PRIMARY KEY IDENTITY(1,1),
     FromUomId INT REFERENCES UnitOfMeasure(UomId),    -- Đơn vị đầu cần quy chuẩn (Lớn)
     ToUomId INT REFERENCES UnitOfMeasure(UomId),      -- Đơn vị tiếp nhận sau phép chia (Nhỏ)
-    ConversionFactor DECIMAL(18, 6) NOT NULL,         -- Tỉ lệ số lượng toán học (vd: Nếu quy đổi Kg ra Gram, ghi hệ số 1000)
+    Factor DECIMAL(18, 6) NOT NULL,                   -- [SYNC] Tỉ lệ số lượng toán học (vd: Nếu quy đổi Kg ra Gram, ghi hệ số 1000)
     Note NVARCHAR(200)                                -- Lời bình để giải phẫu tránh sai sót đơn vị
 );

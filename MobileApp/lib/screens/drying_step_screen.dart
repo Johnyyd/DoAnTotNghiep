@@ -374,14 +374,25 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
   void _validateWeightStatus() {
     final truocStr = _slTruocCtrl.text;
     final sauStr = _slSauCtrl.text;
+    final target = (_batchInfo?['plannedQuantity'] as num?)?.toDouble() ?? 0.0;
 
     if (truocStr.isEmpty) {
       if (mounted) setState(() => _inputStatus['slTruocSay'] = 'none');
     } else {
       final val = double.tryParse(truocStr) ?? 0;
+      bool isValid = val > 0;
+      
+      // KIỂM TRA KHỐI LƯỢNG MẺ (Sai số 1%)
+      if (target > 0) {
+        final diffPercent = ((val - target).abs() / target) * 100;
+        if (diffPercent > 1.0) {
+          isValid = false;
+        }
+      }
+      
       if (mounted) {
         setState(
-            () => _inputStatus['slTruocSay'] = val > 0 ? 'valid' : 'invalid');
+            () => _inputStatus['slTruocSay'] = isValid ? 'valid' : 'invalid');
       }
     }
 
@@ -399,6 +410,27 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
         if (mounted) setState(() => _inputStatus['slSauSay'] = 'valid');
       }
     }
+  }
+
+  bool _isFormValid() {
+    // Check mandatory fields
+    if (_tempCtrl.text.isEmpty || _humidCtrl.text.isEmpty || _pressCtrl.text.isEmpty) return false;
+    if (_tempInCtrl.text.isEmpty || _tempOutCtrl.text.isEmpty) return false;
+    if (_slTruocCtrl.text.isEmpty || _slSauCtrl.text.isEmpty) return false;
+    if (_humidAfterCtrl.text.isEmpty) return false;
+
+    // Check individual status
+    if (_inputStatus.values.contains('invalid') || _inputStatus.values.contains('error')) return false;
+
+    // Strict weight check (Additional safety)
+    final truocVal = double.tryParse(_slTruocCtrl.text) ?? 0;
+    final target = (_batchInfo?['plannedQuantity'] as num?)?.toDouble() ?? 0.0;
+    if (target > 0) {
+      final diffPercent = ((truocVal - target).abs() / target) * 100;
+      if (diffPercent > 1.0) return false;
+    }
+
+    return true;
   }
 
   Future<void> _approveByQC(String status) async {
@@ -757,7 +789,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
             ),
           FloatingActionButton.extended(
             heroTag: 'btnNext',
-            onPressed: isSaving ? null : _nextPhase,
+            onPressed: (isSaving || !_isFormValid()) ? null : _nextPhase,
             label: Text(_currentPhase == ExecutionPhase.input ? 'GỬI DUYỆT QC' : 'TIẾP TỤC'),
             icon: isSaving
                 ? const SizedBox(

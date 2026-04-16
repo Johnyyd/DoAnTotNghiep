@@ -1,4 +1,5 @@
 # CÂU LỆNH NẠP DỮ LIỆU GMP TOÀN DIỆN (Nuke & Seed)
 # File: DATABASE/gmp_full_seed.sql
 
+docker exec -i gmp-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'GMP_Strong@Passw0rd123' -C -d PharmaceuticalProcessingManagementSystem < DATABASE/drop_all.sql
 docker exec -i gmp-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'GMP_Strong@Passw0rd123' -C -d PharmaceuticalProcessingManagementSystem < DATABASE/full_seed.sql

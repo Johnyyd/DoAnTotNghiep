@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace GMP_System.Entities;
@@ -20,6 +20,8 @@ public partial class ProductionBatch
     public int? CurrentStep { get; set; }
 
     public string? Status { get; set; }
+    public decimal? PlannedQuantity { get; set; }
+    public DateTime? CreatedAt { get; set; }
 
     public virtual ICollection<BatchProcessLog> BatchProcessLogs { get; set; } = new List<BatchProcessLog>();
 

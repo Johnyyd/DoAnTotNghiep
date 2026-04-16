@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace GMP_System.Entities;
@@ -22,8 +22,9 @@ public partial class ProductionOrder
     public string? Status { get; set; }
 
     public int? CreatedBy { get; set; }
-
+    public int? PlannedCartons { get; set; }
     public DateTime? CreatedAt { get; set; }
+    public string? Note { get; set; }
 
     public virtual AppUser? CreatedByNavigation { get; set; }
 

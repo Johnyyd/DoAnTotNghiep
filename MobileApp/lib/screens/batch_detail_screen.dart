@@ -3,6 +3,7 @@ import '../services/api_service.dart';
 import 'weighing_step_screen.dart';
 import 'mixing_step_screen.dart';
 import 'drying_step_screen.dart';
+import 'dynamic_step_screen.dart';
 
 /// [BatchDetailScreen] — Màn hình chi tiết một mẻ sản xuất.
 /// Hiển thị danh sách các bước công đoạn (process logs) từ API,
@@ -160,6 +161,15 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
         orderId: widget.orderId,
         stepName: log['step']?['stepName'] ?? 'SẤY', 
         isViewer: isViewer
+      );
+    } else {
+      // Fallback: Use DynamicStepScreen for any other step types
+      nextScreen = DynamicStepScreen(
+        batchId: widget.batchId,
+        stepId: log['stepId'],
+        orderId: widget.orderId,
+        stepName: log['step']?['stepName'],
+        isViewer: isViewer,
       );
     }
 

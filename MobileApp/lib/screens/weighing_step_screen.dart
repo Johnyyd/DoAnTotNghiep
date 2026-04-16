@@ -37,6 +37,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
   final _pressCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
   final _hieuChuanCanCtrl = TextEditingController();
+  final _checkTimeCtrl = TextEditingController(); // Thời gian kiểm tra
 
   // Dynamic BMR Logic
   final _lotWeightACtrl = TextEditingController();
@@ -45,6 +46,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
   final Map<String, double> _dynamicTargets = {};
   bool _isCalculated = false;
 
+  String _phongPhaChe = 'Sạch'; // Phòng pha chế
   String _canIW2 = 'Tốt';
   String _canPMA = 'Tốt';
   String _dungCuCan = 'Sạch';
@@ -65,6 +67,11 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     super.initState();
     if (widget.batchId != null) {
       _loadDataFromDB().then((_) {
+        // Auto-fill check time if empty
+        if (_checkTimeCtrl.text.isEmpty) {
+          final now = DateTime.now();
+          _checkTimeCtrl.text = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+        }
         if (_currentPhase == ExecutionPhase.verification) {
           startPolling(_loadDataFromDB);
         }
@@ -150,6 +157,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
           _tempCtrl.text = params['temperature'] ?? '';
           _humidCtrl.text = params['humidity'] ?? '';
           _pressCtrl.text = params['pressure'] ?? '';
+          if (params['phongPhaChe'] != null) _phongPhaChe = params['phongPhaChe'];
+          if (params['checkTime'] != null) _checkTimeCtrl.text = params['checkTime'];
           if (params['canIW2'] != null) _canIW2 = params['canIW2'];
           if (params['canPMA'] != null) _canPMA = params['canPMA'];
           if (params['dungCuCan'] != null) _dungCuCan = params['dungCuCan'];
@@ -202,6 +211,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     _hieuChuanCanCtrl.dispose();
     _lotWeightACtrl.dispose();
     _purityCCtrl.dispose();
+    _checkTimeCtrl.dispose();
     super.dispose();
   }
 
@@ -312,9 +322,51 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     });
   }
 
+  bool _isFormValid() {
+    // Check mandatory environmental data
+    if (_tempCtrl.text.isEmpty || _humidCtrl.text.isEmpty || _pressCtrl.text.isEmpty) return false;
+    if (_hieuChuanCanCtrl.text.isEmpty) return false;
+
+    // Check all BOM materials
+    for (var item in _bom) {
+      final name = item['material']?['materialName'] ?? 'N/A';
+      final actual = _materialsData[name]?['actual'];
+      final phieuKN = _materialsData[name]?['phieuKN'];
+      if (actual == null || actual.isEmpty || actual == '0') return false;
+      if (phieuKN == null || phieuKN.isEmpty) return false;
+    }
+
+    // Check individual status (Standard thresholds)
+    if (_inputStatus.values.contains('error')) return false;
+
+    return true;
+  }
+
   Future<void> _verifyAndSubmit() async {
+    if (!_isFormValid()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('⚠ Vui lòng nhập đầy đủ thông số và khối lượng!')));
+      return;
+    }
+    
     bool hasDeviation = false;
     String deviationMsg = '';
+
+    // Total Weight Check against Batch Target
+    double totalActual = 0;
+    _materialsData.forEach((k, v) {
+      totalActual += double.tryParse(v['actual'] ?? '0') ?? 0;
+    });
+
+    final target = (_batchInfo?['plannedQuantity'] as num?)?.toDouble() ?? 0.0;
+    if (target > 0) {
+      final diffPercent = ((totalActual - target).abs() / target) * 100;
+      if (diffPercent > 1.0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('❌ Tổng khối lượng ($totalActual) lệch quá 1% so với mẻ ($target)!')));
+        return;
+      }
+    }
 
     for (var item in _bom) {
       final name = item['material']?['materialName'] ?? 'N/A';
@@ -408,6 +460,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       "temperature": _tempCtrl.text,
       "humidity": _humidCtrl.text,
       "pressure": _pressCtrl.text,
+      "phongPhaChe": _phongPhaChe,
+      "checkTime": _checkTimeCtrl.text,
       "canIW2": _canIW2,
       "canPMA": _canPMA,
       "dungCuCan": _dungCuCan,
@@ -456,6 +510,18 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     }
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (_currentPhase != ExecutionPhase.precheck && 
+                _currentPhase != ExecutionPhase.completed &&
+                _currentPhase != ExecutionPhase.verification) {
+              _prevPhase();
+            } else {
+              Navigator.pop(context);
+            }
+          },
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -564,7 +630,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       label = 'KẾT THÚC';
     }
     return FloatingActionButton.extended(
-        onPressed: isSaving ? null : _nextPhase,
+        onPressed: (isSaving || (_currentPhase == ExecutionPhase.input && !_isFormValid())) ? null : _nextPhase,
         label: Text(label),
         icon: const Icon(Icons.arrow_forward));
   }
@@ -572,6 +638,17 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
   Widget _buildPhase1() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const FormSectionHeader('PHẦN 1: KIỂM TRA GIÁ TRỊ ĐẦU VÀO'),
+      SegmentedToggle(
+          label: 'Phòng pha chế',
+          optionA: 'Sạch',
+          optionB: 'Không sạch',
+          onChanged: (v) => setState(() => _phongPhaChe = v)),
+      StandardInputField(
+          label: 'Thời gian kiểm tra (Tự động)',
+          controller: _checkTimeCtrl,
+          readOnly: true,
+          suffixIcon: const Icon(Icons.access_time, size: 20, color: Colors.blue),
+          hint: 'Đang lấy thời gian...'),
       Row(
         children: [
           Expanded(
@@ -672,7 +749,14 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
             onPhieuKNChanged: (v) => _updateMaterial(name, 'phieuKN', v));
       }),
       const FormSectionHeader('GHI CHÚ'),
-      TextField(controller: _noteCtrl, maxLines: 2),
+      TextField(
+        controller: _noteCtrl, 
+        maxLines: 4,
+        decoration: const InputDecoration(
+          hintText: 'Nhập ghi chú chi tiết tại đây...',
+          border: OutlineInputBorder(),
+        ),
+      ),
     ]);
   }
 
