@@ -27,7 +27,7 @@ SELECT * FROM ProductionBatches; -- Các mẻ (lô) chi tiết
 -- 4. NHÓM NHẬT KÝ SẢN XUẤT (eBMR - Hồ sơ lô điện tử)
 PRINT '--- 4. PRODUCTION LOGS (eBMR) ---';
 SELECT * FROM BatchProcessLogs; -- Nhật ký công đoạn
-SELECT * FROM BatchProcessParameterValue; -- Giá trị thông số thực tế
+SELECT * FROM BatchProcessParameterValues; -- Giá trị thông số thực tế
 
 -- 5. NHÓM KHO & CHẤT LƯỢNG (Inventory & QC)
 PRINT '--- 5. INVENTORY & QUALITY ---';
@@ -78,8 +78,8 @@ SELECT
     PB.BatchNumber, 
     M.MaterialName, 
     IL.LotNumber AS SourceLot, 
-    MU.QuantityUsed, 
-    MU.UsedDate
+    MU.ActualAmount, 
+    MU.Timestamp
 FROM MaterialUsage MU
 JOIN ProductionBatches PB ON MU.BatchId = PB.BatchId
 JOIN InventoryLots IL ON MU.InventoryLotId = IL.LotId

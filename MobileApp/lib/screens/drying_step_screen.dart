@@ -229,8 +229,8 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
             if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
               _currentPhase = ExecutionPhase.verification;
             } else if (rawStatus == 'PASSED') {
-              // Đã sấy xong, không chạy lại timer
-              _currentPhase = ExecutionPhase.execution;
+              // Đã sấy xong toàn bộ -> Chuyển sang giai đoạn Đóng gói (Phase 5)
+              _currentPhase = ExecutionPhase.completed;
               _secondsRemaining = 0;
               _timer?.cancel();
             } else if (rawStatus == 'APPROVED') {
@@ -240,7 +240,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
                 Future.delayed(
                     const Duration(milliseconds: 500), () => _startTimer());
               }
-            } else if (rawStatus == 'RUNNING' || rawParams != null) {
+            } else if (rawStatus == 'RUNNING' || rawStatus == 'PENDING') {
               _currentPhase = ExecutionPhase.input;
             } else {
               // Mặc định cho status NONE, null hoặc bất kỳ gì khác -> Kiểm tra ban đầu
@@ -630,7 +630,70 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
               ? '✔ Cập nhật dữ liệu thành công!'
               : '❌ Lỗi khi lưu dữ liệu!')));
     }
+
+    if (success && mounted && !isInternal) {
+      // Chỉ tải lại dữ liệu từ DB khi không phải là lưu nội bộ (giúp tránh nhảy Phase khi bấm Quay lại/Tiếp tục)
+      await _loadDataFromDB();
+    }
     return success;
+  }
+
+  void _resetOperationalData() {
+    setState(() {
+      _timeStartCtrl.clear();
+      _timeEndCtrl.clear();
+      _tempOutCtrl.clear();
+      _tempInCtrl.clear();
+      _humidAfterCtrl.clear();
+      _slSauCtrl.clear();
+      _secondsRemaining = 20;
+      _timer?.cancel();
+      _timer = null;
+      _currentPhase = ExecutionPhase.precheck;
+    });
+  }
+
+  Future<void> _handleRetryDrying(double currentHumid, double maxHumid) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('CHỈ TIÊU KHÔNG ĐẠT'),
+          ],
+        ),
+        content: Text(
+            'Độ ẩm hiện tại là $currentHumid%, vượt ngưỡng cho phép (<= $maxHumid%).\n\nHệ thống yêu cầu bạn thực hiện SẤY LẠI mẻ này.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('KIỂM TRA LẠI SỐ LIỆU'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text('BẮT ĐẦU SẤY LẠI'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      // 1. Gửi kết quả thất bại lên server để lưu Audit Trail
+      await _submit('Failed', 'Humidity out of range ($currentHumid%). Rework required.');
+      
+      // 2. Làm sạch dữ liệu và quay lại Phase 1 để bắt đầu lượt sấy mới (Attempt X)
+      _resetOperationalData();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('♻ Đã chuẩn bị sẵn sàng cho lượt sấy tiếp theo.'))
+        );
+      }
+    }
   }
 
   @override
@@ -1102,8 +1165,31 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
         const SizedBox(height: 20),
         if (_secondsRemaining == 0)
           ElevatedButton.icon(
-            onPressed: () =>
-                _submit('Passed', 'Operation Completed Successfully'),
+            onPressed: () async {
+              // Kiểm tra độ ẩm trước khi cho phép Hoàn tất
+              final humidVal = double.tryParse(_humidAfterCtrl.text) ?? 0;
+              
+              // Lấy tiêu chuẩn từ standardParams (nếu có)
+              double maxAllowed = 5.0; // Mặc định 5%
+              try {
+                final sp = _standardParams.firstWhere(
+                  (p) => (p['parameterName'] as String).toLowerCase().contains('độ ẩm'),
+                  orElse: () => null
+                );
+                if (sp != null && sp['maxValue'] != null) {
+                   maxAllowed = (sp['maxValue'] as num).toDouble();
+                }
+              } catch(_) {}
+
+              if (humidVal > maxAllowed) {
+                await _handleRetryDrying(humidVal, maxAllowed);
+              } else {
+                final ok = await _submit('Passed', 'Operation Completed Successfully');
+                if (ok && mounted) {
+                  setState(() => _currentPhase = ExecutionPhase.completed);
+                }
+              }
+            },
             icon: const Icon(Icons.check_circle_outline),
             label: const Text('XÁC NHẬN HOÀN TẤT CÔNG ĐOẠN'),
             style: ElevatedButton.styleFrom(

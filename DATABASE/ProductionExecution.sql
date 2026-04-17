@@ -57,7 +57,7 @@ GO
 
 -- 4. GIÁ TRỊ THỰC TẾ CỦA THÔNG SỐ (Batch Process Parameter Values)
 -- Lưu trữ chi tiết từng giá trị thông số đã tách từ JSON để phục vụ báo cáo/truy vấn.
-CREATE TABLE BatchProcessParameterValue (
+CREATE TABLE BatchProcessParameterValues (
     ValueId BIGINT PRIMARY KEY IDENTITY(1,1),
     LogId BIGINT REFERENCES BatchProcessLogs(LogId), -- Tham chiếu tới nhật ký công đoạn
     ParameterId INT REFERENCES StepParameters(ParameterId), -- Tham chiếu tới định nghĩa thông số

@@ -204,14 +204,16 @@ namespace GMP_System.Controllers
                             if (sp.MinValue.HasValue && actualVal < sp.MinValue.Value) activeLog.IsDeviation = true;
                             if (sp.MaxValue.HasValue && actualVal > sp.MaxValue.Value) activeLog.IsDeviation = true;
 
-                            if (sp.ParameterName.Contains("Äá»™ áº©m", StringComparison.OrdinalIgnoreCase) &&
-                                sp.MaxValue.HasValue &&
-                                actualVal > sp.MaxValue.Value)
+                            // Logic kiểm tra ĐỘ ẨM để tự động yêu cầu sấy lại (Rework Loop)
+                            bool isHumidityParam = sp.ParameterName.Contains("Độ ẩm", StringComparison.OrdinalIgnoreCase) || 
+                                                 sp.ParameterName.Contains("Do am", StringComparison.OrdinalIgnoreCase);
+
+                            if (isHumidityParam && sp.MaxValue.HasValue && actualVal > sp.MaxValue.Value)
                             {
                                 activeLog.ResultStatus = "Failed";
-                                activeLog.Notes = (activeLog.Notes ?? "") +
-                                    "\n[SYSTEM] Äá»™ áº©m cao quÃ¡ ngÆ°á»¡ng cho phÃ©p (> " + sp.MaxValue.Value +
-                                    "%). Báº®T BUá»˜C THá»°C HIá»†N Láº I CÃ”NG ÄOáº N.";
+                                activeLog.IsDeviation = true;
+                                activeLog.Notes = (activeLog.Notes ?? "") + 
+                                    $"\n[SYSTEM] Kết quả Độ ẩm ({actualVal}%) không đạt tiêu chuẩn (<= {sp.MaxValue.Value}%). Hệ thống yêu cầu THỰC HIỆN LẠI công đoạn sấy.";
                             }
                         }
                     }

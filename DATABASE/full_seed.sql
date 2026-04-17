@@ -210,13 +210,13 @@ INSERT INTO RecipeRouting (RoutingId, RecipeId, StepNumber, StepName, DefaultEqu
 (15, 5, 1, N'Cân nguyên liệu',   1, 90,  N'Cân Paracetamol và tá dược.', 1),
 (16, 5, 2, N'Trộn khô',          3, 15,  N'Trộn đều bột Paracetamol và tá dược độn.', 1),
 (17, 5, 3, N'Tạo hạt ướt',       NULL, 60, N'Thêm dung dịch PVP K30 tạo khối ẩm.', 1),
-(18, 5, 4, N'Sấy hạt tầng sôi',  2, 120, N'Sấy hạt đến khi độ ẩm đạt < 5%. CÓ THỂ LẶP LẠI NẾU CẦN.', 2),
+(18, 5, 4, N'Sấy hạt tầng sôi',  2, 120, N'Sấy hạt đến khi độ ẩm đạt < 5%. CÓ THỂ LẶP LẠI NẾU CẦN.', 10),
 (19, 5, 5, N'Sửa hạt',           NULL, 60, N'Rây hạt qua lưới rây chuẩn.', 1),
 (20, 5, 6, N'Dập viên',          4, 180, N'Dập viên nén 500mg.', 1),
 (21, 6, 1, N'Cân Nguyên Liệu',   6, 60,  N'Cân men vi sinh và tá dược.', 1),
 (22, 6, 2, N'Đóng Gói',         9, 240, N'Đóng gói 3g/gói tự động.', 1),
 -- Quy trình cho Recipe 100 (Sản phẩm viên nang số 0 - Quy chuẩn 1 thùng)
-(100, 100, 1, N'Sấy Tá Dược', 1, 180, N'Sấy dưới 50kg/mẻ. Độ ẩm < 5%', 2),
+(100, 100, 1, N'Sấy Tá Dược', 1, 180, N'Sấy dưới 50kg/mẻ. Độ ẩm < 5%', 10),
 (101, 100, 2, N'Cân Nguyên Liệu', 1, 30, N'Cân chính xác theo BOM', 1),
 (102, 100, 3, N'Trộn Bột Ngoài', 1, 45, N'Trộn đều hỗn hợp bột', 1),
 (103, 100, 4, N'Đóng Nang', 1, 120, N'Đóng vào nang số 0', 1),
@@ -261,6 +261,7 @@ INSERT INTO StepParameters (ParameterId, RoutingId, ParameterName, Unit, MinValu
 (110, 100, N'Khối lượng trước sấy', 'kg', 0.1, 50.0, 1),
 (111, 100, N'Nhiệt độ sấy', '°C', 70, 80, 1),
 (112, 100, N'Thời gian sấy', 'phút', 150, 200, 1),
+(114, 100, N'Độ ẩm sau sấy', '%', NULL, 5.0, 1),
 (113, 102, N'Tốc độ trộn', 'v/p', 15, 25, 1);
 SET IDENTITY_INSERT StepParameters OFF;
 GO
@@ -270,18 +271,18 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT ProductionOrders ON;
 INSERT INTO ProductionOrders (OrderId, OrderCode, RecipeId, PlannedQuantity, ActualQuantity, Status, CreatedBy, StartDate, EndDate, CreatedAt) VALUES
-(1,  'PO-CAP-26-001', 1, 100000.00, 100050.00, 'Completed',  4, DATEADD(DAY,-5,GETDATE()),  DATEADD(DAY,-2,GETDATE()),  DATEADD(DAY,-7,GETDATE())),
-(2,  'PO-CAP-26-002', 1, 300000.00, NULL,       'In-Process', 4, DATEADD(DAY,-1,GETDATE()),  DATEADD(DAY,3, GETDATE()),  DATEADD(DAY,-2,GETDATE())),
-(3,  'PO-CAP-26-003', 1, 150000.00, NULL,       'Hold',       4, GETDATE(),                  DATEADD(DAY,4, GETDATE()),  DATEADD(DAY,-1,GETDATE())),
-(4,  'PO-TAB-26-004', 2, 200000.00, NULL,       'In-Process', 4, DATEADD(DAY,-2,GETDATE()),  DATEADD(DAY,2, GETDATE()),  DATEADD(DAY,-3,GETDATE())),
-(5,  'PO-CAP-26-005', 1, 500000.00, NULL,       'Pending QC', 4, GETDATE(),                  DATEADD(DAY,7, GETDATE()),  GETDATE()),
-(6,  'PO-TAB-26-006', 2, 500000.00, NULL,       'In-Process', 4, DATEADD(DAY,-3,GETDATE()),  DATEADD(DAY,5, GETDATE()),  DATEADD(DAY,-4,GETDATE())),
-(7,  'PO-TAB-26-007', 2, 200000.00, 197800.00,  'Completed',  4, DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-7,GETDATE()),  DATEADD(DAY,-12,GETDATE())),
-(8,  'PO-CAP-26-008', 1, 100000.00, NULL,       'Draft',      4, DATEADD(DAY,3, GETDATE()),  DATEADD(DAY,7, GETDATE()),  GETDATE()),
-(9,  'PO-CAP-26-009', 1, 100000.00, NULL,       'Approved',   4, DATEADD(DAY,1, GETDATE()),  DATEADD(DAY,4, GETDATE()),  GETDATE()),
-(10, 'PO-CAP-26-010', 1, 100000.00, NULL,       'Cancelled',  4, GETDATE(),                  NULL,                       GETDATE()),
-(11, 'PO-COM-26-011', 6, 10000.00,  NULL,       'In-Process', 4, DATEADD(HOUR,-12,GETDATE()),NULL,                       GETDATE()),
-(12, 'PO-COM-26-012', 6, 20000.00,  19985.00,   'Completed',  4, DATEADD(DAY,-4,GETDATE()),  DATEADD(DAY,-1,GETDATE()),  GETDATE());
+(1,  'PO-CAP-26-001', 1, 54000.00, 54050.00, 'Completed',  4, DATEADD(DAY,-5,GETDATE()),  DATEADD(DAY,-2,GETDATE()),  DATEADD(DAY,-7,GETDATE())),
+(2,  'PO-CAP-26-002', 1, 162000.00, NULL,       'InProcess', 4, DATEADD(DAY,-1,GETDATE()),  DATEADD(DAY,3, GETDATE()),  DATEADD(DAY,-2,GETDATE())),
+(3,  'PO-CAP-26-003', 1, 54000.00, NULL,       'Hold',       4, GETDATE(),                  DATEADD(DAY,4, GETDATE()),  DATEADD(DAY,-1,GETDATE())),
+(4,  'PO-TAB-26-004', 2, 1000000.00, NULL,       'InProcess', 4, DATEADD(DAY,-2,GETDATE()),  DATEADD(DAY,2, GETDATE()),  DATEADD(DAY,-3,GETDATE())),
+(5,  'PO-CAP-26-005', 1, 54000.00, NULL,       'PendingQC', 4, GETDATE(),                  DATEADD(DAY,7, GETDATE()),  GETDATE()),
+(6,  'PO-TAB-26-006', 2, 500000.00, NULL,       'InProcess', 4, DATEADD(DAY,-3,GETDATE()),  DATEADD(DAY,5, GETDATE()),  DATEADD(DAY,-4,GETDATE())),
+(7,  'PO-TAB-26-007', 2, 1000000.00, 997800.00,  'Completed',  4, DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-7,GETDATE()),  DATEADD(DAY,-12,GETDATE())),
+(8,  'PO-CAP-26-008', 1, 54000.00, NULL,       'Draft',      4, DATEADD(DAY,3, GETDATE()),  DATEADD(DAY,7, GETDATE()),  GETDATE()),
+(9,  'PO-CAP-26-009', 1, 54000.00, NULL,       'Approved',   4, DATEADD(DAY,1, GETDATE()),  DATEADD(DAY,4, GETDATE()),  GETDATE()),
+(10, 'PO-CAP-26-010', 1, 54000.00, NULL,       'Cancelled',  4, GETDATE(),                  NULL,                       GETDATE()),
+(11, 'PO-COM-26-011', 6, 30000.00,  NULL,       'InProcess', 4, DATEADD(HOUR,-12,GETDATE()),NULL,                       GETDATE()),
+(12, 'PO-COM-26-012', 6, 30000.00,  29985.00,   'Completed',  4, DATEADD(DAY,-4,GETDATE()),  DATEADD(DAY,-1,GETDATE()),  GETDATE());
 SET IDENTITY_INSERT ProductionOrders OFF;
 GO
 
@@ -293,7 +294,7 @@ INSERT INTO ProductionBatches (BatchId, OrderId, BatchNumber, Status, Manufactur
 (1,  1,  'B26-001-01', 'Completed', DATEADD(DAY,-5,GETDATE()),    DATEADD(DAY,-2,GETDATE()),  DATEADD(YEAR,2,GETDATE()),  5),
 (2,  2,  'B26-002-01', 'Completed', DATEADD(HOUR,-24,GETDATE()),  DATEADD(HOUR,-12,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5),
 (3,  2,  'B26-002-02', 'Completed', DATEADD(HOUR,-18,GETDATE()),  DATEADD(HOUR,-6,GETDATE()),  DATEADD(YEAR,2,GETDATE()), 5),
-(4,  2,  'B26-002-03', 'InProcess', GETDATE(),                    NULL,                         NULL,                      2),
+(4,  2,  'B26-002-03', 'Scheduled', GETDATE(),                    NULL,                         NULL,                      1),
 (5,  3,  'B26-003-01', 'OnHold',    DATEADD(HOUR,-6,GETDATE()),   NULL,                         NULL,                      2),
 (6,  4,  'B26-004-01', 'InProcess', DATEADD(HOUR,-8,GETDATE()),   NULL,                         NULL,                      3),
 (7,  4,  'B26-004-02', 'Scheduled', NULL,                          NULL,                         NULL,                      1),
@@ -451,9 +452,9 @@ GO
 -- 1. Các Lệnh sản xuất mới
 SET IDENTITY_INSERT ProductionOrders ON;
 INSERT INTO ProductionOrders (OrderId, OrderCode, RecipeId, PlannedQuantity, Status, CreatedBy, StartDate, EndDate, CreatedAt) VALUES
-(100, 'PO-NCR-21-100', 100, 320000.00, 'InProcess', 4, DATEADD(DAY,-2,GETDATE()), DATEADD(DAY,5,GETDATE()), GETDATE()),
-(200, 'PO-NCR-21-200', 100, 160000.00, 'Approved', 4, DATEADD(DAY,1,GETDATE()),  DATEADD(DAY,7,GETDATE()), GETDATE()),
-(300, 'PO-COM-21-300', 6, 50000.00,  'InProcess', 4, GETDATE(),                DATEADD(DAY,10,GETDATE()),GETDATE());
+(100, 'PO-NCR-21-100', 100, 6400.00, 'InProcess', 4, DATEADD(DAY,-2,GETDATE()), DATEADD(DAY,5,GETDATE()), GETDATE()),
+(200, 'PO-NCR-21-200', 100, 32000.00, 'Approved', 4, DATEADD(DAY,1,GETDATE()),  DATEADD(DAY,7,GETDATE()), GETDATE()),
+(300, 'PO-COM-21-300', 6, 150000.00,  'InProcess', 4, GETDATE(),                DATEADD(DAY,10,GETDATE()),GETDATE());
 SET IDENTITY_INSERT ProductionOrders OFF;
 
 -- 2. Hệ thống Mẻ sản xuất phong phú (20+ mẻ)

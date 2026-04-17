@@ -199,7 +199,7 @@ CREATE TABLE BatchProcessLogs (
 -- Mục đích: Lưu trữ dữ liệu thô của từng thông số kỹ thuật đơn lẻ để vẽ biểu đồ và phân tích.
 -- MQH: Liên kết với BatchProcessLogs và StepParameters.
 -- -------------------------------------------------------------------------
-CREATE TABLE BatchProcessParameterValue (
+CREATE TABLE BatchProcessParameterValues (
     ValueId BIGINT PRIMARY KEY IDENTITY (1, 1),
     LogId BIGINT REFERENCES BatchProcessLogs (LogId), -- Tham chiếu tới hồ sơ bước.
     ParameterId INT REFERENCES StepParameters (ParameterId), -- Là thông số nào (Nhiệt độ, tốc độ...).
@@ -236,8 +236,8 @@ CREATE TABLE MaterialUsage (
     UsageId INT PRIMARY KEY IDENTITY (1, 1),
     BatchId INT REFERENCES ProductionBatches (BatchId), -- Mẻ thuốc nào tiêu thụ.
     InventoryLotId INT REFERENCES InventoryLots (LotId), -- Thùng nguyên liệu nào bị xuất đi.
-    QuantityUsed DECIMAL(18, 4) NOT NULL, -- Số lượng thực tế đã múc đi.
-    UsedDate DATETIME2 DEFAULT GETDATE (),
+    ActualAmount DECIMAL(18, 4) NOT NULL, -- Số lượng thực tế đã múc đi.
+    Timestamp DATETIME2 DEFAULT GETDATE (),
     DispensedBy INT REFERENCES AppUsers (UserId), -- Chữ ký nhân viên thủ kho/người cân.
     Note NVARCHAR (200)
 );
