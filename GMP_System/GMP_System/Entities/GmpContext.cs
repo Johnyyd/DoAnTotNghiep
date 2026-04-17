@@ -49,9 +49,6 @@ public partial class GmpContext : DbContext
 
     public virtual DbSet<BatchProcessParameterValue> BatchProcessParameterValues { get; set; } = null!;
 
-    // Configuration is now handled via Program.cs using AddDbContext.
-    // Removed hardcoded LocalDB connection to support Docker/Linux.
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AppUser>(entity =>
@@ -191,7 +188,9 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.MaterialId).HasColumnName("MaterialID");
             entity.Property(e => e.BaseUomId).HasColumnName("BaseUomID");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.TechnicalSpecification)
+                .HasMaxLength(500)
+                .HasColumnName("TechnicalSpecification");
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.MaterialCode)
                 .HasMaxLength(50)
@@ -431,9 +430,12 @@ public partial class GmpContext : DbContext
             entity.HasIndex(e => new { e.FromUomId, e.ToUomId }, "UQ_Conversion").IsUnique();
 
             entity.Property(e => e.ConversionId).HasColumnName("ConversionID");
-            entity.Property(e => e.Factor).HasColumnType("decimal(18, 6)");
+            entity.Property(e => e.ConversionFactor)
+                .HasColumnType("decimal(18, 6)")
+                .HasColumnName("ConversionFactor");
             entity.Property(e => e.FromUomId).HasColumnName("FromUomID");
             entity.Property(e => e.ToUomId).HasColumnName("ToUomID");
+            entity.Property(e => e.Note).HasMaxLength(200);
 
             entity.HasOne(d => d.FromUom).WithMany(p => p.UomConversionFromUoms)
                 .HasForeignKey(d => d.FromUomId)

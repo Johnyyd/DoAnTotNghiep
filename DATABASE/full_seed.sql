@@ -266,7 +266,7 @@ PRINT 'Insert InventoryLots Completed Successfully!';
 -- 14. MaterialUsage (Xuất kho cho các mẻ)
 -- =====================================================================
 SET IDENTITY_INSERT MaterialUsage ON;
-INSERT INTO MaterialUsage (UsageId, BatchId, InventoryLotId, QuantityUsed, UsedDate, DispensedBy, Note) VALUES
+INSERT INTO MaterialUsage (UsageId, BatchId, InventoryLotId, ActualAmount, UsedDate, DispensedBy, Note) VALUES
 (1, 1, 1, 25015.00, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất NLC3'),
 (2, 1, 5, 25100.00, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất Tinh bột');
 SET IDENTITY_INSERT MaterialUsage OFF;

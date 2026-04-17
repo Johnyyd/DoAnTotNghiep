@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj": {}
+    "d:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj": {}
   },
   "projects": {
-    "D:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj": {
+    "d:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
+        "projectUniqueName": "d:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
         "projectName": "GMP_System",
-        "projectPath": "D:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
+        "projectPath": "d:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
         "packagesPath": "C:\\Users\\GIGABYTE\\.nuget\\packages\\",
-        "outputPath": "D:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\obj\\",
+        "outputPath": "d:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

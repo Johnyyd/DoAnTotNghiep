@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace GMP_System.Entities;
@@ -18,8 +18,6 @@ public partial class Equipment
     public int? AreaId { get; set; }
 
     public string? Status { get; set; }
-
-    public DateTime? LastMaintenanceDate { get; set; }
 
     public virtual ICollection<BatchProcessLog> BatchProcessLogs { get; set; } = new List<BatchProcessLog>();
 

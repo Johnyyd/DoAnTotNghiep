@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace GMP_System.Entities;
 
 public partial class MaterialUsage
 {
-    public long UsageId { get; set; }
+    public int UsageId { get; set; }
 
     public int? BatchId { get; set; }
 
@@ -15,11 +15,13 @@ public partial class MaterialUsage
 
     public decimal ActualAmount { get; set; }
 
+    public DateTime? UsedDate { get; set; }
+
     public int? DispensedBy { get; set; }
 
-    public DateTime? Timestamp { get; set; }
-
     public string? Note { get; set; }
+
+    public DateTime? Timestamp { get; set; }
 
     public virtual ProductionBatch? Batch { get; set; }
 

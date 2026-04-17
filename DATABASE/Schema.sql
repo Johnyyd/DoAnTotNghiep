@@ -267,12 +267,14 @@ CREATE TABLE InventoryLots (
 -- -------------------------------------------------------------------------
 CREATE TABLE MaterialUsage (
     UsageId INT PRIMARY KEY IDENTITY(1,1),
-    BatchId INT REFERENCES ProductionBatches(BatchId),-- Xúc đi dùng cho đối tượng lô sản phẩm cụ thể nào?
-    InventoryLotId INT REFERENCES InventoryLots(LotId),-- Xuất phát điểm lấy từ thùng chứa, lô nguyên vật liệu cụ thể nào?
-    QuantityUsed DECIMAL(18, 4) NOT NULL,             -- Cấp phát đúng bao nhiêu ký (Làm cơ sở trừ hao Inventory gốc)
-    UsedDate DATETIME2 DEFAULT GETDATE(),             -- Lịch sử thời điểm cấp phép xuất
-    DispensedBy INT REFERENCES AppUsers(UserId),      -- Xác thực Nhân viên ký mã quét màng co/thủ kho xuất đồ
-    Note NVARCHAR(200)                                -- Lý do sai lệch (nếu xuất dư hỏng hóc đánh đổ)
+    BatchId INT REFERENCES ProductionBatches(BatchId),
+    InventoryLotId INT REFERENCES InventoryLots(LotId),
+    PlannedAmount DECIMAL(18, 4),                     -- Khối lượng dự tính từ BOM
+    ActualAmount DECIMAL(18, 4) NOT NULL,              -- Khối lượng cấp phát thực tế
+    UsedDate DATETIME2 DEFAULT GETDATE(),
+    DispensedBy INT REFERENCES AppUsers(UserId),
+    Timestamp DATETIME2 DEFAULT GETDATE(),            -- Thời điểm ghi nhận hệ thống
+    Note NVARCHAR(200)
 );
 
 -- -------------------------------------------------------------------------

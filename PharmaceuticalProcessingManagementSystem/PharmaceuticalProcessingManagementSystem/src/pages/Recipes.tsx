@@ -109,7 +109,7 @@ export default function Recipes() {
   const [showRoutingModal, setShowRoutingModal] = useState(false);
   const [editingRouting, setEditingRouting] = useState<UiRouting | null>(null);
 
-  const [createForm, setCreateForm] = useState<RecipeCreateForm>({ materialId: 0, batchSize: 540 });
+  const [createForm, setCreateForm] = useState<RecipeCreateForm>({ materialId: 0, batchSize: 0 });
   const [bomDraftRows, setBomDraftRows] = useState<BomDraftRow[]>([{ materialId: 0, technicalStandard: '', ratioPercent: 0, quantity: 0 }]);
   const [routingForm, setRoutingForm] = useState<RoutingForm>({
     stepNumber: 1,
@@ -185,7 +185,7 @@ export default function Recipes() {
     mutationFn: () => recipesApi.create({ materialId: createForm.materialId, batchSize: createForm.batchSize, status: 'Draft', versionNumber: 1 }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recipes'] });
-      setCreateForm({ materialId: 0, batchSize: 540 });
+      setCreateForm({ materialId: 0, batchSize: 0 });
     },
   });
 
@@ -307,7 +307,7 @@ export default function Recipes() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">Quản lý công thức sản xuất viên nang</h1>
-        <p className="text-neutral-500 mt-1">Lập định mức nguyên liệu và quy trình công đoạn theo biểu mẫu GMP</p>
+        <p className="text-neutral-500 mt-1">Lập định mức nguyên liệu và quy trình công đoạn theo tiêu chuẩn GMP</p>
       </div>
 
       <div className="card space-y-4">

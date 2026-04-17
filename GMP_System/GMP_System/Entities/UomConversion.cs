@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace GMP_System.Entities;
@@ -11,7 +11,9 @@ public partial class UomConversion
 
     public int? ToUomId { get; set; }
 
-    public decimal Factor { get; set; }
+    public decimal ConversionFactor { get; set; }
+
+    public string? Note { get; set; }
 
     public virtual UnitOfMeasure? FromUom { get; set; }
 

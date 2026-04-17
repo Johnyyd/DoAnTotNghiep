@@ -1,4 +1,4 @@
-﻿using GMP_System.Entities;
+using GMP_System.Entities;
 using GMP_System.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -82,7 +82,7 @@ namespace GMP_System.Controllers
             existing.MaterialCode = material.MaterialCode;
             existing.MaterialName = material.MaterialName;
             existing.Type = material.Type;
-            existing.Description = material.Description;
+            existing.TechnicalSpecification = material.TechnicalSpecification;
             existing.BaseUomId = material.BaseUomId;
             existing.IsActive = material.IsActive;
 

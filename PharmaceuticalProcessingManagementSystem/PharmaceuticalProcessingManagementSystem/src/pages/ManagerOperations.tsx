@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, Clock3, Factory, FileSpreadsheet, FlaskConical, Settings2, ShieldCheck } from 'lucide-react';
 import { equipmentsApi, productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
@@ -308,8 +308,7 @@ export default function ManagerOperations() {
         <div className="gmp-sheet-header">
           <div>
             <p className="text-xs font-semibold tracking-[0.18em] text-neutral-600">CÔNG TY ABC</p>
-            <h1 className="text-xl font-bold text-neutral-900">THEO DÕI TIẾN ĐỘ LỆNH SẢN XUẤT - TRƯỞNG PHÒNG</h1>
-            <p className="text-sm text-neutral-600">Đề tài GMP-WHO | Nền tảng Web React + TypeScript</p>
+            <h1 className="text-xl font-bold text-neutral-900">THEO DÕI TIẾN ĐỘ CÁC LỆNH SẢN XUẤT</h1>
           </div>
           <div className="text-right text-sm text-neutral-700">
             <p>Số tờ: ...</p>

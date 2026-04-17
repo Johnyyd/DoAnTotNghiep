@@ -1,4 +1,4 @@
-﻿using GMP_System.Entities;
+using GMP_System.Entities;
 using GMP_System.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -66,7 +66,6 @@ namespace GMP_System.Controllers
             existingEquipment.UsagePurpose = equipment.UsagePurpose;
             existingEquipment.AreaId = equipment.AreaId;
             existingEquipment.Status = equipment.Status;
-            existingEquipment.LastMaintenanceDate = equipment.LastMaintenanceDate;
 
             _unitOfWork.Equipments.Update(existingEquipment);
             await _unitOfWork.CompleteAsync();

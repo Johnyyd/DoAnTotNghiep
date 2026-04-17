@@ -1,4 +1,4 @@
-﻿using GMP_System.Interfaces;
+using GMP_System.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

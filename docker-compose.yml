@@ -35,17 +35,16 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Server=gmp-sqlserver;Database=PharmaceuticalProcessingManagementSystem;User Id=sa;Password=GMP_Strong@Passw0rd123;TrustServerCertificate=true
       - Jwt__Key=GMP_WHO_Default_Secret_Key_Minimum_32_Characters_Long_123456789
-      - Certificates__StoragePath=/app/certificates
-      - Certificates__FinishedStoragePath=/app/finished-certificates
-      - Certificates__PublicMaterialsPath=/app/public-materials
+      - Certificates__StoragePath=/app/materials
+      - Certificates__FinishedStoragePath=/app/finished-goods
+      - Certificates__PublicMaterialsPath=/app/materials
     depends_on:
       gmp-sqlserver:
         condition: service_healthy
     volumes:
       - ./DATABASE:/app/DATABASE:ro
-      - ./PharmaceuticalProcessingManagementSystem/certificates:/app/certificates
-      - ./PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem/public/certificates:/app/finished-certificates
-      - ./PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem/public/materials:/app/public-materials
+      - ./DATABASE/materials:/app/materials
+      - ./DATABASE/finished_goods:/app/finished-goods
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
