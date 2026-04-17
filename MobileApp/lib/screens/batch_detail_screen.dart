@@ -116,6 +116,7 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
   }
 
   void _onStepTap(int index, Map<String, dynamic> log) {
+    final stepType = log['step']?['stepName']?.toString().toLowerCase() ?? '';
     final status = log['resultStatus'] as String?;
     
     // GMP Sequential Check
@@ -134,8 +135,9 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
        return;
     }
 
-    Widget? nextScreen;
-    final stepType = log['step']?['stepName']?.toString().toLowerCase() ?? '';
+    debugPrint('[_onStepTap] Index: $index, Step: $stepType, Status: $status, isBlocked: $isBlocked');
+
+    Widget nextScreen;
     // isViewer is true if the step is already finalized (Passed/Failed)
     final bool isViewer = status == 'Passed' || status == 'Failed'; 
 
@@ -146,7 +148,9 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
         orderId: widget.orderId,
         isViewer: isViewer
       );
-    } else if (stepType.contains('trộn') || stepType.contains('mix')) {
+    } else if (stepType.contains('trộn') || stepType.contains('mix') || 
+               stepType.contains('pha') || stepType.contains('nấu') || 
+               stepType.contains('xay') || stepType.contains('nghiền')) {
       nextScreen = MixingStepScreen(
         batchId: widget.batchId, 
         stepId: log['stepId'], 
@@ -161,11 +165,18 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
         stepName: log['step']?['stepName'] ?? 'SẤY', 
         isViewer: isViewer
       );
+    } else {
+      debugPrint('[_onStepTap] No specific screen for $stepType, using default MixingStepScreen');
+      nextScreen = MixingStepScreen(
+        batchId: widget.batchId, 
+        stepId: log['stepId'], 
+        orderId: widget.orderId,
+        isViewer: isViewer
+      );
     }
 
-    if (nextScreen != null) {
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => nextScreen!)).then((_) => _load());
-    }
+    debugPrint('[_onStepTap] Navigating to ${nextScreen.runtimeType}');
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => nextScreen)).then((_) => _load());
   }
 
   @override

@@ -9,10 +9,16 @@ SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO
 
+-- Vô hiệu hóa Trigger để dọn dẹp dữ liệu
+IF OBJECT_ID('trg_Lock_Finalized_Logs', 'TR') IS NOT NULL DISABLE TRIGGER trg_Lock_Finalized_Logs ON BatchProcessLogs;
+IF OBJECT_ID('trg_Check_Material_QC', 'TR') IS NOT NULL DISABLE TRIGGER trg_Check_Material_QC ON MaterialUsage;
+IF OBJECT_ID('trg_Validate_Drying_Limit', 'TR') IS NOT NULL DISABLE TRIGGER trg_Validate_Drying_Limit ON BatchProcessParameterValues;
+GO
+
 -- =====================================================================
 -- XÓA DỮ LIỆU CŨ (THEO THỨ TỰ NGƯỢC KHÓA NGOẠI)
 -- =====================================================================
-IF OBJECT_ID('BatchProcessParameterValue', 'U') IS NOT NULL DELETE FROM BatchProcessParameterValue;
+IF OBJECT_ID('BatchProcessParameterValues', 'U') IS NOT NULL DELETE FROM BatchProcessParameterValues;
 IF OBJECT_ID('StepParameters', 'U') IS NOT NULL DELETE FROM StepParameters;
 IF OBJECT_ID('QualityTests', 'U') IS NOT NULL DELETE FROM QualityTests;
 IF OBJECT_ID('SystemAuditLog', 'U') IS NOT NULL DELETE FROM SystemAuditLog;
@@ -21,7 +27,7 @@ IF OBJECT_ID('BatchProcessLogs', 'U') IS NOT NULL DELETE FROM BatchProcessLogs;
 IF OBJECT_ID('ProductionBatches', 'U') IS NOT NULL DELETE FROM ProductionBatches;
 IF OBJECT_ID('ProductionOrders', 'U') IS NOT NULL DELETE FROM ProductionOrders;
 IF OBJECT_ID('InventoryLots', 'U') IS NOT NULL DELETE FROM InventoryLots;
-IF OBJECT_ID('RecipeBom', 'U') IS NOT NULL DELETE FROM RecipeBom;
+IF OBJECT_ID('RecipeBOM', 'U') IS NOT NULL DELETE FROM RecipeBOM;
 IF OBJECT_ID('RecipeRouting', 'U') IS NOT NULL DELETE FROM RecipeRouting;
 IF OBJECT_ID('Recipes', 'U') IS NOT NULL DELETE FROM Recipes;
 IF OBJECT_ID('Materials', 'U') IS NOT NULL DELETE FROM Materials;
@@ -38,10 +44,10 @@ IF OBJECT_ID('UomConversions', 'U') IS NOT NULL DBCC CHECKIDENT ('UomConversions
 IF OBJECT_ID('Equipments', 'U') IS NOT NULL DBCC CHECKIDENT ('Equipments', RESEED, 0);
 IF OBJECT_ID('Materials', 'U') IS NOT NULL DBCC CHECKIDENT ('Materials', RESEED, 0);
 IF OBJECT_ID('Recipes', 'U') IS NOT NULL DBCC CHECKIDENT ('Recipes', RESEED, 0);
-IF OBJECT_ID('RecipeBom', 'U') IS NOT NULL DBCC CHECKIDENT ('RecipeBom', RESEED, 0);
+IF OBJECT_ID('RecipeBOM', 'U') IS NOT NULL DBCC CHECKIDENT ('RecipeBOM', RESEED, 0);
 IF OBJECT_ID('RecipeRouting', 'U') IS NOT NULL DBCC CHECKIDENT ('RecipeRouting', RESEED, 0);
 IF OBJECT_ID('StepParameters', 'U') IS NOT NULL DBCC CHECKIDENT ('StepParameters', RESEED, 0);
-IF OBJECT_ID('BatchProcessParameterValue', 'U') IS NOT NULL DBCC CHECKIDENT ('BatchProcessParameterValue', RESEED, 0);
+IF OBJECT_ID('BatchProcessParameterValues', 'U') IS NOT NULL DBCC CHECKIDENT ('BatchProcessParameterValues', RESEED, 0);
 IF OBJECT_ID('QualityTests', 'U') IS NOT NULL DBCC CHECKIDENT ('QualityTests', RESEED, 0);
 IF OBJECT_ID('ProductionOrders', 'U') IS NOT NULL DBCC CHECKIDENT ('ProductionOrders', RESEED, 0);
 IF OBJECT_ID('ProductionBatches', 'U') IS NOT NULL DBCC CHECKIDENT ('ProductionBatches', RESEED, 0);
@@ -148,7 +154,8 @@ INSERT INTO Recipes (RecipeId, MaterialId, VersionNumber, BatchSize, Status, App
 (3, 10, 2, 100000.00, 'Draft',    NULL, NULL,                    DATEADD(DAY,-5, GETDATE()), N'Phiên bản thử nghiệm cải tiến tỷ lệ tá dược - Chưa phê duyệt.'),
 (4, 17, 1, 10000.00, 'Approved', 2, DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Công thức thuốc ống Dipyridamole 10mg/2ml.'),
 (5, 11, 3, 200000.00, 'Approved', 2, DATEADD(DAY,-5,GETDATE()),  DATEADD(DAY,-10,GETDATE()), N'Quy trình sản xuất viên nén Paracetamol (Dây chuyền tầng sôi).'),
-(6, 20, 1, 30000.00,  'Approved', 2, DATEADD(DAY,-2,GETDATE()),  DATEADD(DAY,-5,GETDATE()),  N'Công thức cốm vi sinh Bio-Plus.');
+(6, 20, 1, 30000.00,  'Approved', 2, DATEADD(DAY,-2,GETDATE()),  DATEADD(DAY,-5,GETDATE()),  N'Công thức cốm vi sinh Bio-Plus.'),
+(100, 10, 3, 3200.00, 'Approved', 2, GETDATE(), GETDATE(), N'Công thức quy chuẩn 1 thùng (3200 viên). Tối ưu mẻ sấy 50kg.');
 SET IDENTITY_INSERT Recipes OFF;
 GO
 
@@ -171,7 +178,15 @@ INSERT INTO RecipeBOM (BomId, RecipeId, MaterialId, Quantity, UomId, WastePercen
 (12, 2, 7,  10000.00, 2, 0.20, N'PVP K30 tạo hạt ướt'),
 (13, 6, 18, 10000.00, 2, 0.05, N'Men vi sinh (1g/gói)'),
 (14, 6, 4,  20000.00, 2, 0.10, N'Lactose (2g/gói)'),
-(15, 6, 19, 10000.00, 8, 0.02, N'Màng nhôm (1 gói/gói)');
+(15, 6, 19, 10000.00, 8, 0.02, N'Màng nhôm (1 gói/gói)'),
+-- BOM cho Recipe 100 (3,200 viên)
+(1001, 100, 1,   800.00, 2, 0.00, N'NLC 3 (250mg/v)'),
+(1002, 100, 12,    5.184, 2, 0.00, N'TD 1 - Aerosil (1.62mg/v)'),
+(1003, 100, 13,   95.04, 2, 0.00, N'TD 3 - SSG (29.70mg/v)'),
+(1004, 100, 14,   12.96, 2, 0.00, N'TD 4 - Talc (4.05mg/v)'),
+(1005, 100, 5,    12.96, 2, 0.00, N'TD 5 - Magnesi stearat (4.05mg/v)'),
+(1006, 100, 3,   801.856, 2, 0.00, N'TD 8 - Tinh bột (250.58mg/v)'),
+(1007, 100, 6,  3200.00, 4, 0.00, N'Vỏ nang NLP 6');
 SET IDENTITY_INSERT RecipeBOM OFF;
 GO
 
@@ -199,7 +214,13 @@ INSERT INTO RecipeRouting (RoutingId, RecipeId, StepNumber, StepName, DefaultEqu
 (19, 5, 5, N'Sửa hạt',           NULL, 60, N'Rây hạt qua lưới rây chuẩn.', 1),
 (20, 5, 6, N'Dập viên',          4, 180, N'Dập viên nén 500mg.', 1),
 (21, 6, 1, N'Cân Nguyên Liệu',   6, 60,  N'Cân men vi sinh và tá dược.', 1),
-(22, 6, 2, N'Đóng Gói',         9, 240, N'Đóng gói 3g/gói tự động.', 1);
+(22, 6, 2, N'Đóng Gói',         9, 240, N'Đóng gói 3g/gói tự động.', 1),
+-- Quy trình cho Recipe 100 (Sản phẩm viên nang số 0 - Quy chuẩn 1 thùng)
+(100, 100, 1, N'Sấy Tá Dược', 1, 180, N'Sấy dưới 50kg/mẻ. Độ ẩm < 5%', 2),
+(101, 100, 2, N'Cân Nguyên Liệu', 1, 30, N'Cân chính xác theo BOM', 1),
+(102, 100, 3, N'Trộn Bột Ngoài', 1, 45, N'Trộn đều hỗn hợp bột', 1),
+(103, 100, 4, N'Đóng Nang', 1, 120, N'Đóng vào nang số 0', 1),
+(104, 100, 5, N'Đóng Gói', 1, 60, N'Đóng chai 40 viên', 1);
 SET IDENTITY_INSERT RecipeRouting OFF;
 GO
 
@@ -228,7 +249,19 @@ INSERT INTO StepParameters (ParameterId, RoutingId, ParameterName, Unit, MinValu
 (50, 18, N'Nhiệt độ sấy tầng sôi', '°C', 60, 70, 1),
 (51, 18, N'Độ ẩm hạt sau sấy', '%', NULL, 5.0, 1),
 (52, 22, N'Thời gian trộn', 'phút', 25, 35, 1),
-(53, 22, N'Khối lượng gói', 'g', 2.9, 3.1, 1);
+(53, 22, N'Khối lượng gói', 'g', 2.9, 3.1, 1),
+-- Bổ sung thông số khối lượng cho các công đoạn sấy
+(60, 1, N'Khối lượng trước sấy', 'kg', 0.1, 50.0, 1),
+(61, 1, N'Khối lượng sau sấy',   'kg', 0.1, 50.0, 1),
+(62, 2, N'Khối lượng trước sấy', 'kg', 0.1, 50.0, 1),
+(63, 2, N'Khối lượng sau sấy',   'kg', 0.1, 50.0, 1),
+(64, 18, N'Khối lượng trước sấy', 'kg', 0.1, 50.0, 1),
+(65, 18, N'Khối lượng sau sấy',   'kg', 0.1, 50.0, 1),
+-- Thông số cho Recipe 100 (Điều chỉnh theo quy trình Sấy -> Cân -> Trộn)
+(110, 100, N'Khối lượng trước sấy', 'kg', 0.1, 50.0, 1),
+(111, 100, N'Nhiệt độ sấy', '°C', 70, 80, 1),
+(112, 100, N'Thời gian sấy', 'phút', 150, 200, 1),
+(113, 102, N'Tốc độ trộn', 'v/p', 15, 25, 1);
 SET IDENTITY_INSERT StepParameters OFF;
 GO
 
@@ -415,25 +448,7 @@ GO
 -- Bổ sung kịch bản 100 thùng, nhiều mẻ, nhiều biến thể
 -- =====================================================================
 
--- 1. Recipe bổ sung cho kịch bản mới (Quy chuẩn theo 1 thùng)
-SET IDENTITY_INSERT Recipes ON;
-INSERT INTO Recipes (RecipeId, MaterialId, VersionNumber, BatchSize, Status, ApprovedBy, ApprovedDate, CreatedAt, Note) VALUES
-(100, 10, 3, 3200.00, 'Approved', 2, GETDATE(), GETDATE(), N'Công thức quy chuẩn 1 thùng (3200 viên). Tối ưu mẻ sấy 50kg.');
-SET IDENTITY_INSERT Recipes OFF;
-
--- 2. BOM cho Recipe 100 (3,200 viên)
-SET IDENTITY_INSERT RecipeBOM ON;
-INSERT INTO RecipeBOM (BomId, RecipeId, MaterialId, Quantity, UomId, WastePercentage, Note) VALUES
-(1001, 100, 1,   800.00, 2, 0.00, N'NLC 3 (250mg/v)'),
-(1002, 100, 12,    5.184, 2, 0.00, N'TD 1 - Aerosil (1.62mg/v)'),
-(1003, 100, 13,   95.04, 2, 0.00, N'TD 3 - SSG (29.70mg/v)'),
-(1004, 100, 14,   12.96, 2, 0.00, N'TD 4 - Talc (4.05mg/v)'),
-(1005, 100, 5,    12.96, 2, 0.00, N'TD 5 - Magnesi stearat (4.05mg/v)'),
-(1006, 100, 3,   801.856, 2, 0.00, N'TD 8 - Tinh bột (250.58mg/v)'),
-(1007, 100, 6,  3200.00, 4, 0.00, N'Vỏ nang NLP 6');
-SET IDENTITY_INSERT RecipeBOM OFF;
-
--- 3. Các Lệnh sản xuất mới
+-- 1. Các Lệnh sản xuất mới
 SET IDENTITY_INSERT ProductionOrders ON;
 INSERT INTO ProductionOrders (OrderId, OrderCode, RecipeId, PlannedQuantity, Status, CreatedBy, StartDate, EndDate, CreatedAt) VALUES
 (100, 'PO-NCR-21-100', 100, 320000.00, 'InProcess', 4, DATEADD(DAY,-2,GETDATE()), DATEADD(DAY,5,GETDATE()), GETDATE()),
@@ -441,7 +456,7 @@ INSERT INTO ProductionOrders (OrderId, OrderCode, RecipeId, PlannedQuantity, Sta
 (300, 'PO-COM-21-300', 6, 50000.00,  'InProcess', 4, GETDATE(),                DATEADD(DAY,10,GETDATE()),GETDATE());
 SET IDENTITY_INSERT ProductionOrders OFF;
 
--- 4. Hệ thống Mẻ sản xuất phong phú (20+ mẻ)
+-- 2. Hệ thống Mẻ sản xuất phong phú (20+ mẻ)
 -- PO-100: 2 mẻ lớn (160k viên/mẻ = 50 thùng)
 INSERT INTO ProductionBatches (BatchNumber, OrderId, Status, ManufactureDate, CurrentStep) VALUES
 ('B100-M01', 100, 'Completed', DATEADD(DAY,-2,GETDATE()), 5),
@@ -468,7 +483,7 @@ INSERT INTO ProductionBatches (BatchNumber, OrderId, Status, ManufactureDate, Cu
 ('B300-M04', 300, 'Scheduled', NULL, 1),
 ('B300-M05', 300, 'Scheduled', NULL, 1);
 
--- 5. Bổ sung tồn kho khổng lồ cho các kịch bản test
+-- 3. Bổ sung tồn kho khổng lồ cho các kịch bản test
 SET IDENTITY_INSERT InventoryLots ON;
 INSERT INTO InventoryLots (LotId, MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, QCStatus) VALUES
 (201, 1,  'LOT-NLC3-MAX', 1000000.0, GETDATE(), DATEADD(YEAR,3,GETDATE()), 'Released'),
@@ -478,7 +493,7 @@ INSERT INTO InventoryLots (LotId, MaterialId, LotNumber, QuantityCurrent, Manufa
 (214, 14, 'LOT-TD4-MAX',   100000.0, GETDATE(), DATEADD(YEAR,3,GETDATE()), 'Released');
 SET IDENTITY_INSERT InventoryLots OFF;
 
--- 6. Nhật ký công đoạn eBMR chi tiết
+-- 4. Nhật ký công đoạn eBMR chi tiết
 -- Mẻ B100-M01: Có đầy đủ tham số tính toán
 INSERT INTO BatchProcessLogs (BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData)
 SELECT TOP 1 BatchId, 3, 6, 3, DATEADD(HOUR,-48,GETDATE()), DATEADD(HOUR,-47,GETDATE()), 'Passed', 
@@ -489,4 +504,10 @@ FROM ProductionBatches WHERE BatchNumber = 'B100-M01';
 INSERT INTO BatchProcessLogs (BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, IsDeviation, Notes, ParametersData)
 SELECT TOP 1 BatchId, 1, 2, 6, GETDATE(), NULL, 'OnHold', 1, N'Lỗi sensor nhiệt độ sấy vọt quá 85 độ.', N'{"temp_max":85.5,"sensor_fail":true}'
 FROM ProductionBatches WHERE BatchNumber = 'B200-M05';
+GO
+
+-- Kích hoạt lại Trigger sau khi Seed xong
+IF OBJECT_ID('trg_Lock_Finalized_Logs', 'TR') IS NOT NULL ENABLE TRIGGER trg_Lock_Finalized_Logs ON BatchProcessLogs;
+IF OBJECT_ID('trg_Check_Material_QC', 'TR') IS NOT NULL ENABLE TRIGGER trg_Check_Material_QC ON MaterialUsage;
+IF OBJECT_ID('trg_Validate_Drying_Limit', 'TR') IS NOT NULL ENABLE TRIGGER trg_Validate_Drying_Limit ON BatchProcessParameterValues;
 GO
