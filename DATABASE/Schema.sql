@@ -1,13 +1,12 @@
 /* =========================================================================
-   HỆ THỐNG QUẢN LÝ SẢN XUẤT DƯỢC PHẨM (GMP-WHO SYSTEM)
-   TÀI LIỆU CHI TIẾT CƠ SỞ DỮ LIỆU (DATABASE SCHEMA SPECIFICATION)
-   
-   Hệ thống thiết kế theo mô hình 3 lớp chính:
-   1. MASTER DATA (Dữ liệu gốc): Người dùng, Vật tư, Máy móc, Công thức.
-   2. PRODUCTION FLOW (Luồng sản xuất): Lệnh sản xuất, Mẻ sản xuất.
-   3. COMPLIANCE & TRACEABILITY (Tuân thủ & Truy vết): eBMR, Inventory, Audit Trail.
-========================================================================= */
+HỆ THỐNG QUẢN LÝ SẢN XUẤT DƯỢC PHẨM (GMP-WHO SYSTEM)
+TÀI LIỆU CHI TIẾT CƠ SỞ DỮ LIỆU (DATABASE SCHEMA SPECIFICATION)
 
+Hệ thống thiết kế theo mô hình 3 lớp chính:
+1. MASTER DATA (Dữ liệu gốc): Người dùng, Vật tư, Máy móc, Công thức.
+2. PRODUCTION FLOW (Luồng sản xuất): Lệnh sản xuất, Mẻ sản xuất.
+3. COMPLIANCE & TRACEABILITY (Tuân thủ & Truy vết): eBMR, Inventory, Audit Trail.
+========================================================================= */
 -- -------------------------------------------------------------------------
 -- 1. Bảng AppUsers: QUẢN LÝ NHÂN SỰ & PHÂN QUYỀN (Auth & Authorization)
 -- Mục đích: Lưu trữ toàn bộ danh sách nhân viên tham gia vào hệ thống.
@@ -59,7 +58,12 @@ CREATE TABLE Materials (
     MaterialCode VARCHAR(50) NOT NULL UNIQUE, -- Mã vật tư (Mã số quản lý hàng hóa).
     MaterialName NVARCHAR (200) NOT NULL, -- Tên vật tư (Tên hóa học hoặc tên thương mại).
     Type NVARCHAR (50) CHECK (
-        Type IN ('RawMaterial', 'Packaging', 'FinishedGood', 'Intermediate')
+        Type IN (
+            'RawMaterial',
+            'Packaging',
+            'FinishedGood',
+            'Intermediate'
+        )
     ), -- Phân loại: Nguyên liệu thô, Bao bì, Thành phẩm, Bán thành phẩm.
     BaseUomId INT REFERENCES UnitOfMeasure (UomId), -- Đơn vị tính cơ bản (Gốc).
     IsActive BIT DEFAULT 1, -- Trạng thái kinh doanh của mặt hàng.
@@ -170,6 +174,11 @@ CREATE TABLE ProductionBatches (
     CurrentStep INT DEFAULT 1, -- Bước hiện tại trong quy trình sản xuất.
     CreatedAt DATETIME2 DEFAULT GETDATE ()
 );
+-- Thêm bảng cấu hình tham số bước trong công đoạn
+
+
+
+
 
 -- -------------------------------------------------------------------------
 -- 11. Bảng BatchProcessLogs: NHẬT KÝ HỒ SƠ LÔ ĐIỆN TỬ (eBMR - Electronic Batch Record)

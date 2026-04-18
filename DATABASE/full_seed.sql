@@ -90,7 +90,7 @@ GO
 -- 3. UomConversions
 -- =====================================================================
 SET IDENTITY_INSERT UomConversions ON;
-INSERT INTO UomConversions (ConversionID, FromUomID, ToUomID, Factor) VALUES
+INSERT INTO UomConversions (ConversionID, FromUomID, ToUomID, ConversionFactor) VALUES
 (1, 1, 2,  1000.0),
 (2, 2, 1,  0.001),
 (3, 6, 5,  10.0),
