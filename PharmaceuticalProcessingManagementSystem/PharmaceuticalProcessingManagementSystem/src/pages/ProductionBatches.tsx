@@ -1,65 +1,146 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { productionBatchesApi } from '@/services/api';
-import { ClipboardList, Search, CheckCircle, Clock, RefreshCw } from 'lucide-react';
+﻿import { useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { productionBatchesApi, productionOrdersApi } from '@/services/api';
+import { ClipboardList, Search, CheckCircle, Clock, RefreshCw, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+
+interface OrderOption {
+  orderId: number;
+  orderCode: string;
+}
+
+interface BatchFormState {
+  orderId: number;
+  batchNumber: string;
+  status: string;
+  manufactureDate: string;
+  expiryDate: string;
+  currentStep: number;
+}
+
+interface UiBatch {
+  batchId: number;
+  batchNumber: string;
+  orderId: number;
+  status?: string;
+  qcStatus?: string;
+  manufactureDate?: string;
+  endTime?: string;
+  order?: {
+    orderCode?: string;
+    recipe?: {
+      material?: {
+        materialName?: string;
+      };
+    };
+  };
+}
+
+function toRows<T>(raw: unknown): T[] {
+  if (Array.isArray(raw)) return raw as T[];
+  if (raw && typeof raw === 'object' && 'data' in raw) {
+    const data = (raw as { data?: unknown }).data;
+    return Array.isArray(data) ? (data as T[]) : [];
+  }
+  return [];
+}
 
 export default function ProductionBatches() {
   const [search, setSearch] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState<BatchFormState>({
+    orderId: 0,
+    batchNumber: '',
+    status: 'In-Process',
+    manufactureDate: '',
+    expiryDate: '',
+    currentStep: 1,
+  });
+
   const queryClient = useQueryClient();
 
-  // Fetch ALL batches from the backend
   const { data: response, isLoading } = useQuery({
     queryKey: ['productionBatches'],
     queryFn: () => productionBatchesApi.getAll(),
   });
 
-  // Finish a batch
+  const { data: ordersRaw } = useQuery({
+    queryKey: ['productionOrders'],
+    queryFn: () => productionOrdersApi.getAll(),
+  });
+
+  const orders = useMemo<OrderOption[]>(() => {
+    const rows = Array.isArray(ordersRaw)
+      ? ordersRaw
+      : (ordersRaw as { data?: unknown; items?: unknown })?.data ??
+        (ordersRaw as { data?: unknown; items?: unknown })?.items ??
+        [];
+
+    return (rows as any[]).map((item) => ({
+      orderId: Number(item.orderId ?? item.OrderId ?? 0),
+      orderCode: item.orderCode ?? item.OrderCode ?? '',
+    }));
+  }, [ordersRaw]);
+
+  const createBatchMutation = useMutation({
+    mutationFn: () => productionBatchesApi.create(form),
+    onSuccess: async () => {
+      toast.success('Tạo mẻ sản xuất thành công');
+      await queryClient.invalidateQueries({ queryKey: ['productionBatches'] });
+      setShowModal(false);
+      setForm({ orderId: 0, batchNumber: '', status: 'In-Process', manufactureDate: '', expiryDate: '', currentStep: 1 });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Không thể tạo mẻ sản xuất');
+    },
+  });
+
   const finishMutation = useMutation({
     mutationFn: (batchId: number) => productionBatchesApi.finish(batchId),
-    onSuccess: () => {
-      toast.success('Đóng mẻ sản xuất thành công!');
-      queryClient.invalidateQueries({ queryKey: ['productionBatches'] });
+    onSuccess: async () => {
+      toast.success('Đóng mẻ sản xuất thành công');
+      await queryClient.invalidateQueries({ queryKey: ['productionBatches'] });
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || 'Không thể đóng mẻ. Vui lòng thử lại.');
     },
   });
 
-  // Backend returns camelCase JSON from ASP.NET Core
-  const batches: any[] = Array.isArray(response)
-    ? response
-    : (response as any)?.data ?? [];
+  const batches = useMemo<UiBatch[]>(() => toRows<any>(response), [response]);
 
-  const filtered = batches.filter((b) =>
-    (b.batchNumber ?? '').toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    return batches.filter((b) => (b.batchNumber ?? '').toLowerCase().includes(keyword));
+  }, [batches, search]);
 
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case 'In-Process':
-        return { label: 'Đang sản xuất', badgeClass: 'badge-info' };
-      case 'Completed':
-        return { label: 'Hoàn thành', badgeClass: 'badge-success' };
-      case 'On-Hold':
-        return { label: 'Tạm dừng', badgeClass: 'badge-warning' };
-      default:
-        return { label: status || 'Unknown', badgeClass: 'bg-gray-100 text-gray-800' };
-    }
+  const getStatusInfo = (status?: string) => {
+    const normalized = (status || '').toLowerCase();
+    if (normalized.includes('process')) return { label: 'Đang sản xuất', badgeClass: 'bg-blue-100 text-blue-700' };
+    if (normalized.includes('complete')) return { label: 'Hoàn thành', badgeClass: 'bg-green-100 text-green-700' };
+    if (normalized.includes('hold')) return { label: 'Tạm dừng', badgeClass: 'bg-orange-100 text-orange-700' };
+    return { label: status || 'Unknown', badgeClass: 'bg-gray-100 text-gray-800' };
   };
 
   const fmt = (dateString?: string) => {
     if (!dateString) return '-';
-    try { return new Date(dateString).toLocaleString('vi-VN'); } catch { return '-'; }
+    try {
+      return new Date(dateString).toLocaleString('vi-VN');
+    } catch {
+      return '-';
+    }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Mẻ Sản Xuất</h1>
-          <p className="text-neutral-500 mt-1">Quản lý và thực thi các mẻ sản xuất</p>
+          <h1 className="text-2xl font-bold text-neutral-900">Quản lý lô thành phẩm</h1>
+          <p className="text-neutral-500 mt-1">Theo dõi và cập nhật các mẻ/lô thành phẩm</p>
         </div>
+        <button onClick={() => setShowModal(true)} className="btn-primary">
+          <Plus className="w-4 h-4 mr-2" />
+          Tạo mẻ mới
+        </button>
       </div>
 
       <div className="card">
@@ -70,7 +151,7 @@ export default function ProductionBatches() {
               type="text"
               placeholder="Tìm kiếm theo mã mẻ..."
               value={search}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               className="input pl-10"
             />
           </div>
@@ -92,7 +173,7 @@ export default function ProductionBatches() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Mã Mẻ</th>
+                  <th>Mã mẻ</th>
                   <th>Lệnh SX</th>
                   <th>Sản phẩm</th>
                   <th>Trạng thái</th>
@@ -107,16 +188,10 @@ export default function ProductionBatches() {
                   return (
                     <tr key={batch.batchId}>
                       <td>
-                        <code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">
-                          {batch.batchNumber}
-                        </code>
+                        <code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">{batch.batchNumber}</code>
                       </td>
-                      <td className="text-sm text-neutral-600">
-                        {batch.order?.orderCode ?? `#${batch.orderId}`}
-                      </td>
-                      <td className="text-sm text-neutral-700">
-                        {batch.order?.recipe?.material?.materialName ?? '-'}
-                      </td>
+                      <td className="text-sm text-neutral-600">{batch.order?.orderCode ?? `#${batch.orderId}`}</td>
+                      <td className="text-sm text-neutral-700">{batch.order?.recipe?.material?.materialName ?? '-'}</td>
                       <td>
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusInfo.badgeClass}`}>
                           {statusInfo.label}
@@ -126,15 +201,17 @@ export default function ProductionBatches() {
                       <td className="text-neutral-600 text-sm">{fmt(batch.endTime)}</td>
                       <td className="text-right">
                         <div className="flex items-center justify-end space-x-2">
-                          {batch.status === 'In-Process' && (
+                          {(batch.status === 'In-Process' || batch.status === 'InProcess') && (
                             <button
                               onClick={() => finishMutation.mutate(batch.batchId)}
                               disabled={finishMutation.isPending}
                               className="btn-ghost text-green-600 text-sm flex items-center"
                             >
-                              {finishMutation.isPending
-                                ? <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
-                                : <CheckCircle className="w-4 h-4 mr-1" />}
+                              {finishMutation.isPending ? (
+                                <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                              ) : (
+                                <CheckCircle className="w-4 h-4 mr-1" />
+                              )}
                               Hoàn thành
                             </button>
                           )}
@@ -151,6 +228,64 @@ export default function ProductionBatches() {
           </div>
         )}
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-xl p-6 space-y-4">
+            <h3 className="text-xl font-bold">Tạo mẻ thành phẩm</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <select className="input" value={form.orderId} onChange={(e) => setForm({ ...form, orderId: Number(e.target.value) })}>
+                <option value={0}>Chọn lệnh sản xuất</option>
+                {orders.map((order) => (
+                  <option key={order.orderId} value={order.orderId}>
+                    {order.orderCode}
+                  </option>
+                ))}
+              </select>
+              <input
+                className="input"
+                placeholder="Mã mẻ"
+                value={form.batchNumber}
+                onChange={(e) => setForm({ ...form, batchNumber: e.target.value })}
+              />
+              <select className="input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                <option value="In-Process">In-Process</option>
+                <option value="On-Hold">On-Hold</option>
+                <option value="Completed">Completed</option>
+              </select>
+              <input
+                type="number"
+                className="input"
+                placeholder="Bước hiện tại"
+                value={form.currentStep}
+                onChange={(e) => setForm({ ...form, currentStep: Number(e.target.value) })}
+              />
+              <div>
+                <label className="text-xs text-neutral-500">Ngày sản xuất</label>
+                <input
+                  type="date"
+                  className="input"
+                  value={form.manufactureDate}
+                  onChange={(e) => setForm({ ...form, manufactureDate: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-neutral-500">Hạn dùng</label>
+                <input
+                  type="date"
+                  className="input"
+                  value={form.expiryDate}
+                  onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setShowModal(false)} className="btn-ghost">Hủy</button>
+              <button onClick={() => createBatchMutation.mutate()} className="btn-primary">Tạo mẻ</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

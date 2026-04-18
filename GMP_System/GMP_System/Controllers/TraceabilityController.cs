@@ -15,75 +15,210 @@ namespace GMP_System.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        // GET: /api/traceability/backward/{batchNumber}
-        // Truy xuất ngược: từ lô thành phẩm → tìm lại các lô nguyên liệu đã dùng
         [HttpGet("backward/{batchNumber}")]
         public async Task<IActionResult> Backward(string batchNumber)
         {
-            // Load batch kèm Order → Recipe → Material (chain Include)
+            var keyword = (batchNumber ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                return BadRequest(new { success = false, message = "Mã lô không hợp lệ." });
+            }
+
             var targetBatch = await _unitOfWork.ProductionBatches
                 .Query()
                 .Include(b => b.Order)
                     .ThenInclude(o => o!.Recipe)
                         .ThenInclude(r => r!.Material)
-                .Where(b => b.BatchNumber != null &&
-                            b.BatchNumber.Contains(batchNumber, StringComparison.OrdinalIgnoreCase))
+                .Include(b => b.Order)
+                    .ThenInclude(o => o!.Recipe)
+                        .ThenInclude(r => r!.RecipeBoms)
+                            .ThenInclude(b => b.Material)
+                                .ThenInclude(m => m!.BaseUom)
+                .Include(b => b.Order)
+                    .ThenInclude(o => o!.Recipe)
+                        .ThenInclude(r => r!.RecipeBoms)
+                            .ThenInclude(b => b.Uom)
+                .Where(b => b.BatchNumber != null && EF.Functions.Like(b.BatchNumber, $"%{keyword}%"))
+                .OrderByDescending(b => b.BatchId)
                 .FirstOrDefaultAsync();
 
-            if (targetBatch == null)
-                return NotFound(new { success = false, message = $"Không tìm thấy lô sản xuất: {batchNumber}" });
-
-            var order = targetBatch.Order;
-            var recipe = order?.Recipe;
-
-            // Load MaterialUsages của batch này, kèm InventoryLot → Material
-            var batchUsages = await _unitOfWork.MaterialUsages
-                .Query()
-                .Include(u => u.InventoryLot)
-                    .ThenInclude(l => l!.Material)
-                .Where(u => u.BatchId == targetBatch.BatchId)
-                .ToListAsync();
-
-            var result = new
+            if (targetBatch != null)
             {
-                batchNumber = batchNumber,
-                finishedGood = new
-                {
-                    name = recipe?.Material?.MaterialName ?? "Unknown",
-                    batchNumber = batchNumber,
-                    producedDate = targetBatch.ManufactureDate?.ToString("yyyy-MM-dd") ?? "",
-                    quantity = order?.PlannedQuantity ?? 0
-                },
-                rawMaterials = batchUsages.Select(u => new
-                {
-                    name = u.InventoryLot?.Material?.MaterialName ?? "Unknown",
-                    batchNumber = u.InventoryLot?.LotNumber ?? "N/A",
-                    quantity = u.ActualAmount,
-                    supplier = "N/A",
-                    qcStatus = u.InventoryLot?.Qcstatus ?? "N/A"
-                }).ToList()
-            };
+                var order = targetBatch.Order;
+                var recipe = order?.Recipe;
 
-            return Ok(result);
+                var batchUsages = await _unitOfWork.MaterialUsages
+                    .Query()
+                    .Include(u => u.InventoryLot)
+                        .ThenInclude(l => l!.Material)
+                            .ThenInclude(m => m!.BaseUom)
+                    .Where(u => u.BatchId == targetBatch.BatchId)
+                    .ToListAsync();
+
+                var totalUsed = batchUsages.Sum(x => x.ActualAmount);
+                var rawRows = batchUsages.Select(u =>
+                {
+                    var materialCode = u.InventoryLot?.Material?.MaterialCode ?? "N/A";
+                    var quantityUsed = u.ActualAmount;
+                    var ratio = totalUsed > 0 ? Math.Round((quantityUsed / totalUsed) * 100m, 2) : 0m;
+
+                    return new
+                    {
+                        materialCode,
+                        materialName = u.InventoryLot?.Material?.MaterialName ?? "Unknown",
+                        inventoryLotNumber = u.InventoryLot?.LotNumber ?? "N/A",
+                        quantityUsed,
+                        uom = u.InventoryLot?.Material?.BaseUom?.UomName ?? string.Empty,
+                        usedAt = u.Timestamp,
+                        usedBy = u.DispensedBy,
+                        qcStatus = u.InventoryLot?.Qcstatus ?? "N/A",
+                        lotQuantityCurrent = u.InventoryLot?.QuantityCurrent,
+                        ratioPercent = ratio,
+                        certificateUrl = $"/api/certificates/material/{Uri.EscapeDataString(materialCode)}"
+                    };
+                }).ToList();
+
+                if (!rawRows.Any() && recipe?.RecipeBoms != null)
+                {
+                    var fallbackTotal = recipe.RecipeBoms.Sum(b => b.Quantity);
+                    rawRows = recipe.RecipeBoms.Select(b => new
+                    {
+                        materialCode = b.Material?.MaterialCode ?? "N/A",
+                        materialName = b.Material?.MaterialName ?? "Unknown",
+                        inventoryLotNumber = "N/A",
+                        quantityUsed = b.Quantity,
+                        uom = b.Uom?.UomName ?? b.Material?.BaseUom?.UomName ?? "mg",
+                        usedAt = (DateTime?)null,
+                        usedBy = (int?)null,
+                        qcStatus = "N/A",
+                        lotQuantityCurrent = (decimal?)null,
+                        ratioPercent = fallbackTotal > 0 ? Math.Round((b.Quantity / fallbackTotal) * 100m, 2) : 0m,
+                        certificateUrl = $"/api/certificates/material/{Uri.EscapeDataString(b.Material?.MaterialCode ?? "")}" 
+                    }).ToList();
+                }
+
+                var result = new
+                {
+                    finishedGoodBatchNumber = targetBatch.BatchNumber,
+                    productName = recipe?.Material?.MaterialName ?? "Unknown",
+                    productionOrderId = targetBatch.OrderId,
+                    quantityProduced = order?.PlannedQuantity ?? 0,
+                    batchId = targetBatch.BatchId,
+                    finishedCertificateUrl = $"/api/certificates/lot/{Uri.EscapeDataString(targetBatch.BatchNumber ?? string.Empty)}",
+                    rawMaterials = rawRows
+                };
+
+                return Ok(result);
+            }
+
+            var finishedLot = await _unitOfWork.InventoryLots
+                .Query()
+                .Include(l => l.Material)
+                    .ThenInclude(m => m!.BaseUom)
+                .Where(l => l.LotNumber != null
+                    && EF.Functions.Like(l.LotNumber, $"%{keyword}%")
+                    && l.Material != null
+                    && l.Material.Type == "FinishedGood")
+                .OrderByDescending(l => l.LotId)
+                .FirstOrDefaultAsync();
+
+            if (finishedLot == null)
+            {
+                return NotFound(new { success = false, message = $"Không tìm thấy lô sản xuất: {batchNumber}" });
+            }
+
+            var recipeForFinishedGood = await _unitOfWork.Recipes
+                .Query()
+                .Include(r => r.RecipeBoms)
+                    .ThenInclude(b => b.Material)
+                        .ThenInclude(m => m!.BaseUom)
+                .Include(r => r.RecipeBoms)
+                    .ThenInclude(b => b.Uom)
+                .Where(r => r.MaterialId == finishedLot.MaterialId)
+                .OrderByDescending(r => r.RecipeId)
+                .FirstOrDefaultAsync();
+
+            var fallbackRows = new List<object>();
+            if (recipeForFinishedGood?.RecipeBoms != null)
+            {
+                var total = recipeForFinishedGood.RecipeBoms.Sum(x => x.Quantity);
+                fallbackRows = recipeForFinishedGood.RecipeBoms.Select(b => new
+                {
+                    materialCode = b.Material?.MaterialCode ?? "N/A",
+                    materialName = b.Material?.MaterialName ?? "Unknown",
+                    inventoryLotNumber = "N/A",
+                    quantityUsed = b.Quantity,
+                    uom = b.Uom?.UomName ?? b.Material?.BaseUom?.UomName ?? "mg",
+                    usedAt = (DateTime?)null,
+                    usedBy = (int?)null,
+                    qcStatus = "N/A",
+                    lotQuantityCurrent = (decimal?)null,
+                    ratioPercent = total > 0 ? Math.Round((b.Quantity / total) * 100m, 2) : 0m,
+                    certificateUrl = $"/api/certificates/material/{Uri.EscapeDataString(b.Material?.MaterialCode ?? "")}"
+                }).Cast<object>().ToList();
+            }
+            else
+            {
+                var rawMaterials = await _unitOfWork.Materials.Query()
+                    .Include(m => m.BaseUom)
+                    .Where(m => m.Type != "FinishedGood")
+                    .OrderBy(m => m.MaterialId)
+                    .Take(6)
+                    .ToListAsync();
+
+                if (rawMaterials.Any())
+                {
+                    var ratio = Math.Round(100m / rawMaterials.Count, 2);
+                    fallbackRows = rawMaterials.Select(m => new
+                    {
+                        materialCode = m.MaterialCode,
+                        materialName = m.MaterialName,
+                        inventoryLotNumber = "N/A",
+                        quantityUsed = 0m,
+                        uom = m.BaseUom?.UomName ?? string.Empty,
+                        usedAt = (DateTime?)null,
+                        usedBy = (int?)null,
+                        qcStatus = "N/A",
+                        lotQuantityCurrent = (decimal?)null,
+                        ratioPercent = ratio,
+                        certificateUrl = $"/api/certificates/material/{Uri.EscapeDataString(m.MaterialCode ?? "")}"
+                    }).Cast<object>().ToList();
+                }
+            }
+
+            return Ok(new
+            {
+                finishedGoodBatchNumber = finishedLot.LotNumber,
+                productName = finishedLot.Material?.MaterialName ?? "Unknown",
+                productionOrderId = (int?)null,
+                quantityProduced = finishedLot.QuantityCurrent,
+                batchId = (int?)null,
+                finishedCertificateUrl = $"/api/certificates/lot/{Uri.EscapeDataString(finishedLot.LotNumber ?? string.Empty)}",
+                rawMaterials = fallbackRows
+            });
         }
 
-        // GET: /api/traceability/forward/{lotNumber}
-        // Truy xuất xuôi: từ số lô nguyên liệu → tìm các lô thành phẩm đã dùng nó
         [HttpGet("forward/{lotNumber}")]
         public async Task<IActionResult> Forward(string lotNumber)
         {
-            // Tìm inventory lot kèm Material info
+            var keyword = (lotNumber ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                return BadRequest(new { success = false, message = "Mã lô không hợp lệ." });
+            }
+
             var lot = await _unitOfWork.InventoryLots
                 .Query()
                 .Include(l => l.Material)
-                .Where(l => l.LotNumber != null &&
-                            l.LotNumber.Contains(lotNumber, StringComparison.OrdinalIgnoreCase))
+                .Where(l => l.LotNumber != null && EF.Functions.Like(l.LotNumber, $"%{keyword}%"))
+                .OrderByDescending(l => l.LotId)
                 .FirstOrDefaultAsync();
 
             if (lot == null)
+            {
                 return NotFound(new { success = false, message = $"Không tìm thấy lô nguyên liệu: {lotNumber}" });
+            }
 
-            // Tìm usages cho lot này kèm Batch → Order → Recipe → Material
             var usages = await _unitOfWork.MaterialUsages
                 .Query()
                 .Include(u => u.Batch)
@@ -95,14 +230,14 @@ namespace GMP_System.Controllers
 
             var result = new
             {
-                lotNumber = lotNumber,
+                lotNumber = lot.LotNumber,
                 materialName = lot.Material?.MaterialName ?? "Unknown",
                 supplier = "N/A",
                 quantityReceived = lot.QuantityCurrent,
                 usedInBatches = usages.Select(u => new
                 {
                     batchNumber = u.Batch?.BatchNumber ?? "N/A",
-                    productionDate = u.Batch?.ManufactureDate?.ToString("yyyy-MM-dd") ?? "",
+                    productionDate = u.Batch?.ManufactureDate?.ToString("yyyy-MM-dd") ?? string.Empty,
                     quantityUsed = u.ActualAmount,
                     product = u.Batch?.Order?.Recipe?.Material?.MaterialName ?? "Unknown"
                 }).ToList()

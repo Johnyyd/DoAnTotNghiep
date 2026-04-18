@@ -12,19 +12,19 @@ SET NOCOUNT ON;
 -- --------------------------------------------------------------------------
 IF NOT EXISTS (SELECT 1 FROM Materials WHERE MaterialCode = 'MAT-WATER')
 BEGIN
-    INSERT INTO Materials (MaterialCode, MaterialName, Type, BaseUomId, IsActive, Description)
+    INSERT INTO Materials (MaterialCode, MaterialName, Type, BaseUomId, IsActive, TechnicalSpecification)
     VALUES ('MAT-WATER', N'Nước cất pha tiêm', 'RawMaterial', 3, 1, N'Nước cất vô trùng');
 END;
 
 IF NOT EXISTS (SELECT 1 FROM Materials WHERE MaterialCode = 'MAT-AMP')
 BEGIN
-    INSERT INTO Materials (MaterialCode, MaterialName, Type, BaseUomId, IsActive, Description)
+    INSERT INTO Materials (MaterialCode, MaterialName, Type, BaseUomId, IsActive, TechnicalSpecification)
     VALUES ('MAT-AMP', N'Ống thủy tinh 2ml', 'Packaging', 4, 1, N'Bao bì sơ cấp cho thuốc ống');
 END;
 
 IF NOT EXISTS (SELECT 1 FROM Materials WHERE MaterialCode = 'FG-DIPY-AMP')
 BEGIN
-    INSERT INTO Materials (MaterialCode, MaterialName, Type, BaseUomId, IsActive, Description)
+    INSERT INTO Materials (MaterialCode, MaterialName, Type, BaseUomId, IsActive, TechnicalSpecification)
     VALUES ('FG-DIPY-AMP', N'Thuốc ống Dipyridamole 10mg/2ml', 'FinishedGood', 4, 1, N'Thành phẩm thuốc ống');
 END;
 

@@ -55,7 +55,7 @@ namespace GMP_System.Controllers
 
             existingConversion.FromUomId = conversion.FromUomId;
             existingConversion.ToUomId = conversion.ToUomId;
-            existingConversion.Factor = conversion.Factor;
+            existingConversion.ConversionFactor = conversion.ConversionFactor;
 
             _unitOfWork.UomConversions.Update(existingConversion);
             await _unitOfWork.CompleteAsync();

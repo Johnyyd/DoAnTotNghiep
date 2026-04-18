@@ -31,6 +31,8 @@ public partial class GmpContext : DbContext
 
     public virtual DbSet<ProductionOrder> ProductionOrders { get; set; } = null!;
 
+    public virtual DbSet<ProductionArea> ProductionAreas { get; set; } = null!;
+
     public virtual DbSet<Recipe> Recipes { get; set; } = null!;
 
     public virtual DbSet<RecipeBom> RecipeBoms { get; set; } = null!;
@@ -46,9 +48,6 @@ public partial class GmpContext : DbContext
     public virtual DbSet<StepParameter> StepParameters { get; set; } = null!;
 
     public virtual DbSet<BatchProcessParameterValue> BatchProcessParameterValues { get; set; } = null!;
-
-    // Configuration is now handled via Program.cs using AddDbContext.
-    // Removed hardcoded LocalDB connection to support Docker/Linux.
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -77,7 +76,6 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.LogId).HasColumnName("LogID");
             entity.Property(e => e.BatchId).HasColumnName("BatchID");
             entity.Property(e => e.EquipmentId).HasColumnName("EquipmentID");
-            entity.Property(e => e.NumberOfRouting).HasDefaultValue(1);
             entity.Property(e => e.OperatorId).HasColumnName("OperatorID");
             entity.Property(e => e.ParametersData).HasColumnType("nvarchar(max)");
             entity.Property(e => e.ResultStatus).HasMaxLength(50);
@@ -149,9 +147,16 @@ public partial class GmpContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.EquipmentName).HasMaxLength(200);
+            entity.Property(e => e.TechnicalSpecification).HasMaxLength(300);
+            entity.Property(e => e.UsagePurpose).HasMaxLength(300);
+            entity.Property(e => e.AreaId).HasColumnName("AreaId");
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
                 .HasDefaultValue("Ready");
+
+            entity.HasOne(d => d.Area).WithMany(p => p.Equipments)
+                .HasForeignKey(d => d.AreaId)
+                .HasConstraintName("FK_Equipments_ProductionAreas");
         });
 
         modelBuilder.Entity<InventoryLot>(entity =>
@@ -183,7 +188,9 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.MaterialId).HasColumnName("MaterialID");
             entity.Property(e => e.BaseUomId).HasColumnName("BaseUomID");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.TechnicalSpecification)
+                .HasMaxLength(500)
+                .HasColumnName("TechnicalSpecification");
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.MaterialCode)
                 .HasMaxLength(50)
@@ -264,8 +271,6 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.PlannedQuantity).HasColumnType("decimal(18, 4)");
             entity.Property(e => e.RecipeId).HasColumnName("RecipeID");
             entity.Property(e => e.Status).HasMaxLength(50);
-            entity.Property(e => e.PlannedCartons).HasColumnName("PlannedCartons");
-            entity.Property(e => e.Note).HasMaxLength(500);
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.ProductionOrders)
                 .HasForeignKey(d => d.CreatedBy)
@@ -317,6 +322,7 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.WastePercentage)
                 .HasDefaultValue(0m)
                 .HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.TechnicalStandard).HasMaxLength(100);
 
             entity.HasOne(d => d.Material).WithMany(p => p.RecipeBoms)
                 .HasForeignKey(d => d.MaterialId)
@@ -339,13 +345,29 @@ public partial class GmpContext : DbContext
 
             entity.Property(e => e.RoutingId).HasColumnName("RoutingID");
             entity.Property(e => e.DefaultEquipmentId).HasColumnName("DefaultEquipmentID");
-            entity.Property(e => e.NumberOfRouting).HasDefaultValue(1);
+            entity.Property(e => e.MaterialId).HasColumnName("MaterialId");
+            entity.Property(e => e.AreaId).HasColumnName("AreaId");
             entity.Property(e => e.RecipeId).HasColumnName("RecipeID");
             entity.Property(e => e.StepName).HasMaxLength(200);
+            entity.Property(e => e.NumberOfRouting).HasDefaultValue(1);
+            entity.Property(e => e.CleanlinessStatus).HasMaxLength(50);
+            entity.Property(e => e.StandardTemperature).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.StandardHumidity).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.StandardPressure).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.StabilityStatus).HasMaxLength(50);
+            entity.Property(e => e.SetTemperature).HasColumnType("decimal(10, 2)");
 
             entity.HasOne(d => d.DefaultEquipment).WithMany(p => p.RecipeRoutings)
                 .HasForeignKey(d => d.DefaultEquipmentId)
                 .HasConstraintName("FK__RecipeRou__Defau__6D0D32F4");
+
+            entity.HasOne(d => d.Material).WithMany()
+                .HasForeignKey(d => d.MaterialId)
+                .HasConstraintName("FK_RecipeRouting_Materials");
+
+            entity.HasOne(d => d.Area).WithMany(p => p.RecipeRoutings)
+                .HasForeignKey(d => d.AreaId)
+                .HasConstraintName("FK_RecipeRouting_ProductionAreas");
 
             entity.HasOne(d => d.Recipe).WithMany(p => p.RecipeRoutings)
                 .HasForeignKey(d => d.RecipeId)
@@ -374,6 +396,22 @@ public partial class GmpContext : DbContext
                 .HasConstraintName("FK_Audit_User");
         });
 
+        modelBuilder.Entity<ProductionArea>(entity =>
+        {
+            entity.HasKey(e => e.AreaId).HasName("PK__Producti__70B82028");
+
+            entity.ToTable("ProductionAreas");
+
+            entity.HasIndex(e => e.AreaCode, "UQ_ProductionAreas_AreaCode").IsUnique();
+
+            entity.Property(e => e.AreaId).HasColumnName("AreaId");
+            entity.Property(e => e.AreaCode)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.AreaName).HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(500);
+        });
+
         modelBuilder.Entity<UnitOfMeasure>(entity =>
         {
             entity.HasKey(e => e.UomId).HasName("PK__UnitOfMe__F6F8D59EA16C24B6");
@@ -392,9 +430,12 @@ public partial class GmpContext : DbContext
             entity.HasIndex(e => new { e.FromUomId, e.ToUomId }, "UQ_Conversion").IsUnique();
 
             entity.Property(e => e.ConversionId).HasColumnName("ConversionID");
-            entity.Property(e => e.Factor).HasColumnType("decimal(18, 6)");
+            entity.Property(e => e.ConversionFactor)
+                .HasColumnType("decimal(18, 6)")
+                .HasColumnName("ConversionFactor");
             entity.Property(e => e.FromUomId).HasColumnName("FromUomID");
             entity.Property(e => e.ToUomId).HasColumnName("ToUomID");
+            entity.Property(e => e.Note).HasMaxLength(200);
 
             entity.HasOne(d => d.FromUom).WithMany(p => p.UomConversionFromUoms)
                 .HasForeignKey(d => d.FromUomId)

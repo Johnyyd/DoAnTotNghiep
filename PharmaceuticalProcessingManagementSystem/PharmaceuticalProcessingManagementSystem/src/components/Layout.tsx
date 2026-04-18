@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+﻿import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Pill,
@@ -14,6 +14,7 @@ import {
   LogOut,
   Settings,
   FileText,
+  BarChart3,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -24,10 +25,12 @@ const navigation = [
   { name: 'Công Thức', href: '/recipes', icon: ClipboardList, roles: ['Admin', 'Manager'] },
   { name: 'Lệnh Sản Xuất', href: '/production-orders', icon: Warehouse, roles: ['Admin', 'Manager'] },
   { name: 'Mẻ Sản Xuất', href: '/batches', icon: Activity, roles: ['Admin', 'Manager', 'Operator'] },
+  { name: 'Thành Phẩm', href: '/finished-products', icon: Package, roles: ['Admin', 'Manager', 'QualityControl'] },
   { name: 'Truy Xuất', href: '/traceability', icon: Search, roles: ['Admin', 'Manager', 'QualityControl'] },
   { name: 'Tồn Kho', href: '/inventory', icon: Package, roles: ['Admin', 'Manager'] },
   { name: 'Thiết Bị', href: '/equipments', icon: Settings, roles: ['Admin', 'Manager'] },
-  { name: 'Hồ Sơ Trưởng Phòng', href: '/manager-operations', icon: FileText, roles: ['Admin', 'Manager'] },
+  { name: 'Theo Dõi Tiến Độ', href: '/manager-operations', icon: FileText, roles: ['Admin', 'Manager'] },
+  { name: 'Thống Kê Thành Phẩm', href: '/finished-goods-stats', icon: BarChart3, roles: ['Admin', 'Manager'] },
   { name: 'Tài Khoản', href: '/users', icon: Users, roles: ['Admin'] },
   { name: 'Nhật Ký Hệ Thống', href: '/audit-logs', icon: ClipboardList, roles: ['Admin', 'QualityControl'] },
 ];
@@ -137,9 +140,7 @@ export default function Layout() {
           </button>
 
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-neutral-900">
-              Quản Lý Sản Xuất Dược Phẩm
-            </h2>
+            <h2 className="text-lg font-semibold text-neutral-900">Quản Lý Sản Xuất Dược Phẩm</h2>
           </div>
 
           <div className="flex items-center space-x-4">

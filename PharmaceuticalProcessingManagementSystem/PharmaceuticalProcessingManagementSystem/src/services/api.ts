@@ -159,6 +159,10 @@ export const inventoryApi = {
     api.get<ApiResponse<any[]>>('/inventory-lots', { params }),
   receive: (data: any) =>
     api.post<ApiResponse<any>>('/inventory-lots', data),
+  updateLot: (lotId: number, data: any) =>
+    api.put<ApiResponse<any>>(`/inventory-lots/${lotId}`, data),
+  deleteLot: (lotId: number) =>
+    api.delete<ApiResponse<any>>(`/inventory-lots/${lotId}`),
   updateQc: (lotId: number, status: string) =>
     api.post<ApiResponse<any>>(`/inventory-lots/${lotId}/qc`, { status }),
 
@@ -185,6 +189,24 @@ export const equipmentsApi = {
   create: (data: any) => api.post<ApiResponse<any>>('/equipments', data),
   update: (id: number, data: any) => api.put<ApiResponse<any>>(`/equipments/${id}`, data),
   delete: (id: number) => api.delete<ApiResponse<any>>(`/equipments/${id}`),
+};
+
+export const areasApi = {
+  getAll: () => api.get<ApiResponse<any[]>>('/areas'),
+};
+
+export const certificatesApi = {
+  uploadMaterialCertificate: (materialCode: string, file: File) => {
+    const formData = new FormData();
+    formData.append('materialCode', materialCode);
+    formData.append('file', file);
+    return api.post<ApiResponse<{ fileName: string; filePath: string }>>('/certificates/material/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  getMaterialCertificateUrl: (materialCode: string) => `/api/certificates/material/${encodeURIComponent(materialCode)}`,
+  getFinishedCertificateUrl: (materialCode: string) => `/api/certificates/finished/${encodeURIComponent(materialCode)}`,
+  getLotCertificateUrl: (batchNumber: string) => `/api/certificates/lot/${encodeURIComponent(batchNumber)}`,
 };
 
 // ============== AUDIT LOGS ==============

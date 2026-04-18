@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, Clock3, Factory, FileSpreadsheet, FlaskConical, Settings2, ShieldCheck } from 'lucide-react';
 import { equipmentsApi, productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
@@ -17,6 +17,7 @@ type NormalizedRecipe = {
 type NormalizedBom = {
   bomId: number;
   materialName: string;
+  technicalStandard?: string;
   quantity: number;
   wastePercentage: number;
   uomName: string;
@@ -58,12 +59,12 @@ type NormalizedEquipment = {
 };
 
 const fallbackBom: NormalizedBom[] = [
-  { bomId: 1, materialName: 'NLC 3 - Cao khô Trinh nữ Crila', quantity: 250, wastePercentage: 0.4, uomName: 'mg' },
-  { bomId: 2, materialName: 'TD 1 - Aerosil', quantity: 1.62, wastePercentage: 0.2, uomName: 'mg' },
-  { bomId: 3, materialName: 'TD 3 - Sodium starch glycolate', quantity: 29.7, wastePercentage: 0.2, uomName: 'mg' },
-  { bomId: 4, materialName: 'TD 4 - Talc', quantity: 4.05, wastePercentage: 0.2, uomName: 'mg' },
-  { bomId: 5, materialName: 'TD 5 - Magnesi stearat', quantity: 4.05, wastePercentage: 0.2, uomName: 'mg' },
-  { bomId: 6, materialName: 'TD 8 - Tinh bột', quantity: 250.58, wastePercentage: 0.5, uomName: 'mg' },
+  { bomId: 1, materialName: 'NLC 3 - Cao khô Trinh nữ Crila', technicalStandard: 'TCCS', quantity: 250, wastePercentage: 0.4, uomName: 'mg' },
+  { bomId: 2, materialName: 'TD 1 - Aerosil', technicalStandard: 'USP 30', quantity: 1.62, wastePercentage: 0.2, uomName: 'mg' },
+  { bomId: 3, materialName: 'TD 3 - Sodium starch glycolate', technicalStandard: 'USP 30', quantity: 29.7, wastePercentage: 0.2, uomName: 'mg' },
+  { bomId: 4, materialName: 'TD 4 - Talc', technicalStandard: 'DĐVN V', quantity: 4.05, wastePercentage: 0.2, uomName: 'mg' },
+  { bomId: 5, materialName: 'TD 5 - Magnesi stearat', technicalStandard: 'DĐVN V', quantity: 4.05, wastePercentage: 0.2, uomName: 'mg' },
+  { bomId: 6, materialName: 'TD 8 - Tinh bột', technicalStandard: 'DĐVN V', quantity: 250.58, wastePercentage: 0.5, uomName: 'mg' },
 ];
 
 const fallbackRouting: NormalizedRouting[] = [
@@ -218,6 +219,7 @@ export default function ManagerOperations() {
     const normalized = rows.map((item: any) => ({
       bomId: Number(item.bomId ?? item.BomId ?? 0),
       materialName: item.material?.materialName ?? item.Material?.MaterialName ?? item.materialName ?? 'Nguyên liệu',
+      technicalStandard: item.technicalStandard ?? item.TechnicalStandard ?? '',
       quantity: Number(item.quantity ?? item.Quantity ?? 0),
       wastePercentage: Number(item.wastePercentage ?? item.WastePercentage ?? 0),
       uomName: item.uom?.uomName ?? item.Uom?.UomName ?? item.unit ?? 'kg',
@@ -306,8 +308,7 @@ export default function ManagerOperations() {
         <div className="gmp-sheet-header">
           <div>
             <p className="text-xs font-semibold tracking-[0.18em] text-neutral-600">CÔNG TY ABC</p>
-            <h1 className="text-xl font-bold text-neutral-900">HỒ SƠ CHẾ BIẾN LÔ - TRƯỞNG PHÒNG</h1>
-            <p className="text-sm text-neutral-600">Đề tài GMP-WHO | Nền tảng Web React + TypeScript</p>
+            <h1 className="text-xl font-bold text-neutral-900">THEO DÕI TIẾN ĐỘ CÁC LỆNH SẢN XUẤT</h1>
           </div>
           <div className="text-right text-sm text-neutral-700">
             <p>Số tờ: ...</p>
@@ -353,6 +354,7 @@ export default function ManagerOperations() {
             <tr>
               <th>STT</th>
               <th>Tên nguyên liệu</th>
+              <th>Tiêu chuẩn kỹ thuật</th>
               <th>Số lượng</th>
               <th>Đơn vị</th>
               <th>Tỷ lệ hao hụt (%)</th>
@@ -363,6 +365,7 @@ export default function ManagerOperations() {
               <tr key={item.bomId || index}>
                 <td>{index + 1}</td>
                 <td>{item.materialName}</td>
+                <td>{item.technicalStandard || '-'}</td>
                 <td>{item.quantity.toLocaleString()}</td>
                 <td>{item.uomName}</td>
                 <td>{item.wastePercentage.toFixed(2)}</td>

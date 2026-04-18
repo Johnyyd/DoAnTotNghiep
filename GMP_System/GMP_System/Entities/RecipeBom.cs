@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace GMP_System.Entities;
@@ -16,6 +16,8 @@ public partial class RecipeBom
     public int? UomId { get; set; }
 
     public decimal? WastePercentage { get; set; }
+
+    public string? TechnicalStandard { get; set; }
 
     public string? Note { get; set; }
 

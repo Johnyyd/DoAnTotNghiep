@@ -16,112 +16,91 @@ namespace GMP_System.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        // GET: api/production-orders
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var orders = await _unitOfWork.ProductionOrders
                 .Query()
-                .Include(o => o.Recipe)
-                .Include(o => o.ProductionBatches)
+                .Select(o => new
+                {
+                    o.OrderId,
+                    o.OrderCode,
+                    o.RecipeId,
+                    o.PlannedQuantity,
+                    o.ActualQuantity,
+                    o.Status,
+                    o.StartDate,
+                    o.EndDate,
+                    o.CreatedAt,
+                    Recipe = o.Recipe == null ? null : new
+                    {
+                        o.Recipe.RecipeId,
+                        o.Recipe.BatchSize,
+                        Material = o.Recipe.Material == null ? null : new
+                        {
+                            o.Recipe.Material.MaterialName,
+                            UnitOfMeasure = o.Recipe.Material.BaseUom == null ? null : new { o.Recipe.Material.BaseUom.UomName }
+                        }
+                    },
+                    ProductionBatches = o.ProductionBatches.Select(b => new
+                    {
+                        b.BatchId,
+                        b.BatchNumber,
+                        b.Status
+                    })
+                })
+                .AsNoTracking()
                 .ToListAsync();
 
-            // Auto-initialize batches for display if missing
-            bool layoutChanged = false;
-            foreach (var o in orders)
-            {
-                if (o.Status != "Draft" && o.Status != "Cancelled" && (o.ProductionBatches == null || !o.ProductionBatches.Any()))
-                {
-                    if (await InitializeBatchesForOrder(o)) layoutChanged = true;
-                }
-            }
-            if (layoutChanged) await _unitOfWork.CompleteAsync();
-
-            var result = orders.Select(o => new {
-                o.OrderId,
-                o.OrderCode,
-                o.PlannedQuantity,
-                o.PlannedCartons,
-                o.ActualQuantity,
-                o.Status,
-                o.StartDate,
-                o.EndDate,
-                o.CreatedAt,
-                Recipe = o.Recipe == null ? null : new {
-                    o.Recipe.RecipeId,
-                    o.Recipe.BatchSize,
-                    Material = o.Recipe.Material == null ? null : new {
-                        o.Recipe.Material.MaterialName,
-                        UnitOfMeasure = o.Recipe.Material.BaseUom == null ? null : new {
-                            o.Recipe.Material.BaseUom.UomName
-                        }
-                    }
-                },
-                ProductionBatches = o.ProductionBatches.Select(b => new {
-                    b.BatchId,
-                    b.BatchNumber,
-                    b.Status,
-                    LatestLogStatus = b.BatchProcessLogs.OrderByDescending(l => l.LogId).Select(l => l.ResultStatus).FirstOrDefault()
-                })
-            });
-
-            return Ok(new { data = result, totalCount = orders.Count, success = true, message = "Success" });
+            return Ok(new { data = orders, totalCount = orders.Count, success = true, message = "Success" });
         }
 
-        // GET: api/production-orders/5
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var existing = await _unitOfWork.ProductionOrders.Query()
-                .Include(o => o.Recipe)
-                .Include(o => o.ProductionBatches)
-                .FirstOrDefaultAsync(o => o.OrderId == id);
-
-            if (existing == null)
-                return NotFound(new { success = false, message = $"Không tìm thấy lệnh sản xuất ID={id}" });
-
-            // Auto-initialize batches if missing
-            if (existing.Status != "Draft" && existing.Status != "Cancelled" && (existing.ProductionBatches == null || !existing.ProductionBatches.Any()))
-            {
-                if (await InitializeBatchesForOrder(existing))
+            var order = await _unitOfWork.ProductionOrders
+                .Query()
+                .Where(o => o.OrderId == id)
+                .Select(o => new
                 {
-                    await _unitOfWork.CompleteAsync();
-                }
+                    o.OrderId,
+                    o.OrderCode,
+                    o.RecipeId,
+                    o.PlannedQuantity,
+                    o.ActualQuantity,
+                    o.Status,
+                    o.StartDate,
+                    o.EndDate,
+                    o.CreatedAt,
+                    Recipe = o.Recipe == null ? null : new
+                    {
+                        o.Recipe.RecipeId,
+                        o.Recipe.BatchSize,
+                        o.Recipe.Note,
+                        Material = o.Recipe.Material == null ? null : new
+                        {
+                            o.Recipe.Material.MaterialName,
+                            UnitOfMeasure = o.Recipe.Material.BaseUom == null ? null : new { o.Recipe.Material.BaseUom.UomName }
+                        }
+                    },
+                    ProductionBatches = o.ProductionBatches.Select(b => new
+                    {
+                        b.BatchId,
+                        b.BatchNumber,
+                        b.Status
+                    })
+                })
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+
+            if (order == null)
+            {
+                return NotFound(new { success = false, message = $"Không tìm th?y l?nh s?n xu?t ID={id}" });
             }
 
-            var orderDto = new {
-                existing.OrderId,
-                existing.OrderCode,
-                existing.PlannedQuantity,
-                // existing.PlannedCartons,
-                existing.ActualQuantity,
-                existing.Status,
-                existing.StartDate,
-                existing.EndDate,
-                existing.CreatedAt,
-                Recipe = existing.Recipe == null ? null : new {
-                    existing.Recipe.RecipeId,
-                    existing.Recipe.BatchSize,
-                    existing.Recipe.Note,
-                    Material = existing.Recipe.Material == null ? null : new {
-                        existing.Recipe.Material.MaterialName,
-                        UnitOfMeasure = existing.Recipe.Material.BaseUom == null ? null : new {
-                            existing.Recipe.Material.BaseUom.UomName
-                        }
-                    }
-                },
-                ProductionBatches = existing.ProductionBatches.Select(b => new {
-                    b.BatchId,
-                    b.BatchNumber,
-                    b.Status,
-                    LatestLogStatus = b.BatchProcessLogs.OrderByDescending(l => l.LogId).Select(l => l.ResultStatus).FirstOrDefault()
-                })
-            };
-
-            return Ok(new { data = orderDto, success = true, message = "Success" });
+            return Ok(new { data = order, success = true, message = "Success" });
         }
 
-        // GET: api/production-orders/{orderId}/batches
         [HttpGet("{orderId}/batches")]
         public async Task<IActionResult> GetBatchesByOrder(int orderId)
         {
@@ -129,130 +108,182 @@ namespace GMP_System.Controllers
                 .Query()
                 .Where(b => b.OrderId == orderId)
                 .Include(b => b.MaterialUsages)
+                    .ThenInclude(u => u.InventoryLot)
+                        .ThenInclude(l => l!.Material)
                 .ToListAsync();
 
             return Ok(new { data = batches, success = true, message = "Success" });
         }
 
-        // POST: api/production-orders
         [HttpPost]
-        public async Task<IActionResult> Create(ProductionOrder order)
+        public async Task<IActionResult> Create([FromBody] ProductionOrder order)
         {
             if (order.RecipeId == null)
-                return BadRequest(new { success = false, message = "Vui lòng chọn công thức (RecipeId)." });
-
-            // Logic tính toán theo yêu cầu: Lệnh dựa trên số Thùng (Cartons)
-            if (order.PlannedCartons.HasValue && order.PlannedCartons > 0)
             {
-                // Quy cách: 1 Thùng = 80 Chai * 40 Viên = 3200 Viên
-                order.PlannedQuantity = (decimal)(order.PlannedCartons.Value * 3200);
+                return BadRequest(new { success = false, message = "Vui lòng ch?n công th?c (RecipeId)." });
             }
 
             if (order.PlannedQuantity <= 0)
-                return BadRequest(new { success = false, message = "Số lượng kế hoạch (hoặc số thùng) phải lớn hơn 0." });
+            {
+                return BadRequest(new { success = false, message = "S? lu?ng k? ho?ch ph?i l?n hon 0." });
+            }
 
             var recipe = await _unitOfWork.Recipes.GetByIdAsync(order.RecipeId.Value);
             if (recipe == null)
-                return BadRequest(new { success = false, message = $"Không tìm thấy công thức ID={order.RecipeId}" });
+            {
+                return BadRequest(new { success = false, message = $"Không tìm th?y công th?c ID={order.RecipeId}" });
+            }
 
-            if (recipe.Status != "Approved")
-                return BadRequest(new { success = false, message = "Chỉ có thể tạo lệnh sản xuất từ công thức đã được duyệt." });
+            if (recipe.Status != "Approved" && recipe.Status != "Draft")
+            {
+                return BadRequest(new { success = false, message = "Công th?c ph?i ? tr?ng thái Draft ho?c Approved d? l?p l?nh s?n xu?t." });
+            }
 
-            order.Status = "Draft";
+            order.Status = string.IsNullOrWhiteSpace(order.Status) ? "Draft" : order.Status;
             order.CreatedAt = DateTime.Now;
             if (!order.StartDate.HasValue) order.StartDate = DateTime.Now;
             if (!order.EndDate.HasValue) order.EndDate = order.StartDate!.Value.AddDays(2);
 
             var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (int.TryParse(userIdClaim, out var userId)) order.CreatedBy = userId;
+            if (int.TryParse(userIdClaim, out var userId))
+            {
+                order.CreatedBy = userId;
+            }
 
             await _unitOfWork.ProductionOrders.AddAsync(order);
             await _unitOfWork.CompleteAsync();
 
-            return Ok(new { success = true, message = "Tạo lệnh sản xuất thành công!", data = new { orderId = order.OrderId, status = order.Status, plannedQuantity = order.PlannedQuantity } });
+            return Ok(new { success = true, message = "T?o l?nh s?n xu?t thành công.", data = new { orderId = order.OrderId, status = order.Status } });
         }
 
-        // PATCH: api/production-orders/5/status
-        [HttpPatch("{id}/status")]
-        public async Task<IActionResult> UpdateStatus(int id, [FromBody] string newStatus)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] ProductionOrder order)
         {
-            if (string.IsNullOrWhiteSpace(newStatus))
-                return BadRequest(new { success = false, message = "Status không được để trống." });
-
-            var existing = await _unitOfWork.ProductionOrders.Query()
-                .Include(o => o.Recipe)
-                .Include(o => o.ProductionBatches)
-                .FirstOrDefaultAsync(o => o.OrderId == id);
-
+            var existing = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
             if (existing == null)
-                return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
-
-            existing.Status = newStatus;
-
-            // Kích hoạt chia mẻ khi Duyệt lệnh
-            if (newStatus == "Approved" && (existing.ProductionBatches == null || !existing.ProductionBatches.Any()))
             {
-                await InitializeBatchesForOrder(existing);
+                return NotFound(new { success = false, message = "Không tìm th?y l?nh s?n xu?t." });
             }
+
+            existing.OrderCode = string.IsNullOrWhiteSpace(order.OrderCode) ? existing.OrderCode : order.OrderCode;
+            existing.RecipeId = order.RecipeId;
+            existing.PlannedQuantity = order.PlannedQuantity;
+            existing.StartDate = order.StartDate;
+            existing.EndDate = order.EndDate;
+            existing.Status = string.IsNullOrWhiteSpace(order.Status) ? existing.Status : order.Status;
 
             _unitOfWork.ProductionOrders.Update(existing);
             await _unitOfWork.CompleteAsync();
 
-            return Ok(new { success = true, message = "Cập nhật trạng thái thành công!", orderId = id, status = newStatus });
+            return Ok(new { success = true, message = "C?p nh?t thành công.", orderId = id });
         }
 
-        private async Task<bool> InitializeBatchesForOrder(ProductionOrder order)
+        [HttpPost("{id}/approve")]
+        public async Task<IActionResult> Approve(int id, [FromBody] SignatureRequest request)
         {
-            if (order.Recipe == null) return false;
-            
-            // Công thức chuẩn theo yêu cầu Pharma:
-            // 1 viên = 540mg (0.54g)
-            // 1 mẻ tối đa = 50kg (50,000g)
-            // => Số viên tối đa 1 mẻ = 50,000 / 0.54 = 92,592.59... -> Lấy 92,592 viên
-            const decimal tabletWeightG = 0.540m;
-            const decimal maxBatchWeightG = 50000.0m;
-            decimal unitsPerBatch = Math.Floor(maxBatchWeightG / tabletWeightG); // 92592
-            
-            // Nếu Recipe có BatchSize riêng thì ưu tiên dùng (trong demo này là 92592)
-            if (order.Recipe.BatchSize > 0) unitsPerBatch = order.Recipe.BatchSize;
-
-            decimal totalPlanned = order.PlannedQuantity;
-            if (totalPlanned <= 0) return false;
-
-            int batchCount = (int)Math.Ceiling(totalPlanned / unitsPerBatch);
-            for (int i = 1; i <= batchCount; i++)
+            var existing = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
+            if (existing == null)
             {
-                decimal qtyThisBatch = (i == batchCount) ? (totalPlanned - (unitsPerBatch * (i - 1))) : unitsPerBatch;
-                if (qtyThisBatch <= 0) break;
-
-                var newBatch = new ProductionBatch
-                {
-                    OrderId = order.OrderId,
-                    BatchNumber = $"{order.OrderCode}-{i:D2}",
-                    Status = "Scheduled",
-                    PlannedQuantity = qtyThisBatch,
-                    CurrentStep = 1,
-                    CreatedAt = DateTime.Now
-                };
-                await _unitOfWork.ProductionBatches.AddAsync(newBatch);
+                return NotFound(new { success = false, message = "Không tìm th?y l?nh s?n xu?t." });
             }
-            return true;
+
+            if (existing.Status != "Draft")
+            {
+                return BadRequest(new { success = false, message = "Ch? có th? duy?t l?nh ? tr?ng thái Draft." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Signature))
+            {
+                return BadRequest(new { success = false, message = "Thi?u ch? ký di?n t?." });
+            }
+
+            existing.Status = "Approved";
+            _unitOfWork.ProductionOrders.Update(existing);
+            await _unitOfWork.CompleteAsync();
+
+            return Ok(new { success = true, message = "Duy?t l?nh s?n xu?t thành công." });
         }
 
-        // DELETE: api/production-orders/5
+        [HttpPost("{id}/hold")]
+        public async Task<IActionResult> Hold(int id, [FromBody] HoldRequest request)
+        {
+            var existing = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
+            if (existing == null)
+            {
+                return NotFound(new { success = false, message = "Không tìm th?y l?nh s?n xu?t." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Reason))
+            {
+                return BadRequest(new { success = false, message = "Vui lòng nh?p lý do t?m ngung." });
+            }
+
+            existing.Status = "Hold";
+            _unitOfWork.ProductionOrders.Update(existing);
+            await _unitOfWork.CompleteAsync();
+
+            return Ok(new { success = true, message = "Ðã t?m ngung l?nh s?n xu?t." });
+        }
+
+        [HttpPost("{id}/resume")]
+        public async Task<IActionResult> Resume(int id)
+        {
+            var existing = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
+            if (existing == null)
+            {
+                return NotFound(new { success = false, message = "Không tìm th?y l?nh s?n xu?t." });
+            }
+
+            existing.Status = "InProcess";
+            _unitOfWork.ProductionOrders.Update(existing);
+            await _unitOfWork.CompleteAsync();
+
+            return Ok(new { success = true, message = "Ðã m? l?i l?nh s?n xu?t." });
+        }
+
+        [HttpPost("{id}/complete")]
+        public async Task<IActionResult> Complete(int id, [FromBody] SignatureRequest request)
+        {
+            var existing = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
+            if (existing == null)
+            {
+                return NotFound(new { success = false, message = "Không tìm th?y l?nh s?n xu?t." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Signature))
+            {
+                return BadRequest(new { success = false, message = "Thi?u ch? ký di?n t? xác nh?n hoàn thành." });
+            }
+
+            existing.Status = "Completed";
+            _unitOfWork.ProductionOrders.Update(existing);
+            await _unitOfWork.CompleteAsync();
+
+            return Ok(new { success = true, message = "Ðã hoàn thành l?nh s?n xu?t." });
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var order = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
             if (order == null)
-                return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
-
-            if (order.Status != "Draft")
-                return BadRequest(new { success = false, message = "Chỉ có thể xóa lệnh ở trạng thái Draft." });
+            {
+                return NotFound(new { success = false, message = "Không tìm th?y l?nh s?n xu?t." });
+            }
 
             _unitOfWork.ProductionOrders.Remove(order);
             await _unitOfWork.CompleteAsync();
-            return Ok(new { success = true, message = "Đã xóa lệnh sản xuất." });
+            return Ok(new { success = true, message = "Ðã xóa l?nh s?n xu?t." });
         }
+    }
+
+    public class SignatureRequest
+    {
+        public string Signature { get; set; } = string.Empty;
+    }
+
+    public class HoldRequest
+    {
+        public string Reason { get; set; } = string.Empty;
     }
 }

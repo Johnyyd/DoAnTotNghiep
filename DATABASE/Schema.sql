@@ -1,296 +1,312 @@
 /* =========================================================================
-HỆ THỐNG QUẢN LÝ SẢN XUẤT DƯỢC PHẨM (GMP-WHO SYSTEM)
-TÀI LIỆU CHI TIẾT CƠ SỞ DỮ LIỆU (DATABASE SCHEMA SPECIFICATION)
+   HỆ THỐNG QUẢN LÝ SẢN XUẤT DƯỢC PHẨM (GMP-WHO)
+   Schema Cơ sở dữ liệu cơ bản
+   Mục đích: Định nghĩa toàn bộ các bảng, khóa chính, khóa ngoại 
+   của hệ thống theo quy trình chuẩn của nhà máy Dược.
+   ========================================================================= */
 
-Hệ thống thiết kế theo mô hình 3 lớp chính:
-1. MASTER DATA (Dữ liệu gốc): Người dùng, Vật tư, Máy móc, Công thức.
-2. PRODUCTION FLOW (Luồng sản xuất): Lệnh sản xuất, Mẻ sản xuất.
-3. COMPLIANCE & TRACEABILITY (Tuân thủ & Truy vết): eBMR, Inventory, Audit Trail.
-========================================================================= */
+USE [PharmaceuticalProcessingManagementSystem];
+GO
+
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
 -- -------------------------------------------------------------------------
--- 1. Bảng AppUsers: QUẢN LÝ NHÂN SỰ & PHÂN QUYỀN (Auth & Authorization)
--- Mục đích: Lưu trữ toàn bộ danh sách nhân viên tham gia vào hệ thống.
--- Ứng dụng GMP: Đóng vai trò là "Chữ ký điện tử" (Electronic Signature) 
--- cho mọi thao tác phê duyệt hoặc thực hiện công đoạn.
+-- 0. DỌN DẸP DỮ LIỆU CŨ (THEO THỨ TỰ NGƯỢC KHÓA NGOẠI)
+-- -------------------------------------------------------------------------
+PRINT 'Cleaning up existing tables...';
+IF OBJECT_ID('BatchProcessParameterValue', 'U') IS NOT NULL DROP TABLE BatchProcessParameterValue;
+IF OBJECT_ID('QualityTests', 'U') IS NOT NULL DROP TABLE QualityTests;
+IF OBJECT_ID('SystemAuditLog', 'U') IS NOT NULL DROP TABLE SystemAuditLog;
+IF OBJECT_ID('MaterialUsage', 'U') IS NOT NULL DROP TABLE MaterialUsage;
+IF OBJECT_ID('BatchProcessLogs', 'U') IS NOT NULL DROP TABLE BatchProcessLogs;
+IF OBJECT_ID('ProductionBatches', 'U') IS NOT NULL DROP TABLE ProductionBatches;
+IF OBJECT_ID('ProductionOrders', 'U') IS NOT NULL DROP TABLE ProductionOrders;
+IF OBJECT_ID('InventoryLots', 'U') IS NOT NULL DROP TABLE InventoryLots;
+IF OBJECT_ID('RecipeBom', 'U') IS NOT NULL DROP TABLE RecipeBom;
+IF OBJECT_ID('StepParameters', 'U') IS NOT NULL DROP TABLE StepParameters;
+IF OBJECT_ID('RecipeRouting', 'U') IS NOT NULL DROP TABLE RecipeRouting;
+IF OBJECT_ID('Recipes', 'U') IS NOT NULL DROP TABLE Recipes;
+IF OBJECT_ID('Materials', 'U') IS NOT NULL DROP TABLE Materials;
+IF OBJECT_ID('Equipments', 'U') IS NOT NULL DROP TABLE Equipments;
+IF OBJECT_ID('ProductionAreas', 'U') IS NOT NULL DROP TABLE ProductionAreas;
+IF OBJECT_ID('UomConversions', 'U') IS NOT NULL DROP TABLE UomConversions;
+IF OBJECT_ID('UnitOfMeasure', 'U') IS NOT NULL DROP TABLE UnitOfMeasure;
+IF OBJECT_ID('AppUsers', 'U') IS NOT NULL DROP TABLE AppUsers;
+GO
+
+-- -------------------------------------------------------------------------
+-- 1. Bảng AppUsers: Quản lý người dùng, nhân viên trong nhà máy
+-- Lưu trữ thông tin tài khoản đăng nhập, họ tên và vai trò để phân quyền
+-- theo từng chức năng và công đoạn (QA, Nhân viên, Quản lý).
 -- -------------------------------------------------------------------------
 CREATE TABLE AppUsers (
-    UserId INT PRIMARY KEY IDENTITY (1, 1),
-    Username VARCHAR(50) NOT NULL UNIQUE, -- Tên đăng nhập dùng để xác thực.
-    FullName NVARCHAR (100) NOT NULL, -- Họ và tên đầy đủ để in lên Hồ sơ lô và Báo cáo.
-    Role NVARCHAR (50) NOT NULL, -- Vai trò: QA_QC (Kiểm soát chất lượng), Operator (Công nhân), Admin (Quản trị).
-    IsActive BIT DEFAULT 1, -- Trạng thái: 1-Đang làm việc, 0-Nghỉ việc/Vô hiệu hóa (Tuyệt đối không xóa vật lý).
-    PasswordHash NVARCHAR (MAX), -- Mật khẩu mã hóa để bảo mật thông tin.
-    CreatedAt DATETIME2 DEFAULT GETDATE (), -- Ngày khởi tạo tài khoản.
-    LastLogin DATETIME2 -- Vết đăng nhập cuối để kiểm soát bảo mật truy cập.
+    UserId INT PRIMARY KEY IDENTITY(1,1),
+    Username VARCHAR(50) NOT NULL UNIQUE, -- Định danh người dùng duy nhất
+    FullName NVARCHAR(100) NOT NULL,      -- Tên thật của nhân viên để hiển thị lên chữ ký, báo cáo
+    Role NVARCHAR(50) NOT NULL,          -- Cấp quyền bảo mật (Admin, QA_QC, Operator, ProductionManager)
+    IsActive BIT DEFAULT 1,               -- Soft delete: 1 - Đang làm việc, 0 - Nghỉ việc (Cấm xóa vật lý)
+    PasswordHash NVARCHAR(MAX),          -- Mật khẩu đã được mã hóa Hash an toàn
+    CreatedAt DATETIME2 DEFAULT GETDATE(),-- Thời gian tạo tài khoản
+    LastLogin DATETIME2                  -- Lưu lại vết đăng nhập gần nhất
 );
 
 -- -------------------------------------------------------------------------
--- 2. Bảng UnitOfMeasure (UoM): ĐƠN VỊ ĐO LƯỜNG
--- Mục đích: Chuẩn hóa đơn vị tính toán trong toàn nhà máy để tránh nhầm lẫn 
--- giữa các bộ phận (Kho dùng Kg, Sản xuất dùng Gram, Kinh doanh dùng Thùng).
+-- 2. Bảng UnitOfMeasure: Danh mục đơn vị đo lường (UoM)
+-- Hệ thống chuẩn hóa đơn vị để dễ dàng kiểm soát hao hụt và tính toán công thức.
 -- -------------------------------------------------------------------------
 CREATE TABLE UnitOfMeasure (
-    UomId INT PRIMARY KEY IDENTITY (1, 1),
-    UomName NVARCHAR (50) NOT NULL, -- Tên đơn vị (kg, g, viên, vỉ, chai).
-    Description NVARCHAR (200) -- Giải thích rõ đơn vị (Ví dụ: Kilogram, Gram).
+    UomId INT PRIMARY KEY IDENTITY(1,1),
+    UomName NVARCHAR(50) NOT NULL,
+    Description NVARCHAR(200)
 );
 
 -- -------------------------------------------------------------------------
--- 3. Bảng Equipments: DANH MỤC THIẾT BỊ SẢN XUẤT
--- Mục đích: Quản lý danh sách máy móc được phép sử dụng trong sản xuất.
--- Ứng dụng GMP: Máy móc phải được thẩm định (Qualification) và vệ sinh trước khi dùng.
--- -------------------------------------------------------------------------
-CREATE TABLE Equipments (
-    EquipmentId INT PRIMARY KEY IDENTITY (1, 1),
-    EquipmentCode VARCHAR(50) NOT NULL UNIQUE, -- Mã máy (Ví dụ: DRY-01 cho máy sấy số 1).
-    EquipmentName NVARCHAR (200) NOT NULL, -- Tên máy (Ví dụ: Máy sấy tầng sôi).
-    Status NVARCHAR (50) DEFAULT 'Ready', -- Trạng thái: Ready, InUse, Maintenance, Cleaning.
-    LastMaintenanceDate DATETIME2 -- Ngày bảo trì/vệ sinh gần nhất để QA kiểm soát.
-);
-
--- -------------------------------------------------------------------------
--- 4. Bảng Materials: DANH MỤC VẬT TƯ & SẢN PHẨM (SKU Master)
--- Mục đích: Quản lý mọi thứ từ nguyên liệu thô đến thành phẩm.
--- MQH: Liên kết với UnitOfMeasure qua BaseUomId.
--- -------------------------------------------------------------------------
-CREATE TABLE Materials (
-    MaterialId INT PRIMARY KEY IDENTITY (1, 1),
-    MaterialCode VARCHAR(50) NOT NULL UNIQUE, -- Mã vật tư (Mã số quản lý hàng hóa).
-    MaterialName NVARCHAR (200) NOT NULL, -- Tên vật tư (Tên hóa học hoặc tên thương mại).
-    Type NVARCHAR (50) CHECK (
-        Type IN (
-            'RawMaterial',
-            'Packaging',
-            'FinishedGood',
-            'Intermediate'
-        )
-    ), -- Phân loại: Nguyên liệu thô, Bao bì, Thành phẩm, Bán thành phẩm.
-    BaseUomId INT REFERENCES UnitOfMeasure (UomId), -- Đơn vị tính cơ bản (Gốc).
-    IsActive BIT DEFAULT 1, -- Trạng thái kinh doanh của mặt hàng.
-    Description NVARCHAR (500), -- Thông tin thêm về đặc tính (Ví dụ: Bảo quản < 25 độ C).
-    CreatedAt DATETIME2 DEFAULT GETDATE (),
-    UpdatedAt DATETIME2
-);
-
--- -------------------------------------------------------------------------
--- 5. Bảng Recipes: CÔNG THỨC GỐC (Master Formula)
--- Mục đích: Lưu trữ bí quyết sản xuất của một loại thuốc.
--- MQH: Liên kết với Materials (Sản phẩm đầu ra) và AppUsers (Người phê duyệt).
--- Ứng dụng GMP: Quản lý phiên bản (Version Control) để tránh dùng nhầm công thức cũ.
--- -------------------------------------------------------------------------
-CREATE TABLE Recipes (
-    RecipeId INT PRIMARY KEY IDENTITY (1, 1),
-    MaterialId INT REFERENCES Materials (MaterialId), -- Liên kết tới Thành phẩm sẽ sản xuất.
-    VersionNumber INT DEFAULT 1, -- Số phiên bản (Tăng dần khi có thay đổi công thức).
-    BatchSize DECIMAL(18, 2) NOT NULL, -- Quy mô mẻ chuẩn (Ví dụ: Công thức này dùng cho 100,000 viên).
-    Status NVARCHAR (50) DEFAULT 'Draft', -- Trạng thái: Draft (Dự thảo), Approved (Đã duyệt), Obsolete (Hết hạn).
-    ApprovedBy INT REFERENCES AppUsers (UserId), -- Chữ ký QA/QC phê duyệt công thức này.
-    ApprovedDate DATETIME2, -- Thời điểm chốt duyệt để cho phép áp dụng.
-    CreatedAt DATETIME2 DEFAULT GETDATE (),
-    EffectiveDate DATETIME2, -- Ngày bắt đầu có hiệu lực sản xuất.
-    Note NVARCHAR (500)
-);
-
--- -------------------------------------------------------------------------
--- 6. Bảng RecipeBom: ĐỊNH MỨC NGUYÊN LIỆU (BOM)
--- Mục đích: Chi tiết danh sách thành phần nguyên liệu cho một công thức.
--- MQH: Liên kết với Recipes và Materials (Nguyên liệu thô).
--- -------------------------------------------------------------------------
-CREATE TABLE RecipeBom (
-    BomId INT PRIMARY KEY IDENTITY (1, 1),
-    RecipeId INT REFERENCES Recipes (RecipeId), -- Thuộc về công thức nào?
-    MaterialId INT REFERENCES Materials (MaterialId), -- Nguyên liệu gì?
-    Quantity DECIMAL(18, 4) NOT NULL, -- Số lượng lý thuyết cần dùng.
-    UomId INT REFERENCES UnitOfMeasure (UomId), -- Đơn vị tính của số lượng trên.
-    WastePercentage DECIMAL(5, 2) DEFAULT 0, -- Tỷ lệ hao hụt cho phép (GMP Standard).
-    Note NVARCHAR (200)
-);
-
--- -------------------------------------------------------------------------
--- 7. Bảng RecipeRouting: QUY TRÌNH QUÁ TRÌNH (Process Flow)
--- Mục đích: Định nghĩa các bước sản xuất tiếp diễn (Ví dụ: Bước 1: Sấy, Bước 2: Cân).
--- MQH: Liên kết với Recipes và Equipments (Máy móc mặc định).
--- -------------------------------------------------------------------------
-CREATE TABLE RecipeRouting (
-    RoutingId INT PRIMARY KEY IDENTITY (1, 1),
-    RecipeId INT REFERENCES Recipes (RecipeId), -- Thuộc về công thức nào?
-    StepNumber INT NOT NULL, -- Thứ tự thực hiện (1, 2, 3...).
-    StepName NVARCHAR (100) NOT NULL, -- Tên công đoạn (Ví dụ: Pha chế, Sấy tầng sôi, Dập viên).
-    DefaultEquipmentId INT REFERENCES Equipments (EquipmentId), -- Thiết bị chuẩn được dùng cho công đoạn này.
-    EstimatedTimeMinutes INT, -- Thời gian ước tính thực hiện bước này.
-    Description NVARCHAR (500), -- Hướng dẫn thao tác chi tiết cho công nhân.
-    NumberOfRouting INT DEFAULT 1 -- Số lần thực hiện lặp lại (Nếu có).
-);
-
--- -------------------------------------------------------------------------
--- 8. Bảng StepParameters: THÔNG SỐ KIỂM SOÁT CÔNG ĐOẠN (CPP - Critical Process Parameters)
--- Mục đích: Quy định các chỉ số kỹ thuật phải đạt được trong mỗi bước.
--- MQH: Liên kết với RecipeRouting.
--- -------------------------------------------------------------------------
-CREATE TABLE StepParameters (
-    ParameterId INT PRIMARY KEY IDENTITY (1, 1),
-    RoutingId INT REFERENCES RecipeRouting (RoutingId), -- Tham chiếu tới bước quy trình cụ thể.
-    ParameterName NVARCHAR (100) NOT NULL, -- Tên thông số (Ví dụ: Nhiệt độ sấy, Tốc độ cánh khuấy).
-    Unit NVARCHAR (50), -- Đơn vị đo của thông số (Ví dụ: độ C, vòng/phút).
-    MinValue DECIMAL(18, 4), -- Giá trị tối thiểu cho phép.
-    MaxValue DECIMAL(18, 4), -- Giá trị tối đa cho phép.
-    IsCritical BIT DEFAULT 1, -- Đánh dấu nếu là Thông số trọng yếu (Ảnh hưởng trực tiếp chất lượng).
-    Note NVARCHAR (200) -- Lưu ý cách đo hoặc dụng cụ đo.
-);
-
--- -------------------------------------------------------------------------
--- 9. Bảng ProductionOrders: LỆNH SẢN XUẤT
--- Mục đích: Lệnh từ phòng kế hoạch yêu cầu sản xuất số lượng hàng cụ thể.
--- MQH: Liên kết với Recipes và AppUsers.
--- -------------------------------------------------------------------------
-CREATE TABLE ProductionOrders (
-    OrderId INT PRIMARY KEY IDENTITY (1, 1),
-    OrderCode VARCHAR(50) NOT NULL UNIQUE, -- Mã số lệnh (Ví dụ: PO-2026-001).
-    RecipeId INT REFERENCES Recipes (RecipeId), -- Sản xuất theo công thức nào.
-    PlannedQuantity DECIMAL(18, 4) NOT NULL, -- Tổng số lượng hàng cần sản xuất.
-    ActualQuantity DECIMAL(18, 4), -- Số lượng thực tế thu hồi sau khi xong. (Dùng để tính hiệu suất/hao hụt).
-    StartDate DATETIME2 NOT NULL, -- Ngày bắt đầu dự kiến.
-    EndDate DATETIME2, -- Ngày kết thúc dự kiến.
-    Status NVARCHAR (50) DEFAULT 'Draft', -- Trạng thái: Draft, Approved, InProcess, Completed, Hold, Cancelled.
-    CreatedBy INT REFERENCES AppUsers (UserId), -- Người tạo lệnh.
-    CreatedAt DATETIME2 DEFAULT GETDATE (),
-    Note NVARCHAR (500)
-);
-
--- -------------------------------------------------------------------------
--- 10. Bảng ProductionBatches: MẺ SẢN XUẤT (Batches)
--- Mục đích: Chia nhỏ Lệnh sản xuất thành các mẻ thực tế (Để quản lý rủi ro và truy vết).
--- MQH: Liên kết với ProductionOrders.
--- Ứng dụng GMP: Mỗi mẻ/lô thuốc phải có một mã số lô duy nhất (Batch Number).
--- -------------------------------------------------------------------------
-CREATE TABLE ProductionBatches (
-    BatchId INT PRIMARY KEY IDENTITY (1, 1),
-    OrderId INT REFERENCES ProductionOrders (OrderId), -- Trực thuộc lệnh sản xuất nào.
-    BatchNumber VARCHAR(50) NOT NULL UNIQUE, -- SỐ LÔ SẢN XUẤT (In trên bao bì thuốc).
-    Status NVARCHAR (50) DEFAULT 'Scheduled', -- Trạng thái: Scheduled, InProcess, Completed, OnHold.
-    ManufactureDate DATETIME2, -- Ngày sản xuất thực tế.
-    EndTime DATETIME2, -- Ngày kết thúc thực tế.
-    ExpiryDate DATETIME2, -- Hạn sử dụng (Tính toán dựa trên Recipe và MfgDate).
-    CurrentStep INT DEFAULT 1, -- Bước hiện tại trong quy trình sản xuất.
-    CreatedAt DATETIME2 DEFAULT GETDATE ()
-);
--- Thêm bảng cấu hình tham số bước trong công đoạn
-
-
-
-
-
--- -------------------------------------------------------------------------
--- 11. Bảng BatchProcessLogs: NHẬT KÝ HỒ SƠ LÔ ĐIỆN TỬ (eBMR - Electronic Batch Record)
--- Mục đích: Ghi lại toàn bộ bằng chứng thao tác thực tế tại xưởng.
--- MQH: Liên kết với ProductionBatches, RecipeRouting, Equipments và AppUsers (Operator).
--- Ứng dụng GMP: Là trái tim của hệ thống tuân thủ, ghi lại "Ai làm? Làm gì? Khi nào? Kết quả?".
--- -------------------------------------------------------------------------
-CREATE TABLE BatchProcessLogs (
-    LogId BIGINT PRIMARY KEY IDENTITY (1, 1),
-    BatchId INT REFERENCES ProductionBatches (BatchId), -- Thuộc mẻ nào.
-    RoutingId INT REFERENCES RecipeRouting (RoutingId), -- Là công đoạn nào.
-    EquipmentId INT REFERENCES Equipments (EquipmentId), -- Sử dụng máy nào thực tế.
-    OperatorId INT REFERENCES AppUsers (UserId), -- CHỮ KÝ CÔNG NHÂN THỰC HIỆN.
-    StartTime DATETIME2, -- Thời điểm bắt đầu bấm đồng hồ chạy.
-    EndTime DATETIME2, -- Thời điểm chốt hoàn thành.
-    ResultStatus NVARCHAR (50), -- Kết quả: Passed, Failed, PendingQC.
-    ParametersData NVARCHAR (MAX), -- Lưu một "bản chụp" JSON của toàn bộ thông số lúc đó.
-    Notes NVARCHAR (MAX), -- Ghi chú sự cố hoặc giải trình thao tác.
-    IsDeviation BIT DEFAULT 0, -- Đánh dấu nếu có sai lệch (Cần QA thẩm duyệt sai lệch).
-    VerifiedById INT REFERENCES AppUsers (UserId), -- CHỮ KÝ QA/QC THẨM ĐỊNH LẠI CÔNG ĐOẠN.
-    VerifiedDate DATETIME2, -- Thời điểm chốt duyệt QC.
-    NumberOfRouting INT DEFAULT 1 -- Lần thực hiện thứ mấy (Nếu phải làm lại bước này).
-);
-
--- -------------------------------------------------------------------------
--- 12. Bảng BatchProcessParameterValue: GIÁ TRỊ THÔNG SỐ THỰC TẾ
--- Mục đích: Lưu trữ dữ liệu thô của từng thông số kỹ thuật đơn lẻ để vẽ biểu đồ và phân tích.
--- MQH: Liên kết với BatchProcessLogs và StepParameters.
--- -------------------------------------------------------------------------
-CREATE TABLE BatchProcessParameterValues (
-    ValueId BIGINT PRIMARY KEY IDENTITY (1, 1),
-    LogId BIGINT REFERENCES BatchProcessLogs (LogId), -- Tham chiếu tới hồ sơ bước.
-    ParameterId INT REFERENCES StepParameters (ParameterId), -- Là thông số nào (Nhiệt độ, tốc độ...).
-    ActualValue DECIMAL(18, 4), -- CON SỐ ĐO ĐƯỢC THỰC TẾ.
-    RecordedDate DATETIME2 DEFAULT GETDATE (),
-    Note NVARCHAR (500)
-);
-
--- -------------------------------------------------------------------------
--- 13. Bảng InventoryLots: QUẢN LÝ TỒN KHO THEO LÔ (Traceability)
--- Mục tiêu: Quản lý nguyên liệu trong kho theo từng "Lô nhập" (Lot) để truy xuất nguồn gốc.
--- MQH: Liên kết với Materials.
--- Ứng dụng GMP: Chỉ các lô có QCStatus = 'Released' mới được phép dùng cho sản xuất.
--- -------------------------------------------------------------------------
-CREATE TABLE InventoryLots (
-    LotId INT PRIMARY KEY IDENTITY (1, 1),
-    MaterialId INT REFERENCES Materials (MaterialId), -- Loại nguyên liệu gì.
-    LotNumber VARCHAR(50) NOT NULL UNIQUE, -- Số lô của nhà cung cấp.
-    QuantityCurrent DECIMAL(18, 4) NOT NULL, -- Số lượng đang còn lại trong kho.
-    ManufactureDate DATETIME2, -- Ngày sản xuất của nguyên liệu.
-    ExpiryDate DATETIME2 NOT NULL, -- Hạn dùng nguyên liệu.
-    QCStatus NVARCHAR (50) DEFAULT 'Pending', -- Trạng thái: Pending (Chờ kiểm), Released (Cho phép dùng), Rejected (Loại bỏ).
-    SupplierName NVARCHAR (200), -- Tên nhà cung cấp.
-    CreatedAt DATETIME2 DEFAULT GETDATE ()
-);
-
--- -------------------------------------------------------------------------
--- 14. Bảng MaterialUsage: CẤP PHÁT & SỬ DỤNG NGUYÊN LIỆU (Reconciliation)
--- Mục đích: Ghi lại việc lấy bao nhiêu nguyên liệu từ Lô kho nào để đổ vào Mẻ nào.
--- MQH: Liên kết với ProductionBatches và InventoryLots.
--- Ứng dụng GMP: Đây là xương sống để thực hiện "Truy xuất ngược" (Trace back) khi có sự cố.
--- -------------------------------------------------------------------------
-CREATE TABLE MaterialUsage (
-    UsageId INT PRIMARY KEY IDENTITY (1, 1),
-    BatchId INT REFERENCES ProductionBatches (BatchId), -- Mẻ thuốc nào tiêu thụ.
-    InventoryLotId INT REFERENCES InventoryLots (LotId), -- Thùng nguyên liệu nào bị xuất đi.
-    ActualAmount DECIMAL(18, 4) NOT NULL, -- Số lượng thực tế đã múc đi.
-    Timestamp DATETIME2 DEFAULT GETDATE (),
-    DispensedBy INT REFERENCES AppUsers (UserId), -- Chữ ký nhân viên thủ kho/người cân.
-    Note NVARCHAR (200)
-);
-
--- -------------------------------------------------------------------------
--- 15. Bảng QualityTests: KIỂM TRA CHẤT LƯỢNG (QC Tests)
--- Mục đích: Kết quả xét nghiệm của phòng Lab đối với một lô hàng.
--- MQH: Liên kết với InventoryLots.
--- -------------------------------------------------------------------------
-CREATE TABLE QualityTests (
-    TestId INT PRIMARY KEY IDENTITY (1, 1),
-    InventoryLotId INT REFERENCES InventoryLots (LotId), -- Xét nghiệm lô nào.
-    TestName NVARCHAR (100), -- Tên phép thử (Ví dụ: Độ hòa tan, Định lượng hoạt chất).
-    ResultValue NVARCHAR (200), -- Giá trị kết quả Lab trả về.
-    PassStatus BIT DEFAULT 1, -- 1: Đạt, 0: Không đạt.
-    TestedBy INT REFERENCES AppUsers (UserId), -- Nhân viên kiểm nghiệm.
-    TestDate DATETIME2 DEFAULT GETDATE ()
-);
-
--- -------------------------------------------------------------------------
--- 16. Bảng SystemAuditLog: DẤU VẾT KIỂM TOÁN (Compliance Audit Trail)
--- Mục đích: Ghi lại lịch sử chỉnh sửa dữ liệu (Ai sửa? Sửa gì? Giá trị cũ/mới?).
--- Ứng dụng GMP: Đáp ứng quy tắc ALCOA+ của FDA/WHO (Tính toàn vẹn dữ liệu). Bảng này KHÔNG ĐƯỢC PHÉP SỬA/XÓA.
--- -------------------------------------------------------------------------
-CREATE TABLE SystemAuditLog (
-    AuditId BIGINT PRIMARY KEY IDENTITY (1, 1),
-    TableName NVARCHAR (100), -- Tên bảng bị thay đổi.
-    RecordId NVARCHAR (100), -- ID của bản ghi bị thay đổi.
-    Action NVARCHAR (50), -- INSERT, UPDATE, DELETE.
-    OldValue NVARCHAR (MAX), -- Dữ liệu cũ (Dạng JSON).
-    NewValue NVARCHAR (MAX), -- Dữ liệu mới (Dạng JSON).
-    ChangedBy INT REFERENCES AppUsers (UserId), -- Người thực hiện thay đổi.
-    ChangedDate DATETIME2 DEFAULT GETDATE () -- Thời điểm thay đổi.
-);
-
--- -------------------------------------------------------------------------
--- 17. Bảng UomConversions: ĐỔI ĐƠN VỊ TÍNH
--- Mục đích: Cung cấp tỷ lệ quy đổi (Ví dụ: 1 thùng = 12 hộp, 1 kg = 1000g).
--- MQH: Liên kết với UnitOfMeasure.
+-- 15. Bảng UomConversions: Từ điển Đối soát tỷ lệ Đơn Vị Tính toán
+-- Giải quyết bài toán quy chiếu linh hoạt theo cấp số nhân lúc mua vật tư
+-- so với khối lượng cân xuất phát tính cấp số lẻ xuống dây chuyền phân xưởng.
 -- -------------------------------------------------------------------------
 CREATE TABLE UomConversions (
-    ConversionId INT PRIMARY KEY IDENTITY (1, 1),
-    FromUomId INT REFERENCES UnitOfMeasure (UomId), -- Đơn vị nguồn.
-    ToUomId INT REFERENCES UnitOfMeasure (UomId), -- Đơn vị đích.
-    ConversionFactor DECIMAL(18, 6) NOT NULL, -- Công thức: ToAmount = FromAmount * ConversionFactor.
-    Note NVARCHAR (200)
+    ConversionId INT PRIMARY KEY IDENTITY(1,1),
+    FromUomId INT REFERENCES UnitOfMeasure(UomId),    -- Đơn vị đầu cần quy chuẩn (Lớn)
+    ToUomId INT REFERENCES UnitOfMeasure(UomId),      -- Đơn vị tiếp nhận sau phép chia (Nhỏ)
+    ConversionFactor DECIMAL(18, 6) NOT NULL,         -- Tỉ lệ số lượng toán học (vd: Nếu quy đổi Kg ra Gram, ghi hệ số 1000)
+    Note NVARCHAR(200)                                -- Lời bình để giải phẫu tránh sai sót đơn vị
 );
+
+-- -------------------------------------------------------------------------
+-- 3. THIẾT BỊ SẢN XUẤT (Equipments)
+-- -------------------------------------------------------------------------
+CREATE TABLE ProductionAreas (
+    AreaId INT PRIMARY KEY IDENTITY(1,1),
+    AreaCode VARCHAR(50) NOT NULL UNIQUE,
+    AreaName NVARCHAR(200) NOT NULL,
+    Description NVARCHAR(500)
+);
+-- Theo tiêu chuẩn GMP, mọi công đoạn phải ghi rõ thực hiện trên máy móc nào.
+CREATE TABLE Equipments (
+    EquipmentId INT PRIMARY KEY IDENTITY(1,1),
+    EquipmentCode VARCHAR(50) NOT NULL UNIQUE, -- Mã máy (vd: EQP-DRY-01)
+    EquipmentName NVARCHAR(200) NOT NULL,      -- Tên máy (vd: Máy sấy tầng sôi)
+    TechnicalSpecification NVARCHAR(300),      -- Đặc tính kỹ thuật/năng suất
+    UsagePurpose NVARCHAR(300),                -- Công dụng/sử dụng cho
+    AreaId INT REFERENCES ProductionAreas(AreaId), -- Khu vực đặt thiết bị
+    Status NVARCHAR(50) DEFAULT 'Ready',      -- Trạng thái (Sẵn sàng, Bảo trì, Đang chạy)
+);
+
+-- -------------------------------------------------------------------------
+-- 4. Bảng Materials: Danh mục Vựng tập nguyên vật liệu và Sản phẩm
+-- Nắm giữ thông tin danh mục về mọi nguyên liệu thô, tá dược, bao bì 
+-- và cả thành phẩm đầu ra chờ xuất kho.
+-- -------------------------------------------------------------------------
+CREATE TABLE Materials (
+    MaterialId INT PRIMARY KEY IDENTITY(1,1),
+    MaterialCode VARCHAR(50) NOT NULL UNIQUE, -- Mã SKU vật tư nội bộ nhà máy
+    MaterialName NVARCHAR(200) NOT NULL,      -- Tên thương mại / tên danh pháp của vật tư
+    Type NVARCHAR(50) CHECK (Type IN ('RawMaterial', 'Packaging', 'FinishedGood', 'Intermediate')), -- Phân loại mục đích sử dụng
+    BaseUomId INT REFERENCES UnitOfMeasure(UomId), -- Khóa liên kết tới bảng Đơn vị đo lường gốc của vật tư
+    IsActive BIT DEFAULT 1,                   -- Đánh dấu trạng thái kinh doanh/sử dụng của vật tư
+    TechnicalSpecification NVARCHAR(500),                -- Tiêu chuẩn kĩ thuật
+    CreatedAt DATETIME2 DEFAULT GETDATE(),
+    UpdatedAt DATETIME2                       -- Lưu thời điểm diễn ra tác động cập nhật thuộc tính
+);
+
+-- -------------------------------------------------------------------------
+-- 5. Bảng Recipes: Công thức gốc sản xuất (Master Recipe)
+-- Tài liệu công thức do bộ phận R&D hoặc Cấp cao ban hành. 
+-- Một công thức sẽ chế biến ra một Thành phẩm cụ thể ở mức BatchSize cho trước.
+-- -------------------------------------------------------------------------
+CREATE TABLE Recipes (
+    RecipeId INT PRIMARY KEY IDENTITY(1,1),
+    MaterialId INT REFERENCES Materials(MaterialId),  -- Khóa liên kết tới mã Thành phẩm đầu ra
+    VersionNumber INT DEFAULT 1,                      -- Phiên bản công thức (để update lịch sử công thức an toàn)
+    BatchSize DECIMAL(18, 2) NOT NULL,               -- Cỡ mẻ làm chuẩn cho công thức (ví dụ: công thức này dành cho 100 kg)
+    Status NVARCHAR(50) DEFAULT 'Draft',            -- Phân loại trạng thái phê duyệt (Draft, Approved, Obsolete - hết hạn)
+    ApprovedBy INT REFERENCES AppUsers(UserId),       -- Người thẩm định, chịu trách nhiệm ban hành (QA/QC)
+    ApprovedDate DATETIME2,                           -- Lịch sử ngày chốt duyệt lệnh công thức
+    CreatedAt DATETIME2 DEFAULT GETDATE(),
+    EffectiveDate DATETIME2,                          -- Ngày bắt đầu cho phép áp dụng xuống xưởng thực tế
+    Note NVARCHAR(500)                                -- Lời dặn dò, lưu ý
+);
+
+-- -------------------------------------------------------------------------
+-- 6. Bảng RecipeBom: Cấu trúc Định mức vật tư (BOM)
+-- Chứa danh sách các loại nguyên liệu thô và tỷ lệ cần thiết 
+-- cấu thành nên một công thức (Recipe) ở mức cụ thể.
+-- -------------------------------------------------------------------------
+CREATE TABLE RecipeBom (
+    BomId INT PRIMARY KEY IDENTITY(1,1),
+    RecipeId INT REFERENCES Recipes(RecipeId),       -- Định mức thuộc về Công thức nào?
+    MaterialId INT REFERENCES Materials(MaterialId), -- Vật tư cụ thể đóng góp vào BOM
+    Quantity DECIMAL(18, 4) NOT NULL,               -- Số lượng lý thuyết cần xuất kho để nấu mẻ chuẩn
+    UomId INT REFERENCES UnitOfMeasure(UomId),       -- Đơn vị của con số định mức Quantity
+    WastePercentage DECIMAL(5, 2) DEFAULT 0,         -- % Khấu hao được bù phòng hờ rớt vãi lúc làm (Tiêu chuẩn GMP)
+    Note NVARCHAR(200)                               -- Chú ý riêng cho việc xử lý nguyên liệu này (vd: tránh sáng, độ ẩm)
+);
+
+-- -------------------------------------------------------------------------
+-- 7. Bảng RecipeRouting: Lộ trình và các bước công đoạn (Quy trình sản xuất)
+-- Định nghĩa 1 công thức phải trải qua các thủ tục, các bước nấu, đánh, sấy liên tiếp.
+-- -------------------------------------------------------------------------
+CREATE TABLE RecipeRouting (
+    RoutingId INT PRIMARY KEY IDENTITY(1,1),
+    RecipeId INT REFERENCES Recipes(RecipeId),      -- Quy trình dùng để diễn giải cho Công thức nào
+    StepNumber INT NOT NULL,                        -- Số thứ tự các bước phải làm (1, 2, 3...)
+    StepName NVARCHAR(100) NOT NULL,                -- Tên vắn tắt công đoạn thao tác (vd: Trộn tá dược, sấy mẻ)
+    DefaultEquipmentId INT REFERENCES Equipments(EquipmentId), -- Khuyến nghị dùng hệ thống loại thiết bị máy nào
+    EstimatedTimeMinutes INT,                      -- Dự trù tổng thời gian gian chạy máy (Tính bằng Phút)
+    Description NVARCHAR(500),                      -- Mô tả văn bản các thao tác công nhân cần lấy làm chuẩn
+    NumberOfRouting INT DEFAULT 1,                   -- Số lần thực thực thi mặc định (Loop support)
+    CONSTRAINT CK_RecipeRouting_NumberOfRouting CHECK (NumberOfRouting >= 1)
+);
+
+-- -------------------------------------------------------------------------
+-- 7b. Bảng StepParameters: Thông số kiểm tra tiêu chuẩn cho từng bước
+-- -------------------------------------------------------------------------
+CREATE TABLE StepParameters (
+    ParameterId INT PRIMARY KEY IDENTITY(1,1),
+    RoutingId INT REFERENCES RecipeRouting(RoutingId), -- Tham chiếu tới bước quy trình
+    ParameterName NVARCHAR(100) NOT NULL,             -- Tên thông số (vd: Nhiệt độ sấy)
+    Unit NVARCHAR(50),                                -- Đơn vị tính (vd: °C, v/p)
+    MinValue DECIMAL(18, 4),                          -- Ngưỡng dưới cho phép
+    MaxValue DECIMAL(18, 4),                          -- Ngưỡng trên cho phép
+    IsCritical BIT DEFAULT 1,                         -- Có phải thông số trọng yếu (CCP) hay không
+    Note NVARCHAR(200)                                -- Ghi chú hướng dẫn kiểm tra
+);
+
+-- -------------------------------------------------------------------------
+-- 8. Bảng ProductionOrders: Lệnh sản xuất do Kế hoạch sản xuất ban ra
+-- Văn bản pháp lý số hóa lệnh xưởng phải hoàn thành khối lượng sản phẩm cho trước.
+-- -------------------------------------------------------------------------
+CREATE TABLE ProductionOrders (
+    OrderId INT PRIMARY KEY IDENTITY(1,1),
+    OrderCode VARCHAR(50) NOT NULL UNIQUE,          -- Mã lệnh cấp xuống xưởng (vd: PO-2026-001)
+    RecipeId INT REFERENCES Recipes(RecipeId),      -- Sản xuất dựa trên hồ sơ công thức (Recipe) nào
+    PlannedQuantity DECIMAL(18, 4) NOT NULL,        -- Khối lượng yêu cầu trả hàng từ phòng kinh doanh
+    ActualQuantity DECIMAL(18, 4),                  -- Khối lượng thực tế thu hồi
+    StartDate DATETIME2 NOT NULL,                   -- Hạn lịch bắt đầu nổ máy
+    EndDate DATETIME2,                              -- Lịch bàn giao sản phẩm dự kiến
+    Status NVARCHAR(50) DEFAULT 'Draft',            -- Luồng giám sát tiến độ (Draft, Approved, InProcess, Completed, Hold, Cancelled)
+    CreatedBy INT REFERENCES AppUsers(UserId),      -- Quản lý đã khai sinh lệnh
+    CreatedAt DATETIME2 DEFAULT GETDATE(),
+    Note NVARCHAR(500)                              -- Yêu cầu kèm theo lô này (Nhiệt độ phòng, Ưu tiên gấp...)
+);
+
+-- -------------------------------------------------------------------------
+-- 9. Bảng ProductionBatches: Quản lý chi tiết Mẻ/Lô thực tế (Batches)
+-- Một lệnh sản xuất 1000kg có thể được chia nhỏ làm 10 mẻ Batch nhỏ (100kg/mẻ),
+-- hệ thống sẽ theo dõi và bảo chứng dữ liệu của từng mẻ lô nhỏ độc lập này.
+-- -------------------------------------------------------------------------
+CREATE TABLE ProductionBatches (
+    BatchId INT PRIMARY KEY IDENTITY(1,1),
+    OrderId INT REFERENCES ProductionOrders(OrderId),-- Lô siêu nhỏ nhưng thuộc lệnh tổng nào
+    BatchNumber VARCHAR(50) NOT NULL UNIQUE,         -- Số Lô thực tế in nổi lên hộp thuốc (Ví dụ: 112026)
+    Status NVARCHAR(50) DEFAULT 'Scheduled',         -- Tình trạng tác nghiệp của phần lô (Scheduled, InProcess, Completed, OnHold)
+    ManufactureDate DATETIME2,                       -- Ngày sản xuất thực tế dập trên vỏ chai
+    EndTime DATETIME2,                               -- Thời điểm kết thúc mẻ
+    ExpiryDate DATETIME2,                            -- Hạn sử dụng của sản phẩm
+    CurrentStep INT DEFAULT 1,                       -- Điểm chốt chặn: Lô đang xử lý, hoặc ách tắc ở bước quy trình thứ mấy
+    CreatedAt DATETIME2 DEFAULT GETDATE()
+);
+
+-- -------------------------------------------------------------------------
+-- 10. Bảng BatchProcessLogs: Nhật ký công đoạn sản xuất (Electronic Batch Record - eBMR)
+-- Lưu trữ lại bằng chứng thao tác của người công nhân đối với từng công đoạn của mỗi mẻ.
+-- -------------------------------------------------------------------------
+CREATE TABLE BatchProcessLogs (
+    LogId BIGINT PRIMARY KEY IDENTITY(1,1),
+    BatchId INT REFERENCES ProductionBatches(BatchId),-- Ghi chép này trích xuất từ phần lô sản xuất nào
+    RoutingId INT REFERENCES RecipeRouting(RoutingId),-- Liên kết cứng tới công đoạn quy trình
+    EquipmentId INT REFERENCES Equipments(EquipmentId),-- Máy thực tế người dùng đã chọn chạy mẻ
+    OperatorId INT REFERENCES AppUsers(UserId),       -- Chữ ký điện tử đối chiếu nhân viên chịu trách nhiệm chạy máy
+    StartTime DATETIME2,                              -- Ràng buộc thời gian bấm đồng hồ (Start)
+    EndTime DATETIME2,                                -- Chốt thời khắc công đoạn kết thúc nghiệp thu
+    ResultStatus NVARCHAR(50),                        -- Trạng thái kết quả (Passed, Failed, PendingQC)
+    ParametersData NVARCHAR(MAX),                     -- Dữ liệu JSON thông số vận hành máy
+    Notes NVARCHAR(MAX),                              -- Phân trần, giải trình sự cố kỹ thuật hoặc hao hụt
+    IsDeviation BIT DEFAULT 0,                        -- Đánh dấu nếu có sai lệch thông số
+    VerifiedById INT REFERENCES AppUsers(UserId),     -- Người thẩm định (QA/QC)
+    VerifiedDate DATETIME2,                           -- Ngày thẩm định
+    NumberOfRouting INT DEFAULT 1                     -- Số lần thực thi thực tế (Attempt/Iteration count)
+);
+
+-- -------------------------------------------------------------------------
+-- 10b. Bảng BatchProcessParameterValue: Giá trị thực tế của thông số
+-- -------------------------------------------------------------------------
+CREATE TABLE BatchProcessParameterValue (
+    ValueId BIGINT PRIMARY KEY IDENTITY(1,1),
+    LogId BIGINT REFERENCES BatchProcessLogs(LogId), -- Tham chiếu tới nhật ký công đoạn
+    ParameterId INT REFERENCES StepParameters(ParameterId), -- Tham chiếu tới định nghĩa thông số
+    ActualValue DECIMAL(18, 4),                     -- Giá trị đo được thực tế
+    RecordedDate DATETIME2 DEFAULT GETDATE(),       -- Thời điểm ghi nhận
+    Note NVARCHAR(500)                              -- Ghi chú riêng cho từng thông số (nếu có)
+);
+
+-- -------------------------------------------------------------------------
+-- 11. Bảng InventoryLots: Quản lý Bồn chứa / Kho lưu trữ truy vết chất lượng (Traceability)
+-- Theo dõi chính xác lượng tồn kho nguyên vật liệu phân mảnh cực kỳ chi tiết 
+-- tới từng hộp hóa chất nhập về từ nhà cung cấp riêng biệt.
+-- -------------------------------------------------------------------------
+CREATE TABLE InventoryLots (
+    LotId INT PRIMARY KEY IDENTITY(1,1),
+    MaterialId INT REFERENCES Materials(MaterialId), -- Bồn chứa đang quản lý chủng loại chất gì
+    LotNumber VARCHAR(50) NOT NULL UNIQUE,           -- Số kiểm soát mã lô của bên bán/nhà cung cấp cấp
+    QuantityCurrent DECIMAL(18, 4) NOT NULL,         -- Lượng đang tồn đọng thực tế ở thời điểm hiện tại (Cập nhật realtime)
+    ManufactureDate DATETIME2,                       -- Thời điểm chất được ra lò (Hóa đơn sản xuất)
+    ExpiryDate DATETIME2 NOT NULL,                   -- Hạn dùng nghiêm ngặt GMP bắt buộc phải tuân theo vòng đời lô hóa chất
+    QCStatus NVARCHAR(50) DEFAULT 'Pending',         -- Trạng thái được phép xuất kho? (Pending: Đang test QA, Released: Đã pass QC, Rejected: Cấm xài)
+    SupplierName NVARCHAR(200),                      -- Thông tin thực tế của đại lý buôn thuốc/nguyên liệu
+    CreatedAt DATETIME2 DEFAULT GETDATE()
+);
+
+-- -------------------------------------------------------------------------
+-- 12. Bảng MaterialUsage: Lịch sử Cấp phát kho và Xử lý hao hụt
+-- Ràng buộc lô hóa chất cụ thể trong kho được lấy bao nhiêu kilogam 
+-- đổ vào công đoạn của Mẻ thành phẩm cụ thể nào. Dữ liệu quý giá nhất quy trình truy vết (Trace).
+-- -------------------------------------------------------------------------
+CREATE TABLE MaterialUsage (
+    UsageId INT PRIMARY KEY IDENTITY(1,1),
+    BatchId INT REFERENCES ProductionBatches(BatchId),
+    InventoryLotId INT REFERENCES InventoryLots(LotId),
+    PlannedAmount DECIMAL(18, 4),                     -- Khối lượng dự tính từ BOM
+    ActualAmount DECIMAL(18, 4) NOT NULL,              -- Khối lượng cấp phát thực tế
+    UsedDate DATETIME2 DEFAULT GETDATE(),
+    DispensedBy INT REFERENCES AppUsers(UserId),
+    Timestamp DATETIME2 DEFAULT GETDATE(),            -- Thời điểm ghi nhận hệ thống
+    Note NVARCHAR(200)
+);
+
+-- -------------------------------------------------------------------------
+-- 13. Bảng QualityTests: Nhật ký Thử nghiệm và Kiểm định (Dành riêng cho QA/QC)
+-- Lưu lại chỉ số kiểm định đối với từng Lot nguyên liệu lúc đón đầu nhập kho, 
+-- hoặc lấy mẫu test trong quá trình luân chuyển đóng gói mẻ sản phẩm.
+-- -------------------------------------------------------------------------
+CREATE TABLE QualityTests (
+    TestId INT PRIMARY KEY IDENTITY(1,1),
+    InventoryLotId INT REFERENCES InventoryLots(LotId),-- Cuộc xét nghiệm giành riêng cho thùng nguyên liệu, lô thành phẩm nào
+    TestName NVARCHAR(100),         -- Tên khoa học của kỹ thuật xét nghiệm phòng vật lý (Độ ẩm, Phổ quang, Kích thước hạt)
+    ResultValue NVARCHAR(200),      -- Trị số kết quả cuối cùng thu về từ phòng Lab trả mộc
+    PassStatus BIT DEFAULT 1,       -- Đánh giá QC (1: Vượt tiêu chuẩn, 0: Thi trượt)
+    TestedBy INT REFERENCES AppUsers(UserId), -- Người lấy mẫu trắc nghiệm
+    TestDate DATETIME2 DEFAULT GETDATE()      -- Ngày bàn trắc nghiệm nghiệm thu
+);
+
+-- -------------------------------------------------------------------------
+-- 14. Bảng SystemAuditLog: Dấu vết kiểm toán toàn diện thiết yếu (Essential Audit Trail)
+-- Cuốn sổ cái hệ thống âm thầm ghi lại MỌI THAO TÁC thay đổi của người dùng 
+-- lên bất kỳ dữ liệu GMP nào. Bảng này luôn chỉ được cấp quyền thêm (INSERT) qua 
+-- tính năng Middleware, tuyệt đối không ai (kể cả Admin) được can thiệp sửa/xóa.
+-- -------------------------------------------------------------------------
+CREATE TABLE SystemAuditLog (
+    AuditId BIGINT PRIMARY KEY IDENTITY(1,1),
+    TableName NVARCHAR(100),         -- Vết tích biến động xuất phát tại cấu trúc bảng nào
+    RecordId NVARCHAR(100),          -- Chĩa khóa vào ID bản ghi bị tác động trực diện
+    Action NVARCHAR(50),             -- Hành động vi phạm hoặc thay đổi tác nghiệp: Thêm mới, Sửa(Update) hay Xóa(Delete)
+    OldValue NVARCHAR(MAX),          -- Chụp chiếu và khóa Giá trị cũ (định dạng String text JSON - Phục hình lại log dễ dàng)
+    NewValue NVARCHAR(MAX),          -- Giá trị bị phủ định sau khi gõ sửa (Bản JSON String)
+    ChangedBy INT REFERENCES AppUsers(UserId), -- Bắt chữ ký số UserID chịu trách nhiệm gây ra biến số này
+    ChangedDate DATETIME2 DEFAULT GETDATE()    -- Lịch sử độ chi tiết thời gian tính tới mi-li-giây
+);
+
+PRINT 'Centralized Master Schema Created Successfully.';

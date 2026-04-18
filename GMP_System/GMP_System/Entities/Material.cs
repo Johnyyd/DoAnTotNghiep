@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace GMP_System.Entities;
@@ -17,7 +17,7 @@ public partial class Material
 
     public bool? IsActive { get; set; }
 
-    public string? Description { get; set; }
+    public string? TechnicalSpecification { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 

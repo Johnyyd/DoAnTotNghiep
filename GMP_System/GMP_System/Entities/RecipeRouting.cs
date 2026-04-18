@@ -13,6 +13,8 @@ public partial class RecipeRouting
 
     public string StepName { get; set; } = null!;
 
+    public int? NumberOfRouting { get; set; }
+
     public string? Description { get; set; }
 
     public int? EstimatedTimeMinutes { get; set; }
@@ -21,9 +23,31 @@ public partial class RecipeRouting
     
     public int? NumberOfRouting { get; set; } = 1;
 
+    public int? MaterialId { get; set; }
+
+    public int? AreaId { get; set; }
+
+    public string? CleanlinessStatus { get; set; }
+
+    public decimal? StandardTemperature { get; set; }
+
+    public decimal? StandardHumidity { get; set; }
+
+    public decimal? StandardPressure { get; set; }
+
+    public string? StabilityStatus { get; set; }
+
+    public decimal? SetTemperature { get; set; }
+
+    public int? SetTimeMinutes { get; set; }
+
     public virtual ICollection<BatchProcessLog> BatchProcessLogs { get; set; } = new List<BatchProcessLog>();
 
+    public virtual ProductionArea? Area { get; set; }
+
     public virtual Equipment? DefaultEquipment { get; set; }
+
+    public virtual Material? Material { get; set; }
 
     public virtual Recipe? Recipe { get; set; }
 

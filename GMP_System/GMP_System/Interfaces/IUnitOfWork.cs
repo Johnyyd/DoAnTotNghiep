@@ -8,6 +8,7 @@ namespace GMP_System.Interfaces
         IGenericRepository<Material> Materials { get; }
         IGenericRepository<Recipe> Recipes { get; }
         IGenericRepository<ProductionOrder> ProductionOrders { get; }
+        IGenericRepository<ProductionArea> ProductionAreas { get; }
         IGenericRepository<AppUser> AppUsers { get; }
         IGenericRepository<ProductionBatch> ProductionBatches { get; }
         IGenericRepository<BatchProcessLog> BatchProcessLogs { get; }
