@@ -1,3 +1,24 @@
+USE PharmaceuticalProcessingManagementSystem;
+GO
+-- ============================================================================
+-- 0. Cập nhật cấu trúc bảng (Schema Migration) nếu bị thiếu cột
+-- ============================================================================
+IF COL_LENGTH('Materials', 'TechnicalSpecification') IS NULL ALTER TABLE Materials ADD TechnicalSpecification NVARCHAR(500);
+IF COL_LENGTH('Materials', 'CreatedAt') IS NULL ALTER TABLE Materials ADD CreatedAt DATETIME2 DEFAULT GETDATE();
+IF COL_LENGTH('Materials', 'UpdatedAt') IS NULL ALTER TABLE Materials ADD UpdatedAt DATETIME2;
+
+IF COL_LENGTH('Recipes', 'CreatedAt') IS NULL ALTER TABLE Recipes ADD CreatedAt DATETIME2 DEFAULT GETDATE();
+IF COL_LENGTH('Recipes', 'EffectiveDate') IS NULL ALTER TABLE Recipes ADD EffectiveDate DATETIME2;
+IF COL_LENGTH('Recipes', 'Note') IS NULL ALTER TABLE Recipes ADD Note NVARCHAR(500);
+
+IF COL_LENGTH('RecipeRouting', 'NumberOfRouting') IS NULL ALTER TABLE RecipeRouting ADD NumberOfRouting INT DEFAULT 1;
+
+IF COL_LENGTH('ProductionBatches', 'EndTime') IS NULL ALTER TABLE ProductionBatches ADD EndTime DATETIME2;
+IF COL_LENGTH('ProductionBatches', 'CreatedAt') IS NULL ALTER TABLE ProductionBatches ADD CreatedAt DATETIME2 DEFAULT GETDATE();
+
+IF COL_LENGTH('BatchProcessLogs', 'NumberOfRouting') IS NULL ALTER TABLE BatchProcessLogs ADD NumberOfRouting INT DEFAULT 1;
+GO
+
 -- ============================================================================
 -- Bổ sung quy trình sản xuất mới và dữ liệu mẫu cho NumberOfRouting
 -- - Thuốc ống Dipyridamole 10mg/2ml

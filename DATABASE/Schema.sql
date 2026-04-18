@@ -16,6 +16,7 @@ GO
 -- 0. DỌN DẸP DỮ LIỆU CŨ (THEO THỨ TỰ NGƯỢC KHÓA NGOẠI)
 -- -------------------------------------------------------------------------
 PRINT 'Cleaning up existing tables...';
+IF OBJECT_ID('BatchProcessParameterValues', 'U') IS NOT NULL DROP TABLE BatchProcessParameterValues;
 IF OBJECT_ID('BatchProcessParameterValue', 'U') IS NOT NULL DROP TABLE BatchProcessParameterValue;
 IF OBJECT_ID('QualityTests', 'U') IS NOT NULL DROP TABLE QualityTests;
 IF OBJECT_ID('SystemAuditLog', 'U') IS NOT NULL DROP TABLE SystemAuditLog;
@@ -93,6 +94,7 @@ CREATE TABLE Equipments (
     UsagePurpose NVARCHAR(300),                -- Công dụng/sử dụng cho
     AreaId INT REFERENCES ProductionAreas(AreaId), -- Khu vực đặt thiết bị
     Status NVARCHAR(50) DEFAULT 'Ready',      -- Trạng thái (Sẵn sàng, Bảo trì, Đang chạy)
+    LastMaintenanceDate DATETIME2             -- Ngày bảo trì gần nhất
 );
 
 -- -------------------------------------------------------------------------
@@ -158,6 +160,15 @@ CREATE TABLE RecipeRouting (
     EstimatedTimeMinutes INT,                      -- Dự trù tổng thời gian gian chạy máy (Tính bằng Phút)
     Description NVARCHAR(500),                      -- Mô tả văn bản các thao tác công nhân cần lấy làm chuẩn
     NumberOfRouting INT DEFAULT 1,                   -- Số lần thực thực thi mặc định (Loop support)
+    MaterialId INT REFERENCES Materials(MaterialId), -- Liên kết nguyên vật liệu nếu cần cấp phát tại bước này
+    AreaId INT REFERENCES ProductionAreas(AreaId),   -- Khu vực sản xuất thực hiện bước này (kiểm soát ra vào)
+    CleanlinessStatus NVARCHAR(50),                  -- Trạng thái cấp sạch yêu cầu (Cấp A, Cấp B, Cấp C, Cấp D)
+    StandardTemperature DECIMAL(18,2),               -- Nhiệt độ tiêu chuẩn yêu cầu
+    StandardHumidity DECIMAL(18,2),                  -- Độ ẩm tiêu chuẩn yêu cầu
+    StandardPressure DECIMAL(18,2),                  -- Áp suất tiêu chuẩn chênh lệch
+    StabilityStatus NVARCHAR(50),                    -- Trạng thái lão hóa/độ ổn định định kỳ
+    SetTemperature DECIMAL(18,2),                    -- Nhiệt độ cấu hình tham chiếu cài đặt máy móc
+    SetTimeMinutes INT,                              -- Thời gian thực thi cấu hình tham chiếu máy móc
     CONSTRAINT CK_RecipeRouting_NumberOfRouting CHECK (NumberOfRouting >= 1)
 );
 
@@ -189,6 +200,7 @@ CREATE TABLE ProductionOrders (
     EndDate DATETIME2,                              -- Lịch bàn giao sản phẩm dự kiến
     Status NVARCHAR(50) DEFAULT 'Draft',            -- Luồng giám sát tiến độ (Draft, Approved, InProcess, Completed, Hold, Cancelled)
     CreatedBy INT REFERENCES AppUsers(UserId),      -- Quản lý đã khai sinh lệnh
+    PlannedCartons INT,                             -- Số lượng thùng/chai bao bì dự kiến
     CreatedAt DATETIME2 DEFAULT GETDATE(),
     Note NVARCHAR(500)                              -- Yêu cầu kèm theo lô này (Nhiệt độ phòng, Ưu tiên gấp...)
 );
@@ -207,6 +219,7 @@ CREATE TABLE ProductionBatches (
     EndTime DATETIME2,                               -- Thời điểm kết thúc mẻ
     ExpiryDate DATETIME2,                            -- Hạn sử dụng của sản phẩm
     CurrentStep INT DEFAULT 1,                       -- Điểm chốt chặn: Lô đang xử lý, hoặc ách tắc ở bước quy trình thứ mấy
+    PlannedQuantity DECIMAL(18, 4),                  -- Khối lượng dự kiến của mẻ sản xuất
     CreatedAt DATETIME2 DEFAULT GETDATE()
 );
 
@@ -232,9 +245,9 @@ CREATE TABLE BatchProcessLogs (
 );
 
 -- -------------------------------------------------------------------------
--- 10b. Bảng BatchProcessParameterValue: Giá trị thực tế của thông số
+-- 10b. Bảng BatchProcessParameterValues: Giá trị thực tế của thông số
 -- -------------------------------------------------------------------------
-CREATE TABLE BatchProcessParameterValue (
+CREATE TABLE BatchProcessParameterValues (
     ValueId BIGINT PRIMARY KEY IDENTITY(1,1),
     LogId BIGINT REFERENCES BatchProcessLogs(LogId), -- Tham chiếu tới nhật ký công đoạn
     ParameterId INT REFERENCES StepParameters(ParameterId), -- Tham chiếu tới định nghĩa thông số
