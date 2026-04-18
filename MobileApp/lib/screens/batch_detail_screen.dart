@@ -3,7 +3,6 @@ import '../services/api_service.dart';
 import 'weighing_step_screen.dart';
 import 'mixing_step_screen.dart';
 import 'drying_step_screen.dart';
-import 'dynamic_step_screen.dart';
 
 /// [BatchDetailScreen] — Màn hình chi tiết một mẻ sản xuất.
 /// Hiển thị danh sách các bước công đoạn (process logs) từ API,
@@ -117,6 +116,7 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
   }
 
   void _onStepTap(int index, Map<String, dynamic> log) {
+    final stepType = log['step']?['stepName']?.toString().toLowerCase() ?? '';
     final status = log['resultStatus'] as String?;
     
     // GMP Sequential Check
@@ -135,8 +135,9 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
        return;
     }
 
-    Widget? nextScreen;
-    final stepType = log['step']?['stepName']?.toString().toLowerCase() ?? '';
+    debugPrint('[_onStepTap] Index: $index, Step: $stepType, Status: $status, isBlocked: $isBlocked');
+
+    Widget nextScreen;
     // isViewer is true if the step is already finalized (Passed/Failed)
     final bool isViewer = status == 'Passed' || status == 'Failed'; 
 
@@ -147,7 +148,9 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
         orderId: widget.orderId,
         isViewer: isViewer
       );
-    } else if (stepType.contains('trộn') || stepType.contains('mix')) {
+    } else if (stepType.contains('trộn') || stepType.contains('mix') || 
+               stepType.contains('pha') || stepType.contains('nấu') || 
+               stepType.contains('xay') || stepType.contains('nghiền')) {
       nextScreen = MixingStepScreen(
         batchId: widget.batchId, 
         stepId: log['stepId'], 
@@ -163,19 +166,17 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
         isViewer: isViewer
       );
     } else {
-      // Fallback: Use DynamicStepScreen for any other step types
-      nextScreen = DynamicStepScreen(
-        batchId: widget.batchId,
-        stepId: log['stepId'],
+      debugPrint('[_onStepTap] No specific screen for $stepType, using default MixingStepScreen');
+      nextScreen = MixingStepScreen(
+        batchId: widget.batchId, 
+        stepId: log['stepId'], 
         orderId: widget.orderId,
-        stepName: log['step']?['stepName'],
-        isViewer: isViewer,
+        isViewer: isViewer
       );
     }
 
-    if (nextScreen != null) {
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => nextScreen!)).then((_) => _load());
-    }
+    debugPrint('[_onStepTap] Navigating to ${nextScreen.runtimeType}');
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => nextScreen)).then((_) => _load());
   }
 
   @override

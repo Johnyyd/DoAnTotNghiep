@@ -36,7 +36,7 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> GetLogsByBatch(int batchId)
         {
             var batch = await _unitOfWork.ProductionBatches.GetByIdAsync(batchId);
-            if (batch == null) return NotFound(new { success = false, message = "Không tìm thấy mẻ." });
+            if (batch == null) return NotFound(new { success = false, message = "KhÃ´ng tÃ¬m tháº¥y máº»." });
 
             var order = await _unitOfWork.ProductionOrders.Query()
                 .Include(o => o.Recipe)
@@ -116,13 +116,13 @@ namespace GMP_System.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] BatchProcessLog log)
         {
-            if (log == null) return BadRequest("Dữ liệu không hợp lệ.");
+            if (log == null) return BadRequest("Dá»¯ liá»‡u khÃ´ng há»£p lá»‡.");
             if (!log.BatchId.HasValue || !log.RoutingId.HasValue)
-                return BadRequest("Thiếu BatchId hoặc RoutingId.");
+                return BadRequest("Thiáº¿u BatchId hoáº·c RoutingId.");
 
             var routing = await _unitOfWork.RecipeRoutings.GetByIdAsync(log.RoutingId.Value);
             if (routing == null)
-                return BadRequest("Không tìm thấy công đoạn quy trình.");
+                return BadRequest("KhÃ´ng tÃ¬m tháº¥y cÃ´ng Ä‘oáº¡n quy trÃ¬nh.");
 
             var maxAttempts = Math.Max(1, routing.NumberOfRouting ?? 1);
             var stepLogs = await _unitOfWork.BatchProcessLogs.Query()
@@ -139,7 +139,7 @@ namespace GMP_System.Controllers
                 return BadRequest(new
                 {
                     success = false,
-                    message = $"Công đoạn này chỉ được thực hiện tối đa {maxAttempts} lần."
+                    message = $"CÃ´ng Ä‘oáº¡n nÃ y chá»‰ Ä‘Æ°á»£c thá»±c hiá»‡n tá»‘i Ä‘a {maxAttempts} láº§n."
                 });
             }
 
@@ -185,27 +185,13 @@ namespace GMP_System.Controllers
                             .Where(sp => sp.RoutingId == log.RoutingId)
                             .ToListAsync();
 
-                        List<string> missingParams = new();
-                        var batchEntity = await _unitOfWork.ProductionBatches.GetByIdAsync(log.BatchId!.Value);
-
                         foreach (var sp in standardParams)
                         {
-                            // Tìm kiếm linh hoạt thông số trong JSON (bao gồm cả khTT, slSauSay...)
                             var entry = paramsDict.FirstOrDefault(p =>
                                 p.Key.Equals(sp.ParameterName, StringComparison.OrdinalIgnoreCase) ||
-                                (sp.ParameterName.Contains(p.Key, StringComparison.OrdinalIgnoreCase) && p.Key.Length > 2));
+                                sp.ParameterName.Contains(p.Key, StringComparison.OrdinalIgnoreCase));
 
-                            // KIỂM TRA BẮT BUỘC NHẬP (Mandatory)
-                            if (entry.Key == null || string.IsNullOrWhiteSpace(entry.Value?.ToString()) || entry.Value!.ToString() == "0")
-                            {
-                                // Đối với các trường như "Actual Weight" hoặc "Khối lượng", bắt buộc phải có giá trị
-                                if (sp.IsCritical == true || sp.ParameterName.Contains("Khối lượng") || sp.ParameterName.Contains("Nhiệt độ") || sp.ParameterName.Contains("Độ ẩm"))
-                                {
-                                    missingParams.Add(sp.ParameterName);
-                                }
-                                continue;
-                            }
-
+                            if (entry.Key == null) continue;
                             if (!decimal.TryParse(entry.Value?.ToString() ?? "0", out var actualVal)) continue;
 
                             activeLog.ParameterValues.Add(new BatchProcessParameterValue
@@ -215,52 +201,25 @@ namespace GMP_System.Controllers
                                 RecordedDate = DateTime.Now
                             });
 
-                            // RÀNG BUỘC KIỂM TRA KHỐI LƯỢNG (Sai số 1%)
-                            if (sp.ParameterName.Contains("Khối lượng", StringComparison.OrdinalIgnoreCase) || 
-                                sp.ParameterName.Equals("khTT", StringComparison.OrdinalIgnoreCase) ||
-                                sp.ParameterName.Contains("slTruocSay", StringComparison.OrdinalIgnoreCase))
-                            {
-                                if (batchEntity?.PlannedQuantity > 0)
-                                {
-                                    decimal target = batchEntity.PlannedQuantity.Value;
-                                    decimal diffPercent = Math.Abs(actualVal - target) / target * 100;
-                                    if (diffPercent > 1.0m) // 1% Tolerance
-                                    {
-                                        return BadRequest(new { 
-                                            success = false, 
-                                            message = $"Lỗi: {sp.ParameterName} ({actualVal.ToString("N2")}) lệch quá 1% so với mục tiêu ({target.ToString("N2")})." 
-                                        });
-                                    }
-                                }
-                            }
-
                             if (sp.MinValue.HasValue && actualVal < sp.MinValue.Value) activeLog.IsDeviation = true;
                             if (sp.MaxValue.HasValue && actualVal > sp.MaxValue.Value) activeLog.IsDeviation = true;
 
-                            // Logic cảnh báo Độ ẩm (Fail nếu cao quá mốc)
-                            if (sp.ParameterName.Contains("Độ ẩm", StringComparison.OrdinalIgnoreCase) &&
-                                sp.MaxValue.HasValue &&
-                                actualVal > sp.MaxValue.Value)
+                            // Logic kiểm tra ĐỘ ẨM để tự động yêu cầu sấy lại (Rework Loop)
+                            bool isHumidityParam = sp.ParameterName.Contains("Độ ẩm", StringComparison.OrdinalIgnoreCase) || 
+                                                 sp.ParameterName.Contains("Do am", StringComparison.OrdinalIgnoreCase);
+
+                            if (isHumidityParam && sp.MaxValue.HasValue && actualVal > sp.MaxValue.Value)
                             {
                                 activeLog.ResultStatus = "Failed";
-                                activeLog.Notes = (activeLog.Notes ?? "") +
-                                    "\n[SYSTEM] Độ ẩm cao quá ngưỡng cho phép (> " + sp.MaxValue.Value +
-                                    "%). Bắt buộc thực hiện lại công đoạn.";
+                                activeLog.IsDeviation = true;
+                                activeLog.Notes = (activeLog.Notes ?? "") + 
+                                    $"\n[SYSTEM] Kết quả Độ ẩm ({actualVal}%) không đạt tiêu chuẩn (<= {sp.MaxValue.Value}%). Hệ thống yêu cầu THỰC HIỆN LẠI công đoạn sấy.";
                             }
-                        }
-
-                        if (missingParams.Any())
-                        {
-                            return BadRequest(new { 
-                                success = false, 
-                                message = $"Lỗi: Các thông số sau là bắt buộc và không được để trống: {string.Join(", ", missingParams)}" 
-                            });
                         }
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
-                    return BadRequest(new { success = false, message = "Lỗi xử lý dữ liệu thông số: " + ex.Message });
                 }
             }
 
@@ -300,8 +259,8 @@ namespace GMP_System.Controllers
             return Ok(new
             {
                 Message = activeLog.IsDeviation == true
-                    ? "Ghi nhật ký thành công (CẢNH BÁO TỒN TẠI SAI LỆCH)!"
-                    : "Ghi nhật ký thành công!",
+                    ? "Ghi nháº­t kÃ½ thÃ nh cÃ´ng (Cáº¢NH BÃO Tá»’N Táº I SAI Lá»†CH)!"
+                    : "Ghi nháº­t kÃ½ thÃ nh cÃ´ng!",
                 LogId = activeLog.LogId,
                 IsDeviation = activeLog.IsDeviation,
                 NumberOfRouting = activeLog.NumberOfRouting,
@@ -313,7 +272,7 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> Verify([FromBody] JsonElement body)
         {
             if (!body.TryGetProperty("logId", out var logIdProp) || !body.TryGetProperty("verifierId", out var verifierIdProp))
-                return BadRequest("Thiếu thông tin LogId hoặc VerifierId.");
+                return BadRequest("Thiáº¿u thÃ´ng tin LogId hoáº·c VerifierId.");
 
             long logId = logIdProp.GetInt64();
             int verifierId = verifierIdProp.GetInt32();
@@ -323,7 +282,7 @@ namespace GMP_System.Controllers
             var log = await _unitOfWork.BatchProcessLogs.Query()
                 .FirstOrDefaultAsync(x => x.LogId == logId);
 
-            if (log == null) return NotFound("Không tìm thấy nhật ký mẻ.");
+            if (log == null) return NotFound("KhÃ´ng tÃ¬m tháº¥y nháº­t kÃ½ máº».");
 
             log.VerifiedById = verifierId;
             log.VerifiedDate = DateTime.Now;
@@ -347,7 +306,7 @@ namespace GMP_System.Controllers
             }
 
             await _unitOfWork.CompleteAsync();
-            return Ok(new { Message = "Xác nhận QC thành công!", Status = log.ResultStatus });
+            return Ok(new { Message = "XÃ¡c nháº­n QC thÃ nh cÃ´ng!", Status = log.ResultStatus });
         }
 
         private static int ResolveAttemptNumber(int? requestedAttempt, BatchProcessLog? latestStepLog, string? incomingStatus, int maxAttempts)

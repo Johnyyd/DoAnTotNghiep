@@ -67,12 +67,13 @@ PRINT '-- Section 6: Audit Trail --'
 :r ./AuditTrail.sql
 
 -- =====================================================
--- 7. Advanced Logic (Triggers, Stored Procedures)
+-- 7. Advanced Logic (Triggers, Stored Procedures, Constraints)
 -- =====================================================
-PRINT '-- Section 7: Advanced Logic --'
+PRINT '-- Section 7: Advanced Logic & Constraints --'
 
 :r ./AdvancedLogic.sql
 :r ./Immutability.sql
+:r ./Constraints.sql
 
 -- =====================================================
 -- 8. Unit Conversions
