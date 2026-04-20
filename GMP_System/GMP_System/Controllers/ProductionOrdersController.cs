@@ -107,9 +107,31 @@ namespace GMP_System.Controllers
             var batches = await _unitOfWork.ProductionBatches
                 .Query()
                 .Where(b => b.OrderId == orderId)
-                .Include(b => b.MaterialUsages)
-                    .ThenInclude(u => u.InventoryLot)
-                        .ThenInclude(l => l!.Material)
+                .Select(b => new
+                {
+                    b.BatchId,
+                    b.OrderId,
+                    b.BatchNumber,
+                    b.Status,
+                    b.ManufactureDate,
+                    b.EndTime,
+                    b.ExpiryDate,
+                    b.CurrentStep,
+                    Order = b.Order == null ? null : new
+                    {
+                        b.Order.OrderId,
+                        b.Order.OrderCode,
+                        Recipe = b.Order.Recipe == null ? null : new
+                        {
+                            b.Order.Recipe.RecipeId,
+                            Material = b.Order.Recipe.Material == null ? null : new
+                            {
+                                b.Order.Recipe.Material.MaterialName
+                            }
+                        }
+                    }
+                })
+                .AsNoTracking()
                 .ToListAsync();
 
             return Ok(new { data = batches, success = true, message = "Success" });

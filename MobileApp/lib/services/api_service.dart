@@ -19,7 +19,7 @@ class ApiService {
       return '$origin/api';
     }
     // Mobile/Emulator fallback. Chú ý: localhost không chạy được trên thiết bị thật.
-    return 'http://10.0.2.2:5001/api'; // Mặc định cho Android Emulator
+    return 'http://100.89.137.3:5001/api'; // Sử dụng IP Tailscale để kết nối từ thiết bị thật
   }
 
   /// Tiện ích log lỗi cho dev

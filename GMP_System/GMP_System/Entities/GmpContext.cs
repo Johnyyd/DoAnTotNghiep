@@ -140,6 +140,8 @@ public partial class GmpContext : DbContext
         {
             entity.HasKey(e => e.EquipmentId).HasName("PK__Equipmen__34474599F11FEE84");
 
+            entity.ToTable(tb => tb.HasTrigger("trg_Audit_Equipments"));
+
             entity.HasIndex(e => e.EquipmentCode, "UQ__Equipmen__09E4417E23FBF8F4").IsUnique();
 
             entity.Property(e => e.EquipmentId).HasColumnName("EquipmentID");
@@ -163,6 +165,8 @@ public partial class GmpContext : DbContext
         {
             entity.HasKey(e => e.LotId).HasName("PK__Inventor__4160EF4DD676A0B9");
 
+            entity.ToTable(tb => tb.HasTrigger("trg_Audit_InventoryLots"));
+
             entity.Property(e => e.LotId).HasColumnName("LotID");
             entity.Property(e => e.LotNumber)
                 .HasMaxLength(50)
@@ -182,6 +186,8 @@ public partial class GmpContext : DbContext
         modelBuilder.Entity<Material>(entity =>
         {
             entity.HasKey(e => e.MaterialId).HasName("PK__Material__C50613177C517D7B");
+
+            entity.ToTable(tb => tb.HasTrigger("trg_Audit_Materials"));
 
             entity.HasIndex(e => e.MaterialCode, "UQ__Material__170C54BAB161407D").IsUnique();
 
@@ -259,6 +265,8 @@ public partial class GmpContext : DbContext
         modelBuilder.Entity<ProductionOrder>(entity =>
         {
             entity.HasKey(e => e.OrderId).HasName("PK__Producti__C3905BAF770F7793");
+
+            entity.ToTable(tb => tb.HasTrigger("trg_Audit_ProductionOrders"));
 
             entity.HasIndex(e => e.OrderCode, "UQ__Producti__999B5229EBD49113").IsUnique();
 

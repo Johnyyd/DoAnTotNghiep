@@ -1,31 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "d:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj": {}
+    "/src/GMP_System.csproj": {}
   },
   "projects": {
-    "d:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj": {
+    "/src/GMP_System.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "d:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
+        "projectUniqueName": "/src/GMP_System.csproj",
         "projectName": "GMP_System",
-        "projectPath": "d:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
-        "packagesPath": "C:\\Users\\GIGABYTE\\.nuget\\packages\\",
-        "outputPath": "d:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\obj\\",
+        "projectPath": "/src/GMP_System.csproj",
+        "packagesPath": "/root/.nuget/packages/",
+        "outputPath": "/src/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\GIGABYTE\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/root/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -43,8 +37,7 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "10.0.200"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -102,7 +95,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.420/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

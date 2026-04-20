@@ -53,7 +53,7 @@ services: # Danh sách các services trong hệ thống
         condition: service_healthy 
     volumes:
       - ./DATABASE:/app/DATABASE:ro # Liên kết thư mục Script nếu Controller có nhu cầu truy vấn tĩnh
-#      - ./GMP_System/GMP_System:/src # Ánh xạ qua bộ nhớ Host và mã nguồn Container tại gốc
+      - ./GMP_System/GMP_System:/src # Ánh xạ qua bộ nhớ Host và mã nguồn Container tại gốc
     command: dotnet watch run --project GMP_System.csproj --urls "http://0.0.0.0:5000" --no-hot-reload
     restart: unless-stopped
     healthcheck:
