@@ -164,16 +164,23 @@ export default function ProductionOrders() {
         status: orderForm.status,
       } as any);
       
-      const orderId = resp?.data?.orderId ?? resp?.orderId;
-      if (orderId && customRoutings.length > 0) {
-        await productionOrdersApi.saveRoutings(orderId, customRoutings);
+      const orderId = Number(resp?.data?.orderId ?? resp?.orderId ?? 0);
+      if (orderId) {
+        // Save routings if any
+        if (customRoutings.length > 0) {
+          await productionOrdersApi.saveRoutings(orderId, customRoutings);
+        }
       }
       return resp;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['productionOrders'] });
+      await queryClient.invalidateQueries({ queryKey: ['productionBatches'] });
       setShowOrderModal(false);
       setEditingOrder(null);
+    },
+    onError: (err: any) => {
+      alert(err?.response?.data?.message ?? err?.message ?? 'Không thể tạo lệnh sản xuất');
     },
   });
 
@@ -247,8 +254,12 @@ export default function ProductionOrders() {
   });
 
   const openCreateOrder = () => {
+    const now = new Date();
+    const randomSuffix = Math.floor(Math.random() * 100);
+    const autoCode = `PO-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}-${randomSuffix}`;
+    
     setEditingOrder(null);
-    setOrderForm({ orderCode: '', recipeId: 0, plannedQuantity: 0, startDate: '', endDate: '', status: 'Draft' });
+    setOrderForm({ orderCode: autoCode, recipeId: 0, plannedQuantity: 0, startDate: '', endDate: '', status: 'Draft' });
     setCustomRoutings([]);
     setActiveTab('info');
     setShowOrderModal(true);

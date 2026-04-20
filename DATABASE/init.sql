@@ -4,7 +4,7 @@
 -- ============================================================================
 
 -- BƯỚC 1: SỬA ĐƯỜNG DẪN DƯỚI ĐÂY KHỚP VỚI MÁY CỦA BẠN (Cần có dấu \ ở cuối)
-:setvar BaseDir "c:\Users\trinm\.openclaw\workspace\DoAnTotNghiep\DATABASE\"
+:setvar BaseDir "d:\codes\Antigravity\DoAnTotNghiep\DATABASE\"
 
 USE master;
 GO

@@ -39,6 +39,7 @@ namespace GMP_System.Controllers
             if (batch == null) return NotFound(new { success = false, message = "KhÃ´ng tÃ¬m tháº¥y máº»." });
 
             var order = await _unitOfWork.ProductionOrders.Query()
+                .Include(o => o.Recipe)
                 .FirstOrDefaultAsync(o => o.OrderId == batch.OrderId);
 
             if (order == null) return NotFound(new { success = false, message = "KhÃ´ng tÃ¬m tháº¥y lá»‡nh sáº£n xuáº¥t." });
@@ -50,11 +51,12 @@ namespace GMP_System.Controllers
                 .OrderBy(r => r.StepNumber)
                 .ToListAsync();
 
-            if (!routings.Any())
+            if (routings == null || routings.Count == 0)
             {
                 // Fallback to Recipe-default routings
+                // Some older data might have OrderId = 0 instead of NULL
                 routings = await _unitOfWork.RecipeRoutings.Query()
-                    .Where(r => r.RecipeId == order.RecipeId && r.OrderId == null)
+                    .Where(r => r.RecipeId == order.RecipeId && (r.OrderId == null || r.OrderId == 0))
                     .Include(r => r.StepParameters)
                     .OrderBy(r => r.StepNumber)
                     .ToListAsync();

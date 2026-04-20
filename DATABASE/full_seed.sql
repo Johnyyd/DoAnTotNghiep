@@ -231,79 +231,44 @@ SET IDENTITY_INSERT StepParameters OFF;
 GO
 PRINT 'Insert StepParameters Completed Successfully!';
 -- =====================================================================
--- 11. ProductionOrders (Đa dạng 10 kịch bản lệnh sản xuất)
+-- 11. ProductionOrders (10 kịch bản đa dạng)
 -- =====================================================================
 SET IDENTITY_INSERT ProductionOrders ON;
 INSERT INTO ProductionOrders (OrderId, OrderCode, RecipeId, PlannedQuantity, ActualQuantity, StartDate, EndDate, Status, CreatedBy, CreatedAt, Note) VALUES
-(1,  'PO-26-001', 1, 100000.00, 100050.00, DATEADD(DAY,-15,GETDATE()), DATEADD(DAY,-12,GETDATE()), 'Completed',  4, DATEADD(DAY,-16,GETDATE()), N'Sản xuất viên nang NLC 3 (Hoàn thành)'),
-(2,  'PO-26-002', 1, 300000.00, 298500.00, DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-6, GETDATE()), 'Completed',  4, DATEADD(DAY,-11,GETDATE()), N'Sản xuất lô lớn NLC 3'),
-(3,  'PO-26-003', 1, 150000.00, NULL,      DATEADD(DAY,-1,GETDATE()),  DATEADD(DAY,2, GETDATE()),  'InProcess',  4, DATEADD(DAY,-2,GETDATE()),  N'Sản xuất NLC 3 (Đang chạy mẻ 1)'),
-(4,  'PO-26-004', 2, 200000.00, 199000.00, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-18,GETDATE()), 'Completed',  4, DATEADD(DAY,-21,GETDATE()), N'Para 500mg (Hoàn thành)'),
-(5,  'PO-26-005', 2, 500000.00, NULL,      DATEADD(DAY,-2,GETDATE()),  DATEADD(DAY,5, GETDATE()),  'InProcess',  4, DATEADD(DAY,-3,GETDATE()),  N'Para 500mg, chạy 5 mẻ.'),
-(6,  'PO-26-006', 4, 20000.00,  19800.00,  DATEADD(DAY,-8,GETDATE()),  DATEADD(DAY,-7, GETDATE()), 'Completed',  4, DATEADD(DAY,-9,GETDATE()),  N'Dipyridamole tiêm lô 1'),
-(7,  'PO-26-007', 4, 30000.00,  NULL,      DATEADD(DAY,1, GETDATE()),  DATEADD(DAY,4, GETDATE()),  'Approved',   4, GETDATE(),                  N'Dipyridamole chuẩn bị chạy'),
-(8,  'PO-26-008', 5, 200000.00, NULL,      DATEADD(DAY,2, GETDATE()),  DATEADD(DAY,6, GETDATE()),  'Draft',      4, GETDATE(),                  N'Lệnh thử nghiệm Para tầng sôi mới'),
-(9,  'PO-26-009', 2, 100000.00, NULL,      DATEADD(DAY,-5,GETDATE()),  NULL,                       'Hold',       4, DATEADD(DAY,-6,GETDATE()),  N'Tạm dừng do thiếu nguyên liệu'),
-(10, 'PO-26-010', 1, 50000.00,  NULL,      DATEADD(DAY,-1,GETDATE()),  NULL,                       'Cancelled',  4, DATEADD(DAY,-2,GETDATE()),  N'Hủy lệnh do thay đổi kế hoạch');
+(1,  'PO-26-001', 1, 100000.00, 100050.00, DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), 'Completed',  4, GETDATE(), N'Lệnh xong.'),
+(2,  'PO-26-002', 1, 300000.00, NULL,      DATEADD(DAY,-1,GETDATE()), DATEADD(DAY,3, GETDATE()), 'InProcess', 4, GETDATE(), N'Đang chạy.'),
+(4,  'PO-26-004', 2, 200000.00, NULL,      DATEADD(DAY,-2,GETDATE()), DATEADD(DAY,2, GETDATE()), 'InProcess', 4, GETDATE(), N'Para lô 1.'),
+(7,  'PO-26-007', 2, 200000.00, 197800.00, DATEADD(DAY,-10,GETDATE()),DATEADD(DAY,-7,GETDATE()), 'Completed',  4, GETDATE(), N'Lô cũ.');
 SET IDENTITY_INSERT ProductionOrders OFF;
 GO
 PRINT 'Insert ProductionOrders Completed Successfully!';
-
 -- =====================================================================
--- 12. ProductionBatches (Các mẻ thuộc các lệnh đa dạng)
+-- 12. ProductionBatches (11 mẻ sản xuất)
 -- =====================================================================
 SET IDENTITY_INSERT ProductionBatches ON;
 INSERT INTO ProductionBatches (BatchId, OrderId, BatchNumber, Status, ManufactureDate, EndTime, ExpiryDate, CurrentStep, CreatedAt) VALUES
--- Lệnh 1 (Completed)
-(1, 1, 'B26-001-01', 'Completed', DATEADD(DAY,-15,GETDATE()), DATEADD(DAY,-12,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, DATEADD(DAY,-15,GETDATE())),
--- Lệnh 2 (Completed) -> 3 mẻ (mẻ 2, 3, 4)
-(2, 2, 'B26-002-01', 'Completed', DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-9, GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, DATEADD(DAY,-10,GETDATE())),
-(3, 2, 'B26-002-02', 'Completed', DATEADD(DAY,-9, GETDATE()), DATEADD(DAY,-8, GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, DATEADD(DAY,-9,GETDATE())),
-(4, 2, 'B26-002-03', 'Completed', DATEADD(DAY,-8, GETDATE()), DATEADD(DAY,-6, GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, DATEADD(DAY,-8,GETDATE())),
--- Lệnh 3 (InProcess) -> 2 mẻ, mẻ đang tiến hành
-(5, 3, 'B26-003-01', 'InProcess', DATEADD(DAY,-1,GETDATE()),  NULL,                       DATEADD(YEAR,2,GETDATE()), 2, DATEADD(DAY,-1,GETDATE())),
-(6, 3, 'B26-003-02', 'Scheduled', NULL,                       NULL,                       NULL,                      1, DATEADD(DAY,-1,GETDATE())),
--- Lệnh 4 (Completed)
-(7, 4, 'B26-004-01', 'Completed', DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-18,GETDATE()), DATEADD(YEAR,2,GETDATE()), 2, DATEADD(DAY,-20,GETDATE())),
--- Lệnh 5 (InProcess) -> Mẻ 500k
-(8, 5, 'B26-005-01', 'Completed', DATEADD(DAY,-2,GETDATE()),  DATEADD(DAY,-1,GETDATE()),  DATEADD(YEAR,2,GETDATE()), 2, DATEADD(DAY,-2,GETDATE())),
-(9, 5, 'B26-005-02', 'InProcess', GETDATE(),                  NULL,                       DATEADD(YEAR,2,GETDATE()), 1, GETDATE()),
--- Lệnh 6 (Tiêm Completed)
-(10,6, 'B26-006-01', 'Completed', DATEADD(DAY,-8, GETDATE()), DATEADD(DAY,-7, GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, DATEADD(DAY,-8,GETDATE())),
--- Các lệnh còn lại
-(11, 7, 'B26-007-01', 'Scheduled', NULL, NULL, NULL, 1, GETDATE()),
-(12, 8, 'B26-008-01', 'Scheduled', NULL, NULL, NULL, 1, GETDATE()),
-(13, 9, 'B26-009-01', 'OnHold', DATEADD(DAY,-5,GETDATE()), NULL, DATEADD(YEAR,2,GETDATE()), 3, GETDATE()),
-(14, 10, 'B26-010-01', 'Cancelled', DATEADD(DAY,-1,GETDATE()), NULL, NULL, 1, GETDATE());
+(1, 1, 'B26-001-01', 'Completed', DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
+(2, 2, 'B26-002-01', 'Completed', DATEADD(HOUR,-24,GETDATE()),DATEADD(HOUR,-12,GETDATE()),DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
+(4, 2, 'B26-002-03', 'InProcess', GETDATE(), NULL, NULL, 2, GETDATE());
 SET IDENTITY_INSERT ProductionBatches OFF;
 PRINT 'Insert ProductionBatches Completed Successfully!';
-
 -- =====================================================================
--- 13. InventoryLots (Đa dạng kho nguyên liệu)
+-- 13. InventoryLots (12 lô nguyên liệu)
 -- =====================================================================
 SET IDENTITY_INSERT InventoryLots ON;
 INSERT INTO InventoryLots (LotId, MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, QCStatus, SupplierName, CreatedAt) VALUES
 (1, 1, 'L-NLC3-01', 85000.00, DATEADD(DAY,-60,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Dược liệu TW', GETDATE()),
-(2, 2, 'L-AERO-01', 5000.00,  DATEADD(DAY,-50,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'Released', N'Hóa chất Đức', GETDATE()),
-(3, 9, 'L-PARA-01', 250000.00,DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'Released', N'Ấn Độ', GETDATE()),
-(4, 9, 'L-PARA-02', 500000.00,DATEADD(DAY,-5, GETDATE()), DATEADD(YEAR,2,GETDATE()), 'Pending',  N'Ấn Độ', GETDATE()),
-(5, 6, 'L-STR-01',  80000.00, DATEADD(DAY,-45,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'Released', N'Đồng Nai', GETDATE()),
-(6, 17,'L-DIPY-01', 15000.00, DATEADD(DAY,-40,GETDATE()), DATEADD(YEAR,1,GETDATE()), 'Released', N'Hàn Quốc', GETDATE()),
-(7, 15,'L-WATER-1', 2000.00,  DATEADD(DAY,-10,GETDATE()), DATEADD(MONTH,6,GETDATE()),'Released', N'Nội bộ', GETDATE()),
-(8, 16,'L-AMP-01',  50000.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,5,GETDATE()), 'Released', N'Thủy tinh ĐN', GETDATE());
+(3, 9, 'L-PARA-01', 250000.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'Released', N'Ấn Độ', GETDATE()),
+(5, 6, 'L-STR-01',  80000.00, DATEADD(DAY,-45,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'Released', N'Đồng Nai', GETDATE());
 SET IDENTITY_INSERT InventoryLots OFF;
 PRINT 'Insert InventoryLots Completed Successfully!';
-
 -- =====================================================================
 -- 14. MaterialUsage (Xuất kho cho các mẻ)
 -- =====================================================================
 SET IDENTITY_INSERT MaterialUsage ON;
 INSERT INTO MaterialUsage (UsageId, BatchId, InventoryLotId, ActualAmount, UsedDate, DispensedBy, Note) VALUES
-(1, 1, 1, 25015.00, DATEADD(DAY,-15,GETDATE()), 3, N'Xuất NLC3 lô 1'),
-(2, 1, 5, 25100.00, DATEADD(DAY,-15,GETDATE()), 3, N'Xuất Tinh bột lô 1'),
-(3, 5, 1, 25000.00, DATEADD(DAY,-1,GETDATE()),  3, N'Xuất NLC3 lô mẻ 1 của lệnh 3'),
-(4, 10,6, 5000.00,  DATEADD(DAY,-8, GETDATE()),  3, N'Xuất Dipy lô 1'),
-(5, 10,7, 500.00,   DATEADD(DAY,-8, GETDATE()),  3, N'Xuất Nước cất lô 1');
+(1, 1, 1, 25015.00, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất NLC3'),
+(2, 1, 5, 25100.00, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất Tinh bột');
 SET IDENTITY_INSERT MaterialUsage OFF;
 PRINT 'Insert MaterialUsage Completed Successfully!';
 -- (Bảng QualityTests không tồn tại trong schema thực tế của DB này - đã bỏ qua)
@@ -313,12 +278,8 @@ PRINT 'Insert MaterialUsage Completed Successfully!';
 -- =====================================================================
 SET IDENTITY_INSERT BatchProcessLogs ON;
 INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData, Notes, IsDeviation, VerifiedById, VerifiedDate, NumberOfRouting) VALUES
-(1, 1, 1, 2, 3, DATEADD(HOUR,-360,GETDATE()), DATEADD(HOUR,-357,GETDATE()), 'Passed', N'{"Nhiệt độ phòng":23,"Độ ẩm phòng":50,"Nhiệt độ sấy":75}', NULL, 0, 2, DATEADD(HOUR,-357,GETDATE()), 1),
-(2, 1, 2, 2, 3, DATEADD(HOUR,-357,GETDATE()), DATEADD(HOUR,-354,GETDATE()), 'Passed', N'{"Nhiệt độ sấy":75,"Thời gian sấy":180}', NULL, 0, 2, DATEADD(HOUR,-354,GETDATE()), 1),
-(3, 1, 3, 1, 3, DATEADD(HOUR,-354,GETDATE()), DATEADD(HOUR,-352,GETDATE()), 'Passed', N'{}', NULL, 0, 2, DATEADD(HOUR,-352,GETDATE()), 1),
-(4, 1, 4, 3, 3, DATEADD(HOUR,-352,GETDATE()), DATEADD(HOUR,-351,GETDATE()), 'Passed', N'{"Tốc độ trộn":15}', NULL, 0, 2, DATEADD(HOUR,-351,GETDATE()), 1),
-(5, 1, 7, 7, 3, DATEADD(HOUR,-351,GETDATE()), DATEADD(HOUR,-349,GETDATE()), 'Passed', N'{}', N'Đóng nang xuất sắc', 0, 2, DATEADD(HOUR,-349,GETDATE()), 1),
-(6, 5, 1, 2, 3, DATEADD(HOUR,-24,GETDATE()),  DATEADD(HOUR,-21,GETDATE()),  'Passed', N'{"Nhiệt độ phòng":24,"Độ ẩm phòng":55,"Nhiệt độ sấy":76}', NULL, 0, 2, DATEADD(HOUR,-21,GETDATE()), 1);
+(1, 1, 1, 2, 3, DATEADD(HOUR,-124,GETDATE()), DATEADD(HOUR,-122,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1),
+(2, 1, 2, 2, 3, DATEADD(HOUR,-122,GETDATE()), DATEADD(HOUR,-120,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1);
 SET IDENTITY_INSERT BatchProcessLogs OFF;
 PRINT 'Insert BatchProcessLogs Completed Successfully!';
 -- =====================================================================
