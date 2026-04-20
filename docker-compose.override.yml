@@ -10,7 +10,7 @@ services: # Danh sách các services trong hệ thống
     networks:
       - gmp-network # Đưa container vào mạng nội bộ chung
     ports:
-      - "1434:1433" # Ánh xạ cổng 1433 trong container ra cổng 1434 trên máy host (để tráng trùng với SQL có sẵn)
+      - "1435:1433" # Ánh xạ cổng 1433 trong container ra cổng 1435 trên máy host (để tráng trùng với SQL có sẵn)
     environment: # Thông số cấu hình
       - ACCEPT_EULA=Y # Bắt buộc chấp thuận EULA để chạy SQL Server
       - SA_PASSWORD=GMP_Strong@Passw0rd123 # Mật khẩu của tài khoản quản trị viên root (SA)

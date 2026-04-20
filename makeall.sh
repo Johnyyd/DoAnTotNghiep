@@ -42,7 +42,7 @@ case $choice in
         echo "  Backend API: http://localhost:5001"
         echo "  Frontend:    http://localhost:8080"
         echo "  Mobile App:  http://localhost:8081"
-        echo "  Database:    localhost,1434 (SA password: GMP_Strong@Passw0rd123)"
+        echo "  Database:    localhost,1435 (SA password: GMP_Strong@Passw0rd123)"
         echo ""
         echo "To view logs: docker-compose logs -f"
         echo "To stop:     docker-compose down"
