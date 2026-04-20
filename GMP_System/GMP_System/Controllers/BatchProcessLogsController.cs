@@ -39,14 +39,26 @@ namespace GMP_System.Controllers
             if (batch == null) return NotFound(new { success = false, message = "KhÃ´ng tÃ¬m tháº¥y máº»." });
 
             var order = await _unitOfWork.ProductionOrders.Query()
-                .Include(o => o.Recipe)
-                    .ThenInclude(r => r!.RecipeRoutings)
-                        .ThenInclude(rr => rr.StepParameters)
                 .FirstOrDefaultAsync(o => o.OrderId == batch.OrderId);
 
-            var routings = order?.Recipe?.RecipeRoutings
+            if (order == null) return NotFound(new { success = false, message = "KhÃ´ng tÃ¬m tháº¥y lá»‡nh sáº£n xuáº¥t." });
+
+            // Prioritize Order-specific routings (custom steps)
+            var routings = await _unitOfWork.RecipeRoutings.Query()
+                .Where(r => r.OrderId == batch.OrderId)
+                .Include(r => r.StepParameters)
                 .OrderBy(r => r.StepNumber)
-                .ToList() ?? new List<RecipeRouting>();
+                .ToListAsync();
+
+            if (!routings.Any())
+            {
+                // Fallback to Recipe-default routings
+                routings = await _unitOfWork.RecipeRoutings.Query()
+                    .Where(r => r.RecipeId == order.RecipeId && r.OrderId == null)
+                    .Include(r => r.StepParameters)
+                    .OrderBy(r => r.StepNumber)
+                    .ToListAsync();
+            }
 
             var existingLogs = await _unitOfWork.BatchProcessLogs.Query()
                 .Include(x => x.Routing)

@@ -256,6 +256,9 @@ IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_RecipeRouting_Pro
 IF COL_LENGTH('dbo.RecipeRouting','NumberOfRouting') IS NULL
     ALTER TABLE dbo.RecipeRouting ADD NumberOfRouting INT NULL DEFAULT 1;
 
+IF COL_LENGTH('dbo.RecipeRouting','OrderId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD OrderId INT NULL;
+
 -- Missing column for Materials
 IF COL_LENGTH('dbo.Materials','TechnicalSpecification') IS NULL
     ALTER TABLE dbo.Materials ADD TechnicalSpecification NVARCHAR(MAX) NULL;

@@ -29,6 +29,7 @@ public partial class ProductionOrder
     public virtual AppUser? CreatedByNavigation { get; set; }
 
     public virtual ICollection<ProductionBatch> ProductionBatches { get; set; } = new List<ProductionBatch>();
+    public virtual ICollection<RecipeRouting> RecipeRoutings { get; set; } = new List<RecipeRouting>();
 
     public virtual Recipe? Recipe { get; set; }
 }

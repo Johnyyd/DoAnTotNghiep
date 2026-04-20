@@ -356,6 +356,7 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.MaterialId).HasColumnName("MaterialId");
             entity.Property(e => e.AreaId).HasColumnName("AreaId");
             entity.Property(e => e.RecipeId).HasColumnName("RecipeID");
+            entity.Property(e => e.OrderId).HasColumnName("OrderID");
             entity.Property(e => e.StepName).HasMaxLength(200);
             entity.Property(e => e.NumberOfRouting).HasDefaultValue(1);
             entity.Property(e => e.CleanlinessStatus).HasMaxLength(50);
@@ -380,6 +381,10 @@ public partial class GmpContext : DbContext
             entity.HasOne(d => d.Recipe).WithMany(p => p.RecipeRoutings)
                 .HasForeignKey(d => d.RecipeId)
                 .HasConstraintName("FK__RecipeRou__Recip__6C190EBB");
+
+            entity.HasOne(d => d.Order).WithMany(p => p.RecipeRoutings)
+                .HasForeignKey(d => d.OrderId)
+                .HasConstraintName("FK_RecipeRouting_ProductionOrders");
         });
 
         modelBuilder.Entity<SystemAuditLog>(entity =>

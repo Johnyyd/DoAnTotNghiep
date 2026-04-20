@@ -137,6 +137,69 @@ namespace GMP_System.Controllers
             return Ok(new { data = batches, success = true, message = "Success" });
         }
 
+        [HttpGet("{orderId}/routings")]
+        public async Task<IActionResult> GetCustomRoutings(int orderId)
+        {
+            var order = await _unitOfWork.ProductionOrders.GetByIdAsync(orderId);
+            if (order == null) return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
+
+            var routings = await _unitOfWork.RecipeRoutings.Query()
+                .Where(r => r.OrderId == orderId)
+                .Include(r => r.StepParameters)
+                .OrderBy(r => r.StepNumber)
+                .ToListAsync();
+
+            // If no custom routings, fallback to Recipe routings (for preview/initial state)
+            if (!routings.Any() && order.RecipeId.HasValue)
+            {
+                routings = await _unitOfWork.RecipeRoutings.Query()
+                    .Where(r => r.RecipeId == order.RecipeId && r.OrderId == null)
+                    .Include(r => r.StepParameters)
+                    .OrderBy(r => r.StepNumber)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
+
+            return Ok(new { success = true, data = routings });
+        }
+
+        [HttpPost("{orderId}/routings")]
+        public async Task<IActionResult> SaveCustomRoutings(int orderId, [FromBody] List<RecipeRouting> routings)
+        {
+            var order = await _unitOfWork.ProductionOrders.GetByIdAsync(orderId);
+            if (order == null) return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
+
+            // Remove existing custom routings for this order
+            var existing = await _unitOfWork.RecipeRoutings.Query()
+                .Where(r => r.OrderId == orderId)
+                .ToListAsync();
+            
+            foreach (var r in existing)
+            {
+                _unitOfWork.RecipeRoutings.Remove(r);
+            }
+
+            // Add new custom routings
+            foreach (var r in routings)
+            {
+                r.RoutingId = 0; // Ensure new ID
+                r.OrderId = orderId;
+                r.RecipeId = order.RecipeId;
+                
+                // Clear links to avoid EF issues
+                r.Order = null;
+                r.Recipe = null;
+                r.DefaultEquipment = null;
+                r.Area = null;
+                r.BatchProcessLogs = new List<BatchProcessLog>();
+
+                await _unitOfWork.RecipeRoutings.AddAsync(r);
+            }
+
+            await _unitOfWork.CompleteAsync();
+            return Ok(new { success = true, message = "Đã cập nhật cấu hình công đoạn cho lệnh sản xuất." });
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ProductionOrder order)
         {

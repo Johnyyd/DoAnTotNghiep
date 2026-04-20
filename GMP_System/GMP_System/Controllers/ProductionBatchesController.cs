@@ -80,22 +80,39 @@ namespace GMP_System.Controllers
                                 Material = bom.Material == null ? null : new { bom.Material.MaterialName },
                                 Uom = bom.Uom == null ? null : new { bom.Uom.UomName }
                             }),
-                            RecipeRoutings = b.Order.Recipe.RecipeRoutings.Select(r => new {
-                                r.RoutingId,
-                                r.StepNumber,
-                                r.StepName,
-                                r.Description,
-                                r.EstimatedTimeMinutes,
-                                r.DefaultEquipmentId,
-                                r.NumberOfRouting,
-                                StepParameters = r.StepParameters.Select(sp => new {
-                                    sp.ParameterId,
-                                    sp.ParameterName,
-                                    sp.MinValue,
-                                    sp.MaxValue,
-                                    sp.Unit
+                            RecipeRoutings = (b.Order.RecipeRoutings != null && b.Order.RecipeRoutings.Any(r => r.OrderId == b.OrderId))
+                                ? b.Order.RecipeRoutings.Where(r => r.OrderId == b.OrderId).OrderBy(r => r.StepNumber).Select(r => new {
+                                    r.RoutingId,
+                                    r.StepNumber,
+                                    r.StepName,
+                                    r.Description,
+                                    r.EstimatedTimeMinutes,
+                                    r.DefaultEquipmentId,
+                                    r.NumberOfRouting,
+                                    StepParameters = r.StepParameters.Select(sp => new {
+                                        sp.ParameterId,
+                                        sp.ParameterName,
+                                        sp.MinValue,
+                                        sp.MaxValue,
+                                        sp.Unit
+                                    })
                                 })
-                            })
+                                : b.Order.Recipe.RecipeRoutings.OrderBy(r => r.StepNumber).Select(r => new {
+                                    r.RoutingId,
+                                    r.StepNumber,
+                                    r.StepName,
+                                    r.Description,
+                                    r.EstimatedTimeMinutes,
+                                    r.DefaultEquipmentId,
+                                    r.NumberOfRouting,
+                                    StepParameters = r.StepParameters.Select(sp => new {
+                                        sp.ParameterId,
+                                        sp.ParameterName,
+                                        sp.MinValue,
+                                        sp.MaxValue,
+                                        sp.Unit
+                                    })
+                                })
                         }
                     },
                     BatchProcessLogs = b.BatchProcessLogs.Select(l => new {
