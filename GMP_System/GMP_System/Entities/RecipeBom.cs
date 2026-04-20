@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace GMP_System.Entities;
 
@@ -23,6 +24,7 @@ public partial class RecipeBom
 
     public virtual Material? Material { get; set; }
 
+    [JsonIgnore]
     public virtual Recipe? Recipe { get; set; }
 
     public virtual UnitOfMeasure? Uom { get; set; }

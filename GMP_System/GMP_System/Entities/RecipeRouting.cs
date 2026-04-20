@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace GMP_System.Entities;
 
@@ -48,7 +49,10 @@ public partial class RecipeRouting
 
     public virtual Material? Material { get; set; }
 
+    [JsonIgnore]
     public virtual Recipe? Recipe { get; set; }
+    
+    [JsonIgnore]
     public virtual ProductionOrder? Order { get; set; }
 
     public virtual ICollection<StepParameter> StepParameters { get; set; } = new List<StepParameter>();
