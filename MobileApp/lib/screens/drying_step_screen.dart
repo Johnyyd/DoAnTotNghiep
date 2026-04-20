@@ -374,21 +374,12 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
   void _validateWeightStatus() {
     final truocStr = _slTruocCtrl.text;
     final sauStr = _slSauCtrl.text;
-    final target = (_batchInfo?['plannedQuantity'] as num?)?.toDouble() ?? 0.0;
 
     if (truocStr.isEmpty) {
       if (mounted) setState(() => _inputStatus['slTruocSay'] = 'none');
     } else {
       final val = double.tryParse(truocStr) ?? 0;
       bool isValid = val > 0;
-      
-      // KIỂM TRA KHỐI LƯỢNG MẺ (Sai số 1%)
-      if (target > 0) {
-        final diffPercent = ((val - target).abs() / target) * 100;
-        if (diffPercent > 1.0) {
-          isValid = false;
-        }
-      }
       
       if (mounted) {
         setState(
@@ -413,21 +404,17 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
   }
 
   bool _isFormValid() {
-    // Check mandatory fields
-    if (_tempCtrl.text.isEmpty || _humidCtrl.text.isEmpty || _pressCtrl.text.isEmpty) return false;
-    if (_tempInCtrl.text.isEmpty || _tempOutCtrl.text.isEmpty) return false;
-    if (_slTruocCtrl.text.isEmpty || _slSauCtrl.text.isEmpty) return false;
-    if (_humidAfterCtrl.text.isEmpty) return false;
-
-    // Check individual status
+    // Check individual status for invalid/error globally
     if (_inputStatus.values.contains('invalid') || _inputStatus.values.contains('error')) return false;
 
-    // Strict weight check (Additional safety)
-    final truocVal = double.tryParse(_slTruocCtrl.text) ?? 0;
-    final target = (_batchInfo?['plannedQuantity'] as num?)?.toDouble() ?? 0.0;
-    if (target > 0) {
-      final diffPercent = ((truocVal - target).abs() / target) * 100;
-      if (diffPercent > 1.0) return false;
+    // Check mandatory fields based on current phase
+    if (_currentPhase == ExecutionPhase.precheck) {
+      if (_tempCtrl.text.isEmpty || _humidCtrl.text.isEmpty || _pressCtrl.text.isEmpty) return false;
+      if (_slTruocCtrl.text.isEmpty) return false;
+    } else if (_currentPhase == ExecutionPhase.input) {
+      if (_tempInCtrl.text.isEmpty || _tgSayCaiDatCtrl.text.isEmpty) return false;
+    } else if (_currentPhase == ExecutionPhase.execution) {
+      if (_tempOutCtrl.text.isEmpty || _slSauCtrl.text.isEmpty || _humidAfterCtrl.text.isEmpty) return false;
     }
 
     return true;
@@ -1055,7 +1042,9 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
               controller: _tempInCtrl,
               keyboardType: TextInputType.number,
               readOnly: _isPhase2Locked,
+              status: _inputStatus['nhietDoKhiVao'] ?? 'none',
               standardText: _getStandardText('Nhiệt độ sấy'),
+              onChanged: (v) => _updateInputStatus('nhietDoKhiVao', v, paramNameInStandard: 'Nhiệt độ sấy'),
             )),
           ],
         ),
@@ -1165,7 +1154,9 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
                     label: 'Nhiệt độ khí ra (°C)',
                     controller: _tempOutCtrl,
                     readOnly: _isPhase4Locked || _secondsRemaining > 0,
-                    keyboardType: TextInputType.number)),
+                    keyboardType: TextInputType.number,
+                    onChanged: (v) => setState(() {}),
+                )),
           ],
         ),
         const Divider(),

@@ -13,8 +13,6 @@ public partial class RecipeRouting
 
     public string StepName { get; set; } = null!;
 
-    public int? NumberOfRouting { get; set; }
-
     public string? Description { get; set; }
 
     public int? EstimatedTimeMinutes { get; set; }
