@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, Clock3, Factory, FileSpreadsheet, FlaskConical, Settings2, ShieldCheck } from 'lucide-react';
-import { equipmentsApi, productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
+import { Clock3, FlaskConical, ShieldCheck } from 'lucide-react';
+import { productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
 
 type NormalizedRecipe = {
   recipeId: number;
@@ -19,7 +19,7 @@ type NormalizedBom = {
   materialName: string;
   technicalStandard?: string;
   quantity: number;
-  wastePercentage: number;
+  ratioPercent: number;
   uomName: string;
 };
 
@@ -28,6 +28,7 @@ type NormalizedRouting = {
   stepNumber: number;
   stepName: string;
   equipmentName: string;
+  areaName: string;
   estimatedTimeMinutes: number;
   description?: string;
 };
@@ -40,6 +41,7 @@ type NormalizedOrder = {
   status: string;
   startDate?: string;
   endDate?: string;
+  createdByName?: string;
 };
 
 type NormalizedBatch = {
@@ -50,36 +52,23 @@ type NormalizedBatch = {
   currentStep: number;
 };
 
-type NormalizedEquipment = {
-  equipmentId: number;
-  equipmentCode: string;
-  equipmentName: string;
-  status: string;
-  lastMaintenanceDate?: string;
-};
 
 const fallbackBom: NormalizedBom[] = [
-  { bomId: 1, materialName: 'NLC 3 - Cao khô Trinh nữ Crila', technicalStandard: 'TCCS', quantity: 250, wastePercentage: 0.4, uomName: 'mg' },
-  { bomId: 2, materialName: 'TD 1 - Aerosil', technicalStandard: 'USP 30', quantity: 1.62, wastePercentage: 0.2, uomName: 'mg' },
-  { bomId: 3, materialName: 'TD 3 - Sodium starch glycolate', technicalStandard: 'USP 30', quantity: 29.7, wastePercentage: 0.2, uomName: 'mg' },
-  { bomId: 4, materialName: 'TD 4 - Talc', technicalStandard: 'DĐVN V', quantity: 4.05, wastePercentage: 0.2, uomName: 'mg' },
-  { bomId: 5, materialName: 'TD 5 - Magnesi stearat', technicalStandard: 'DĐVN V', quantity: 4.05, wastePercentage: 0.2, uomName: 'mg' },
-  { bomId: 6, materialName: 'TD 8 - Tinh bột', technicalStandard: 'DĐVN V', quantity: 250.58, wastePercentage: 0.5, uomName: 'mg' },
+  { bomId: 1, materialName: 'NLC 3 - Cao khô Trinh nữ Crila', technicalStandard: 'TCCS', quantity: 250, ratioPercent: 46.6, uomName: 'mg' },
+  { bomId: 2, materialName: 'TD 1 - Aerosil', technicalStandard: 'USP 30', quantity: 1.62, ratioPercent: 0.3, uomName: 'mg' },
+  { bomId: 3, materialName: 'TD 3 - Sodium starch glycolate', technicalStandard: 'USP 30', quantity: 29.7, ratioPercent: 5.5, uomName: 'mg' },
+  { bomId: 4, materialName: 'TD 4 - Talc', technicalStandard: 'ĐĐVN V', quantity: 4.05, ratioPercent: 0.75, uomName: 'mg' },
+  { bomId: 5, materialName: 'TD 5 - Magnesi stearat', technicalStandard: 'ĐĐVN V', quantity: 4.05, ratioPercent: 0.75, uomName: 'mg' },
+  { bomId: 6, materialName: 'TD 8 - Tinh bột', technicalStandard: 'ĐĐVN V', quantity: 250.58, ratioPercent: 46.7, uomName: 'mg' },
 ];
 
 const fallbackRouting: NormalizedRouting[] = [
-  { routingId: 1, stepNumber: 1, stepName: 'Cân nguyên liệu', equipmentName: 'IW2-60 / PMA-5000', estimatedTimeMinutes: 50 },
-  { routingId: 2, stepNumber: 2, stepName: 'Trộn khô', equipmentName: 'AD-LP-200', estimatedTimeMinutes: 45 },
-  { routingId: 3, stepNumber: 3, stepName: 'Sấy', equipmentName: 'KBC-TS-50', estimatedTimeMinutes: 180 },
-  { routingId: 4, stepNumber: 4, stepName: 'Đóng nang', equipmentName: 'NJP-1200D', estimatedTimeMinutes: 120 },
+  { routingId: 1, stepNumber: 1, stepName: 'Cân nguyên liệu', equipmentName: 'IW2-60 / PMA-5000', areaName: 'Phòng cân', estimatedTimeMinutes: 50 },
+  { routingId: 2, stepNumber: 2, stepName: 'Trộn khô', equipmentName: 'AD-LP-200', areaName: 'Phòng trộn khô', estimatedTimeMinutes: 45 },
+  { routingId: 3, stepNumber: 3, stepName: 'Sấy', equipmentName: 'KBC-TS-50', areaName: 'Phòng sấy', estimatedTimeMinutes: 180 },
+  { routingId: 4, stepNumber: 4, stepName: 'Đóng nang', equipmentName: 'NJP-1200D', areaName: 'Phòng đóng nang', estimatedTimeMinutes: 120 },
 ];
 
-const fallbackEquipments: NormalizedEquipment[] = [
-  { equipmentId: 1, equipmentCode: 'KBC-TS-50', equipmentName: 'Thiết bị sấy tầng sôi', status: 'Maintenance' },
-  { equipmentId: 2, equipmentCode: 'IW2-60', equipmentName: 'Cân điện tử 60kg', status: 'Active' },
-  { equipmentId: 3, equipmentCode: 'AD-LP-200', equipmentName: 'Máy trộn lập phương', status: 'Active' },
-  { equipmentId: 4, equipmentCode: 'NJP-1200D', equipmentName: 'Máy đóng nang tự động', status: 'Active' },
-];
 
 function normalizeStatus(raw?: string): string {
   if (!raw) return 'Draft';
@@ -117,10 +106,6 @@ export default function ManagerOperations() {
     queryFn: () => productionBatchesApi.getAll(),
   });
 
-  const { data: equipmentsRaw } = useQuery({
-    queryKey: ['equipments'],
-    queryFn: () => equipmentsApi.getAll(),
-  });
 
   const recipes = useMemo<NormalizedRecipe[]>(() => {
     const rows = Array.isArray(recipesRaw) ? recipesRaw : (recipesRaw as any)?.data ?? [];
@@ -146,6 +131,7 @@ export default function ManagerOperations() {
       status: normalizeStatus(item.status ?? item.Status),
       startDate: item.startDate ?? item.StartDate,
       endDate: item.endDate ?? item.EndDate,
+      createdByName: item.createdByName ?? item.CreatedByName,
     }));
   }, [ordersRaw]);
 
@@ -160,17 +146,6 @@ export default function ManagerOperations() {
     }));
   }, [batchesRaw]);
 
-  const equipments = useMemo<NormalizedEquipment[]>(() => {
-    const rows = Array.isArray(equipmentsRaw) ? equipmentsRaw : (equipmentsRaw as any)?.data ?? [];
-    const normalized = rows.map((item: any) => ({
-      equipmentId: Number(item.equipmentId ?? item.EquipmentId ?? 0),
-      equipmentCode: item.equipmentCode ?? item.EquipmentCode ?? '-',
-      equipmentName: item.equipmentName ?? item.EquipmentName ?? '-',
-      status: item.status ?? item.Status ?? 'Active',
-      lastMaintenanceDate: item.lastMaintenanceDate ?? item.LastMaintenanceDate,
-    }));
-    return normalized.length ? normalized : fallbackEquipments;
-  }, [equipmentsRaw]);
 
   useEffect(() => {
     if (!selectedRecipeId && recipes.length) {
@@ -216,14 +191,17 @@ export default function ManagerOperations() {
 
   const bomItems = useMemo<NormalizedBom[]>(() => {
     const rows = Array.isArray(bomRaw) ? bomRaw : (bomRaw as any)?.data ?? [];
-    const normalized = rows.map((item: any) => ({
+    const normalized: NormalizedBom[] = rows.map((item: any) => ({
       bomId: Number(item.bomId ?? item.BomId ?? 0),
       materialName: item.material?.materialName ?? item.Material?.MaterialName ?? item.materialName ?? 'Nguyên liệu',
       technicalStandard: item.technicalStandard ?? item.TechnicalStandard ?? '',
       quantity: Number(item.quantity ?? item.Quantity ?? 0),
-      wastePercentage: Number(item.wastePercentage ?? item.WastePercentage ?? 0),
+      ratioPercent: 0, // computed below
       uomName: item.uom?.uomName ?? item.Uom?.UomName ?? item.unit ?? 'kg',
     }));
+    // compute ratio from total
+    const total = normalized.reduce((s, b) => s + b.quantity, 0);
+    normalized.forEach((b) => { b.ratioPercent = total > 0 ? (b.quantity / total) * 100 : 0; });
     return normalized.length ? normalized : fallbackBom;
   }, [bomRaw]);
 
@@ -237,6 +215,9 @@ export default function ManagerOperations() {
         ?? item.DefaultEquipment?.EquipmentName
         ?? item.equipmentName
         ?? 'Chưa gán thiết bị',
+      areaName: item.defaultEquipment?.area?.areaName
+        ?? item.DefaultEquipment?.Area?.AreaName
+        ?? '-',
       estimatedTimeMinutes: Number(item.estimatedTimeMinutes ?? item.EstimatedTimeMinutes ?? 0),
       description: item.description ?? item.Description,
     }));
@@ -299,8 +280,7 @@ export default function ManagerOperations() {
     return 'bg-neutral-100 text-neutral-700';
   };
 
-  const equipmentActive = equipments.filter((equipment) => equipment.status.toLowerCase().includes('active')).length;
-  const equipmentMaintenance = equipments.filter((equipment) => equipment.status.toLowerCase().includes('maint')).length;
+
 
   return (
     <div className="space-y-6">
@@ -317,21 +297,7 @@ export default function ManagerOperations() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
-          <label className="text-sm font-medium text-neutral-700">
-            Chọn Recipe
-            <select
-              value={selectedRecipeId ?? ''}
-              onChange={(event) => setSelectedRecipeId(Number(event.target.value))}
-              className="input mt-1"
-            >
-              {recipes.map((recipe) => (
-                <option key={recipe.recipeId} value={recipe.recipeId}>
-                  {recipe.recipeCode} - {recipe.recipeName}
-                </option>
-              ))}
-            </select>
-          </label>
+        <div className="mb-4">
           <label className="text-sm font-medium text-neutral-700">
             Chọn Lệnh Sản Xuất
             <select
@@ -357,7 +323,7 @@ export default function ManagerOperations() {
               <th>Tiêu chuẩn kỹ thuật</th>
               <th>Số lượng</th>
               <th>Đơn vị</th>
-              <th>Tỷ lệ hao hụt (%)</th>
+              <th>Tỉ lệ công thức (%)</th>
             </tr>
           </thead>
           <tbody>
@@ -368,14 +334,14 @@ export default function ManagerOperations() {
                 <td>{item.technicalStandard || '-'}</td>
                 <td>{item.quantity.toLocaleString()}</td>
                 <td>{item.uomName}</td>
-                <td>{item.wastePercentage.toFixed(2)}</td>
+                <td>{item.ratioPercent.toFixed(2)}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
         <div className="gmp-title-row">II - RECIPE & ROUTING</div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           <div className="gmp-info-card">
             <FlaskConical className="w-5 h-5 text-primary-600" />
             <div>
@@ -391,15 +357,7 @@ export default function ManagerOperations() {
               <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusClass(selectedRecipe?.status ?? 'Draft')}`}>
                 {selectedRecipe?.status ?? 'Draft'}
               </span>
-              <p className="text-sm text-neutral-600 mt-1">Version v{selectedRecipe?.versionNumber ?? 1}</p>
-            </div>
-          </div>
-          <div className="gmp-info-card">
-            <FileSpreadsheet className="w-5 h-5 text-amber-600" />
-            <div>
-              <p className="text-xs uppercase tracking-wide text-neutral-500">Cỡ lô tiêu chuẩn</p>
-              <p className="font-semibold text-neutral-900">{(selectedRecipe?.batchSize ?? 0).toLocaleString()} đơn vị</p>
-              <p className="text-sm text-neutral-600">Ngày duyệt: {formatDate(selectedRecipe?.approvedDate)}</p>
+              <p className="text-sm text-neutral-600 mt-1">Ngày duyệt: {formatDate(selectedRecipe?.approvedDate)}</p>
             </div>
           </div>
         </div>
@@ -409,7 +367,8 @@ export default function ManagerOperations() {
             <tr>
               <th>Bước</th>
               <th>Công đoạn</th>
-              <th>Thiết bị mặc định</th>
+              <th>Thiết bị được sử dụng</th>
+              <th>Khu vực</th>
               <th>Thời gian dự kiến (phút)</th>
               <th>Mô tả</th>
             </tr>
@@ -420,6 +379,7 @@ export default function ManagerOperations() {
                 <td>{step.stepNumber}</td>
                 <td>{step.stepName}</td>
                 <td>{step.equipmentName}</td>
+                <td>{step.areaName}</td>
                 <td>{step.estimatedTimeMinutes}</td>
                 <td>{step.description || '-'}</td>
               </tr>
@@ -444,7 +404,7 @@ export default function ManagerOperations() {
             <div className="grid grid-cols-3 gap-3 text-sm">
               <div className="border border-dashed border-neutral-300 rounded-md p-2 text-center">
                 <p className="font-semibold">Người soạn</p>
-                <p className="text-neutral-500 mt-6">................</p>
+                <p className="text-neutral-700 font-medium mt-4 text-sm">{selectedOrder?.createdByName ?? '................'}</p>
               </div>
               <div className="border border-dashed border-neutral-300 rounded-md p-2 text-center">
                 <p className="font-semibold">Người kiểm tra</p>
@@ -551,55 +511,7 @@ export default function ManagerOperations() {
           </table>
         </div>
 
-        <div className="gmp-title-row mt-5">V - QUẢN LÝ THIẾT BỊ NHÀ MÁY</div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
-          <div className="gmp-info-card">
-            <Factory className="w-5 h-5 text-primary-600" />
-            <div>
-              <p className="text-xs uppercase text-neutral-500 tracking-wide">Tổng thiết bị</p>
-              <p className="text-lg font-semibold text-neutral-900">{equipments.length}</p>
-            </div>
-          </div>
-          <div className="gmp-info-card">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-            <div>
-              <p className="text-xs uppercase text-neutral-500 tracking-wide">Đang hoạt động</p>
-              <p className="text-lg font-semibold text-neutral-900">{equipmentActive}</p>
-            </div>
-          </div>
-          <div className="gmp-info-card">
-            <Settings2 className="w-5 h-5 text-amber-600" />
-            <div>
-              <p className="text-xs uppercase text-neutral-500 tracking-wide">Bảo trì</p>
-              <p className="text-lg font-semibold text-neutral-900">{equipmentMaintenance}</p>
-            </div>
-          </div>
-        </div>
 
-        <table className="gmp-grid-table">
-          <thead>
-            <tr>
-              <th>Mã TB</th>
-              <th>Tên thiết bị</th>
-              <th>Trạng thái</th>
-              <th>Bảo trì gần nhất</th>
-            </tr>
-          </thead>
-          <tbody>
-            {equipments.map((equipment) => (
-              <tr key={equipment.equipmentId}>
-                <td>{equipment.equipmentCode}</td>
-                <td>{equipment.equipmentName}</td>
-                <td>
-                  <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusClass(equipment.status)}`}>
-                    {equipment.status}
-                  </span>
-                </td>
-                <td>{formatDate(equipment.lastMaintenanceDate)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
 
         <div className="flex items-center justify-between text-xs text-neutral-500 mt-4">
           <div className="flex items-center gap-2">

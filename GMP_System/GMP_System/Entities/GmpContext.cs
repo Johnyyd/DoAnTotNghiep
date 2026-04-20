@@ -39,7 +39,6 @@ public partial class GmpContext : DbContext
 
     public virtual DbSet<RecipeRouting> RecipeRoutings { get; set; } = null!;
 
-    public virtual DbSet<SystemAuditLog> SystemAuditLogs { get; set; } = null!;
 
     public virtual DbSet<UnitOfMeasure> UnitOfMeasures { get; set; } = null!;
 
@@ -150,9 +149,7 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.TechnicalSpecification).HasMaxLength(300);
             entity.Property(e => e.UsagePurpose).HasMaxLength(300);
             entity.Property(e => e.AreaId).HasColumnName("AreaId");
-            entity.Property(e => e.Status)
-                .HasMaxLength(50)
-                .HasDefaultValue("Ready");
+
 
             entity.HasOne(d => d.Area).WithMany(p => p.Equipments)
                 .HasForeignKey(d => d.AreaId)
@@ -322,7 +319,6 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.WastePercentage)
                 .HasDefaultValue(0m)
                 .HasColumnType("decimal(5, 2)");
-            entity.Property(e => e.TechnicalStandard).HasMaxLength(100);
 
             entity.HasOne(d => d.Material).WithMany(p => p.RecipeBoms)
                 .HasForeignKey(d => d.MaterialId)
@@ -345,56 +341,19 @@ public partial class GmpContext : DbContext
 
             entity.Property(e => e.RoutingId).HasColumnName("RoutingID");
             entity.Property(e => e.DefaultEquipmentId).HasColumnName("DefaultEquipmentID");
-            entity.Property(e => e.MaterialId).HasColumnName("MaterialId");
-            entity.Property(e => e.AreaId).HasColumnName("AreaId");
             entity.Property(e => e.RecipeId).HasColumnName("RecipeID");
             entity.Property(e => e.StepName).HasMaxLength(200);
             entity.Property(e => e.NumberOfRouting).HasDefaultValue(1);
-            entity.Property(e => e.CleanlinessStatus).HasMaxLength(50);
-            entity.Property(e => e.StandardTemperature).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.StandardHumidity).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.StandardPressure).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.StabilityStatus).HasMaxLength(50);
-            entity.Property(e => e.SetTemperature).HasColumnType("decimal(10, 2)");
 
             entity.HasOne(d => d.DefaultEquipment).WithMany(p => p.RecipeRoutings)
                 .HasForeignKey(d => d.DefaultEquipmentId)
                 .HasConstraintName("FK__RecipeRou__Defau__6D0D32F4");
-
-            entity.HasOne(d => d.Material).WithMany()
-                .HasForeignKey(d => d.MaterialId)
-                .HasConstraintName("FK_RecipeRouting_Materials");
-
-            entity.HasOne(d => d.Area).WithMany(p => p.RecipeRoutings)
-                .HasForeignKey(d => d.AreaId)
-                .HasConstraintName("FK_RecipeRouting_ProductionAreas");
 
             entity.HasOne(d => d.Recipe).WithMany(p => p.RecipeRoutings)
                 .HasForeignKey(d => d.RecipeId)
                 .HasConstraintName("FK__RecipeRou__Recip__6C190EBB");
         });
 
-        modelBuilder.Entity<SystemAuditLog>(entity =>
-        {
-            entity.HasKey(e => e.AuditId).HasName("PK__SystemAu__A17F23B88B95E69A");
-
-            entity.ToTable("SystemAuditLog");
-
-            entity.Property(e => e.AuditId).HasColumnName("AuditID");
-            entity.Property(e => e.Action).HasMaxLength(10);
-            entity.Property(e => e.ChangedDate).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.RecordId)
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("RecordID");
-            entity.Property(e => e.TableName)
-                .HasMaxLength(100)
-                .IsUnicode(false);
-
-            entity.HasOne(d => d.ChangedByNavigation).WithMany(p => p.SystemAuditLogs)
-                .HasForeignKey(d => d.ChangedBy)
-                .HasConstraintName("FK_Audit_User");
-        });
 
         modelBuilder.Entity<ProductionArea>(entity =>
         {

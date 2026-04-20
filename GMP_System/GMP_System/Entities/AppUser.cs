@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace GMP_System.Entities;
 
@@ -20,15 +21,19 @@ public partial class AppUser
 
     public DateTime? CreatedAt { get; set; }
 
+    [JsonIgnore]
     public virtual ICollection<MaterialUsage> MaterialUsages { get; set; } = new List<MaterialUsage>();
 
+    [JsonIgnore]
     public virtual ICollection<ProductionOrder> ProductionOrders { get; set; } = new List<ProductionOrder>();
 
+    [JsonIgnore]
     public virtual ICollection<Recipe> Recipes { get; set; } = new List<Recipe>();
 
-    public virtual ICollection<SystemAuditLog> SystemAuditLogs { get; set; } = new List<SystemAuditLog>();
 
+    [JsonIgnore]
     public virtual ICollection<BatchProcessLog> BatchProcessLogOperators { get; set; } = new List<BatchProcessLog>();
 
+    [JsonIgnore]
     public virtual ICollection<BatchProcessLog> BatchProcessLogVerifiers { get; set; } = new List<BatchProcessLog>();
 }

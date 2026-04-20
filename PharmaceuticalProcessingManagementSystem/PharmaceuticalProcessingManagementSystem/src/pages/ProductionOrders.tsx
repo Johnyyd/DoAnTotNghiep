@@ -1,16 +1,16 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { equipmentsApi, inventoryApi, productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
-import { Calculator, ClipboardList, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { certificatesApi, productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
+import { Calculator, ClipboardList, FileCheck2, Layers, Pencil, Plus, Search, Trash2, Upload, X } from 'lucide-react';
 
 type OrderStatus = 'Draft' | 'Approved' | 'InProcess' | 'Hold' | 'Completed';
-type MassUnit = 'kg' | 'g' | 'vien';
 
 interface UiProductionOrder {
   orderId: number;
   orderCode: string;
   recipeId: number;
   recipeName?: string;
+  uomName?: string;
   plannedQuantity: number;
   status: OrderStatus;
   plannedStartDate?: string;
@@ -26,91 +26,87 @@ function toRows<T>(raw: unknown): T[] {
   return [];
 }
 
-function parseCapacityKg(spec?: string): number | null {
-  if (!spec) return null;
-  const m = spec.replace(',', '.').match(/(\d+(?:\.\d+)?)\s*kg/i);
-  if (!m) return null;
-  const v = Number(m[1]);
-  return Number.isFinite(v) && v > 0 ? v : null;
+function statusClass(status: string) {
+  if (status === 'Draft') return 'bg-gray-100 text-gray-700';
+  if (status === 'Approved') return 'bg-blue-100 text-blue-700';
+  if (status === 'InProcess') return 'bg-purple-100 text-purple-700';
+  if (status === 'Hold') return 'bg-orange-100 text-orange-700';
+  if (status === 'Completed') return 'bg-emerald-100 text-emerald-700';
+  return 'bg-gray-100 text-gray-700';
 }
+
+type MassUnit = 'kg' | 'g' | 'vien';
 
 export default function ProductionOrders() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [editingOrder, setEditingOrder] = useState<UiProductionOrder | null>(null);
+  const [batchPopupOrderId, setBatchPopupOrderId] = useState<number | null>(null);
+  const [batchPopupLabel, setBatchPopupLabel] = useState('');
+  const [uploadingForBatch, setUploadingForBatch] = useState<string | null>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
-  const [orderForm, setOrderForm] = useState({ orderCode: '', recipeId: 0, plannedQuantity: 0, startDate: '', endDate: '', status: 'Draft' as OrderStatus });
-  const [planForm, setPlanForm] = useState({ recipeId: 0, cartons: 0, bottlesPerCarton: 10, tabletsPerBottle: 100, looseTablets: 0, massUnit: 'kg' as MassUnit });
+  const [orderForm, setOrderForm] = useState({
+    orderCode: '',
+    recipeId: 0,
+    plannedQuantity: 0,
+    startDate: '',
+    endDate: '',
+    status: 'Draft' as OrderStatus,
+  });
+
+  const [planForm, setPlanForm] = useState({
+    recipeId: 0,
+    cartons: 0,
+    bottlesPerCarton: 0,
+    tabletsPerBottle: 0,
+    looseTablets: 0,
+    massUnit: 'vien' as MassUnit,
+  });
 
   const { data: ordersRaw, isLoading } = useQuery({ queryKey: ['productionOrders'], queryFn: () => productionOrdersApi.getAll() });
   const { data: recipesRaw } = useQuery({ queryKey: ['recipes'], queryFn: () => recipesApi.getAll() });
-  const { data: lotsRaw } = useQuery({ queryKey: ['inventoryLots'], queryFn: () => inventoryApi.getAll() });
-  const { data: equipmentsRaw } = useQuery({ queryKey: ['equipments'], queryFn: () => equipmentsApi.getAll() });
-
-  const orders = useMemo<UiProductionOrder[]>(() => toRows<any>(ordersRaw).map((o) => ({
-    orderId: Number(o.orderId ?? o.OrderId ?? 0),
-    orderCode: o.orderCode ?? o.OrderCode ?? '',
-    recipeId: Number(o.recipeId ?? o.RecipeId ?? 0),
-    recipeName: o.recipe?.material?.materialName ?? o.recipeName,
-    plannedQuantity: Number(o.plannedQuantity ?? o.PlannedQuantity ?? 0),
-    status: (o.status ?? o.Status ?? 'Draft') as OrderStatus,
-    plannedStartDate: o.startDate ?? o.StartDate,
-  })), [ordersRaw]);
 
   const recipes = useMemo(() => toRows<any>(recipesRaw).map((r) => ({
     recipeId: Number(r.recipeId ?? r.RecipeId ?? 0),
     recipeName: r.material?.materialName ?? r.Material?.MaterialName ?? `Công thức #${r.recipeId ?? r.RecipeId}`,
     batchSize: Number(r.batchSize ?? r.BatchSize ?? 0),
+    uomName: r.material?.baseUom?.uomName ?? r.Material?.BaseUom?.UomName ?? 'viên',
   })), [recipesRaw]);
 
-  const selectedRecipe = useMemo(() => recipes.find((r) => r.recipeId === planForm.recipeId), [recipes, planForm.recipeId]);
+  const selectedPlanRecipe = useMemo(() => recipes.find((r) => r.recipeId === planForm.recipeId) ?? null, [recipes, planForm.recipeId]);
 
-  const { data: bomRaw } = useQuery({ queryKey: ['recipeBomForOrder', planForm.recipeId], queryFn: () => recipesApi.getBOM(planForm.recipeId), enabled: planForm.recipeId > 0 });
-  const { data: routingRaw } = useQuery({ queryKey: ['recipeRoutingForOrder', planForm.recipeId], queryFn: () => recipesApi.getRouting(planForm.recipeId), enabled: planForm.recipeId > 0 });
+  const { data: bomRaw } = useQuery({
+    queryKey: ['recipeBom', planForm.recipeId],
+    queryFn: () => recipesApi.getBOM(planForm.recipeId),
+    enabled: planForm.recipeId > 0,
+  });
 
-  const bomItems = useMemo(() => toRows<any>(bomRaw).map((b) => ({
-    materialId: Number(b.materialId ?? b.MaterialId ?? 0),
-    materialName: b.material?.materialName ?? b.Material?.MaterialName ?? 'Nguyên liệu',
-    mgPerTablet: Number(b.quantity ?? b.Quantity ?? 0),
+  const { data: inventoryRaw } = useQuery({ queryKey: ['inventoryLots'], queryFn: () => (import('@/services/api').then(m => m.inventoryApi.getAll())) });
+
+  const bomItems = useMemo(() => toRows<any>(bomRaw).map((item: any) => ({
+    materialId: Number(item.materialId ?? item.MaterialId ?? 0),
+    materialName: item.material?.materialName ?? item.Material?.MaterialName ?? 'Nguyên liệu',
+    mgPerTablet: Number(item.quantity ?? item.Quantity ?? 0),
   })), [bomRaw]);
-
-  const routingSteps = useMemo(() => toRows<any>(routingRaw).map((r) => ({
-    stepNumber: Number(r.stepNumber ?? r.StepNumber ?? 1),
-    defaultEquipmentId: Number(r.defaultEquipmentId ?? r.DefaultEquipmentId ?? 0),
-    stepName: r.stepName ?? r.StepName ?? '',
-  })), [routingRaw]);
-
-  const equipments = useMemo(() => toRows<any>(equipmentsRaw).map((e) => ({
-    equipmentId: Number(e.equipmentId ?? e.EquipmentId ?? 0),
-    equipmentName: e.equipmentName ?? e.EquipmentName ?? '',
-    technicalSpecification: e.technicalSpecification ?? e.TechnicalSpecification ?? '',
-  })), [equipmentsRaw]);
 
   const stockByMaterial = useMemo(() => {
     const map = new Map<number, number>();
-    const lots = toRows<any>(lotsRaw);
-    for (const lot of lots) {
-      const materialId = Number(lot.materialId ?? lot.MaterialId ?? 0);
-      const qty = Number(lot.quantityCurrent ?? lot.QuantityCurrent ?? 0);
-      if (!materialId) continue;
-      map.set(materialId, (map.get(materialId) ?? 0) + qty);
-    }
+    toRows<any>(inventoryRaw).forEach((lot: any) => {
+      const mid = Number(lot.materialId ?? 0);
+      const qty = Number(lot.quantityCurrent ?? 0);
+      map.set(mid, (map.get(mid) ?? 0) + qty);
+    });
     return map;
-  }, [lotsRaw]);
-
-  const filteredOrders = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-    if (!keyword) return orders;
-    return orders.filter((order) => order.orderCode.toLowerCase().includes(keyword));
-  }, [orders, search]);
+  }, [inventoryRaw]);
 
   const totalTablets = useMemo(() => {
     const packed = Math.max(planForm.cartons, 0) * Math.max(planForm.bottlesPerCarton, 0) * Math.max(planForm.tabletsPerBottle, 0);
     return packed + Math.max(planForm.looseTablets, 0);
   }, [planForm]);
 
-  const oneTabletMg = selectedRecipe?.batchSize ?? 0;
+  const oneTabletMg = selectedPlanRecipe?.batchSize ?? 0;
   const totalMassMg = totalTablets * oneTabletMg;
   const totalMassKg = totalMassMg / 1_000_000;
 
@@ -130,24 +126,59 @@ export default function ProductionOrders() {
 
   const insufficientMaterials = useMemo(() => requiredMaterials.filter((m) => !m.enough), [requiredMaterials]);
 
-  const batchPlan = useMemo(() => {
-    if (totalTablets <= 0 || oneTabletMg <= 0) return { batches: 0, tabletsPerBatch: 0, reason: 'Thiếu dữ liệu để tính mẻ.' };
-
-    const capacitiesKg = routingSteps
-      .map((s) => equipments.find((e) => e.equipmentId === s.defaultEquipmentId))
-      .map((e) => parseCapacityKg(e?.technicalSpecification ?? ''))
-      .filter((v): v is number => v !== null && Number.isFinite(v) && v > 0);
-
-    const minCapacityKg = capacitiesKg.length ? Math.min(...capacitiesKg) : totalMassKg;
-    const tabletsPerBatch = Math.max(1, Math.floor((minCapacityKg * 1_000_000) / oneTabletMg));
-    const batches = Math.ceil(totalTablets / tabletsPerBatch);
-
+  const orders = useMemo<UiProductionOrder[]>(() => toRows<any>(ordersRaw).map((o) => {
+    const recipe = recipes.find((r) => r.recipeId === Number(o.recipeId ?? o.RecipeId));
     return {
-      batches,
-      tabletsPerBatch,
-      reason: capacitiesKg.length ? `Tách theo sức chứa tối thiểu ${minCapacityKg.toLocaleString()} kg/mẻ của thiết bị.` : 'Không có giới hạn sức chứa theo kg, giữ 1 mẻ.',
+      orderId: Number(o.orderId ?? o.OrderId ?? 0),
+      orderCode: o.orderCode ?? o.OrderCode ?? '',
+      recipeId: Number(o.recipeId ?? o.RecipeId ?? 0),
+      recipeName: o.recipe?.material?.materialName ?? o.Recipe?.Material?.MaterialName ?? recipe?.recipeName,
+      uomName: o.recipe?.material?.baseUom?.uomName ?? recipe?.uomName ?? 'viên',
+      plannedQuantity: Number(o.plannedQuantity ?? o.PlannedQuantity ?? 0),
+      status: (o.status ?? o.Status ?? 'Draft') as OrderStatus,
+      plannedStartDate: o.startDate ?? o.StartDate,
     };
-  }, [routingSteps, equipments, totalTablets, oneTabletMg, totalMassKg]);
+  }), [ordersRaw, recipes]);
+
+  const filteredOrders = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) return orders;
+    return orders.filter((order) => order.orderCode.toLowerCase().includes(keyword));
+  }, [orders, search]);
+
+  const { data: batchesRaw } = useQuery({
+    queryKey: ['batchesForOrder', batchPopupOrderId],
+    queryFn: () => productionBatchesApi.getAll(),
+    enabled: batchPopupOrderId !== null,
+  });
+
+  const batchesForPopup = useMemo(() => {
+    if (batchPopupOrderId === null) return [];
+    const all = toRows<any>(batchesRaw);
+    return all.filter((b: any) => Number(b.orderId ?? b.OrderId ?? 0) === batchPopupOrderId);
+  }, [batchesRaw, batchPopupOrderId]);
+
+  const createOrderFromPlanMutation = useMutation({
+    mutationFn: async () => {
+      if (insufficientMaterials.length) throw new Error('Không đủ nguyên liệu tồn kho.');
+      const now = new Date();
+      const end = new Date(now); end.setDate(end.getDate() + 7);
+      const orderCode = `PO-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+      await productionOrdersApi.create({
+        orderCode,
+        recipeId: planForm.recipeId,
+        plannedQuantity: totalTablets,
+        startDate: now.toISOString(),
+        endDate: end.toISOString(),
+        status: 'Draft',
+      } as any);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['productionOrders'] });
+      alert('Đã tạo lệnh sản xuất thành công.');
+    },
+    onError: (err: any) => alert(err?.message ?? 'Không thể tạo lệnh sản xuất'),
+  });
 
   const createOrderMutation = useMutation({
     mutationFn: () => productionOrdersApi.create({
@@ -161,7 +192,6 @@ export default function ProductionOrders() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['productionOrders'] });
       setShowOrderModal(false);
-      setEditingOrder(null);
     },
   });
 
@@ -181,52 +211,23 @@ export default function ProductionOrders() {
     },
   });
 
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ orderId, status }: { orderId: number; status: string }) =>
+      productionOrdersApi.update(orderId, { status } as any),
+    onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ['productionOrders'] }); },
+    onError: (err: any) => alert(err?.response?.data?.message ?? err?.message ?? 'Cập nhật trạng thái thất bại.'),
+  });
+
   const deleteOrderMutation = useMutation({
     mutationFn: (id: number) => productionOrdersApi.delete(id),
     onSuccess: async () => queryClient.invalidateQueries({ queryKey: ['productionOrders'] }),
   });
 
-  const createOrderFromPlanMutation = useMutation({
-    mutationFn: async () => {
-      if (insufficientMaterials.length) {
-        throw new Error('Không đủ nguyên liệu tồn kho để tạo lệnh sản xuất.');
-      }
-
-      const now = new Date();
-      const end = new Date(now);
-      end.setDate(end.getDate() + 7);
-      const orderCode = `PO-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
-
-      const created: any = await productionOrdersApi.create({
-        orderCode,
-        recipeId: planForm.recipeId,
-        plannedQuantity: totalTablets,
-        startDate: now.toISOString(),
-        endDate: end.toISOString(),
-        status: 'Draft',
-      } as any);
-
-      const orderId = Number(created?.data?.orderId ?? created?.orderId ?? created?.data?.OrderId ?? 0);
-      if (!orderId) return;
-
-      for (let i = 0; i < batchPlan.batches; i++) {
-        const batchCode = `${orderCode.replace('PO', 'B')}-${String(i + 1).padStart(2, '0')}`;
-        await productionBatchesApi.create({
-          orderId,
-          batchNumber: batchCode,
-          status: i === 0 ? 'InProcess' : 'Scheduled',
-          currentStep: 1,
-        } as any);
-      }
-    },
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['productionOrders'] }),
-        queryClient.invalidateQueries({ queryKey: ['productionBatches'] }),
-      ]);
-      alert('Đã tạo lệnh sản xuất và tách mẻ tự động.');
-    },
-    onError: (err: any) => alert(err?.message ?? 'Không thể tạo lệnh sản xuất'),
+  const uploadBatchCertMutation = useMutation({
+    mutationFn: ({ batchNumber, file }: { batchNumber: string; file: File }) =>
+      certificatesApi.uploadBatchCertificate(batchNumber, file),
+    onSuccess: () => { setUploadingForBatch(null); alert('Đã tải giấy kiểm nghiệm mẻ thành công.'); },
+    onError: (err: any) => alert(err?.response?.data?.message ?? 'Không thể tải lên giấy kiểm nghiệm.'),
   });
 
   const openCreateOrder = () => {
@@ -248,6 +249,13 @@ export default function ProductionOrders() {
     setShowOrderModal(true);
   };
 
+  const openBatchPopup = (order: UiProductionOrder) => {
+    setBatchPopupOrderId(order.orderId);
+    setBatchPopupLabel(`${order.orderCode} — ${order.recipeName ?? ''}`);
+  };
+
+  const allStatuses: OrderStatus[] = ['Draft', 'Approved', 'InProcess', 'Hold', 'Completed'];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -258,6 +266,7 @@ export default function ProductionOrders() {
         <button onClick={openCreateOrder} className="btn-primary flex items-center"><Plus className="w-5 h-5 mr-2" />Tạo lệnh mới</button>
       </div>
 
+      {/* Planning Panel */}
       <div className="rounded-xl border border-primary-200 bg-primary-50/40 p-4 space-y-4">
         <div className="flex items-center gap-2"><Calculator className="w-5 h-5 text-primary-700" /><h3 className="text-lg font-semibold text-primary-900">Lập lệnh sản xuất N viên thuốc</h3></div>
 
@@ -297,24 +306,21 @@ export default function ProductionOrders() {
           </div>
         )}
 
-        <div className="border border-amber-300 bg-amber-50 rounded-lg p-3 text-amber-800 text-sm">
-          <p><strong>Kế hoạch tách mẻ tự động:</strong> {batchPlan.batches} mẻ, mỗi mẻ tối đa {batchPlan.tabletsPerBatch.toLocaleString()} viên.</p>
-          <p>{batchPlan.reason}</p>
-        </div>
-
-        <div className="table-container bg-white rounded-lg border border-primary-200">
-          <table className="table">
-            <thead><tr><th>Nguyên liệu</th><th>Định mức (mg/viên)</th><th>Khối lượng cần (kg)</th><th>Tồn hiện tại (kg)</th><th>Đủ/Thiếu</th></tr></thead>
-            <tbody>
-              {requiredMaterials.length === 0 ? <tr><td colSpan={5} className="text-center py-4 text-neutral-500">Chưa có định mức nguyên liệu.</td></tr> : requiredMaterials.map((item, idx) => (
-                <tr key={`${item.materialName}-${idx}`}>
-                  <td>{item.materialName}</td><td>{item.mgPerTablet.toFixed(2)}</td><td>{item.requiredKg.toFixed(4)}</td><td>{item.available.toFixed(4)}</td>
-                  <td><span className={`px-2 py-1 rounded-full text-xs ${item.enough ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{item.enough ? 'Đủ' : 'Thiếu'}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {requiredMaterials.length > 0 && (
+          <div className="table-container bg-white rounded-lg border border-primary-200">
+            <table className="table">
+              <thead><tr><th>Nguyên liệu</th><th>Định mức (mg/viên)</th><th>Khối lượng cần (kg)</th><th>Tồn hiện tại (kg)</th><th>Đủ/Thiếu</th></tr></thead>
+              <tbody>
+                {requiredMaterials.map((item, idx) => (
+                  <tr key={`${item.materialId}-${idx}`}>
+                    <td>{item.materialName}</td><td>{item.mgPerTablet.toFixed(2)}</td><td>{item.requiredKg.toFixed(4)}</td><td>{item.available.toFixed(4)}</td>
+                    <td><span className={`px-2 py-1 rounded-full text-xs ${item.enough ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{item.enough ? 'Đủ' : 'Thiếu'}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         <div className="flex justify-end">
           <button className="btn-primary" disabled={planForm.recipeId <= 0 || totalTablets <= 0 || insufficientMaterials.length > 0 || createOrderFromPlanMutation.isPending} onClick={() => createOrderFromPlanMutation.mutate()}>
@@ -323,42 +329,196 @@ export default function ProductionOrders() {
         </div>
       </div>
 
+      {/* Search */}
       <div className="card">
-        <div className="relative flex-1"><Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" /><input type="text" placeholder="Tìm kiếm theo mã lệnh..." value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-10" /></div>
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+          <input type="text" placeholder="Tìm kiếm theo mã lệnh..." value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-10" />
+        </div>
       </div>
 
+      {/* Orders table */}
       <div className="card p-0 overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>
         ) : filteredOrders.length === 0 ? (
           <div className="text-center py-12"><ClipboardList className="w-12 h-12 text-neutral-300 mx-auto mb-4" /><p className="text-neutral-500">Không tìm thấy lệnh sản xuất nào.</p></div>
         ) : (
-          <div className="table-container"><table className="table"><thead><tr><th>Mã lệnh</th><th>Công thức</th><th>Số lượng kế hoạch</th><th>Trạng thái</th><th>Dự kiến bắt đầu</th><th className="text-right">Thao tác</th></tr></thead><tbody>{filteredOrders.map((order) => (
-            <tr key={order.orderId}>
-              <td><code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">{order.orderCode}</code></td>
-              <td className="font-medium text-neutral-900">{order.recipeName || `Công thức #${order.recipeId}`}</td>
-              <td>{order.plannedQuantity.toLocaleString()}</td>
-              <td>{order.status}</td>
-              <td>{order.plannedStartDate ? new Date(order.plannedStartDate).toLocaleDateString('vi-VN') : '-'}</td>
-              <td className="text-right"><div className="flex justify-end gap-2"><button onClick={() => openEditOrder(order)} className="btn-ghost text-sm"><Pencil className="w-4 h-4 mr-1" />Sửa</button><button onClick={() => { if (confirm('Xóa lệnh sản xuất này?')) deleteOrderMutation.mutate(order.orderId); }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xóa</button></div></td>
-            </tr>
-          ))}</tbody></table></div>
+          <div className="table-container">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Mã lệnh</th>
+                  <th>Công thức</th>
+                  <th>Số lượng kế hoạch</th>
+                  <th>Trạng thái</th>
+                  <th>Dự kiến bắt đầu</th>
+                  <th className="text-right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredOrders.map((order) => (
+                  <tr key={order.orderId}>
+                    <td>
+                      <button
+                        onClick={() => openBatchPopup(order)}
+                        className="flex items-center gap-1.5 text-primary-600 hover:text-primary-800 hover:underline transition-colors"
+                        title="Xem danh sách mẻ"
+                      >
+                        <code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono">{order.orderCode}</code>
+                        <Layers className="w-3.5 h-3.5 opacity-60" />
+                      </button>
+                    </td>
+                    <td className="font-medium text-neutral-900">{order.recipeName || `Công thức #${order.recipeId}`}</td>
+                    <td>{order.plannedQuantity.toLocaleString()} <span className="text-neutral-500 text-xs">{order.uomName}</span></td>
+                    <td>
+                      <select
+                        value={order.status}
+                        onChange={(e) => {
+                          const newStatus = e.target.value;
+                          if (confirm(`Cập nhật trạng thái thành "${newStatus}"?`)) {
+                            updateStatusMutation.mutate({ orderId: order.orderId, status: newStatus });
+                          }
+                        }}
+                        className={`text-xs font-semibold px-2 py-1 rounded-full border-0 cursor-pointer outline-none ${statusClass(order.status)}`}
+                      >
+                        {allStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </td>
+                    <td>{order.plannedStartDate ? new Date(order.plannedStartDate).toLocaleDateString('vi-VN') : '-'}</td>
+                    <td className="text-right">
+                      <div className="flex justify-end gap-2">
+                        {(order.status === 'Draft' || order.status === 'Hold') && (
+                          <button onClick={() => openEditOrder(order)} className="btn-ghost text-sm"><Pencil className="w-4 h-4 mr-1" />Sửa</button>
+                        )}
+                        <button onClick={() => { if (confirm('Xóa lệnh sản xuất này?')) deleteOrderMutation.mutate(order.orderId); }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xóa</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
+      {/* Order create/edit modal */}
       {showOrderModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-2xl p-6 space-y-4">
             <h2 className="text-xl font-bold">{editingOrder ? 'Cập nhật lệnh sản xuất' : 'Tạo lệnh sản xuất'}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input className="input" placeholder="Mã lệnh" value={orderForm.orderCode} onChange={(e) => setOrderForm({ ...orderForm, orderCode: e.target.value })} />
-              <select className="input" value={orderForm.recipeId} onChange={(e) => setOrderForm({ ...orderForm, recipeId: Number(e.target.value) })}><option value={0}>Chọn công thức</option>{recipes.map((recipe) => <option key={recipe.recipeId} value={recipe.recipeId}>#{recipe.recipeId} - {recipe.recipeName}</option>)}</select>
-              <input type="number" className="input" placeholder="Số lượng kế hoạch" value={orderForm.plannedQuantity} onChange={(e) => setOrderForm({ ...orderForm, plannedQuantity: Number(e.target.value) })} />
-              <select className="input" value={orderForm.status} onChange={(e) => setOrderForm({ ...orderForm, status: e.target.value as OrderStatus })}><option value="Draft">Draft</option><option value="Approved">Approved</option><option value="InProcess">InProcess</option><option value="Hold">Hold</option><option value="Completed">Completed</option></select>
-              <div><label className="text-xs text-neutral-500">Ngày bắt đầu dự kiến</label><input type="date" className="input" value={orderForm.startDate} onChange={(e) => setOrderForm({ ...orderForm, startDate: e.target.value })} /></div>
-              <div><label className="text-xs text-neutral-500">Ngày kết thúc dự kiến</label><input type="date" className="input" value={orderForm.endDate} onChange={(e) => setOrderForm({ ...orderForm, endDate: e.target.value })} /></div>
+              <div><label className="text-xs text-neutral-500">Mã lệnh</label>
+                <input className="input" placeholder="Mã lệnh" value={orderForm.orderCode} onChange={(e) => setOrderForm({ ...orderForm, orderCode: e.target.value })} />
+              </div>
+              <div><label className="text-xs text-neutral-500">Công thức</label>
+                <select className="input" value={orderForm.recipeId} onChange={(e) => setOrderForm({ ...orderForm, recipeId: Number(e.target.value) })}>
+                  <option value={0}>Chọn công thức</option>
+                  {recipes.map((recipe) => <option key={recipe.recipeId} value={recipe.recipeId}>#{recipe.recipeId} - {recipe.recipeName}</option>)}
+                </select>
+              </div>
+              <div><label className="text-xs text-neutral-500">Số lượng kế hoạch</label>
+                <input type="number" className="input" placeholder="Số lượng kế hoạch" value={orderForm.plannedQuantity} onChange={(e) => setOrderForm({ ...orderForm, plannedQuantity: Number(e.target.value) })} />
+              </div>
+              <div><label className="text-xs text-neutral-500">Trạng thái</label>
+                <select className="input" value={orderForm.status} onChange={(e) => setOrderForm({ ...orderForm, status: e.target.value as OrderStatus })}>
+                  {allStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div><label className="text-xs text-neutral-500">Ngày bắt đầu dự kiến</label>
+                <input type="date" className="input" value={orderForm.startDate} onChange={(e) => setOrderForm({ ...orderForm, startDate: e.target.value })} />
+              </div>
+              <div><label className="text-xs text-neutral-500">Ngày kết thúc dự kiến</label>
+                <input type="date" className="input" value={orderForm.endDate} onChange={(e) => setOrderForm({ ...orderForm, endDate: e.target.value })} />
+              </div>
             </div>
-            <div className="flex justify-end gap-2"><button onClick={() => setShowOrderModal(false)} className="btn-ghost">Hủy</button><button onClick={() => (editingOrder ? updateOrderMutation.mutate() : createOrderMutation.mutate())} className="btn-primary">{editingOrder ? 'Lưu cập nhật' : 'Tạo mới'}</button></div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => { setShowOrderModal(false); setEditingOrder(null); }} className="btn-ghost">Hủy</button>
+              <button onClick={() => (editingOrder ? updateOrderMutation.mutate() : createOrderMutation.mutate())} className="btn-primary">{editingOrder ? 'Lưu cập nhật' : 'Tạo mới'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Batch popup */}
+      {batchPopupOrderId !== null && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-3xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold">Danh sách mẻ sản xuất</h2>
+                <p className="text-sm text-neutral-500 mt-0.5">Lệnh: {batchPopupLabel}</p>
+              </div>
+              <button onClick={() => { setBatchPopupOrderId(null); setUploadingForBatch(null); }} className="p-2 rounded-lg hover:bg-neutral-100">
+                <X className="w-5 h-5 text-neutral-600" />
+              </button>
+            </div>
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Mã mẻ</th>
+                    <th>Trạng thái</th>
+                    <th>Bước hiện tại</th>
+                    <th>Ngày bắt đầu</th>
+                    <th>Ngày kết thúc</th>
+                    <th>Giấy kiểm nghiệm</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {batchesForPopup.length === 0 ? (
+                    <tr><td colSpan={6} className="text-center text-neutral-500 py-6">Chưa có mẻ nào cho lệnh này.</td></tr>
+                  ) : batchesForPopup.map((b: any) => {
+                    const s = b.status ?? b.Status ?? '';
+                    const batchNum = b.batchNumber ?? b.BatchNumber ?? '';
+                    const isCompleted = s === 'Completed';
+                    return (
+                      <tr key={b.batchId ?? b.BatchId}>
+                        <td><code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">{batchNum}</code></td>
+                        <td><span className={`text-xs font-semibold px-2 py-1 rounded-full ${statusClass(s)}`}>{s}</span></td>
+                        <td>{b.currentStep ?? b.CurrentStep ?? '-'}</td>
+                        <td>{b.manufactureDate ? new Date(b.manufactureDate).toLocaleDateString('vi-VN') : '-'}</td>
+                        <td>{b.endTime ? new Date(b.endTime).toLocaleDateString('vi-VN') : '-'}</td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <a href={certificatesApi.getBatchCertificateUrl(batchNum)} target="_blank" rel="noreferrer" className="text-primary-600 hover:underline inline-flex items-center text-xs">
+                              <FileCheck2 className="w-3.5 h-3.5 mr-1" />Xem
+                            </a>
+                            {isCompleted && (
+                              <>
+                                <button
+                                  className="text-xs text-primary-600 hover:underline inline-flex items-center"
+                                  onClick={() => { setUploadingForBatch(batchNum); uploadInputRef.current?.click(); }}
+                                >
+                                  <Upload className="w-3.5 h-3.5 mr-1" />Tải lên
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {/* Hidden file input for batch cert upload */}
+            <input
+              ref={uploadInputRef}
+              type="file"
+              accept=".jpg,.jpeg,.png,.webp,.pdf"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file && uploadingForBatch) {
+                  uploadBatchCertMutation.mutate({ batchNumber: uploadingForBatch, file });
+                }
+                e.target.value = '';
+              }}
+            />
+            {uploadBatchCertMutation.isPending && (
+              <div className="text-sm text-primary-600 text-center">Đang tải lên giấy kiểm nghiệm...</div>
+            )}
           </div>
         </div>
       )}

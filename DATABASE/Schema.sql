@@ -92,7 +92,7 @@ CREATE TABLE Equipments (
     TechnicalSpecification NVARCHAR(300),      -- Đặc tính kỹ thuật/năng suất
     UsagePurpose NVARCHAR(300),                -- Công dụng/sử dụng cho
     AreaId INT REFERENCES ProductionAreas(AreaId), -- Khu vực đặt thiết bị
-    Status NVARCHAR(50) DEFAULT 'Ready',      -- Trạng thái (Sẵn sàng, Bảo trì, Đang chạy)
+
 );
 
 -- -------------------------------------------------------------------------
@@ -292,21 +292,5 @@ CREATE TABLE QualityTests (
     TestDate DATETIME2 DEFAULT GETDATE()      -- Ngày bàn trắc nghiệm nghiệm thu
 );
 
--- -------------------------------------------------------------------------
--- 14. Bảng SystemAuditLog: Dấu vết kiểm toán toàn diện thiết yếu (Essential Audit Trail)
--- Cuốn sổ cái hệ thống âm thầm ghi lại MỌI THAO TÁC thay đổi của người dùng 
--- lên bất kỳ dữ liệu GMP nào. Bảng này luôn chỉ được cấp quyền thêm (INSERT) qua 
--- tính năng Middleware, tuyệt đối không ai (kể cả Admin) được can thiệp sửa/xóa.
--- -------------------------------------------------------------------------
-CREATE TABLE SystemAuditLog (
-    AuditId BIGINT PRIMARY KEY IDENTITY(1,1),
-    TableName NVARCHAR(100),         -- Vết tích biến động xuất phát tại cấu trúc bảng nào
-    RecordId NVARCHAR(100),          -- Chĩa khóa vào ID bản ghi bị tác động trực diện
-    Action NVARCHAR(50),             -- Hành động vi phạm hoặc thay đổi tác nghiệp: Thêm mới, Sửa(Update) hay Xóa(Delete)
-    OldValue NVARCHAR(MAX),          -- Chụp chiếu và khóa Giá trị cũ (định dạng String text JSON - Phục hình lại log dễ dàng)
-    NewValue NVARCHAR(MAX),          -- Giá trị bị phủ định sau khi gõ sửa (Bản JSON String)
-    ChangedBy INT REFERENCES AppUsers(UserId), -- Bắt chữ ký số UserID chịu trách nhiệm gây ra biến số này
-    ChangedDate DATETIME2 DEFAULT GETDATE()    -- Lịch sử độ chi tiết thời gian tính tới mi-li-giây
-);
 
 PRINT 'Centralized Master Schema Created Successfully.';

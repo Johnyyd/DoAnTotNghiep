@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GMP_System.Entities;
 
@@ -15,5 +16,6 @@ public partial class ProductionArea
 
     public virtual ICollection<Equipment> Equipments { get; set; } = new List<Equipment>();
 
+    [NotMapped]
     public virtual ICollection<RecipeRouting> RecipeRoutings { get; set; } = new List<RecipeRouting>();
 }

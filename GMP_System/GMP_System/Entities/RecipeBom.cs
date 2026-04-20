@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace GMP_System.Entities;
 
@@ -17,12 +19,14 @@ public partial class RecipeBom
 
     public decimal? WastePercentage { get; set; }
 
+    [NotMapped]
     public string? TechnicalStandard { get; set; }
 
     public string? Note { get; set; }
 
     public virtual Material? Material { get; set; }
 
+    [JsonIgnore]
     public virtual Recipe? Recipe { get; set; }
 
     public virtual UnitOfMeasure? Uom { get; set; }

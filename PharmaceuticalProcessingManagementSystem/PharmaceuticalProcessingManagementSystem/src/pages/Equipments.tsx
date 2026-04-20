@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { equipmentsApi } from '@/services/api';
 import { Search } from 'lucide-react';
@@ -9,14 +9,12 @@ type UiEquipment = {
   technicalSpec: string;
   usageFor: string;
   areaName: string;
-  status: string;
 };
 
 function normalizeEquipment(raw: any): UiEquipment {
   return {
     equipmentCode: raw.equipmentCode ?? raw.EquipmentCode ?? '-',
     equipmentName: raw.equipmentName ?? raw.EquipmentName ?? '-',
-    status: raw.status ?? raw.Status ?? 'Ready',
     technicalSpec: raw.technicalSpecification ?? raw.TechnicalSpecification ?? '-',
     usageFor: raw.usagePurpose ?? raw.UsagePurpose ?? '-',
     areaName: raw.area?.areaName ?? raw.Area?.AreaName ?? '-',
@@ -42,13 +40,7 @@ export default function Equipments() {
     return equipments.filter((e) => e.equipmentCode.toLowerCase().includes(keyword) || e.equipmentName.toLowerCase().includes(keyword));
   }, [equipments, search]);
 
-  const statusBadge = (status: string) => {
-    const s = status.toLowerCase();
-    if (s.includes('ready') || s.includes('active')) return 'bg-green-100 text-green-700';
-    if (s.includes('maint')) return 'bg-yellow-100 text-yellow-700';
-    if (s.includes('broken')) return 'bg-red-100 text-red-700';
-    return 'bg-neutral-100 text-neutral-700';
-  };
+
 
   return (
     <div className="space-y-6">
@@ -74,7 +66,6 @@ export default function Equipments() {
                 <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Đặc tính kỹ thuật</th>
                 <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Công dụng</th>
                 <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Khu vực</th>
-                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Trạng thái</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
@@ -90,7 +81,6 @@ export default function Equipments() {
                     <td className="py-3 px-4 text-sm text-neutral-700">{equip.technicalSpec}</td>
                     <td className="py-3 px-4 text-sm text-neutral-700">{equip.usageFor}</td>
                     <td className="py-3 px-4 text-sm text-neutral-700">{equip.areaName}</td>
-                    <td className="py-3 px-4"><span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusBadge(equip.status)}`}>{equip.status}</span></td>
                   </tr>
                 ))
               )}

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "fW+LwaweGq8=",
+  "dgSpecHash": "HaUaE64SxI0=",
   "success": true,
-  "projectFilePath": "d:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
+  "projectFilePath": "D:\\codes\\Antigravity\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\GIGABYTE\\.nuget\\packages\\azure.core\\1.35.0\\azure.core.1.35.0.nupkg.sha512",
     "C:\\Users\\GIGABYTE\\.nuget\\packages\\azure.identity\\1.10.3\\azure.identity.1.10.3.nupkg.sha512",

@@ -1,4 +1,4 @@
-using GMP_System.Entities;
+﻿using GMP_System.Entities;
 using GMP_System.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -40,7 +40,7 @@ namespace GMP_System.Controllers
 
             if (material == null)
             {
-                return NotFound(new { success = false, message = $"Không tìm thấy nguyên liệu ID={id}" });
+                return NotFound(new { success = false, message = $"KhÃ´ng tÃ¬m tháº¥y nguyÃªn liá»‡u ID={id}" });
             }
 
             return Ok(new { data = material, success = true, message = "Success" });
@@ -59,10 +59,9 @@ namespace GMP_System.Controllers
 
             await _unitOfWork.Materials.AddAsync(material);
             await _unitOfWork.CompleteAsync();
-            await WriteAuditAsync("Materials", material.MaterialId.ToString(), "Create", null, $"Code={material.MaterialCode};Name={material.MaterialName}");
 
             return CreatedAtAction(nameof(GetById), new { id = material.MaterialId },
-                new { success = true, data = material, message = "Tạo nguyên liệu thành công." });
+                new { success = true, data = material, message = "Táº¡o nguyÃªn liá»‡u thÃ nh cÃ´ng." });
         }
 
         [HttpPut("{id}")]
@@ -70,13 +69,13 @@ namespace GMP_System.Controllers
         {
             if (id != material.MaterialId)
             {
-                return BadRequest(new { success = false, message = "ID không khớp." });
+                return BadRequest(new { success = false, message = "ID khÃ´ng khá»›p." });
             }
 
             var existing = await _unitOfWork.Materials.GetByIdAsync(id);
             if (existing == null)
             {
-                return NotFound(new { success = false, message = "Không tìm thấy nguyên liệu." });
+                return NotFound(new { success = false, message = "KhÃ´ng tÃ¬m tháº¥y nguyÃªn liá»‡u." });
             }
 
             existing.MaterialCode = material.MaterialCode;
@@ -88,9 +87,8 @@ namespace GMP_System.Controllers
 
             _unitOfWork.Materials.Update(existing);
             await _unitOfWork.CompleteAsync();
-            await WriteAuditAsync("Materials", id.ToString(), "Update", null, $"Code={existing.MaterialCode};Name={existing.MaterialName}");
 
-            return Ok(new { success = true, message = "Cập nhật thành công.", materialId = id });
+            return Ok(new { success = true, message = "Cáº­p nháº­t thÃ nh cÃ´ng.", materialId = id });
         }
 
         [HttpDelete("{id}")]
@@ -99,7 +97,7 @@ namespace GMP_System.Controllers
             var material = await _unitOfWork.Materials.GetByIdAsync(id);
             if (material == null)
             {
-                return NotFound(new { success = false, message = "Không tìm thấy nguyên liệu." });
+                return NotFound(new { success = false, message = "KhÃ´ng tÃ¬m tháº¥y nguyÃªn liá»‡u." });
             }
 
             var hasRecipeAsProduct = await _unitOfWork.Recipes.Query().AnyAsync(x => x.MaterialId == id);
@@ -108,7 +106,7 @@ namespace GMP_System.Controllers
                 return BadRequest(new
                 {
                     success = false,
-                    message = "Nguyên liệu đang được dùng trong công thức hoặc sản phẩm, không thể xóa."
+                    message = "NguyÃªn liá»‡u Ä‘ang Ä‘Æ°á»£c dÃ¹ng trong cÃ´ng thá»©c hoáº·c sáº£n pháº©m, khÃ´ng thá»ƒ xÃ³a."
                 });
             }
 
@@ -125,7 +123,7 @@ namespace GMP_System.Controllers
                     return BadRequest(new
                     {
                         success = false,
-                        message = "Nguyên liệu đã phát sinh sử dụng trong sản xuất, không thể xóa."
+                        message = "NguyÃªn liá»‡u Ä‘Ã£ phÃ¡t sinh sá»­ dá»¥ng trong sáº£n xuáº¥t, khÃ´ng thá»ƒ xÃ³a."
                     });
                 }
 
@@ -140,15 +138,14 @@ namespace GMP_System.Controllers
             try
             {
                 await _unitOfWork.CompleteAsync();
-                await WriteAuditAsync("Materials", id.ToString(), "Delete", $"Code={material.MaterialCode};Name={material.MaterialName}", null);
-                return Ok(new { success = true, message = "Đã xóa nguyên liệu." });
+                return Ok(new { success = true, message = "ÄÃ£ xÃ³a nguyÃªn liá»‡u." });
             }
             catch (DbUpdateException)
             {
                 return BadRequest(new
                 {
                     success = false,
-                    message = "Nguyên liệu đang liên kết dữ liệu nghiệp vụ khác nên chưa thể xóa."
+                    message = "NguyÃªn liá»‡u Ä‘ang liÃªn káº¿t dá»¯ liá»‡u nghiá»‡p vá»¥ khÃ¡c nÃªn chÆ°a thá»ƒ xÃ³a."
                 });
             }
             catch (Exception ex)
@@ -156,31 +153,10 @@ namespace GMP_System.Controllers
                 return BadRequest(new
                 {
                     success = false,
-                    message = $"Không thể xóa nguyên liệu: {ex.Message}"
+                    message = $"KhÃ´ng thá»ƒ xÃ³a nguyÃªn liá»‡u: {ex.Message}"
                 });
             }
         }
 
-        private async Task WriteAuditAsync(string tableName, string recordId, string action, string? oldValue, string? newValue)
-        {
-            int? changedBy = null;
-            var claim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (int.TryParse(claim, out var uid))
-            {
-                changedBy = uid;
-            }
-
-            _context.SystemAuditLogs.Add(new SystemAuditLog
-            {
-                TableName = tableName,
-                RecordId = recordId,
-                Action = action,
-                OldValue = oldValue,
-                NewValue = newValue,
-                ChangedBy = changedBy,
-                ChangedDate = DateTime.Now
-            });
-            await _context.SaveChangesAsync();
-        }
     }
 }

@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { certificatesApi, inventoryApi, materialsApi } from '@/services/api';
 import { Plus, Search, Eye, FileCheck2, Upload, Pencil, Trash2 } from 'lucide-react';
@@ -104,6 +104,10 @@ export default function Materials() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importMaterialId, setImportMaterialId] = useState(0);
+  const [importForm, setImportForm] = useState({ quantityCurrent: 0, manufactureDate: new Date().toISOString().slice(0, 10), expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString().slice(0, 10) });
+  const [importCertFile, setImportCertFile] = useState<File | null>(null);
   const [detailMaterial, setDetailMaterial] = useState<any | null>(null);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [editingLot, setEditingLot] = useState<EditLotForm | null>(null);
@@ -149,6 +153,37 @@ export default function Materials() {
       queryClient.invalidateQueries({ queryKey: ['inventoryLots'] }),
     ]);
   };
+
+  const importMutation = useMutation({
+    mutationFn: async () => {
+      const mat = materials.find((m) => m.materialId === importMaterialId);
+      if (!mat) throw new Error('Vui lòng chọn nguyên liệu.');
+      if (importForm.quantityCurrent <= 0) throw new Error('Số lượng phải lớn hơn 0.');
+      const dateError = validateLotDates(importForm.manufactureDate, importForm.expiryDate);
+      if (dateError) throw new Error(dateError);
+
+      await inventoryApi.receive({
+        materialId: importMaterialId,
+        lotNumber: buildAutoLotNumber(mat.materialCode),
+        quantityCurrent: importForm.quantityCurrent,
+        manufactureDate: importForm.manufactureDate,
+        expiryDate: importForm.expiryDate,
+        qcstatus: 'Pending',
+      } as any);
+
+      if (importCertFile) {
+        await certificatesApi.uploadMaterialCertificate(mat.materialCode, importCertFile);
+      }
+    },
+    onSuccess: async () => {
+      await refreshLists();
+      setShowImportModal(false);
+      setImportCertFile(null);
+      setImportForm({ quantityCurrent: 0, manufactureDate: new Date().toISOString().slice(0, 10), expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString().slice(0, 10) });
+      alert('Đã nhập nguyên liệu thành công.');
+    },
+    onError: (err: any) => alert(err?.response?.data?.message ?? err?.message ?? 'Không thể nhập nguyên liệu.'),
+  });
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -282,9 +317,14 @@ export default function Materials() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-neutral-900">Quản lý nguyên liệu</h1>
-        <button onClick={() => setShowModal(true)} className="btn-primary flex items-center">
-          <Plus className="w-4 h-4 mr-2" />Thêm nguyên liệu
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => { setImportMaterialId(0); setShowImportModal(true); }} className="btn-secondary flex items-center">
+            <Plus className="w-4 h-4 mr-2" />Nhập nguyên liệu
+          </button>
+          <button onClick={() => setShowModal(true)} className="btn-primary flex items-center">
+            <Plus className="w-4 h-4 mr-2" />Thêm nguyên liệu mới
+          </button>
+        </div>
       </div>
 
       <div className="card">
@@ -389,6 +429,48 @@ export default function Materials() {
             <div className="flex justify-end gap-2">
               <button className="btn-ghost" onClick={() => setShowModal(false)}>Hủy</button>
               <button className="btn-primary" onClick={() => createMutation.mutate()} disabled={createMutation.isPending}>Lưu</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-xl p-6 space-y-4">
+            <h2 className="text-2xl font-bold text-neutral-900">Nhập nguyên liệu</h2>
+            <p className="text-sm text-neutral-500">Thêm một đợt nhập mới cho nguyên liệu đã có trong hệ thống. Số đợt nhập sẽ tăng lên 1.</p>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="text-xs text-neutral-500">Chọn nguyên liệu</label>
+                <select className="input" value={importMaterialId} onChange={(e) => setImportMaterialId(Number(e.target.value))}>
+                  <option value={0}>Chọn nguyên liệu</option>
+                  {materials.map((m) => <option key={m.materialId} value={m.materialId}>{m.materialCode} - {m.materialName}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-neutral-500">Số lượng nhập</label>
+                <input type="number" min={0.0001} className="input" value={importForm.quantityCurrent} onChange={(e) => setImportForm({ ...importForm, quantityCurrent: Number(e.target.value) })} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs text-neutral-500">Ngày sản xuất</label>
+                  <input type="date" max={new Date().toISOString().slice(0,10)} className="input" value={importForm.manufactureDate} onChange={(e) => setImportForm({ ...importForm, manufactureDate: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs text-neutral-500">Hạn dùng</label>
+                  <input type="date" min={new Date().toISOString().slice(0,10)} className="input" value={importForm.expiryDate} onChange={(e) => setImportForm({ ...importForm, expiryDate: e.target.value })} />
+                </div>
+              </div>
+            </div>
+            <div className="rounded-lg border border-dashed border-neutral-300 p-4">
+              <label className="text-sm font-medium text-neutral-700 flex items-center mb-2">
+                <Upload className="w-4 h-4 mr-2" />Tải giấy kiểm nghiệm (tuỳ chọn)
+              </label>
+              <input type="file" accept=".jpg,.jpeg,.png,.webp" onChange={(e) => setImportCertFile(e.target.files?.[0] ?? null)} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button className="btn-ghost" onClick={() => setShowImportModal(false)}>Hủy</button>
+              <button className="btn-primary" onClick={() => importMutation.mutate()} disabled={importMutation.isPending}>Nhập</button>
             </div>
           </div>
         </div>
