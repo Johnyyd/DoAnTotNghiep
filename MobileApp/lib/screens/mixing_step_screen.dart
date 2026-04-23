@@ -63,7 +63,6 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
   List<dynamic> _bom = [];
 
   // GMP EBR Additions
-  final Map<String, String> _inputStatus = {};
   List<dynamic> _standardParams = [];
   Map<String, dynamic> _currentLog = {};
   Map<String, dynamic>? _batchInfo;
@@ -72,7 +71,12 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
   @override
   void initState() {
     super.initState();
-    _loadDataFromDB();
+    _loadDataFromDB().then((_) {
+      if (!widget.isViewer) {
+        startTimeUpdates([_timeCtrl, _timeStartCtrl]);
+        _timeStartCtrl.addListener(_autoCalcTimeEnd);
+      }
+    });
   }
 
   String? _getStandardText(String paramName) {
@@ -124,14 +128,21 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
 
       // Load Logs for Phase Sync
       final logs = await ApiService.getProcessLogs(widget.batchId!);
-      final log = logs.firstWhere((l) => l['stepId'] == widget.stepId,
-          orElse: () => {});
+      debugPrint("DEBUG: [Mixing] widget.stepId=${widget.stepId} (${widget.stepId.runtimeType})");
+
+      final log = logs.firstWhere(
+        (l) => l['stepId']?.toString() == widget.stepId?.toString(),
+        orElse: () => {},
+      );
 
       if (log.isNotEmpty) {
         _currentLog = log;
-        _standardParams = log['routing']?['stepParameters'] ?? [];
+        final routing = log['routing'] ?? log['step'] ?? {};
+        _standardParams = routing['stepParameters'] ?? [];
+        debugPrint("DEBUG: [Mixing] _standardParams count: ${_standardParams.length}");
 
-        final rawParams = log['parametersData'];
+        final rawParams = _currentLog['parametersData'];
+
         Map<String, dynamic> params = {};
         if (rawParams is Map<String, dynamic>) {
           params = rawParams;
@@ -253,44 +264,16 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
     super.dispose();
   }
 
-  void _updateInputStatus(String fieldName, String value,
-      {String? paramNameInStandard}) {
-    if (_standardParams.isEmpty) return;
-    final val = double.tryParse(value);
-    if (val == null) {
-      setState(() => _inputStatus[fieldName] = 'none');
-      return;
-    }
-    final sp = _standardParams.firstWhere(
-      (p) => (p['parameterName'] as String)
-          .toLowerCase()
-          .contains((paramNameInStandard ?? fieldName).toLowerCase()),
-      orElse: () => null,
-    );
-    if (sp != null) {
-      final min =
-          sp['minValue'] != null ? (sp['minValue'] as num).toDouble() : null;
-      final max =
-          sp['maxValue'] != null ? (sp['maxValue'] as num).toDouble() : null;
-      String status = 'none';
-      if (min != null && val < min) status = 'error';
-      if (max != null && val > max) status = 'error';
-      setState(() => _inputStatus[fieldName] = status);
-    }
-  }
+
 
   void _updateAllInputStatuses() {
-    _updateInputStatus('nhietDo', _tempCtrl.text,
-        paramNameInStandard: 'Nhiệt độ phòng');
-    _updateInputStatus('doAm', _humidCtrl.text,
-        paramNameInStandard: 'Độ ẩm phòng');
-    _updateInputStatus('apLuc', _pressCtrl.text,
-        paramNameInStandard: 'Áp lực phòng');
-    _updateInputStatus('tocDoThucTe', _tocDoThucTeCtrl.text,
-        paramNameInStandard: 'Tốc độ trộn');
-    _updateInputStatus('tgThucTe', _tgThucTeCtrl.text,
-        paramNameInStandard: 'Thời gian trộn');
+    validateInput('nhietDo', _tempCtrl.text, _standardParams, matchName: 'Nhiệt độ phòng');
+    validateInput('doAm', _humidCtrl.text, _standardParams, matchName: 'Độ ẩm phòng');
+    validateInput('apLuc', _pressCtrl.text, _standardParams, matchName: 'Áp lực phòng');
+    validateInput('tocDoThucTe', _tocDoThucTeCtrl.text, _standardParams, matchName: 'Tốc độ trộn');
+    validateInput('tgThucTe', _tgThucTeCtrl.text, _standardParams, matchName: 'Thời gian trộn');
   }
+
 
   Future<void> _approveByQC(String status) async {
     final pin = await showPinDialog();
@@ -680,33 +663,33 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
                 child: StandardInputField(
               label: 'Nhiệt độ (°C)',
               controller: _tempCtrl,
-              status: _inputStatus['nhietDo'] ?? 'none',
-              standardText: _getStandardText('Nhiệt độ phòng'),
-              keyboardType: TextInputType.number,
-              onChanged: (v) => _updateInputStatus('nhietDo', v,
-                  paramNameInStandard: 'Nhiệt độ phòng'),
+            status: inputStatuses['nhietDo'] ?? 'none',
+            standardText: _getStandardText('Nhiệt độ phòng'),
+            keyboardType: TextInputType.number,
+            onChanged: (v) => validateInput('nhietDo', v, _standardParams, matchName: 'Nhiệt độ phòng'),
+
             )),
             const SizedBox(width: 16),
             Expanded(
                 child: StandardInputField(
               label: 'Độ ẩm (%)',
               controller: _humidCtrl,
-              status: _inputStatus['doAm'] ?? 'none',
-              standardText: _getStandardText('Độ ẩm phòng'),
-              keyboardType: TextInputType.number,
-              onChanged: (v) => _updateInputStatus('doAm', v,
-                  paramNameInStandard: 'Độ ẩm phòng'),
+            status: inputStatuses['doAm'] ?? 'none',
+            standardText: _getStandardText('Độ ẩm phòng'),
+            keyboardType: TextInputType.number,
+            onChanged: (v) => validateInput('doAm', v, _standardParams, matchName: 'Độ ẩm phòng'),
+
             )),
           ],
         ),
         StandardInputField(
           label: 'Áp lực (Pa)',
           controller: _pressCtrl,
-          status: _inputStatus['apLuc'] ?? 'none',
-          standardText: _getStandardText('Áp lực phòng'),
-          keyboardType: TextInputType.number,
-          onChanged: (v) => _updateInputStatus('apLuc', v,
-              paramNameInStandard: 'Áp lực phòng'),
+        status: inputStatuses['apLuc'] ?? 'none',
+        standardText: _getStandardText('Áp lực phòng'),
+        keyboardType: TextInputType.number,
+        onChanged: (v) => validateInput('apLuc', v, _standardParams, matchName: 'Áp lực phòng'),
+
         ),
       ],
     );

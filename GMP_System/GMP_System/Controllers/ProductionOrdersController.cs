@@ -107,6 +107,7 @@ namespace GMP_System.Controllers
             var batches = await _unitOfWork.ProductionBatches
                 .Query()
                 .Where(b => b.OrderId == orderId)
+                .OrderBy(b => b.BatchId)
                 .Select(b => new
                 {
                     b.BatchId,

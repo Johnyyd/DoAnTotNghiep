@@ -1,17 +1,32 @@
+# ==============================================================================================
 # GMP-WHO Mobile Application (Flutter Web)
-# Bỏ qua Stage build Flutter vì thiếu RAM WSL, build trước bằng lệnh local trên Windows
+# ==============================================================================================
 
+# STAGE 1: Build Flutter Web
+# Sử dụng Image Flutter chính thức để đóng gói mã nguồn
+FROM ghcr.io/cirruslabs/flutter:stable AS build
+WORKDIR /app
+
+# Tối ưu hóa Cache cho Flutter Pub Get
+COPY pubspec.* .
+RUN flutter pub get
+
+# Copy toàn bộ mã nguồn và thực hiện build
+COPY . .
+RUN flutter build web --release
+
+# ----------------------------------------------------------------------------------------------
+# STAGE 2: Production (Phân phối qua Nginx)
+# ----------------------------------------------------------------------------------------------
 FROM nginx:alpine AS production
 WORKDIR /usr/share/nginx/html
 
-# Copy pre-built files (Yêu cầu build locally flutter build web trước)
-COPY build/web .
+# Chuyển thành phẩm từ Stage Build sang
+COPY --from=build /app/build/web .
 
-# Copy nginx configuration
+# Cấu hình Nginx để hỗ trợ Single Page Application (SPA)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port
 EXPOSE 80
 
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

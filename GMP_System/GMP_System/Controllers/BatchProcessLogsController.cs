@@ -61,6 +61,36 @@ namespace GMP_System.Controllers
                     .OrderBy(r => r.StepNumber)
                     .ToListAsync();
             }
+            else
+            {
+                // Nếu lấy theo OrderId mà bị thiếu StepParameters (do lúc tạo Order chưa copy đủ),
+                // thì cố gắng bổ sung từ quy trình gốc (Master Recipe)
+                var baseRoutings = await _unitOfWork.RecipeRoutings.Query()
+                    .Where(r => r.RecipeId == order.RecipeId && (r.OrderId == null || r.OrderId == 0))
+                    .Include(r => r.StepParameters)
+                    .ToListAsync();
+
+                foreach (var r in routings)
+                {
+                    if (r.StepParameters == null || r.StepParameters.Count == 0)
+                    {
+                        var baseR = baseRoutings.FirstOrDefault(br => br.StepNumber == r.StepNumber);
+                        if (baseR != null && baseR.StepParameters != null && baseR.StepParameters.Count > 0)
+                        {
+                            r.StepParameters = baseR.StepParameters;
+                            Console.WriteLine($"[DEBUG-SERVER] Inherited {baseR.StepParameters.Count} parameters from Master Recipe for Step {r.StepNumber} (RoutingId: {r.RoutingId})");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[DEBUG-SERVER] Step {r.StepNumber} has NO parameters in both Order and Master Recipe.");
+                        }
+                    }
+                }
+            }
+
+            Console.WriteLine($"[DEBUG-SERVER] Returning {routings.Count} routings for Batch {batchId}. First routing has {routings.FirstOrDefault()?.StepParameters?.Count ?? 0} parameters.");
+
+
 
             var existingLogs = await _unitOfWork.BatchProcessLogs.Query()
                 .Include(x => x.Routing)
@@ -139,6 +169,24 @@ namespace GMP_System.Controllers
                 return BadRequest("KhÃ´ng tÃ¬m tháº¥y cÃ´ng Ä‘oáº¡n quy trÃ¬nh.");
 
             var maxAttempts = Math.Max(1, routing.NumberOfRouting ?? 1);
+
+            // GMP Sequential Batch Check: Phải xong mẻ trước mới được làm mẻ sau
+            var currentBatch = await _unitOfWork.ProductionBatches.GetByIdAsync(log.BatchId.Value);
+            if (currentBatch != null && currentBatch.OrderId.HasValue)
+            {
+                var hasUnfinishedPreviousBatch = await _unitOfWork.ProductionBatches.Query()
+                    .Where(b => b.OrderId == currentBatch.OrderId && b.BatchId < currentBatch.BatchId && b.Status != "Completed")
+                    .AnyAsync();
+
+                if (hasUnfinishedPreviousBatch)
+                {
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "⚠ Vi phạm quy trình GMP: Bạn phải hoàn thành hoàn toàn các mẻ sản xuất trước đó trong cùng lệnh này mới có thể ghi nhận dữ liệu cho mẻ hiện tại." 
+                    });
+                }
+            }
+
             var stepLogs = await _unitOfWork.BatchProcessLogs.Query()
                 .Include(x => x.ParameterValues)
                 .Where(x => x.BatchId == log.BatchId && x.RoutingId == log.RoutingId)

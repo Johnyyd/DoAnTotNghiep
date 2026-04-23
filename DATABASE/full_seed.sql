@@ -6,6 +6,31 @@
 USE [PharmaceuticalProcessingManagementSystem];
 GO
 
+-- =====================================================================
+-- ĐẢM BẢO CẤU TRÚC DATABASE KHỚP VỚI FILE SEED (CHỈ THÊM, KHÔNG XÓA)
+-- =====================================================================
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('AppUsers') AND name = 'LastLogin')
+    ALTER TABLE AppUsers ADD LastLogin DATETIME2;
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('UomConversions') AND name = 'ConversionFactor')
+    ALTER TABLE UomConversions ADD ConversionFactor DECIMAL(18, 6);
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('UomConversions') AND name = 'Note')
+    ALTER TABLE UomConversions ADD Note NVARCHAR(200);
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('InventoryLots') AND name = 'SupplierName')
+    ALTER TABLE InventoryLots ADD SupplierName NVARCHAR(200);
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('InventoryLots') AND name = 'CreatedAt')
+    ALTER TABLE InventoryLots ADD CreatedAt DATETIME2;
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MaterialUsage') AND name = 'UsedDate')
+    ALTER TABLE MaterialUsage ADD UsedDate DATETIME2;
+GO
+
+-- TẮT RÀNG BUỘC ĐỂ CẬP NHẬT DỮ LIỆU
+EXEC sp_MSforeachtable "ALTER TABLE ? NOCHECK CONSTRAINT all"
+
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO
@@ -225,6 +250,9 @@ INSERT INTO StepParameters (ParameterId, RoutingId, ParameterName, Unit, MinValu
 (4, 1, N'Nhiệt độ sấy',  '°C', 73, 77, 1, NULL),
 (20, 1, N'Thời gian sấy', 'phút', 170, 190, 1, NULL),
 (24, 2, N'Nhiệt độ sấy',  '°C', 73, 77, 1, NULL),
+(25, 2, N'Nhiệt độ phòng', '°C', 21, 25, 1, NULL),
+(26, 2, N'Độ ẩm phòng',   '%',  45, 70, 1, NULL),
+(27, 2, N'Áp lực phòng',  'Pa', 10, 20, 1, NULL),
 (7, 4, N'Tốc độ trộn',   'v/p', 14, 16, 1, NULL),
 (50, 18, N'Nhiệt độ sấy', '°C', 60, 70, 1, NULL);
 SET IDENTITY_INSERT StepParameters OFF;
@@ -293,3 +321,7 @@ GO
 PRINT 'Insert SystemAuditLog Completed Successfully!';
 
 PRINT 'GMP Database Initialization & Full Seeding Completed Successfully!';
+
+-- BẬT LẠI RÀNG BUỘC
+EXEC sp_MSforeachtable "ALTER TABLE ? CHECK CONSTRAINT all"
+GO

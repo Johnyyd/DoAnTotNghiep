@@ -56,7 +56,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
   List<dynamic> _bom = [];
 
   // GMP EBR Additions
-  final Map<String, String> _inputStatus = {};
+  // Map lưu trữ trạng thái hiển thị được kế thừa từ GmpStepMixin
+
   List<dynamic> _standardParams = [];
   Map<String, dynamic> _currentLog = {};
   Map<String, dynamic>? _batchInfo;
@@ -67,11 +68,11 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     super.initState();
     if (widget.batchId != null) {
       _loadDataFromDB().then((_) {
-        // Auto-fill check time if empty
-        if (_checkTimeCtrl.text.isEmpty) {
-          final now = DateTime.now();
-          _checkTimeCtrl.text = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+        // Auto-fill check time and start real-time updates if not viewer
+        if (!widget.isViewer) {
+          startTimeUpdates([_checkTimeCtrl]);
         }
+        
         if (_currentPhase == ExecutionPhase.verification) {
           startPolling(_loadDataFromDB);
         }
@@ -136,14 +137,21 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
 
       // Load Logs for Phase Sync
       final logs = await ApiService.getProcessLogs(widget.batchId!);
-      final log = logs.firstWhere((l) => l['stepId'] == widget.stepId,
-          orElse: () => {});
+      debugPrint("DEBUG: [Weighing] widget.stepId=${widget.stepId} (${widget.stepId.runtimeType})");
+
+      final log = logs.firstWhere(
+        (l) => l['stepId']?.toString() == widget.stepId?.toString(),
+        orElse: () => {},
+      );
 
       if (log.isNotEmpty) {
         _currentLog = log;
-        _standardParams = log['routing']?['stepParameters'] ?? [];
+        final routing = log['routing'] ?? log['step'] ?? {};
+        _standardParams = routing['stepParameters'] ?? [];
+        debugPrint("DEBUG: [Weighing] _standardParams count: ${_standardParams.length}");
 
-        final rawParams = log['parametersData'];
+        final rawParams = _currentLog['parametersData'];
+
         Map<String, dynamic> params = {};
         if (rawParams is Map<String, dynamic>) {
           params = rawParams;
@@ -215,40 +223,14 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     super.dispose();
   }
 
-  void _updateInputStatus(String fieldName, String value,
-      {String? paramNameInStandard}) {
-    if (_standardParams.isEmpty) return;
-    final val = double.tryParse(value);
-    if (val == null) {
-      setState(() => _inputStatus[fieldName] = 'none');
-      return;
-    }
-    final sp = _standardParams.firstWhere(
-      (p) => (p['parameterName'] as String)
-          .toLowerCase()
-          .contains((paramNameInStandard ?? fieldName).toLowerCase()),
-      orElse: () => null,
-    );
-    if (sp != null) {
-      final min =
-          sp['minValue'] != null ? (sp['minValue'] as num).toDouble() : null;
-      final max =
-          sp['maxValue'] != null ? (sp['maxValue'] as num).toDouble() : null;
-      String status = 'none';
-      if (min != null && val < min) status = 'error';
-      if (max != null && val > max) status = 'error';
-      setState(() => _inputStatus[fieldName] = status);
-    }
-  }
+
 
   void _updateAllInputStatuses() {
-    _updateInputStatus('temperature', _tempCtrl.text,
-        paramNameInStandard: 'Nhiệt độ phòng');
-    _updateInputStatus('humidity', _humidCtrl.text,
-        paramNameInStandard: 'Độ ẩm phòng');
-    _updateInputStatus('pressure', _pressCtrl.text,
-        paramNameInStandard: 'Áp lực phòng');
+    validateInput('temperature', _tempCtrl.text, _standardParams, matchName: 'Nhiệt độ phòng');
+    validateInput('humidity', _humidCtrl.text, _standardParams, matchName: 'Độ ẩm phòng');
+    validateInput('pressure', _pressCtrl.text, _standardParams, matchName: 'Áp lực phòng');
   }
+
 
   Future<void> _approveByQC(String status) async {
     final pin = await showPinDialog();
@@ -337,7 +319,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     }
 
     // Check individual status (Standard thresholds)
-    if (_inputStatus.values.contains('error')) return false;
+    if (inputStatuses.values.contains('error')) return false;
+
 
     return true;
   }
@@ -655,33 +638,33 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
               child: StandardInputField(
             label: 'Nhiệt độ (°C)',
             controller: _tempCtrl,
-            status: _inputStatus['temperature'] ?? 'none',
+            status: inputStatuses['temperature'] ?? 'none',
             standardText: _getStandardText('Nhiệt độ phòng'),
             keyboardType: TextInputType.number,
-            onChanged: (v) => _updateInputStatus('temperature', v,
-                paramNameInStandard: 'Nhiệt độ phòng'),
+            onChanged: (v) => validateInput('temperature', v, _standardParams, matchName: 'Nhiệt độ phòng'),
+
           )),
           const SizedBox(width: 16),
           Expanded(
               child: StandardInputField(
             label: 'Độ ẩm (%)',
             controller: _humidCtrl,
-            status: _inputStatus['humidity'] ?? 'none',
+            status: inputStatuses['humidity'] ?? 'none',
             standardText: _getStandardText('Độ ẩm phòng'),
             keyboardType: TextInputType.number,
-            onChanged: (v) => _updateInputStatus('humidity', v,
-                paramNameInStandard: 'Độ ẩm phòng'),
+            onChanged: (v) => validateInput('humidity', v, _standardParams, matchName: 'Độ ẩm phòng'),
+
           )),
         ],
       ),
       StandardInputField(
         label: 'Áp lực (Pa)',
         controller: _pressCtrl,
-        status: _inputStatus['pressure'] ?? 'none',
+        status: inputStatuses['pressure'] ?? 'none',
         standardText: _getStandardText('Áp lực phòng'),
         keyboardType: TextInputType.number,
-        onChanged: (v) => _updateInputStatus('pressure', v,
-            paramNameInStandard: 'Áp lực phòng'),
+        onChanged: (v) => validateInput('pressure', v, _standardParams, matchName: 'Áp lực phòng'),
+
       ),
       StandardInputField(
           label: 'Mã hiệu chuẩn cân (MT/QC)',

@@ -42,6 +42,7 @@ namespace GMP_System.Controllers
                         }
                     }
                 })
+                .OrderBy(b => b.BatchId)
                 .AsNoTracking()
                 .ToListAsync();
 

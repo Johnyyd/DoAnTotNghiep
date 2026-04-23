@@ -128,7 +128,9 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          ..._batches.map((batch) {
+          ..._batches.asMap().entries.map((entry) {
+            final i = entry.key;
+            final batch = entry.value;
             final batchId = batch['batchId'] as int?;
             final batchNumber = batch['batchNumber'] as String? ?? '-';
             final status = batch['status'] as String?;
@@ -139,11 +141,21 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
             final orderCode =
                 batch['order']?['orderCode'] as String? ?? '#$batchId';
 
-            final color = _statusColor(status);
+            // Sequential GMP check: Batch N can only start if Batch N-1 is Completed
+            bool isBlocked = false;
+            if (i > 0) {
+              final prevStatus = _batches[i - 1]['status'];
+              if (prevStatus != 'Completed') {
+                isBlocked = true;
+              }
+            }
+
+            final color = isBlocked ? Colors.grey.shade400 : _statusColor(status);
 
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
-              elevation: 1,
+              elevation: isBlocked ? 0 : 1,
+              color: isBlocked ? Colors.grey.shade50 : Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide(
@@ -153,9 +165,19 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
               ),
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
-                onTap: batchId == null
+                onTap: (batchId == null)
                     ? null
                     : () {
+                        if (isBlocked) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  '⚠ Bạn phải hoàn thành mẻ trước đó (${_batches[i - 1]['batchNumber']}) mới có thể thực hiện mẻ này!'),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
+                          return;
+                        }
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => BatchDetailScreen(
@@ -177,7 +199,11 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
                           color: color.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(_statusIcon(status), color: color, size: 24),
+                        child: Icon(
+                          isBlocked ? Icons.lock : _statusIcon(status),
+                          color: color,
+                          size: 24,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -186,23 +212,30 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
                           children: [
                             Text(
                               batchNumber,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15,
+                                color: isBlocked ? Colors.grey : Colors.black87,
                               ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               productName,
-                              style: const TextStyle(
-                                  fontSize: 13, color: Colors.black54),
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  color: isBlocked
+                                      ? Colors.grey.shade400
+                                      : Colors.black54),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
                               'Lệnh: $orderCode',
-                              style: const TextStyle(
-                                  fontSize: 12, color: Colors.black38),
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: isBlocked
+                                      ? Colors.grey.shade300
+                                      : Colors.black38),
                             ),
                           ],
                         ),
@@ -216,11 +249,11 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
                             decoration: BoxDecoration(
                               color: color.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
-                              border:
-                                  Border.all(color: color.withValues(alpha: 0.5)),
+                              border: Border.all(
+                                  color: color.withValues(alpha: 0.5)),
                             ),
                             child: Text(
-                              _statusLabel(status),
+                              isBlocked ? 'Chưa được phép' : _statusLabel(status),
                               style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
@@ -228,8 +261,9 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          const Icon(Icons.chevron_right,
-                              size: 18, color: Colors.black26),
+                          Icon(Icons.chevron_right,
+                              size: 18,
+                              color: isBlocked ? Colors.grey.shade300 : Colors.black26),
                         ],
                       ),
                     ],

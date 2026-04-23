@@ -3,6 +3,7 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../utils/gmp_step_mixin.dart';
 import '../models/execution_phase.dart';
+import '../components/step_form_inputs.dart';
 
 /// [DynamicStepScreen] — Màn hình công đoạn "thông minh" tự động hiển thị form theo tham số từ DB.
 /// Thích hợp cho các loại thuốc mới/phức tạp mà không cần tạo file code màn hình riêng.
@@ -74,6 +75,24 @@ class _DynamicStepScreenState extends State<DynamicStepScreen>
             _currentPhase = ExecutionPhase.input;
           } else {
             _currentPhase = ExecutionPhase.precheck;
+          }
+
+          // Real-time time updates for dynamic parameters
+          if (!widget.isViewer) {
+            final List<TextEditingController> timeCtrls = [];
+            for (var p in _parameters) {
+              final String name = (p['parameterName'] ?? '').toString().toLowerCase();
+              final pid = p['parameterId'] as int;
+              if (name.contains('thời gian') || name.contains('time')) {
+                if (!_controllers.containsKey(pid)) {
+                  _controllers[pid] = TextEditingController();
+                }
+                timeCtrls.add(_controllers[pid]!);
+              }
+            }
+            if (timeCtrls.isNotEmpty) {
+              startTimeUpdates(timeCtrls);
+            }
           }
         });
       }
@@ -215,20 +234,21 @@ class _DynamicStepScreenState extends State<DynamicStepScreen>
     }
 
     final isReadOnly = widget.isViewer || _currentPhase != ExecutionPhase.input;
+    final fieldKey = 'dynamic_$pid';
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: TextFormField(
-        controller: _controllers[pid],
-        readOnly: isReadOnly,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(
-          labelText: name,
-          suffixText: unit,
-          helperText: 'Tiêu chuẩn: ${min ?? 'N/A'} - ${max ?? 'N/A'} $unit',
-          border: const OutlineInputBorder(),
-        ),
-      ),
+    return StandardInputField(
+      label: name,
+      controller: _controllers[pid],
+      readOnly: isReadOnly,
+      keyboardType: TextInputType.number,
+      hint: 'Nhập giá trị...',
+      suffixIcon: unit.isNotEmpty ? Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Text(unit, style: const TextStyle(color: Colors.grey)),
+      ) : null,
+      standardText: 'Tiêu chuẩn: ${min ?? 'N/A'} - ${max ?? 'N/A'} $unit',
+      status: inputStatuses[fieldKey] ?? 'none',
+      onChanged: (v) => validateInput(fieldKey, v, _parameters, matchName: name),
     );
   }
 
