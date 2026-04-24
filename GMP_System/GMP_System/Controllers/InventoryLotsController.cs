@@ -34,7 +34,7 @@ namespace GMP_System.Controllers
                 query = query.Where(l => l.LotNumber.Contains(lotNumber));
             }
 
-            var lots = await query.Include(l => l.Material).ToListAsync();
+            var lots = await query.Include(l => l.Material).ThenInclude(m => m!.BaseUom).ToListAsync();
             return Ok(new { success = true, data = lots });
         }
 

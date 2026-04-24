@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { inventoryApi } from '@/services/api';
 import { Search, PackageOpen } from 'lucide-react';
@@ -65,16 +65,15 @@ export default function Inventory() {
                 <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Mã nguyên liệu</th>
                 <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Tên nguyên liệu</th>
                 <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Số đợt nhập</th>
-                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Đơn vị</th>
                 <th className="py-3 px-4 text-sm font-semibold text-neutral-600 text-right">Tổng tồn hiện tại</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
               {isLoading ? (
-                <tr><td colSpan={5} className="py-8 text-center text-neutral-500">Đang tải dữ liệu tồn kho...</td></tr>
+                <tr><td colSpan={4} className="py-8 text-center text-neutral-500">Đang tải dữ liệu tồn kho...</td></tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-neutral-500">
+                  <td colSpan={4} className="py-12 text-center text-neutral-500">
                     <PackageOpen className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
                     <p className="text-lg font-medium text-neutral-900">Không có dữ liệu</p>
                     <p className="text-sm">Không tìm thấy nguyên liệu phù hợp.</p>
@@ -86,7 +85,6 @@ export default function Inventory() {
                     <td className="py-3 px-4 text-sm font-mono text-primary-700">{row.materialCode}</td>
                     <td className="py-3 px-4 text-sm text-neutral-900 font-medium">{row.materialName}</td>
                     <td className="py-3 px-4 text-sm text-neutral-700">{row.lotCount}</td>
-                    <td className="py-3 px-4 text-sm text-neutral-700">{row.uom}</td>
                     <td className="py-3 px-4 text-sm text-neutral-900 text-right font-mono">{row.total.toLocaleString()} {row.uom}</td>
                   </tr>
                 ))

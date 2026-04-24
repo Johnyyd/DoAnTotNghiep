@@ -1,11 +1,11 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { areasApi, equipmentsApi, materialsApi, recipesApi } from '@/services/api';
 import { CheckCircle2, ListTree, Pencil, Plus, Route, Search, Trash2 } from 'lucide-react';
 
 type MaterialOption = { materialId: number; materialCode: string; materialName: string; type: string };
 type AreaOption = { areaId: number; areaCode: string; areaName: string };
-type EquipmentOption = { equipmentId: number; equipmentName: string; equipmentCode: string; technicalSpecification?: string };
+type EquipmentOption = { equipmentId: number; equipmentName: string; equipmentCode: string; areaId: number; technicalSpecification?: string };
 
 type UiRecipe = { recipeId: number; materialId: number; materialName?: string; batchSize: number; status: string; versionNumber: number };
 type UiBom = { bomId: number; materialId: number; materialName: string; quantity: number; technicalStandard?: string };
@@ -89,15 +89,15 @@ function normalizeRouting(item: any): UiRouting {
     areaId: Number(item.areaId ?? item.AreaId ?? 0) || undefined,
     equipmentName: item.defaultEquipment?.equipmentName ?? item.DefaultEquipment?.EquipmentName,
     materialName: item.material?.materialName ?? item.Material?.MaterialName,
-    areaName: item.area?.areaName ?? item.Area?.AreaName,
+    areaName: item.defaultEquipment?.area?.areaName ?? item.DefaultEquipment?.Area?.AreaName ?? item.area?.areaName ?? item.Area?.AreaName,
     estimatedTimeMinutes: Number(item.estimatedTimeMinutes ?? item.EstimatedTimeMinutes ?? 0),
     cleanlinessStatus: item.cleanlinessStatus ?? item.CleanlinessStatus,
-    standardTemperature: Number(item.standardTemperature ?? item.StandardTemperature ?? 0) || undefined,
-    standardHumidity: Number(item.standardHumidity ?? item.StandardHumidity ?? 0) || undefined,
-    standardPressure: Number(item.standardPressure ?? item.StandardPressure ?? 0) || undefined,
+    standardTemperature: (item.standardTemperature !== undefined && item.standardTemperature !== null) ? Number(item.standardTemperature) : (item.StandardTemperature !== undefined ? Number(item.StandardTemperature) : undefined),
+    standardHumidity: (item.standardHumidity !== undefined && item.standardHumidity !== null) ? Number(item.standardHumidity) : (item.StandardHumidity !== undefined ? Number(item.StandardHumidity) : undefined),
+    standardPressure: (item.standardPressure !== undefined && item.standardPressure !== null) ? Number(item.standardPressure) : (item.StandardPressure !== undefined ? Number(item.StandardPressure) : undefined),
     stabilityStatus: item.stabilityStatus ?? item.StabilityStatus,
-    setTemperature: Number(item.setTemperature ?? item.SetTemperature ?? 0) || undefined,
-    setTimeMinutes: Number(item.setTimeMinutes ?? item.SetTimeMinutes ?? 0) || undefined,
+    setTemperature: (item.setTemperature !== undefined && item.setTemperature !== null) ? Number(item.setTemperature) : (item.SetTemperature !== undefined ? Number(item.SetTemperature) : undefined),
+    setTimeMinutes: (item.setTimeMinutes !== undefined && item.setTimeMinutes !== null) ? Number(item.setTimeMinutes) : (item.SetTimeMinutes !== undefined ? Number(item.SetTimeMinutes) : undefined),
     description: item.description ?? item.Description ?? '',
   };
 }
@@ -149,6 +149,7 @@ export default function Recipes() {
     equipmentId: Number(e.equipmentId ?? e.EquipmentId ?? 0),
     equipmentName: e.equipmentName ?? e.EquipmentName ?? '',
     equipmentCode: e.equipmentCode ?? e.EquipmentCode ?? '',
+    areaId: Number(e.areaId ?? e.AreaId ?? 0),
     technicalSpecification: e.technicalSpecification ?? e.TechnicalSpecification ?? '',
   })), [equipmentsRaw]);
 
@@ -183,8 +184,14 @@ export default function Recipes() {
 
   const createRecipeMutation = useMutation({
     mutationFn: () => recipesApi.create({ materialId: createForm.materialId, batchSize: createForm.batchSize, status: 'Draft', versionNumber: 1 }),
-    onSuccess: async () => {
+    onSuccess: async (response: any) => {
       await queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      
+      const newId = response?.data?.recipeId ?? response?.recipeId;
+      if (newId) {
+        setSelectedRecipeId(newId);
+      }
+      
       setCreateForm({ materialId: 0, batchSize: 0 });
     },
   });
@@ -219,7 +226,14 @@ export default function Recipes() {
   });
 
   const addRoutingMutation = useMutation({
-    mutationFn: () => recipesApi.addRoutingStep(selectedRecipeId as number, routingForm as any),
+    mutationFn: () => recipesApi.addRoutingStep(selectedRecipeId as number, {
+      ...routingForm,
+      materialId: routingForm.materialId > 0 ? routingForm.materialId : null,
+      areaId: routingForm.areaId > 0 ? routingForm.areaId : null,
+      defaultEquipmentId: routingForm.defaultEquipmentId > 0 ? routingForm.defaultEquipmentId : null,
+      setTemperature: routingForm.standardTemperature,
+      estimatedTimeMinutes: routingForm.setTimeMinutes,
+    } as any),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recipeRouting', selectedRecipeId] });
       setShowRoutingModal(false);
@@ -228,7 +242,14 @@ export default function Recipes() {
   });
 
   const updateRoutingMutation = useMutation({
-    mutationFn: () => recipesApi.updateRoutingStep(selectedRecipeId as number, editingRouting!.routingId, routingForm as any),
+    mutationFn: () => recipesApi.updateRoutingStep(selectedRecipeId as number, editingRouting!.routingId, {
+      ...routingForm,
+      materialId: routingForm.materialId > 0 ? routingForm.materialId : null,
+      areaId: routingForm.areaId > 0 ? routingForm.areaId : null,
+      defaultEquipmentId: routingForm.defaultEquipmentId > 0 ? routingForm.defaultEquipmentId : null,
+      setTemperature: routingForm.standardTemperature,
+      estimatedTimeMinutes: routingForm.setTimeMinutes,
+    } as any),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recipeRouting', selectedRecipeId] });
       setShowRoutingModal(false);
@@ -310,48 +331,47 @@ export default function Recipes() {
         <p className="text-neutral-500 mt-1">Lập định mức nguyên liệu và quy trình công đoạn theo tiêu chuẩn GMP</p>
       </div>
 
-      <div className="card space-y-4">
-        <h2 className="text-lg font-semibold text-neutral-900">Thêm công thức mới</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left: Create form */}
+        <div className="card self-start space-y-3">
+          <h2 className="text-base font-semibold text-neutral-900">Thêm công thức mới</h2>
           <div>
             <label className="text-xs text-neutral-500">Chọn thành phẩm mong muốn</label>
-            <select className="input" value={createForm.materialId} onChange={(e) => setCreateForm({ ...createForm, materialId: Number(e.target.value) })}>
+            <select className="input mt-1" value={createForm.materialId} onChange={(e) => setCreateForm({ ...createForm, materialId: Number(e.target.value) })}>
               <option value={0}>Chọn thành phẩm mong muốn</option>
               {finishedMaterials.map((m) => <option key={m.materialId} value={m.materialId}>{m.materialCode} - {m.materialName}</option>)}
             </select>
           </div>
           <div>
             <label className="text-xs text-neutral-500">Khối lượng 1 viên (mg)</label>
-            <input type="number" className="input" value={createForm.batchSize} onChange={(e) => setCreateForm({ ...createForm, batchSize: Number(e.target.value) })} />
+            <input type="number" className="input mt-1" value={createForm.batchSize} onChange={(e) => setCreateForm({ ...createForm, batchSize: Number(e.target.value) })} />
           </div>
-          <div className="flex items-end">
-            <button className="btn-primary w-full" onClick={() => createRecipeMutation.mutate()} disabled={createForm.materialId <= 0 || createForm.batchSize <= 0}>
-              <Plus className="w-4 h-4 mr-2" />Tạo công thức
-            </button>
-          </div>
+          <button className="btn-primary w-full" onClick={() => createRecipeMutation.mutate()} disabled={createForm.materialId <= 0 || createForm.batchSize <= 0}>
+            <Plus className="w-4 h-4 mr-2" />Tạo công thức
+          </button>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="card lg:col-span-1">
-          <div className="relative mb-4">
+        {/* Right: Recipe list */}
+        <div className="card self-start">
+          <h2 className="text-base font-semibold text-neutral-900 mb-2">Danh sách công thức</h2>
+          <div className="relative mb-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm công thức..." className="input pl-9" />
           </div>
           {isLoading ? <p className="text-sm text-neutral-500">Đang tải dữ liệu...</p> : (
-            <div className="space-y-2 max-h-[560px] overflow-y-auto pr-1">
+            <div className="space-y-1.5 max-h-[200px] overflow-y-auto pr-1">
               {filteredRecipes.map((recipe) => (
-                <button key={recipe.recipeId} onClick={() => setSelectedRecipeId(recipe.recipeId)} className={`w-full text-left p-3 rounded-lg border transition ${selectedRecipeId === recipe.recipeId ? 'border-primary-300 bg-primary-50' : 'border-neutral-200 hover:border-primary-200'}`}>
-                  <p className="font-semibold text-neutral-900">Công thức #{recipe.recipeId}</p>
-                  <p className="text-sm text-neutral-600 truncate">{recipe.materialName ?? '-'}</p>
-                  <p className="text-xs mt-1 text-neutral-500">Trạng thái: {recipe.status}</p>
+                <button key={recipe.recipeId} onClick={() => setSelectedRecipeId(recipe.recipeId)} className={`w-full text-left px-3 py-2 rounded-lg border transition text-sm ${selectedRecipeId === recipe.recipeId ? 'border-primary-300 bg-primary-50' : 'border-neutral-200 hover:border-primary-200'}`}>
+                  <p className="font-semibold text-neutral-900 truncate">#{recipe.recipeId} - {recipe.materialName ?? '-'}</p>
+                  <p className="text-xs text-neutral-500">{recipe.status}</p>
                 </button>
               ))}
             </div>
           )}
         </div>
+      </div>
 
-        <div className="card lg:col-span-2">
+      <div className="card">
           {!selectedRecipe ? <p className="text-sm text-neutral-500">Chọn một công thức để quản lý.</p> : (
             <div className="space-y-6">
               <div className="flex items-start justify-between gap-3">
@@ -435,17 +455,23 @@ export default function Recipes() {
                 <div className="flex items-center justify-between"><div className="flex items-center gap-2"><Route className="w-5 h-5 text-primary-600" /><h3 className="text-lg font-semibold text-neutral-900">Quy trình công đoạn</h3></div><button onClick={openCreateRouting} className="btn-secondary text-sm"><Plus className="w-4 h-4 mr-1" />Thêm công đoạn</button></div>
                 <div className="table-container">
                   <table className="table">
-                    <thead><tr><th>Bước</th><th>Tên công đoạn</th><th>Nguyên liệu</th><th>Phòng sản xuất</th><th>Thiết bị</th><th>Điều kiện</th><th className="text-right">Thao tác</th></tr></thead>
+                    <thead><tr><th className="w-12 text-center">Bước</th><th>Tên công đoạn</th><th>Nguyên liệu</th><th>Phòng sản xuất</th><th>Thiết bị</th><th>Điều kiện</th><th className="text-right w-24">Thao tác</th></tr></thead>
                     <tbody>
                       {routingSteps.length === 0 ? <tr><td colSpan={7} className="text-center text-neutral-500 py-4">Chưa có công đoạn.</td></tr> : routingSteps.map((item) => (
                         <tr key={item.routingId}>
-                          <td>{item.stepNumber}</td>
+                          <td className="text-center">{item.stepNumber}</td>
                           <td>{item.stepName}</td>
                           <td>{item.materialName || '-'}</td>
                           <td>{item.areaName || '-'}</td>
                           <td>{item.equipmentName || '-'}</td>
-                          <td>{`${item.cleanlinessStatus || '-'} | ${item.standardTemperature ?? '-'}°C | ${item.standardHumidity ?? '-'}% | ${item.standardPressure ?? '-'} Pa`}</td>
-                          <td className="text-right"><div className="flex justify-end gap-2"><button onClick={() => openEditRouting(item)} className="btn-ghost text-sm"><Pencil className="w-4 h-4 mr-1" />Sửa</button><button onClick={() => { if (confirm('Xóa công đoạn này?')) deleteRoutingMutation.mutate(item.routingId); }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xóa</button></div></td>
+                          <td>
+                            <div className="flex flex-col text-xs text-neutral-600 gap-0.5">
+                              <span>Nhiệt độ: <b>{item.standardTemperature ?? '-'}°C</b></span>
+                              <span>Độ ẩm: <b>{item.standardHumidity ?? '-'}%</b></span>
+                              <span>Áp suất: <b>{item.standardPressure ?? '-'} Pa</b></span>
+                            </div>
+                          </td>
+                          <td className="text-right"><div className="flex justify-end gap-1"><button onClick={() => openEditRouting(item)} className="p-1.5 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 rounded"><Pencil className="w-4 h-4" /></button><button onClick={() => { if (confirm('Xóa công đoạn này?')) deleteRoutingMutation.mutate(item.routingId); }} className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded"><Trash2 className="w-4 h-4" /></button></div></td>
                         </tr>
                       ))}
                     </tbody>
@@ -455,35 +481,38 @@ export default function Recipes() {
             </div>
           )}
         </div>
-      </div>
 
       {showRoutingModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-3xl p-6 space-y-4">
             <h3 className="text-xl font-bold">{editingRouting ? 'Cập nhật công đoạn' : 'Thêm công đoạn'}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div><label className="text-xs text-neutral-500">Số bước</label><input type="number" className="input" value={routingForm.stepNumber} onChange={(e) => setRoutingForm({ ...routingForm, stepNumber: Number(e.target.value) })} /></div>
               <div><label className="text-xs text-neutral-500">Tên công đoạn</label><input className="input" value={routingForm.stepName} onChange={(e) => setRoutingForm({ ...routingForm, stepName: e.target.value })} /></div>
               <div><label className="text-xs text-neutral-500">Chọn nguyên liệu</label><select className="input" value={routingForm.materialId} onChange={(e) => setRoutingForm({ ...routingForm, materialId: Number(e.target.value) })}><option value={0}>Chọn nguyên liệu</option>{inputMaterials.map((m) => <option key={m.materialId} value={m.materialId}>{m.materialCode} - {m.materialName}</option>)}</select></div>
-              <div><label className="text-xs text-neutral-500">Phòng sản xuất</label><select className="input" value={routingForm.areaId} onChange={(e) => setRoutingForm({ ...routingForm, areaId: Number(e.target.value) })}><option value={0}>Chọn khu vực</option>{areas.map((a) => <option key={a.areaId} value={a.areaId}>{a.areaName}</option>)}</select></div>
-              <div><label className="text-xs text-neutral-500">Thiết bị</label><select className="input" value={routingForm.defaultEquipmentId} onChange={(e) => setRoutingForm({ ...routingForm, defaultEquipmentId: Number(e.target.value) })}><option value={0}>Chọn thiết bị</option>{equipments.map((eq) => <option key={eq.equipmentId} value={eq.equipmentId}>{eq.equipmentCode} - {eq.equipmentName}</option>)}</select></div>
-              <div><label className="text-xs text-neutral-500">Thời gian dự kiến (phút)</label><input type="number" className="input" value={routingForm.estimatedTimeMinutes} onChange={(e) => setRoutingForm({ ...routingForm, estimatedTimeMinutes: Number(e.target.value) })} /></div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div><label className="text-xs text-neutral-500">Sạch/không sạch</label><select className="input" value={routingForm.cleanlinessStatus} onChange={(e) => setRoutingForm({ ...routingForm, cleanlinessStatus: e.target.value })}><option value="Sạch">Sạch</option><option value="Không sạch">Không sạch</option></select></div>
-              <div><label className="text-xs text-neutral-500">Nhiệt độ tiêu chuẩn (°C)</label><input type="number" className="input" value={routingForm.standardTemperature} onChange={(e) => setRoutingForm({ ...routingForm, standardTemperature: Number(e.target.value) })} /></div>
-              <div><label className="text-xs text-neutral-500">Độ ẩm tiêu chuẩn (%)</label><input type="number" className="input" value={routingForm.standardHumidity} onChange={(e) => setRoutingForm({ ...routingForm, standardHumidity: Number(e.target.value) })} /></div>
-              <div><label className="text-xs text-neutral-500">Áp suất (Pa)</label><input type="number" className="input" value={routingForm.standardPressure} onChange={(e) => setRoutingForm({ ...routingForm, standardPressure: Number(e.target.value) })} /></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><label className="text-xs text-neutral-500">Phòng sản xuất</label><select className="input" value={routingForm.areaId} onChange={(e) => {
+                setRoutingForm({ ...routingForm, areaId: Number(e.target.value), defaultEquipmentId: 0 });
+              }}><option value={0}>Chọn khu vực</option>{areas.map((a) => <option key={a.areaId} value={a.areaId}>{a.areaName}</option>)}</select></div>
+              <div><label className="text-xs text-neutral-500">Thiết bị</label><select className="input disabled:opacity-50" value={routingForm.defaultEquipmentId} disabled={routingForm.areaId === 0} onChange={(e) => setRoutingForm({ ...routingForm, defaultEquipmentId: Number(e.target.value) })}><option value={0}>{routingForm.areaId === 0 ? 'Vui lòng chọn phòng trước' : 'Chọn thiết bị'}</option>{equipments.filter(e => e.areaId === routingForm.areaId).map((eq) => <option key={eq.equipmentId} value={eq.equipmentId}>{eq.equipmentCode} - {eq.equipmentName}</option>)}</select></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div><label className="text-xs text-neutral-500">Ổn định/không ổn định</label><select className="input" value={routingForm.stabilityStatus} onChange={(e) => setRoutingForm({ ...routingForm, stabilityStatus: e.target.value })}><option value="Ổn định">Ổn định</option><option value="Không ổn định">Không ổn định</option></select></div>
-              <div><label className="text-xs text-neutral-500">Nhiệt độ cài đặt (°C)</label><input type="number" className="input" value={routingForm.setTemperature} onChange={(e) => setRoutingForm({ ...routingForm, setTemperature: Number(e.target.value) })} /></div>
-              <div><label className="text-xs text-neutral-500">Thời gian cài đặt (phút)</label><input type="number" className="input" value={routingForm.setTimeMinutes} onChange={(e) => setRoutingForm({ ...routingForm, setTimeMinutes: Number(e.target.value) })} /></div>
+              <div><label className="text-xs text-neutral-500">Nhiệt độ tiêu chuẩn (°C)</label><input type="number" className="input" value={routingForm.standardTemperature} onChange={(e) => setRoutingForm({ ...routingForm, standardTemperature: Number(e.target.value) })} /></div>
+              <div><label className="text-xs text-neutral-500">Độ ẩm tiêu chuẩn (%)</label><input type="number" className="input" value={routingForm.standardHumidity} onChange={(e) => setRoutingForm({ ...routingForm, standardHumidity: Number(e.target.value) })} /></div>
+              <div><label className="text-xs text-neutral-500">Áp suất tiêu chuẩn (Pa)</label><input type="number" className="input" value={routingForm.standardPressure} onChange={(e) => setRoutingForm({ ...routingForm, standardPressure: Number(e.target.value) })} /></div>
             </div>
 
-            <div><label className="text-xs text-neutral-500">Mô tả</label><textarea className="input min-h-20" value={routingForm.description} onChange={(e) => setRoutingForm({ ...routingForm, description: e.target.value })} /></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:pr-2"><label className="text-xs text-neutral-500">Thời gian cài đặt (phút)</label><input type="number" className="input" value={routingForm.setTimeMinutes} onChange={(e) => setRoutingForm({ ...routingForm, setTimeMinutes: Number(e.target.value) })} /></div>
+            </div>
+
+            <div>
+              <label className="text-xs text-neutral-500">Mô tả</label>
+              <textarea className="input min-h-[100px]" value={routingForm.description} onChange={(e) => setRoutingForm({ ...routingForm, description: e.target.value })} />
+            </div>
+
 
             <div className="flex justify-end gap-2"><button onClick={() => setShowRoutingModal(false)} className="btn-ghost">Hủy</button><button onClick={() => (editingRouting ? updateRoutingMutation.mutate() : addRoutingMutation.mutate())} className="btn-primary">{editingRouting ? 'Lưu cập nhật' : 'Thêm công đoạn'}</button></div>
           </div>

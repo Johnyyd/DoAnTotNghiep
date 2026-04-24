@@ -48,5 +48,3 @@ Trong file `appsettings.json` của Backend, hãy đảm bảo thông tin khớp
 ## ⚠️ Lưu ý quan trọng
 - **Tên Database**: Phải là `PharmaceuticalProcessingManagementSystem` để đồng bộ với code Backend.
 - **Ràng buộc khóa ngoại**: Nếu cập nhật thủ công, hãy chú ý thứ tự xóa/tạo bảng để tránh lỗi ràng buộc (Foreign Key). Các file module đã được sắp xếp để hạn chế tối đa vấn đề này.
-
-||docker-compose up -d --build gmp-sqlserver gmp-api gmp-frontend||

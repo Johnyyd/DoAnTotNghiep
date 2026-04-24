@@ -9,7 +9,6 @@ import type {
   ProductionOrder,
   ProductionBatch,
   BatchProcessLog,
-  SystemAuditLog,
   User,
   PaginatedResponse,
   PaginationParams
@@ -43,7 +42,7 @@ api.interceptors.response.use(
   (response) => response.data,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid — clear storage
+      // Token expired or invalid â€” clear storage
       localStorage.removeItem('gmp_token');
       localStorage.removeItem('gmp_user');
     }
@@ -211,19 +210,17 @@ export const certificatesApi = {
   getMaterialCertificateUrl: (materialCode: string) => `/api/certificates/material/${encodeURIComponent(materialCode)}`,
   getFinishedCertificateUrl: (materialCode: string) => `/api/certificates/finished/${encodeURIComponent(materialCode)}`,
   getLotCertificateUrl: (batchNumber: string) => `/api/certificates/lot/${encodeURIComponent(batchNumber)}`,
+  uploadBatchCertificate: (batchNumber: string, file: File) => {
+    const formData = new FormData();
+    formData.append('batchNumber', batchNumber);
+    formData.append('file', file);
+    return api.post<ApiResponse<{ fileName: string; filePath: string }>>('/certificates/batch/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  getBatchCertificateUrl: (batchNumber: string) => `/api/certificates/batch/${encodeURIComponent(batchNumber)}`,
 };
 
-// ============== AUDIT LOGS ==============
-export const auditApi = {
-  getAll: (params?: { entityType?: string; entityId?: number; limit?: number }) =>
-    api.get<ApiResponse<SystemAuditLog[]>>('/audit-logs', { params }),
-  getByEntity: (entityType: string, entityId: number) =>
-    api.get<ApiResponse<SystemAuditLog[]>>(`/audit-logs/${entityType}/${entityId}`),
-};
 
-// ============== HEALTH & SYSTEM ==============
-export const systemApi = {
-  health: () => api.get<{ status: string; timestamp: string; version?: string }>('/health'),
-};
 
 export default api;

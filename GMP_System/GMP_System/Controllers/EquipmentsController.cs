@@ -65,7 +65,7 @@ namespace GMP_System.Controllers
             existingEquipment.TechnicalSpecification = equipment.TechnicalSpecification;
             existingEquipment.UsagePurpose = equipment.UsagePurpose;
             existingEquipment.AreaId = equipment.AreaId;
-            existingEquipment.Status = equipment.Status;
+
 
             _unitOfWork.Equipments.Update(existingEquipment);
             await _unitOfWork.CompleteAsync();

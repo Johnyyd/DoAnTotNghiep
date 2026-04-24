@@ -21,6 +21,7 @@ namespace GMP_System.Controllers
         {
             var orders = await _unitOfWork.ProductionOrders
                 .Query()
+                .Include(o => o.CreatedByNavigation)
                 .Select(o => new
                 {
                     o.OrderId,
@@ -32,6 +33,8 @@ namespace GMP_System.Controllers
                     o.StartDate,
                     o.EndDate,
                     o.CreatedAt,
+                    o.CreatedBy,
+                    CreatedByName = o.CreatedByNavigation == null ? null : o.CreatedByNavigation.FullName,
                     Recipe = o.Recipe == null ? null : new
                     {
                         o.Recipe.RecipeId,
@@ -286,20 +289,32 @@ namespace GMP_System.Controllers
             var existing = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
             if (existing == null)
             {
-                return NotFound(new { success = false, message = "Không tìm th?y l?nh s?n xu?t." });
+                return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
             }
 
-            existing.OrderCode = string.IsNullOrWhiteSpace(order.OrderCode) ? existing.OrderCode : order.OrderCode;
-            existing.RecipeId = order.RecipeId;
-            existing.PlannedQuantity = order.PlannedQuantity;
-            existing.StartDate = order.StartDate;
-            existing.EndDate = order.EndDate;
-            existing.Status = string.IsNullOrWhiteSpace(order.Status) ? existing.Status : order.Status;
+            // Only overwrite each field if caller provided a non-default value
+            if (!string.IsNullOrWhiteSpace(order.OrderCode))
+                existing.OrderCode = order.OrderCode;
+
+            if (order.RecipeId.HasValue && order.RecipeId.Value > 0)
+                existing.RecipeId = order.RecipeId;
+
+            if (order.PlannedQuantity > 0)
+                existing.PlannedQuantity = order.PlannedQuantity;
+
+            if (order.StartDate.HasValue)
+                existing.StartDate = order.StartDate;
+
+            if (order.EndDate.HasValue)
+                existing.EndDate = order.EndDate;
+
+            if (!string.IsNullOrWhiteSpace(order.Status))
+                existing.Status = order.Status;
 
             _unitOfWork.ProductionOrders.Update(existing);
             await _unitOfWork.CompleteAsync();
 
-            return Ok(new { success = true, message = "C?p nh?t thành công.", orderId = id });
+            return Ok(new { success = true, message = "Cập nhật thành công.", orderId = id });
         }
 
         [HttpPost("{id}/approve")]

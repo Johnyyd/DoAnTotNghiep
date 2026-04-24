@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GMP_System.Controllers
@@ -126,6 +126,76 @@ namespace GMP_System.Controllers
         public IActionResult GetLotCertificate(string batchNumber)
         {
             return ServeImageByCode(new[] { GetMaterialStorageDirectory() }, batchNumber);
+        }
+
+        private string GetBatchStorageDirectory()
+        {
+            var configured = _configuration["Certificates:BatchStoragePath"];
+            if (!string.IsNullOrWhiteSpace(configured))
+                return configured;
+            return Path.Combine(_env.ContentRootPath, "certificates", "batches");
+        }
+
+        [HttpPost("batch/upload")]
+        [RequestSizeLimit(20_000_000)]
+        public async Task<IActionResult> UploadBatchCertificate([FromForm] string batchNumber, [FromForm] IFormFile file)
+        {
+            if (string.IsNullOrWhiteSpace(batchNumber))
+                return BadRequest(new { success = false, message = "Thiếu mã mẻ sản xuất." });
+
+            if (file == null || file.Length == 0)
+                return BadRequest(new { success = false, message = "Thiếu tệp giấy kiểm nghiệm." });
+
+            var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp", ".pdf" };
+            if (string.IsNullOrWhiteSpace(ext) || !allowed.Contains(ext))
+                return BadRequest(new { success = false, message = "Định dạng không hợp lệ. Chỉ hỗ trợ JPG/PNG/WEBP/PDF." });
+
+            var safeCode = new string(batchNumber.Where(ch => char.IsLetterOrDigit(ch) || ch == '-' || ch == '_').ToArray());
+            if (string.IsNullOrWhiteSpace(safeCode))
+                return BadRequest(new { success = false, message = "Mã mẻ không hợp lệ." });
+
+            var storageDir = GetBatchStorageDirectory();
+            Directory.CreateDirectory(storageDir);
+
+            var fileName = $"{safeCode}{ext}";
+            var fullPath = Path.Combine(storageDir, fileName);
+
+            await using (var stream = System.IO.File.Create(fullPath))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            return Ok(new { success = true, message = "Tải giấy kiểm nghiệm mẻ thành công.", data = new { fileName, filePath = fullPath } });
+        }
+
+        [HttpGet("batch/{batchNumber}")]
+        [AllowAnonymous]
+        public IActionResult GetBatchCertificate(string batchNumber)
+        {
+            var storageDir = GetBatchStorageDirectory();
+            if (string.IsNullOrWhiteSpace(batchNumber))
+                return NotFound(new { success = false, message = "Thiếu mã mẻ." });
+
+            var safeCode = new string(batchNumber.Where(ch => char.IsLetterOrDigit(ch) || ch == '-' || ch == '_').ToArray());
+
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp", ".pdf" };
+            var found = allowed.Select(ext => Path.Combine(storageDir, $"{safeCode}{ext}"))
+                               .FirstOrDefault(System.IO.File.Exists);
+
+            if (found == null)
+                return NotFound(new { success = false, message = $"Chưa có giấy kiểm nghiệm cho mẻ {safeCode}." });
+
+            var extension = Path.GetExtension(found).ToLowerInvariant();
+            var contentType = extension switch
+            {
+                ".pdf" => "application/pdf",
+                ".png" => "image/png",
+                ".webp" => "image/webp",
+                _ => "image/jpeg"
+            };
+
+            return PhysicalFile(found, contentType);
         }
 
         private IActionResult ServeImageByCode(IEnumerable<string> storageDirs, string code)

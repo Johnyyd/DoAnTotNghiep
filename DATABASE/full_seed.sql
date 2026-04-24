@@ -6,31 +6,6 @@
 USE [PharmaceuticalProcessingManagementSystem];
 GO
 
--- =====================================================================
--- ĐẢM BẢO CẤU TRÚC DATABASE KHỚP VỚI FILE SEED (CHỈ THÊM, KHÔNG XÓA)
--- =====================================================================
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('AppUsers') AND name = 'LastLogin')
-    ALTER TABLE AppUsers ADD LastLogin DATETIME2;
-
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('UomConversions') AND name = 'ConversionFactor')
-    ALTER TABLE UomConversions ADD ConversionFactor DECIMAL(18, 6);
-
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('UomConversions') AND name = 'Note')
-    ALTER TABLE UomConversions ADD Note NVARCHAR(200);
-
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('InventoryLots') AND name = 'SupplierName')
-    ALTER TABLE InventoryLots ADD SupplierName NVARCHAR(200);
-
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('InventoryLots') AND name = 'CreatedAt')
-    ALTER TABLE InventoryLots ADD CreatedAt DATETIME2;
-
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MaterialUsage') AND name = 'UsedDate')
-    ALTER TABLE MaterialUsage ADD UsedDate DATETIME2;
-GO
-
--- TẮT RÀNG BUỘC ĐỂ CẬP NHẬT DỮ LIỆU
-EXEC sp_MSforeachtable "ALTER TABLE ? NOCHECK CONSTRAINT all"
-
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO
@@ -113,9 +88,9 @@ PRINT 'Insert UnitOfMeasure Completed Successfully!';
 SET IDENTITY_INSERT ProductionAreas ON;
 INSERT INTO ProductionAreas (AreaId, AreaCode, AreaName, Description)
 VALUES 
-(1, 'PHA-CHE', N'Phòng pha chế', N'Khu vực pha chế'),
+(1, 'PHONG-PHA-CHE', N'Phòng pha chế', N'Khu vực pha chế'),
 (2, 'PHONG-CAN', N'Phòng cân', N'Khu vực cân'),
-(3, 'TRON-KHO', N'Phòng trộn khô', N'Khu vực trộn');
+(3, 'PHONG-TRON-KHO', N'Phòng trộn khô', N'Khu vực trộn');
 SET IDENTITY_INSERT ProductionAreas OFF;
 GO
 PRINT 'Insert ProductionAreas Completed Successfully!';
@@ -136,18 +111,18 @@ PRINT 'Insert UomConversions Completed Successfully!';
 -- 5. Equipments (8 thiết bị)
 -- =====================================================================
 SET IDENTITY_INSERT Equipments ON;
-INSERT INTO Equipments (EquipmentId, EquipmentCode, EquipmentName, TechnicalSpecification, UsagePurpose, AreaId, Status) VALUES
-(1,  'IW2-60',        N'Cân điện tử',            N'60 kg; 5 g',           N'Cân nguyên liệu và tá dược', 2, 'Ready'),
-(2,  'PMA-5000',      N'Cân điện tử',            N'5 kg; 0,1 g',          N'Cân tá dược',                 2, 'Ready'),
-(3,  'TE-212',        N'Cân điện tử',            N'210 g; 0,01 g',        N'Kiểm tra khối lượng viên',    2, 'Ready'),
-(4,  'AD-LP-200',     N'Máy trộn lập phương',    N'200 kg/ mẻ',           N'Trộn đồng nhất',              3, 'Ready'),
-(5,  'NJP-1200 D',    N'Máy đóng nang tự động',  N'72.000 viên/ giờ',     N'Cấp thuốc vào nang',          1, 'Ready'),
-(6,  'IPJ',           N'Máy lau nang',           N'100.000 viên/ giờ',    N'Làm sạch viên thuốc',         1, 'Ready'),
-(7,  'KW-102',        N'Máy đóng chai',          N'500 chai/ giờ',        N'Đếm viên thuốc vào chai',     1, 'Ready'),
-(8,  'CNTB-TSC',      N'Tủ sấy chai',            N'1,5 m³',               N'Sấy khô chai',                1, 'Ready'),
-(9,  'VIDEOJET-1220', N'Máy in số lô',           N'250 nhãn/ giờ',        N'In số lô, ngày SX, hạn dùng', 1, 'Ready'),
-(10, 'ABL-M',         N'Máy dán nhãn tự động',   N'1.500 nhãn/ giờ',      N'Dán nhãn vào thân chai',      1, 'Ready'),
-(11, 'F-262',         N'Máy gấp toa',            N'10.000 toa/ giờ',      N'Bế tờ HDSD',                  1, 'Ready');
+INSERT INTO Equipments (EquipmentId, EquipmentCode, EquipmentName, TechnicalSpecification, UsagePurpose, AreaId) VALUES
+(1,  'IW2-60',        N'Cân điện tử',            N'60 kg; 5 g',           N'Cân nguyên liệu và tá dược', 2),
+(2,  'PMA-5000',      N'Cân điện tử',            N'5 kg; 0,1 g',          N'Cân tá dược',                 2),
+(3,  'TE-212',        N'Cân điện tử',            N'210 g; 0,01 g',        N'Kiểm tra khối lượng viên',    2),
+(4,  'AD-LP-200',     N'Máy trộn lập phương',    N'200 kg/ mẻ',           N'Trộn đồng nhất',              3),
+(5,  'NJP-1200 D',    N'Máy đóng nang tự động',  N'72.000 viên/ giờ',     N'Cấp thuốc vào nang',          1),
+(6,  'IPJ',           N'Máy lau nang',           N'100.000 viên/ giờ',    N'Làm sạch viên thuốc',         1),
+(7,  'KW-102',        N'Máy đóng chai',          N'500 chai/ giờ',        N'Đếm viên thuốc vào chai',     1),
+(8,  'CNTB-TSC',      N'Tủ sấy chai',            N'1,5 m³',               N'Sấy khô chai',                1),
+(9,  'VIDEOJET-1220', N'Máy in số lô',           N'250 nhãn/ giờ',        N'In số lô, ngày SX, hạn dùng', 1),
+(10, 'ABL-M',         N'Máy dán nhãn tự động',   N'1.500 nhãn/ giờ',      N'Dán nhãn vào thân chai',      1),
+(11, 'F-262',         N'Máy gấp toa',            N'10.000 toa/ giờ',      N'Bế tờ HDSD',                  1);
 SET IDENTITY_INSERT Equipments OFF;
 GO
 PRINT 'Insert Equipments Completed Successfully!';
@@ -250,9 +225,6 @@ INSERT INTO StepParameters (ParameterId, RoutingId, ParameterName, Unit, MinValu
 (4, 1, N'Nhiệt độ sấy',  '°C', 73, 77, 1, NULL),
 (20, 1, N'Thời gian sấy', 'phút', 170, 190, 1, NULL),
 (24, 2, N'Nhiệt độ sấy',  '°C', 73, 77, 1, NULL),
-(25, 2, N'Nhiệt độ phòng', '°C', 21, 25, 1, NULL),
-(26, 2, N'Độ ẩm phòng',   '%',  45, 70, 1, NULL),
-(27, 2, N'Áp lực phòng',  'Pa', 10, 20, 1, NULL),
 (7, 4, N'Tốc độ trộn',   'v/p', 14, 16, 1, NULL),
 (50, 18, N'Nhiệt độ sấy', '°C', 60, 70, 1, NULL);
 SET IDENTITY_INSERT StepParameters OFF;
@@ -285,9 +257,23 @@ PRINT 'Insert ProductionBatches Completed Successfully!';
 -- =====================================================================
 SET IDENTITY_INSERT InventoryLots ON;
 INSERT INTO InventoryLots (LotId, MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, QCStatus, SupplierName, CreatedAt) VALUES
-(1, 1, 'L-NLC3-01', 85000.00, DATEADD(DAY,-60,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Dược liệu TW', GETDATE()),
-(3, 9, 'L-PARA-01', 250000.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'Released', N'Ấn Độ', GETDATE()),
-(5, 6, 'L-STR-01',  80000.00, DATEADD(DAY,-45,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'Released', N'Đồng Nai', GETDATE());
+(1, 1, 'L-NLC3-01', 2.00, DATEADD(DAY,-60,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Dược liệu TW', GETDATE()),
+(2, 2, 'L-AEROSIL-01', 5.00, DATEADD(DAY,-55,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp A', GETDATE()),
+(3, 3, 'L-SSG-01', 3.00, DATEADD(DAY,-50,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp B', GETDATE()),
+(4, 4, 'L-TALC-01', 5.00, DATEADD(DAY,-45,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp C', GETDATE()),
+(5, 5, 'L-MAGIE-01', 3.00, DATEADD(DAY,-40,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp D', GETDATE()),
+(6, 6, 'L-STR-01', 2.00, DATEADD(DAY,-45,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'Released', N'Đồng Nai', GETDATE()),
+(7, 7, 'L-NANG-01', 50.00, DATEADD(DAY,-35,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp E', GETDATE()),
+(8, 8, 'L-PVP-01', 10.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp F', GETDATE()),
+(9, 9, 'L-PARA-01', 3.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'Released', N'Ấn Độ', GETDATE()),
+(10, 10, 'L-LAC-01', 15.00, DATEADD(DAY,-25,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp G', GETDATE()),
+(11, 11, 'L-ALU-01', 20.00, DATEADD(DAY,-20,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp H', GETDATE()),
+(12, 12, 'L-PVC-01', 20.00, DATEADD(DAY,-15,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp I', GETDATE()),
+(13, 13, 'L-FGNLC3-01', 5.00, DATEADD(DAY,-10,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Sản xuất nội bộ', GETDATE()),
+(14, 14, 'L-FGPARA-01', 10.00, DATEADD(DAY,-5,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Sản xuất nội bộ', GETDATE()),
+(15, 15, 'L-WATER-01', 100.00, DATEADD(DAY,-5,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp J', GETDATE()),
+(16, 16, 'L-AMP-01', 50.00, DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp K', GETDATE()),
+(17, 17, 'L-FGDIPY-01', 2.00, DATEADD(DAY,-1,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Sản xuất nội bộ', GETDATE());
 SET IDENTITY_INSERT InventoryLots OFF;
 PRINT 'Insert InventoryLots Completed Successfully!';
 -- =====================================================================
@@ -295,8 +281,8 @@ PRINT 'Insert InventoryLots Completed Successfully!';
 -- =====================================================================
 SET IDENTITY_INSERT MaterialUsage ON;
 INSERT INTO MaterialUsage (UsageId, BatchId, InventoryLotId, ActualAmount, UsedDate, DispensedBy, Note) VALUES
-(1, 1, 1, 25015.00, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất NLC3'),
-(2, 1, 5, 25100.00, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất Tinh bột');
+(1, 1, 1, 1.50, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất NLC3'),
+(2, 1, 6, 1.00, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất Tinh bột');
 SET IDENTITY_INSERT MaterialUsage OFF;
 PRINT 'Insert MaterialUsage Completed Successfully!';
 -- (Bảng QualityTests không tồn tại trong schema thực tế của DB này - đã bỏ qua)
@@ -310,18 +296,5 @@ INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId
 (2, 1, 2, 2, 3, DATEADD(HOUR,-122,GETDATE()), DATEADD(HOUR,-120,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1);
 SET IDENTITY_INSERT BatchProcessLogs OFF;
 PRINT 'Insert BatchProcessLogs Completed Successfully!';
--- =====================================================================
--- 16. SystemAuditLog (Dấu vết kiểm toán - minh họa)
--- =====================================================================
-SET IDENTITY_INSERT SystemAuditLog ON;
-INSERT INTO SystemAuditLog (AuditId, TableName, RecordId, Action, OldValue, NewValue, ChangedBy, ChangedDate) VALUES
-(1, 'Recipes', '1', 'UPDATE', N'{"Status":"Draft"}', N'{"Status":"Approved"}', 2, DATEADD(DAY,-30,GETDATE()));
-SET IDENTITY_INSERT SystemAuditLog OFF;
-GO
-PRINT 'Insert SystemAuditLog Completed Successfully!';
 
 PRINT 'GMP Database Initialization & Full Seeding Completed Successfully!';
-
--- BẬT LẠI RÀNG BUỘC
-EXEC sp_MSforeachtable "ALTER TABLE ? CHECK CONSTRAINT all"
-GO

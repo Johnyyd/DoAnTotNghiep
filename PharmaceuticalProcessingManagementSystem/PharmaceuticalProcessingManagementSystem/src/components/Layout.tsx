@@ -1,20 +1,20 @@
-﻿import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Pill,
   ClipboardList,
   Warehouse,
   Search,
-  Activity,
   Menu,
   X,
-  Bell,
+
   Users,
   Package,
   LogOut,
   Settings,
   FileText,
   BarChart3,
+  Factory,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -24,15 +24,15 @@ const navigation = [
   { name: 'Nguyên Liệu', href: '/materials', icon: Pill, roles: ['Admin', 'Manager', 'QualityControl'] },
   { name: 'Công Thức', href: '/recipes', icon: ClipboardList, roles: ['Admin', 'Manager'] },
   { name: 'Lệnh Sản Xuất', href: '/production-orders', icon: Warehouse, roles: ['Admin', 'Manager'] },
-  { name: 'Mẻ Sản Xuất', href: '/batches', icon: Activity, roles: ['Admin', 'Manager', 'Operator'] },
   { name: 'Thành Phẩm', href: '/finished-products', icon: Package, roles: ['Admin', 'Manager', 'QualityControl'] },
   { name: 'Truy Xuất', href: '/traceability', icon: Search, roles: ['Admin', 'Manager', 'QualityControl'] },
   { name: 'Tồn Kho', href: '/inventory', icon: Package, roles: ['Admin', 'Manager'] },
   { name: 'Thiết Bị', href: '/equipments', icon: Settings, roles: ['Admin', 'Manager'] },
   { name: 'Theo Dõi Tiến Độ', href: '/manager-operations', icon: FileText, roles: ['Admin', 'Manager'] },
+  { name: 'Phòng Sản Xuất', href: '/production-areas', icon: Factory, roles: ['Admin', 'Manager'] },
   { name: 'Thống Kê Thành Phẩm', href: '/finished-goods-stats', icon: BarChart3, roles: ['Admin', 'Manager'] },
   { name: 'Tài Khoản', href: '/users', icon: Users, roles: ['Admin'] },
-  { name: 'Nhật Ký Hệ Thống', href: '/audit-logs', icon: ClipboardList, roles: ['Admin', 'QualityControl'] },
+
 ];
 
 const roleLabels: Record<string, string> = {
@@ -62,7 +62,7 @@ export default function Layout() {
       )}
 
       <aside
-        className={`print:hidden fixed inset-y-0 left-0 z-50 w-72 bg-surface border-r border-neutral-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col ${
+        className={`print:hidden fixed inset-y-0 left-0 z-50 w-[258px] bg-surface border-r border-neutral-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -130,7 +130,7 @@ export default function Layout() {
         </div>
       </aside>
 
-      <div className="flex-1 lg:ml-72 print:m-0 print:w-full">
+      <div className="flex-1 lg:ml-[258px] print:m-0 print:w-full">
         <header className="print:hidden bg-surface border-b border-neutral-200 h-16 flex items-center px-6 sticky top-0 z-30">
           <button
             className="lg:hidden p-2 rounded-lg hover:bg-neutral-100 mr-4"
@@ -140,20 +140,10 @@ export default function Layout() {
           </button>
 
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-neutral-900">Quản Lý Sản Xuất Dược Phẩm</h2>
+            <h2 className="text-lg font-semibold text-neutral-900">Theo dõi tiến độ</h2>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <button className="relative p-2 rounded-lg hover:bg-neutral-100 transition-colors">
-              <Bell className="w-5 h-5 text-neutral-600" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
 
-            <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 bg-secondary-50 border border-secondary-200 rounded-lg">
-              <div className="w-2 h-2 bg-secondary-500 rounded-full animate-pulse" />
-              <span className="text-sm font-medium text-secondary-700">Hệ thống ổn định</span>
-            </div>
-          </div>
         </header>
 
         <main className="p-6 lg:p-8">

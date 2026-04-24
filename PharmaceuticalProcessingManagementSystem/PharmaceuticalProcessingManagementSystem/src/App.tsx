@@ -12,12 +12,13 @@ import Recipes from '@/pages/Recipes';
 import ProductionOrders from '@/pages/ProductionOrders';
 import ProductionBatches from '@/pages/ProductionBatches';
 import Traceability from '@/pages/Traceability';
-import AuditLogs from '@/pages/AuditLogs';
+
 import Inventory from '@/pages/Inventory';
 import AppUsers from '@/pages/AppUsers';
 import Equipments from '@/pages/Equipments';
 import ManagerOperations from '@/pages/ManagerOperations';
 import FinishedGoodsStats from '@/pages/FinishedGoodsStats';
+import ProductionAreas from '@/pages/ProductionAreas';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,12 +55,13 @@ function App() {
               <Route path="batches" element={<ProductionBatches />} />
               <Route path="finished-products" element={<FinishedProducts />} />
               <Route path="traceability" element={<Traceability />} />
-              <Route path="audit-logs" element={<AuditLogs />} />
+
               <Route path="inventory" element={<Inventory />} />
               <Route path="users" element={<AppUsers />} />
               <Route path="equipments" element={<Equipments />} />
               <Route path="manager-operations" element={<ManagerOperations />} />
               <Route path="finished-goods-stats" element={<FinishedGoodsStats />} />
+              <Route path="production-areas" element={<ProductionAreas />} />
             </Route>
 
             {/* Fallback */}

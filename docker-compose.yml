@@ -38,6 +38,7 @@ services:
       - Certificates__StoragePath=/app/materials
       - Certificates__FinishedStoragePath=/app/finished-goods
       - Certificates__PublicMaterialsPath=/app/materials
+      - Certificates__BatchStoragePath=/app/batch-certificates
     depends_on:
       gmp-sqlserver:
         condition: service_healthy
@@ -45,6 +46,7 @@ services:
       - ./DATABASE:/app/DATABASE:ro
       - ./DATABASE/materials:/app/materials
       - ./DATABASE/finished_goods:/app/finished-goods
+      - gmp-batch-certificates:/app/batch-certificates
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
@@ -88,3 +90,4 @@ networks:
 
 volumes:
   gmp-sqlserver-data:
+  gmp-batch-certificates:

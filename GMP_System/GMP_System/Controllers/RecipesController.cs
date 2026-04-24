@@ -172,6 +172,19 @@ namespace GMP_System.Controllers
                 .Include(b => b.Material)
                 .Include(b => b.Uom)
                 .OrderBy(b => b.BomId)
+                .Select(b => new
+                {
+                    b.BomId,
+                    b.RecipeId,
+                    b.MaterialId,
+                    b.Quantity,
+                    b.UomId,
+                    b.WastePercentage,
+                    b.Note,
+                    TechnicalStandard = b.Material != null ? b.Material.TechnicalSpecification : null,
+                    Material = b.Material == null ? null : new { b.Material.MaterialId, b.Material.MaterialCode, b.Material.MaterialName },
+                    Uom = b.Uom == null ? null : new { b.Uom.UomId, b.Uom.UomName }
+                })
                 .ToListAsync();
 
             return Ok(new { success = true, data = items });
@@ -257,7 +270,41 @@ namespace GMP_System.Controllers
             var steps = await _context.RecipeRoutings
                 .Where(r => r.RecipeId == id)
                 .Include(r => r.DefaultEquipment)
+                    .ThenInclude(e => e!.Area)
                 .OrderBy(r => r.StepNumber)
+                .Select(r => new
+                {
+                    r.RoutingId,
+                    r.RecipeId,
+                    r.StepNumber,
+                    r.StepName,
+                    r.Description,
+                    r.EstimatedTimeMinutes,
+                    r.DefaultEquipmentId,
+                    r.MaterialId,
+                    r.AreaId,
+                    r.CleanlinessStatus,
+                    r.StandardTemperature,
+                    r.StandardHumidity,
+                    r.StandardPressure,
+                    r.StabilityStatus,
+                    r.SetTemperature,
+                    r.SetTimeMinutes,
+                    Material = r.Material == null ? null : new { r.Material.MaterialName },
+                    Area = r.Area == null ? null : new { r.Area.AreaName },
+                    DefaultEquipment = r.DefaultEquipment == null ? null : new
+                    {
+                        r.DefaultEquipment.EquipmentId,
+                        r.DefaultEquipment.EquipmentName,
+                        r.DefaultEquipment.EquipmentCode,
+                        Area = r.DefaultEquipment.Area == null ? null : new
+                        {
+                            r.DefaultEquipment.Area.AreaId,
+                            r.DefaultEquipment.Area.AreaName,
+                            r.DefaultEquipment.Area.AreaCode
+                        }
+                    }
+                })
                 .ToListAsync();
 
             return Ok(new { success = true, data = steps });
@@ -284,7 +331,16 @@ namespace GMP_System.Controllers
                 StepName = request.StepName.Trim(),
                 Description = request.Description,
                 EstimatedTimeMinutes = request.EstimatedTimeMinutes,
-                DefaultEquipmentId = request.DefaultEquipmentId
+                DefaultEquipmentId = request.DefaultEquipmentId,
+                MaterialId = request.MaterialId,
+                AreaId = request.AreaId,
+                CleanlinessStatus = request.CleanlinessStatus,
+                StandardTemperature = request.StandardTemperature,
+                StandardHumidity = request.StandardHumidity,
+                StandardPressure = request.StandardPressure,
+                StabilityStatus = request.StabilityStatus,
+                SetTemperature = request.SetTemperature,
+                SetTimeMinutes = request.SetTimeMinutes
             };
 
             _context.RecipeRoutings.Add(step);
@@ -311,6 +367,15 @@ namespace GMP_System.Controllers
             step.Description = request.Description;
             step.EstimatedTimeMinutes = request.EstimatedTimeMinutes;
             step.DefaultEquipmentId = request.DefaultEquipmentId;
+            step.MaterialId = request.MaterialId;
+            step.AreaId = request.AreaId;
+            step.CleanlinessStatus = request.CleanlinessStatus;
+            step.StandardTemperature = request.StandardTemperature;
+            step.StandardHumidity = request.StandardHumidity;
+            step.StandardPressure = request.StandardPressure;
+            step.StabilityStatus = request.StabilityStatus;
+            step.SetTemperature = request.SetTemperature;
+            step.SetTimeMinutes = request.SetTimeMinutes;
 
             await _context.SaveChangesAsync();
             return Ok(new { success = true, data = step, message = "Ðã c?p nh?t công do?n." });

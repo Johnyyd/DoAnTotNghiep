@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { certificatesApi, inventoryApi, materialsApi } from '@/services/api';
 import { FileCheck2, Search } from 'lucide-react';
@@ -65,7 +65,7 @@ export default function FinishedProducts() {
     return rows.filter((m) => {
       const g = grouped.get(m.materialId);
       if (tab === 'completed') return (g?.completedQty ?? 0) > 0;
-      return true;
+      return (g?.completedQty ?? 0) === 0;
     });
   }, [materials, grouped, tab, search]);
 
@@ -93,13 +93,14 @@ export default function FinishedProducts() {
               <tbody>
                 {filtered.map((m) => {
                   const g = grouped.get(m.materialId);
-                  const qty = tab === 'completed' ? (g?.completedQty ?? 0) : (g?.targetQty ?? 2);
-                  const unit = viUnit(g?.unit || m.baseUomName || 'đơn vị');
+                  const qty = tab === 'completed' ? (g?.completedQty ?? 0) : null;
+                  const displayQty = qty !== null ? `${qty.toLocaleString()} ` : 'N/A';
+                  const unit = displayQty !== 'N/A' ? viUnit(g?.unit || m.baseUomName || '') : '';
                   return (
                     <tr key={m.materialId}>
                       <td><code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">{m.materialCode}</code></td>
                       <td className="font-medium text-neutral-900">{m.materialName}</td>
-                      <td>{qty.toLocaleString()} {unit}</td>
+                      <td>{displayQty}{unit}</td>
                       <td><a className="text-primary-600 hover:underline inline-flex items-center" href={certificatesApi.getFinishedCertificateUrl(m.materialCode)} target="_blank" rel="noreferrer"><FileCheck2 className="w-4 h-4 mr-1" /> Xem</a></td>
                     </tr>
                   );
