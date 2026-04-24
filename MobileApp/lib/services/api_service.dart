@@ -18,8 +18,8 @@ class ApiService {
       final origin = Uri.base.origin;
       return '$origin/api';
     }
-    // Mobile/Emulator fallback. Chú ý: localhost không chạy được trên thiết bị thật.
-    return 'http://100.89.137.3:5001/api'; // Sử dụng IP Tailscale để kết nối từ thiết bị thật
+    // QUAN TRỌNG: Thay 'localhost' thành địa chỉ IP máy tính của bạn (vd: 192.168.1.10) để kết nối từ điện thoại thật.
+    return 'http://192.168.100.160:5001/api'; // <--- HÃY THAY IP NÀY BẰNG IP MÁY TÍNH CỦA BẠN
   }
 
   /// Tiện ích log lỗi cho dev
@@ -190,7 +190,8 @@ class ApiService {
   /// Lấy nhật ký công đoạn của một mẻ (Virtual Workflow: Routing + Logs)
   static Future<List<Map<String, dynamic>>> getProcessLogs(int batchId) async {
     try {
-      final url = Uri.parse('$baseUrl/batch-process-logs/batch/$batchId?t=${DateTime.now().millisecondsSinceEpoch}');
+      final url = Uri.parse(
+          '$baseUrl/batch-process-logs/batch/$batchId?t=${DateTime.now().millisecondsSinceEpoch}');
       final response = await http.get(url, headers: await _headers());
 
       debugPrint('ApiService.getProcessLogs status: ${response.statusCode}');
