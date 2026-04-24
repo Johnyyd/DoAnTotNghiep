@@ -69,12 +69,12 @@ namespace GMP_System.Controllers
                 return BadRequest(new { success = false, message = "Vui lòng nhập mã lô." });
             }
 
-            if (lot.QuantityCurrent <= 0)
+            if (lot.Quantity <= 0)
             {
                 return BadRequest(new { success = false, message = "Số lượng phải lớn hơn 0." });
             }
 
-            lot.Qcstatus = string.IsNullOrWhiteSpace(lot.Qcstatus) ? "Pending" : lot.Qcstatus;
+            lot.Status = string.IsNullOrWhiteSpace(lot.Status) ? "Pending" : lot.Status;
             await _unitOfWork.InventoryLots.AddAsync(lot);
             await _unitOfWork.CompleteAsync();
 
@@ -96,17 +96,17 @@ namespace GMP_System.Controllers
                 return BadRequest(new { success = false, message = validationError });
             }
 
-            if (request.QuantityCurrent <= 0)
+            if (request.Quantity <= 0)
             {
                 return BadRequest(new { success = false, message = "Số lượng phải lớn hơn 0." });
             }
 
-            lot.QuantityCurrent = request.QuantityCurrent;
+            lot.Quantity = request.Quantity;
             lot.ManufactureDate = request.ManufactureDate;
             lot.ExpiryDate = request.ExpiryDate;
-            if (!string.IsNullOrWhiteSpace(request.Qcstatus))
+            if (!string.IsNullOrWhiteSpace(request.Status))
             {
-                lot.Qcstatus = request.Qcstatus;
+                lot.Status = request.Status;
             }
 
             _unitOfWork.InventoryLots.Update(lot);
@@ -136,7 +136,7 @@ namespace GMP_System.Controllers
         }
 
         [HttpPost("{id}/qc")]
-        public async Task<IActionResult> UpdateQcStatus(int id, [FromBody] QcUpdateDto request)
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] QcUpdateDto request)
         {
             var lot = await _unitOfWork.InventoryLots.GetByIdAsync(id);
             if (lot == null)
@@ -144,11 +144,23 @@ namespace GMP_System.Controllers
                 return NotFound(new { success = false, message = "Không tìm thấy lô hàng." });
             }
 
-            lot.Qcstatus = request.Status;
+            lot.Status = request.Status;
             _unitOfWork.InventoryLots.Update(lot);
             await _unitOfWork.CompleteAsync();
 
             return Ok(new { success = true, message = "Cập nhật trạng thái QC thành công." });
+        }
+
+        [HttpGet("available")]
+        public async Task<IActionResult> GetAvailableLots()
+        {
+            var lots = await _unitOfWork.InventoryLots.Query()
+                .Where(l => l.Status == "Released" && l.Quantity > 0)
+                .Include(l => l.Material)
+                .OrderByDescending(l => l.LotId)
+                .ToListAsync();
+
+            return Ok(new { success = true, data = lots });
         }
 
         private static string? ValidateLotDates(DateTime? manufactureDate, DateTime expiryDate)

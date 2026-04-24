@@ -71,8 +71,8 @@ namespace GMP_System.Controllers
                         uom = u.InventoryLot?.Material?.BaseUom?.UomName ?? string.Empty,
                         usedAt = u.Timestamp,
                         usedBy = u.DispensedBy,
-                        qcStatus = u.InventoryLot?.Qcstatus ?? "N/A",
-                        lotQuantityCurrent = u.InventoryLot?.QuantityCurrent,
+                        Status = u.InventoryLot?.Status ?? "N/A",
+                        lotQuantity = u.InventoryLot?.Quantity,
                         ratioPercent = ratio,
                         certificateUrl = $"/api/certificates/material/{Uri.EscapeDataString(materialCode)}"
                     };
@@ -90,8 +90,8 @@ namespace GMP_System.Controllers
                         uom = b.Uom?.UomName ?? b.Material?.BaseUom?.UomName ?? "mg",
                         usedAt = (DateTime?)null,
                         usedBy = (int?)null,
-                        qcStatus = "N/A",
-                        lotQuantityCurrent = (decimal?)null,
+                        Status = "N/A",
+                        lotQuantity = (decimal?)null,
                         ratioPercent = fallbackTotal > 0 ? Math.Round((b.Quantity / fallbackTotal) * 100m, 2) : 0m,
                         certificateUrl = $"/api/certificates/material/{Uri.EscapeDataString(b.Material?.MaterialCode ?? "")}" 
                     }).ToList();
@@ -151,8 +151,8 @@ namespace GMP_System.Controllers
                     uom = b.Uom?.UomName ?? b.Material?.BaseUom?.UomName ?? "mg",
                     usedAt = (DateTime?)null,
                     usedBy = (int?)null,
-                    qcStatus = "N/A",
-                    lotQuantityCurrent = (decimal?)null,
+                    Status = "N/A",
+                    lotQuantity = (decimal?)null,
                     ratioPercent = total > 0 ? Math.Round((b.Quantity / total) * 100m, 2) : 0m,
                     certificateUrl = $"/api/certificates/material/{Uri.EscapeDataString(b.Material?.MaterialCode ?? "")}"
                 }).Cast<object>().ToList();
@@ -178,8 +178,8 @@ namespace GMP_System.Controllers
                         uom = m.BaseUom?.UomName ?? string.Empty,
                         usedAt = (DateTime?)null,
                         usedBy = (int?)null,
-                        qcStatus = "N/A",
-                        lotQuantityCurrent = (decimal?)null,
+                        Status = "N/A",
+                        lotQuantity = (decimal?)null,
                         ratioPercent = ratio,
                         certificateUrl = $"/api/certificates/material/{Uri.EscapeDataString(m.MaterialCode ?? "")}"
                     }).Cast<object>().ToList();
@@ -191,7 +191,7 @@ namespace GMP_System.Controllers
                 finishedGoodBatchNumber = finishedLot.LotNumber,
                 productName = finishedLot.Material?.MaterialName ?? "Unknown",
                 productionOrderId = (int?)null,
-                quantityProduced = finishedLot.QuantityCurrent,
+                quantityProduced = finishedLot.Quantity,
                 batchId = (int?)null,
                 finishedCertificateUrl = $"/api/certificates/lot/{Uri.EscapeDataString(finishedLot.LotNumber ?? string.Empty)}",
                 rawMaterials = fallbackRows
@@ -233,7 +233,7 @@ namespace GMP_System.Controllers
                 lotNumber = lot.LotNumber,
                 materialName = lot.Material?.MaterialName ?? "Unknown",
                 supplier = "N/A",
-                quantityReceived = lot.QuantityCurrent,
+                quantityReceived = lot.Quantity,
                 usedInBatches = usages.Select(u => new
                 {
                     batchNumber = u.Batch?.BatchNumber ?? "N/A",

@@ -78,6 +78,44 @@ namespace GMP_System.Controllers
                 ? orderRoutings 
                 : await routingsQuery.Where(r => r.RecipeId == recipeId && r.OrderId == null).ToListAsync();
 
+            // Truy vấn trực tiếp từ bảng RecipeBom để đảm bảo không bị mất dữ liệu do nạp lồng
+            var bomsWithQC = new List<object>();
+            if (batch.Order != null && batch.Order.RecipeId != null)
+            {
+                var boms = await _unitOfWork.RecipeBoms.Query()
+                    .Where(bom => bom.RecipeId == batch.Order.RecipeId)
+                    .Include(bom => bom.Material)
+                    .Select(bom => new {
+                        bom.BomId,
+                        bom.MaterialId,
+                        bom.Quantity,
+                        bom.UomId,
+                        MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
+                        MaterialCode = bom.Material != null ? bom.Material.MaterialCode : "N/A"
+                    }).ToListAsync();
+
+                foreach (var bom in boms) 
+                {
+                    var suggestedQC = await _unitOfWork.InventoryLots.Query()
+                        .Where(l => l.MaterialId == bom.MaterialId && l.Status == "Released" && l.Quantity > 0)
+                        .OrderByDescending(l => l.LotId)
+                        .Select(l => l.LotNumber) 
+                        .FirstOrDefaultAsync();
+
+                    bomsWithQC.Add(new {
+                        bom.BomId,
+                        bom.MaterialId,
+                        bom.Quantity,
+                        bom.UomId,
+                        Material = new {
+                            MaterialName = bom.MaterialName,
+                            MaterialCode = bom.MaterialCode,
+                            SuggestedQCNumber = suggestedQC
+                        }
+                    });
+                }
+            }
+
             var result = new {
                 batch.BatchId,
                 batch.OrderId,
@@ -100,16 +138,7 @@ namespace GMP_System.Controllers
                                 batch.Order.Recipe.Material.BaseUom.UomName
                             }
                         },
-                        RecipeBoms = batch.Order.Recipe.RecipeBoms.Select(bom => new {
-                            bom.BomId,
-                            bom.MaterialId,
-                            bom.Quantity,
-                            bom.UomId,
-                            Material = bom.Material == null ? null : new {
-                                bom.Material.MaterialName,
-                                bom.Material.MaterialCode
-                            }
-                        }).ToList()
+                        RecipeBoms = bomsWithQC
                     }
                 },
                 Routings = finalRoutings.OrderBy(r => r.StepNumber).Select(r => new {

@@ -11,13 +11,17 @@ public partial class InventoryLot
 
     public string LotNumber { get; set; } = null!;
 
-    public decimal QuantityCurrent { get; set; }
+    public decimal Quantity { get; set; }
 
     public DateTime? ManufactureDate { get; set; }
 
     public DateTime ExpiryDate { get; set; }
 
-    public string? Qcstatus { get; set; }
+    public string? Status { get; set; }
+
+    public string? SupplierName { get; set; }
+
+    public DateTime? CreatedAt { get; set; }
 
     public virtual Material? Material { get; set; }
 

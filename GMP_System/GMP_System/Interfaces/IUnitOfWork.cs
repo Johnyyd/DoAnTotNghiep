@@ -1,10 +1,10 @@
-﻿using GMP_System.Entities;
+using GMP_System.Entities;
 
 namespace GMP_System.Interfaces
 {
     public interface IUnitOfWork : IDisposable
     {
-        // Khai bÃ¡o cÃ¡c báº£ng cáº§n dÃ¹ng
+        // Khai báo các bảng cần dùng
         IGenericRepository<Material> Materials { get; }
         IGenericRepository<Recipe> Recipes { get; }
         IGenericRepository<ProductionOrder> ProductionOrders { get; }
@@ -20,7 +20,8 @@ namespace GMP_System.Interfaces
         IGenericRepository<StepParameter> StepParameters { get; }
         IGenericRepository<BatchProcessParameterValue> BatchProcessParameterValues { get; }
         IGenericRepository<RecipeRouting> RecipeRoutings { get; }
-        // HÃ m lÆ°u thay Ä‘á»•i (Commit)
+        IGenericRepository<RecipeBom> RecipeBoms { get; }
+        // Hàm lưu thay đổi (Commit)
         Task<int> CompleteAsync();
     }
 }

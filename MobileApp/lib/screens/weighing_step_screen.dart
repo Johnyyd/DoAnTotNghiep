@@ -7,6 +7,7 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../models/execution_phase.dart';
 import '../utils/gmp_step_mixin.dart';
+import '../theme/app_theme.dart';
 
 /// Màn hình [WeighingStepScreen] hiển thị giao diện cho công đoạn cân nguyên liệu.
 class WeighingStepScreen extends StatefulWidget {
@@ -191,6 +192,21 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
           }
         }
 
+        // Auto-fill materials QC numbers from SUGGESTED values
+        for (var bomItem in _bom) {
+          final mName = bomItem['material']?['materialName'];
+          final suggestedQC = bomItem['material']?['suggestedQCNumber'];
+          if (mName != null && suggestedQC != null) {
+            if (_materialsData[mName] == null) {
+              _materialsData[mName] = {};
+            }
+            if (_materialsData[mName]?['phieuKN'] == null ||
+                _materialsData[mName]!['phieuKN']!.isEmpty) {
+              _materialsData[mName]!['phieuKN'] = suggestedQC;
+            }
+          }
+        }
+
         // Phase Logic
         final rawStatus = normalizeStatus(log['resultStatus']);
         if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
@@ -317,29 +333,82 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
 
   bool _isFormValid() {
     // Check mandatory environmental data
-    if (_tempCtrl.text.isEmpty || _humidCtrl.text.isEmpty || _pressCtrl.text.isEmpty) return false;
-    if (_hieuChuanCanCtrl.text.isEmpty) return false;
+    if (_tempCtrl.text.isEmpty || _humidCtrl.text.isEmpty || _pressCtrl.text.isEmpty) {
+      debugPrint("GMP Validation: Missing environment data (Phase 1)");
+      return false;
+    }
+    if (_hieuChuanCanCtrl.text.isEmpty) {
+      debugPrint("GMP Validation: Missing scale calibration");
+      return false;
+    }
 
     // Check all BOM materials
     for (var item in _bom) {
       final name = item['material']?['materialName'] ?? 'N/A';
       final actual = _materialsData[name]?['actual'];
       final phieuKN = _materialsData[name]?['phieuKN'];
-      if (actual == null || actual.isEmpty || actual == '0') return false;
-      if (phieuKN == null || phieuKN.isEmpty) return false;
+
+      if (actual == null || actual.isEmpty || actual == '0') {
+        debugPrint("GMP Validation: Missing weight for material $name");
+        return false;
+      }
+      if (phieuKN == null || phieuKN.isEmpty) {
+        debugPrint("GMP Validation: Missing QC number for material $name");
+        return false;
+      }
     }
 
     // Check individual status (Standard thresholds)
-    if (inputStatuses.values.contains('error')) return false;
-
+    if (inputStatuses.values.contains('error')) {
+      debugPrint("GMP Validation: Out-of-range parameters detected");
+      return false;
+    }
 
     return true;
   }
 
+  void _showValidationError() {
+    String errorMsg = 'Vui lòng hoàn thành các thông tin sau:\n';
+    
+    if (_tempCtrl.text.isEmpty || _humidCtrl.text.isEmpty || _pressCtrl.text.isEmpty) {
+      errorMsg += '- Thông số môi trường (Nhiệt độ, Độ ẩm, Áp suất)\n';
+    }
+    if (_hieuChuanCanCtrl.text.isEmpty) {
+      errorMsg += '- Hiệu chuẩn cân và Mã thiết bị\n';
+    }
+
+    for (var item in _bom) {
+      final name = item['material']?['materialName'] ?? 'N/A';
+      final actual = _materialsData[name]?['actual'];
+      final phieuKN = _materialsData[name]?['phieuKN'];
+      
+      if (actual == null || actual.isEmpty || actual == '0') {
+        errorMsg += '- Khối lượng thực tế cho $name\n';
+      }
+      if (phieuKN == null || phieuKN.isEmpty) {
+        errorMsg += '- Số phiếu kiểm nghiệm cho $name\n';
+      }
+    }
+
+    if (inputStatuses.values.contains('error')) {
+      errorMsg += '- Một số thông số đang nằm ngoài giới hạn cho phép\n';
+    }
+
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('THIẾU THÔNG TIN', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+        content: Text(errorMsg),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c), child: const Text('ĐÓNG'))
+        ],
+      )
+    );
+  }
+
   Future<void> _verifyAndSubmit() async {
     if (!_isFormValid()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('⚠ Vui lòng nhập đầy đủ thông số và khối lượng!')));
+      _showValidationError();
       return;
     }
     
@@ -624,7 +693,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       label = 'KẾT THÚC';
     }
     return FloatingActionButton.extended(
-        onPressed: (isSaving || (_currentPhase == ExecutionPhase.input && !_isFormValid())) ? null : _nextPhase,
+        backgroundColor: isSaving ? Colors.grey : AppTheme.primaryBlue,
+        onPressed: isSaving ? null : _nextPhase,
         label: Text(label),
         icon: const Icon(Icons.arrow_forward));
   }

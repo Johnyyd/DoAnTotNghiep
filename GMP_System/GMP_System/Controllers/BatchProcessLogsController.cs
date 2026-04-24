@@ -357,10 +357,18 @@ namespace GMP_System.Controllers
                 var routing = await _unitOfWork.RecipeRoutings.GetByIdAsync(log.RoutingId.Value);
                 if (batch != null && routing != null)
                 {
-                    batch.CurrentStep = routing.StepNumber;
-                    if (IsFailureStatus(status) && (log.NumberOfRouting ?? 1) >= Math.Max(1, routing.NumberOfRouting ?? 1))
+                    if (status.Equals("Passed", StringComparison.OrdinalIgnoreCase) || status.Equals("Approved", StringComparison.OrdinalIgnoreCase))
                     {
-                        batch.Status = "OnHold";
+                        batch.CurrentStep = routing.StepNumber + 1;
+                        if (batch.Status == "OnHold") batch.Status = "In-Process";
+                    }
+                    else
+                    {
+                        batch.CurrentStep = routing.StepNumber;
+                        if (IsFailureStatus(status) && (log.NumberOfRouting ?? 1) >= Math.Max(1, routing.NumberOfRouting ?? 1))
+                        {
+                            batch.Status = "OnHold";
+                        }
                     }
 
                     _unitOfWork.ProductionBatches.Update(batch);

@@ -1,4 +1,4 @@
-﻿using GMP_System.Entities;
+using GMP_System.Entities;
 using GMP_System.Interfaces;
 using System.Security.Cryptography;
 
@@ -11,7 +11,7 @@ namespace GMP_System.Repositories
         public UnitOfWork(GmpContext context)
         {
             _context = context;
-            // Khá»Ÿi táº¡o cÃ¡c Repository con
+            // Khởi tạo các Repository con
             Materials = new GenericRepository<Material>(_context);
             Recipes = new GenericRepository<Recipe>(_context);
             ProductionOrders = new GenericRepository<ProductionOrder>(_context);
@@ -27,6 +27,7 @@ namespace GMP_System.Repositories
             StepParameters = new GenericRepository<StepParameter>(_context);
             BatchProcessParameterValues = new GenericRepository<BatchProcessParameterValue>(_context);
             RecipeRoutings = new GenericRepository<RecipeRouting>(_context);
+            RecipeBoms = new GenericRepository<RecipeBom>(_context);
         }
 
         public IGenericRepository<Material> Materials { get; private set; }
@@ -44,6 +45,7 @@ namespace GMP_System.Repositories
         public IGenericRepository<StepParameter> StepParameters { get; private set; }
         public IGenericRepository<BatchProcessParameterValue> BatchProcessParameterValues { get; private set; }
         public IGenericRepository<RecipeRouting> RecipeRoutings { get; private set; }
+        public IGenericRepository<RecipeBom> RecipeBoms { get; private set; }
 
         public async Task<int> CompleteAsync()
         {

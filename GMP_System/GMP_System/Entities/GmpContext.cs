@@ -160,24 +160,31 @@ public partial class GmpContext : DbContext
 
         modelBuilder.Entity<InventoryLot>(entity =>
         {
-            entity.HasKey(e => e.LotId).HasName("PK__Inventor__4160EF4DD676A0B9");
+            entity.HasKey(e => e.LotId);
 
             entity.ToTable(tb => tb.HasTrigger("trg_Audit_InventoryLots"));
 
-            entity.Property(e => e.LotId).HasColumnName("LotID");
+            entity.Property(e => e.LotId).HasColumnName("LotId");
             entity.Property(e => e.LotNumber)
                 .HasMaxLength(50)
                 .IsUnicode(false);
-            entity.Property(e => e.MaterialId).HasColumnName("MaterialID");
-            entity.Property(e => e.Qcstatus)
+            
+            // Nếu dùng QCNumber trong code, ánh xạ tạm vào LotNumber hoặc để trống nếu DB không có.
+            // Trong Schema.sql chỉ có LotNumber và QCStatus.
+            // Tôi sẽ bỏ QCNumber mapping nếu DB không có để tránh lỗi 207.
+            
+            entity.Property(e => e.MaterialId).HasColumnName("MaterialId");
+            entity.Property(e => e.Status)
                 .HasMaxLength(50)
-                .HasDefaultValue("Quarantine")
-                .HasColumnName("QCStatus");
-            entity.Property(e => e.QuantityCurrent).HasColumnType("decimal(18, 4)");
+                .HasDefaultValue("Pending")
+                .HasColumnName("QCStatus"); // Khớp với Schema.sql
+
+            entity.Property(e => e.Quantity)
+                .HasColumnName("QuantityCurrent") // Khớp với Schema.sql
+                .HasColumnType("decimal(18, 4)");
 
             entity.HasOne(d => d.Material).WithMany(p => p.InventoryLots)
-                .HasForeignKey(d => d.MaterialId)
-                .HasConstraintName("FK__Inventory__Mater__02084FDA");
+                .HasForeignKey(d => d.MaterialId);
         });
 
         modelBuilder.Entity<Material>(entity =>
