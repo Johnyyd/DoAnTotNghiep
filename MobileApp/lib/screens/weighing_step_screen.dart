@@ -67,6 +67,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
   @override
   void initState() {
     super.initState();
+    _lotWeightACtrl.addListener(_calculateDynamicBOM);
+    _purityCCtrl.addListener(_calculateDynamicBOM);
     if (widget.batchId != null) {
       _loadDataFromDB().then((_) {
         // Auto-fill check time and start real-time updates if not viewer
@@ -263,36 +265,41 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     setState(() => isSaving = true);
     final verifierId = AuthService.currentUser?['userId'] ?? 0;
 
-    final success = await ApiService.verifyStepData(
-      logId: _currentLog['logId'] ?? _currentLog['id'],
-      verifierId: verifierId,
-      status: status,
-      notes:
-          status == 'Failed' ? 'QC Rejected Weighing' : 'Approved via Mobile',
-    );
+    try {
+      final success = await ApiService.verifyStepData(
+        logId: _currentLog['logId'] ?? _currentLog['id'],
+        verifierId: verifierId,
+        status: status,
+        notes:
+            status == 'Failed' ? 'QC Rejected Weighing' : 'Approved via Mobile',
+      );
 
-    setState(() => isSaving = false);
-    if (success && mounted) {
-      if (status == 'Approved' && widget.orderId != null) {
-        await ApiService.updateOrderStatus(widget.orderId!, 'In-Process');
+      if (success && mounted) {
+        if (status == 'Approved' && widget.orderId != null) {
+          await ApiService.updateOrderStatus(widget.orderId!, 'In-Process');
+        }
+        if (!mounted) return;
+        setState(() {
+          _currentPhase =
+              (status == 'Approved') ? ExecutionPhase.execution : _currentPhase;
+        });
+        if (status != 'Approved') Navigator.pop(context, true);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('✔ QC đã xác nhận: $status')));
+        
+        // Refresh data to update UI/Phase
+        await _loadDataFromDB();
       }
-      if (!mounted) return;
-      setState(() {
-        _currentPhase =
-            (status == 'Approved') ? ExecutionPhase.execution : _currentPhase;
-      });
-      if (status != 'Approved') Navigator.pop(context, true);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('✔ QC đã xác nhận: $status')));
-      
-      // Refresh data to update UI/Phase
-      await _loadDataFromDB();
+    } finally {
+      if (mounted) setState(() => isSaving = false);
     }
   }
 
   void _updateMaterial(String name, String field, String value) {
-    if (!_materialsData.containsKey(name)) _materialsData[name] = {};
-    _materialsData[name]![field] = value;
+    setState(() {
+      if (!_materialsData.containsKey(name)) _materialsData[name] = {};
+      _materialsData[name]![field] = value;
+    });
   }
 
   void _calculateDynamicBOM() {
@@ -300,8 +307,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     double? C = double.tryParse(_purityCCtrl.text);
 
     if (A == null || C == null || C < 0.4) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("❌ Dữ liệu đầu vào không hợp lệ (C yêu cầu >= 0.4%)")));
       return;
     }
 
@@ -325,9 +330,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       double td8Mg = 540 - yMg - fixedTDsMg;
       _dynamicTargets['MAT-TD8'] = (td8Mg * Q) / 1000;
       _dynamicTargets['MAT-NLP6'] = Q;
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('✔ Đã tính toán: ${Q.toStringAsFixed(0)} viên.')));
     });
   }
 
@@ -344,7 +346,9 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
 
     // Check all BOM materials
     for (var item in _bom) {
-      final name = item['material']?['materialName'] ?? 'N/A';
+      final mat = item['material'] ?? {};
+      final name = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
+      
       final actual = _materialsData[name]?['actual'];
       final phieuKN = _materialsData[name]?['phieuKN'];
 
@@ -378,7 +382,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     }
 
     for (var item in _bom) {
-      final name = item['material']?['materialName'] ?? 'N/A';
+      final mat = item['material'] ?? {};
+      final name = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
       final actual = _materialsData[name]?['actual'];
       final phieuKN = _materialsData[name]?['phieuKN'];
       
@@ -407,8 +412,23 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
   }
 
   Future<void> _verifyAndSubmit() async {
+    FocusScope.of(context).unfocus(); // Dismiss keyboard to see results
     if (!_isFormValid()) {
       _showValidationError();
+      String missing = '';
+      for (var item in _bom) {
+        final mat = item['material'] ?? {};
+        final name = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
+        if (_materialsData[name]?['actual'] == null || _materialsData[name]!['actual']!.isEmpty) {
+          missing += ' Thiếu KL $name. ';
+        }
+        if (_materialsData[name]?['phieuKN'] == null || _materialsData[name]!['phieuKN']!.isEmpty) {
+          missing += ' Thiếu QC $name. ';
+        }
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Thiếu thông tin: $missing'), backgroundColor: Colors.red)
+      );
       return;
     }
     
@@ -432,8 +452,9 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     }
 
     for (var item in _bom) {
-      final name = item['material']?['materialName'] ?? 'N/A';
-      final code = item['material']?['materialCode'] ?? '';
+      final mat = item['material'] ?? {};
+      final name = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
+      final code = mat['materialCode'] ?? 'N/A';
       double requiredQty = (item['quantity'] as num?)?.toDouble() ?? 0.0;
       if (_isCalculated && _dynamicTargets.containsKey(code)) {
         requiredQty = _dynamicTargets[code]!;
@@ -538,32 +559,35 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
         ? 'DEVIATION:\n$devNotes\nNote: ${_noteCtrl.text}'
         : _noteCtrl.text;
     if (widget.batchId == null || widget.stepId == null) {
-      setState(() => isSaving = false);
       return false;
     }
 
-    bool success = await ApiService.submitStepData(
-      batchId: widget.batchId!,
-      stepId: widget.stepId!,
-      resultStatus: resultStatus,
-      parametersData: params,
-      notes: finalNotes.isNotEmpty ? finalNotes : null,
-    );
-    setState(() => isSaving = false);
+    setState(() => isSaving = true);
+    try {
+      bool success = await ApiService.submitStepData(
+        batchId: widget.batchId!,
+        stepId: widget.stepId!,
+        resultStatus: resultStatus,
+        parametersData: params,
+        notes: finalNotes.isNotEmpty ? finalNotes : null,
+      );
 
-    if (success && mounted) {
-      if (resultStatus == 'PendingQC') {
-        setState(() => _currentPhase = ExecutionPhase.verification);
-      } else if (resultStatus == 'Passed') {
-        setState(() => _currentPhase = ExecutionPhase.completed);
-        Navigator.pop(context, true);
+      if (success && mounted) {
+        if (resultStatus == 'PendingQC') {
+          setState(() => _currentPhase = ExecutionPhase.verification);
+        } else if (resultStatus == 'Passed') {
+          setState(() => _currentPhase = ExecutionPhase.completed);
+          Navigator.pop(context, true);
+        }
       }
+      if (!isInternal && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(success ? '✔ Thành công!' : '❌ Thất bại!')));
+      }
+      return success;
+    } finally {
+      if (mounted) setState(() => isSaving = false);
     }
-    if (!isInternal && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(success ? '✔ Thành công!' : '❌ Thất bại!')));
-    }
-    return success;
   }
 
   @override
@@ -653,7 +677,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Mẻ cân ${_currentPhase.indexNumber}/5',
+          Text('Giai đoạn ${_currentPhase.indexNumber}/5',
               style: const TextStyle(
                   fontWeight: FontWeight.bold, color: Colors.blue)),
           Text(_currentPhase.label.toUpperCase(),
@@ -790,16 +814,14 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
               label: 'Hàm lượng Alkaloid (C - %)',
               controller: _purityCCtrl,
               keyboardType: TextInputType.number),
-          ElevatedButton.icon(
-              onPressed: _calculateDynamicBOM,
-              icon: const Icon(Icons.calculate),
-              label: const Text('TÍNH ĐỊNH MỨC')),
         ],
       ),
       const SizedBox(height: 16),
       ..._bom.map((item) {
-        final name = item['material']?['materialName'] ?? 'N/A';
-        final code = item['material']?['materialCode'] ?? '';
+        final mat = item['material'] ?? {};
+        final name = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
+        final code = mat['materialCode'] ?? 'N/A';
+        
         double target = (item['quantity'] as num?)?.toDouble() ?? 0.0;
         if (_isCalculated && _dynamicTargets.containsKey(code)) {
           target = _dynamicTargets[code]!;

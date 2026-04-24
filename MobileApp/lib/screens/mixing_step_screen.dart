@@ -199,6 +199,35 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
           _currentPhase = ExecutionPhase.precheck;
           stopPolling();
         }
+
+        // --- INHERIT DATA FROM WEIGHING STEP ---
+        for (var l in logs) {
+          final sName = (l['step']?['stepName'] ??
+                  l['routing']?['stepName'] ??
+                  '')
+              .toString()
+              .toUpperCase();
+          if (sName.contains('CÂN')) {
+            final wParamsRaw = l['parametersData'];
+            Map<String, dynamic> wData = {};
+            if (wParamsRaw is Map<String, dynamic>) {
+              wData = wParamsRaw;
+            } else if (wParamsRaw is String && wParamsRaw.isNotEmpty) {
+              try {
+                wData = jsonDecode(wParamsRaw);
+              } catch (_) {}
+            }
+
+            if (wData.containsKey('materials')) {
+              final mats = wData['materials'] as Map<String, dynamic>;
+              mats.forEach((k, v) {
+                if (v is Map && v.containsKey('actual')) {
+                  _actualMaterials[k] = v['actual'].toString();
+                }
+              });
+            }
+          }
+        }
       }
 
       _updateAllInputStatuses();
@@ -300,10 +329,6 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
             .showSnackBar(SnackBar(content: Text('✔ QC đã xác nhận: $status')));
       }
     }
-  }
-
-  void _updateActualMaterial(String name, String value) {
-    _actualMaterials[name] = value;
   }
 
   Future<void> _verifyAndSubmit() async {
@@ -454,8 +479,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
   }
 
   Widget _buildComparisonRow(String key, String label, String expected) {
-    String initialValue = _actualMaterials[key] ?? '';
-    TextEditingController ctrl = TextEditingController(text: initialValue);
+    String value = _actualMaterials[key] ?? 'N/A';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
@@ -470,12 +494,9 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
               padding: EdgeInsets.symmetric(horizontal: 8),
               child: Text('vs', style: TextStyle(color: Colors.grey))),
           Expanded(
-              child: StandardInputField(
+              child: ReadOnlyField(
             label: '',
-            hint: 'Thực tế',
-            controller: ctrl,
-            readOnly: widget.isViewer,
-            onChanged: (v) => _updateActualMaterial(key, v),
+            value: value,
           )),
         ],
       ),
@@ -747,7 +768,8 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
           const Text('Không có dữ liệu BOM.')
         else
           ..._bom.map((item) {
-            final materialName = item['material']?['materialName'] ?? 'N/A';
+            final mat = item['material'] ?? {};
+            final materialName = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
             final requiredQty = item['quantity']?.toString() ?? '0.00';
             return _buildComparisonRow(materialName, materialName, requiredQty);
           }),
@@ -787,13 +809,6 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
             label: 'Tỷ trọng gõ',
             controller: _tyTrongCtrl,
             keyboardType: TextInputType.number),
-        MixingPackagingField(onResultChanged: (v) => _slDongGoi = v),
-        const SizedBox(height: 12),
-        TextField(
-            controller: _noteCtrl,
-            maxLines: 2,
-            decoration: const InputDecoration(
-                hintText: 'Ghi chú...', border: OutlineInputBorder())),
       ],
     );
   }
@@ -807,11 +822,29 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
   }
 
   Widget _buildPhase4() {
-    return _buildCenteredStatus(
-        Icons.play_circle_fill,
-        Colors.green,
-        'ĐANG THỰC HIỆN TRỘN',
-        'Máy đang quay. Nhấn KẾT THÚC sau khi hoàn thành.');
+    return Column(
+      children: [
+        _buildCenteredStatus(
+            Icons.play_circle_fill,
+            Colors.green,
+            'ĐANG THỰC HIỆN TRỘN',
+            'Máy đang quay. Vui lòng nhập số lượng đóng gói và nhấn KẾT THÚC sau khi hoàn thành.'),
+        const SizedBox(height: 24),
+        const FormSectionHeader('BÁO CÁO KẾT THÚC CÔNG ĐOẠN'),
+        MixingPackagingField(
+            onResultChanged: (v) => _slDongGoi = v,
+            readOnly: widget.isViewer),
+        const SizedBox(height: 16),
+        TextField(
+            controller: _noteCtrl,
+            maxLines: 3,
+            readOnly: widget.isViewer,
+            decoration: const InputDecoration(
+                labelText: 'Ghi chú cuối công đoạn',
+                hintText: 'Nhập tình trạng phẩm cấp, sai lệch nếu có...',
+                border: OutlineInputBorder())),
+      ],
+    );
   }
 
   Widget _buildPhase5() {

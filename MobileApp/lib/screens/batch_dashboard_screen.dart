@@ -40,11 +40,10 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
   }
 
   Color _statusColor(String? status) {
+    if (status == 'In-Process' || status == 'InProcess') return Colors.blue.shade600;
     switch (status) {
       case 'Completed':
         return Colors.green.shade600;
-      case 'In-Process':
-        return Colors.blue.shade600;
       case 'On-Hold':
         return Colors.orange.shade600;
       default:
@@ -53,11 +52,10 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
   }
 
   String _statusLabel(String? status) {
+    if (status == 'In-Process' || status == 'InProcess') return 'Đang sản xuất';
     switch (status) {
       case 'Completed':
         return 'Hoàn thành';
-      case 'In-Process':
-        return 'Đang sản xuất';
       case 'On-Hold':
         return 'Tạm dừng';
       default:
@@ -66,15 +64,14 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
   }
 
   IconData _statusIcon(String? status) {
+    if (status == 'In-Process' || status == 'InProcess') return Icons.pending;
     switch (status) {
       case 'Completed':
         return Icons.check_circle;
-      case 'In-Process':
-        return Icons.pending;
       case 'On-Hold':
         return Icons.pause_circle;
       default:
-        return Icons.lock;
+        return Icons.help_outline;
     }
   }
 
@@ -134,12 +131,11 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
             final batchId = batch['batchId'] as int?;
             final batchNumber = batch['batchNumber'] as String? ?? '-';
             final status = batch['status'] as String?;
-            final productName = batch['order']?['recipe']?['material']?['materialName']
-                    as String? ??
-                batch['order']?['productName'] as String? ??
-                'Sản phẩm';
-            final orderCode =
-                batch['order']?['orderCode'] as String? ?? '#$batchId';
+
+            final productName = batch['order']?['recipe']?['material']?['materialName'] ??
+                batch['order']?['productName'] ??
+                'Sản phẩm khác';
+            final orderCode = batch['order']?['orderCode'] ?? 'N/A';
 
             // Sequential GMP check: Batch N can only start if Batch N-1 is Completed
             bool isBlocked = false;
@@ -152,23 +148,21 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
 
             final color = isBlocked ? Colors.grey.shade400 : _statusColor(status);
 
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              elevation: isBlocked ? 0 : 1,
-              color: isBlocked ? Colors.grey.shade50 : Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: color.withValues(alpha: 0.3),
-                  width: 1,
+            return Opacity(
+              opacity: isBlocked ? 0.6 : 1.0,
+              child: Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: isBlocked ? Colors.grey.shade300 : Colors.transparent,
+                  ),
                 ),
-              ),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: (batchId == null)
-                    ? null
-                    : () {
-                        if (isBlocked) {
+                elevation: isBlocked ? 0 : 2,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: isBlocked
+                      ? () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
@@ -176,97 +170,95 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
                               backgroundColor: Colors.orange,
                             ),
                           );
-                          return;
                         }
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => BatchDetailScreen(
-                              batchId: batchId,
-                              batchNumber: batchNumber,
-                              orderId: batch['orderId'],
-                            ),
+                      : (batchId == null)
+                          ? null
+                          : () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => BatchDetailScreen(
+                                    batchId: batchId,
+                                    batchNumber: batchNumber,
+                                    orderId: batch['orderId'],
+                                  ),
+                                ),
+                              ).then((_) => _loadBatches());
+                            },
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                        );
-                      },
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
+                          child: Icon(
+                            isBlocked ? Icons.lock : _statusIcon(status),
+                            color: color,
+                            size: 24,
+                          ),
                         ),
-                        child: Icon(
-                          isBlocked ? Icons.lock : _statusIcon(status),
-                          color: color,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              batchNumber,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: isBlocked ? Colors.grey : Colors.black87,
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                batchNumber,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              productName,
-                              style: TextStyle(
+                              const SizedBox(height: 2),
+                              Text(
+                                productName,
+                                style: TextStyle(
                                   fontSize: 13,
-                                  color: isBlocked
-                                      ? Colors.grey.shade400
-                                      : Colors.black54),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              'Lệnh: $orderCode',
-                              style: TextStyle(
+                                  color: isBlocked ? Colors.grey : Colors.black54,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                'Lệnh: $orderCode',
+                                style: TextStyle(
                                   fontSize: 12,
-                                  color: isBlocked
-                                      ? Colors.grey.shade300
-                                      : Colors.black38),
-                            ),
-                          ],
+                                  color: isBlocked ? Colors.grey.shade400 : Colors.black38,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                  color: color.withValues(alpha: 0.5)),
-                            ),
-                            child: Text(
-                              isBlocked ? 'Chưa được phép' : _statusLabel(status),
-                              style: TextStyle(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: color.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: color.withOpacity(0.5)),
+                              ),
+                              child: Text(
+                                isBlocked ? 'Chưa được phép' : _statusLabel(status),
+                                style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
-                                  color: color),
+                                  color: color,
+                                ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Icon(Icons.chevron_right,
-                              size: 18,
-                              color: isBlocked ? Colors.grey.shade300 : Colors.black26),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(height: 4),
+                            const Icon(Icons.chevron_right, size: 18, color: Colors.black26),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

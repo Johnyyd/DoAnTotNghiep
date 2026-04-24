@@ -189,7 +189,7 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
       appBar: AppBar(
         title: Text(widget.batchNumber),
         actions: [
-          if (batchStatus == 'In-Process')
+          if (batchStatus == 'In-Process' && _logs.isNotEmpty && _logs.every((l) => l['resultStatus'] == 'Passed'))
             TextButton.icon(
               onPressed: _finishBatch,
               icon: const Icon(Icons.check_circle_outline, color: Colors.white),

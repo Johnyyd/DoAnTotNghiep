@@ -210,9 +210,49 @@ namespace GMP_System.Controllers
         [HttpPost("{id}/finish")]
         public async Task<IActionResult> FinishBatch(int id)
         {
-            var batch = await _unitOfWork.ProductionBatches.GetByIdAsync(id);
+            var batch = await _unitOfWork.ProductionBatches.Query()
+                .Include(b => b.Order)
+                .FirstOrDefaultAsync(b => b.BatchId == id);
+
             if (batch == null) return NotFound(new { success = false, message = "Không tìm thấy mẻ sản xuất." });
             if (batch.Status == "Completed") return BadRequest(new { success = false, message = "Mẻ này đã kết thúc rồi." });
+
+            // [GMP ENFORCEMENT] Verify all steps are Passed
+            var routingsQuery = _unitOfWork.RecipeRoutings.Query();
+            var orderRoutings = await routingsQuery.Where(r => r.OrderId == batch.OrderId).ToListAsync();
+            var recipeId = batch.Order?.RecipeId;
+            var finalRoutings = orderRoutings.Any()
+                ? orderRoutings
+                : await routingsQuery.Where(r => r.RecipeId == recipeId && r.OrderId == null).ToListAsync();
+
+            if (finalRoutings.Any())
+            {
+                var passedLogs = await _unitOfWork.BatchProcessLogs.Query()
+                    .Where(l => l.BatchId == id && (l.ResultStatus == "Passed" || l.ResultStatus == "Approved"))
+                    .Select(l => l.RoutingId)
+                    .Distinct()
+                    .ToListAsync();
+
+                var missingStepIds = finalRoutings
+                    .Select(r => r.RoutingId)
+                    .Where(rid => !passedLogs.Contains(rid))
+                    .ToList();
+
+                if (missingStepIds.Any())
+                {
+                    var missingStepNames = finalRoutings
+                        .Where(r => missingStepIds.Contains(r.RoutingId))
+                        .Select(r => r.StepName)
+                        .ToList();
+
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "⚠ Vi phạm quy trình GMP: Không thể kết thúc mẻ vì vẫn còn công đoạn chưa hoàn thành hoặc chưa được QC duyệt.",
+                        details = $"Công đoạn chưa xong: {string.Join(", ", missingStepNames)}"
+                    });
+                }
+            }
 
             batch.Status = "Completed";
             batch.EndTime = DateTime.Now;
