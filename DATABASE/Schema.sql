@@ -118,7 +118,7 @@ CREATE TABLE Equipments (
     EquipmentName NVARCHAR(200) NOT NULL,
     TechnicalSpecification NVARCHAR(300),
     UsagePurpose NVARCHAR(300),
-    AreaId INT REFERENCES ProductionAreas(AreaId)
+    AreaId INT -- Managed by Program.cs EnsureColumnsAsync or explicit ALTER
 );
 GO
 
@@ -129,10 +129,10 @@ CREATE TABLE Materials (
     MaterialId INT PRIMARY KEY IDENTITY(1,1),
     MaterialCode VARCHAR(50) NOT NULL UNIQUE,
     MaterialName NVARCHAR(200) NOT NULL,
-    Type NVARCHAR(50) CHECK (Type IN ('RawMaterial', 'Packaging', 'FinishedGood', 'Intermediate')),
-    BaseUomId INT REFERENCES UnitOfMeasure(UomId),
+    Type NVARCHAR(50),
+    BaseUomId INT,
     IsActive BIT DEFAULT 1,
-    TechnicalSpecification NVARCHAR(500),
+    TechnicalSpecification NVARCHAR(MAX),
     CreatedAt DATETIME2 DEFAULT GETDATE(),
     UpdatedAt DATETIME2
 );
@@ -182,8 +182,9 @@ CREATE TABLE ProductionOrders (
     EndDate DATETIME2,
     Status NVARCHAR(50) DEFAULT 'Draft',
     CreatedBy INT REFERENCES AppUsers(UserId),
+    PlannedCartons INT,
     CreatedAt DATETIME2 DEFAULT GETDATE(),
-    Note NVARCHAR(500)
+    Note NVARCHAR(MAX)
 );
 GO
 
@@ -200,6 +201,15 @@ CREATE TABLE RecipeRouting (
     EstimatedTimeMinutes INT,
     Description NVARCHAR(500),
     NumberOfRouting INT DEFAULT 1,
+    MaterialId INT,
+    AreaId INT,
+    CleanlinessStatus NVARCHAR(50),
+    StandardTemperature DECIMAL(10, 2),
+    StandardHumidity DECIMAL(10, 2),
+    StandardPressure DECIMAL(10, 2),
+    StabilityStatus NVARCHAR(50),
+    SetTemperature DECIMAL(10, 2),
+    SetTimeMinutes INT,
     CONSTRAINT CK_RecipeRouting_NumberOfRouting CHECK (NumberOfRouting >= 1)
 );
 GO
@@ -226,11 +236,12 @@ CREATE TABLE ProductionBatches (
     BatchId INT PRIMARY KEY IDENTITY(1,1),
     OrderId INT REFERENCES ProductionOrders(OrderId),
     BatchNumber VARCHAR(50) NOT NULL UNIQUE,
-    Status NVARCHAR(50) DEFAULT 'Scheduled',
+    Status NVARCHAR(50) DEFAULT 'Draft',
     ManufactureDate DATETIME2,
     EndTime DATETIME2,
     ExpiryDate DATETIME2,
     CurrentStep INT DEFAULT 1,
+    PlannedQuantity DECIMAL(18, 4),
     CreatedAt DATETIME2 DEFAULT GETDATE()
 );
 GO

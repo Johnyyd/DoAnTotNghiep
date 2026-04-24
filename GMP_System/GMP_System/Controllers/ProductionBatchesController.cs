@@ -53,47 +53,91 @@ namespace GMP_System.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-               var batchData = await _unitOfWork.ProductionBatches
-                .Query()
+            var batch = await _unitOfWork.ProductionBatches.Query()
                 .Include(b => b.Order)
                     .ThenInclude(o => o.Recipe)
                         .ThenInclude(r => r.Material)
                             .ThenInclude(m => m.BaseUom)
-                .Include(b => b.BatchProcessLogs)
+                .Include(b => b.Order)
+                    .ThenInclude(o => o.Recipe)
+                        .ThenInclude(r => r.RecipeBoms)
+                            .ThenInclude(bom => bom.Material)
                 .Where(b => b.BatchId == id)
-                .Select(b => new {
-                    b.BatchId,
-                    b.OrderId,
-                    b.BatchNumber,
-                    b.Status,
-                    b.ManufactureDate,
-                    b.EndTime,
-                    b.ExpiryDate,
-                    b.CurrentStep,
-                    Order = b.Order == null ? null : new {
-                        OrderId = b.Order.OrderId,
-                        OrderCode = b.Order.OrderCode,
-                        Recipe = b.Order.Recipe == null ? null : new {
-                            RecipeId = b.Order.Recipe.RecipeId,
-                            Material = b.Order.Recipe.Material == null ? null : new {
-                                MaterialName = b.Order.Recipe.Material.MaterialName,
-                                UnitOfMeasure = b.Order.Recipe.Material.BaseUom == null ? null : new {
-                                    UomName = b.Order.Recipe.Material.BaseUom.UomName
-                                }
-                            }
-                        }
-                    },
-                    // We will return simplify routings here too
-                    Routings = (b.Order != null && _unitOfWork.RecipeRoutings.Query().Any(r => r.OrderId == b.OrderId))
-                        ? _unitOfWork.RecipeRoutings.Query().Where(r => r.OrderId == b.OrderId).OrderBy(r => r.StepNumber).ToList()
-                        : (b.Order != null && b.Order.RecipeId != null) 
-                            ? _unitOfWork.RecipeRoutings.Query().Where(r => r.RecipeId == b.Order.RecipeId && r.OrderId == null).OrderBy(r => r.StepNumber).ToList()
-                            : new List<RecipeRouting>()
-                })
                 .FirstOrDefaultAsync();
 
-            if (batchData == null) return NotFound(new { success = false, message = "Không tìm thấy mẻ sản xuất." });
-            return Ok(new { data = batchData, success = true, message = "Success" });
+            if (batch == null) return NotFound(new { success = false, message = "KhÃ´ng tÃ¬m tháº¥y máº» sáº£n xuáº¥t." });
+
+            // Fetch Routings separately with StepParameters included
+            var routingsQuery = _unitOfWork.RecipeRoutings.Query()
+                .Include(r => r.DefaultEquipment)
+                .Include(r => r.StepParameters);
+            
+            var orderRoutings = await routingsQuery.Where(r => r.OrderId == batch.OrderId).ToListAsync();
+            var recipeId = batch.Order?.RecipeId;
+            var finalRoutings = orderRoutings.Any() 
+                ? orderRoutings 
+                : await routingsQuery.Where(r => r.RecipeId == recipeId && r.OrderId == null).ToListAsync();
+
+            var result = new {
+                batch.BatchId,
+                batch.OrderId,
+                batch.BatchNumber,
+                batch.Status,
+                batch.PlannedQuantity,
+                batch.ManufactureDate,
+                batch.EndTime,
+                batch.ExpiryDate,
+                batch.CurrentStep,
+                Order = batch.Order == null ? null : new {
+                    batch.Order.OrderId,
+                    batch.Order.OrderCode,
+                    batch.Order.RecipeId,
+                    Recipe = batch.Order.Recipe == null ? null : new {
+                        batch.Order.Recipe.RecipeId,
+                        Material = batch.Order.Recipe.Material == null ? null : new {
+                            batch.Order.Recipe.Material.MaterialName,
+                            UnitOfMeasure = batch.Order.Recipe.Material.BaseUom == null ? null : new {
+                                batch.Order.Recipe.Material.BaseUom.UomName
+                            }
+                        },
+                        RecipeBoms = batch.Order.Recipe.RecipeBoms.Select(bom => new {
+                            bom.BomId,
+                            bom.MaterialId,
+                            bom.Quantity,
+                            bom.UomId,
+                            Material = bom.Material == null ? null : new {
+                                bom.Material.MaterialName,
+                                bom.Material.MaterialCode
+                            }
+                        }).ToList()
+                    }
+                },
+                Routings = finalRoutings.OrderBy(r => r.StepNumber).Select(r => new {
+                    r.RoutingId,
+                    r.StepNumber,
+                    r.StepName,
+                    r.EstimatedTimeMinutes,
+                    r.Description,
+                    r.NumberOfRouting,
+                    r.SetTemperature,
+                    r.SetTimeMinutes,
+                    DefaultEquipment = r.DefaultEquipment == null ? null : new {
+                        r.DefaultEquipment.EquipmentId,
+                        r.DefaultEquipment.EquipmentCode,
+                        r.DefaultEquipment.EquipmentName
+                    },
+                    StepParameters = r.StepParameters.Select(sp => new {
+                        sp.ParameterId,
+                        sp.ParameterName,
+                        sp.Unit,
+                        sp.MinValue,
+                        sp.MaxValue
+                    }).ToList()
+                }).ToList()
+            };
+
+            return Ok(new { data = result, success = true, message = "Success" });
+
         }
 
         // POST: api/production-batches — Tạo mẻ sản xuất mới

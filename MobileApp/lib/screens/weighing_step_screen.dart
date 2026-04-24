@@ -183,6 +183,14 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
           }
         }
 
+        // Auto-fill equipment code if empty
+        if (_hieuChuanCanCtrl.text.isEmpty) {
+          final eqCode = routing['defaultEquipment']?['equipmentCode'];
+          if (eqCode != null) {
+            _hieuChuanCanCtrl.text = eqCode;
+          }
+        }
+
         // Phase Logic
         final rawStatus = normalizeStatus(log['resultStatus']);
         if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
@@ -226,9 +234,9 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
 
 
   void _updateAllInputStatuses() {
-    validateInput('temperature', _tempCtrl.text, _standardParams, matchName: 'Nhiệt độ phòng');
-    validateInput('humidity', _humidCtrl.text, _standardParams, matchName: 'Độ ẩm phòng');
-    validateInput('pressure', _pressCtrl.text, _standardParams, matchName: 'Áp lực phòng');
+    validateInput('temperature', _tempCtrl.text, _standardParams, matchName: 'Nhiệt độ phòng cân');
+    validateInput('humidity', _humidCtrl.text, _standardParams, matchName: 'Độ ẩm phòng cân');
+    validateInput('pressure', _pressCtrl.text, _standardParams, matchName: 'Áp lực phòng cân');
   }
 
 
@@ -260,6 +268,9 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       if (status != 'Approved') Navigator.pop(context, true);
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('✔ QC đã xác nhận: $status')));
+      
+      // Refresh data to update UI/Phase
+      await _loadDataFromDB();
     }
   }
 
@@ -639,9 +650,9 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
             label: 'Nhiệt độ (°C)',
             controller: _tempCtrl,
             status: inputStatuses['temperature'] ?? 'none',
-            standardText: _getStandardText('Nhiệt độ phòng'),
+            standardText: _getStandardText('Nhiệt độ phòng cân'),
             keyboardType: TextInputType.number,
-            onChanged: (v) => validateInput('temperature', v, _standardParams, matchName: 'Nhiệt độ phòng'),
+            onChanged: (v) => validateInput('temperature', v, _standardParams, matchName: 'Nhiệt độ phòng cân'),
 
           )),
           const SizedBox(width: 16),
@@ -650,9 +661,9 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
             label: 'Độ ẩm (%)',
             controller: _humidCtrl,
             status: inputStatuses['humidity'] ?? 'none',
-            standardText: _getStandardText('Độ ẩm phòng'),
+            standardText: _getStandardText('Độ ẩm phòng cân'),
             keyboardType: TextInputType.number,
-            onChanged: (v) => validateInput('humidity', v, _standardParams, matchName: 'Độ ẩm phòng'),
+            onChanged: (v) => validateInput('humidity', v, _standardParams, matchName: 'Độ ẩm phòng cân'),
 
           )),
         ],
@@ -661,9 +672,9 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
         label: 'Áp lực (Pa)',
         controller: _pressCtrl,
         status: inputStatuses['pressure'] ?? 'none',
-        standardText: _getStandardText('Áp lực phòng'),
+        standardText: _getStandardText('Áp lực phòng cân'),
         keyboardType: TextInputType.number,
-        onChanged: (v) => validateInput('pressure', v, _standardParams, matchName: 'Áp lực phòng'),
+        onChanged: (v) => validateInput('pressure', v, _standardParams, matchName: 'Áp lực phòng cân'),
 
       ),
       StandardInputField(
