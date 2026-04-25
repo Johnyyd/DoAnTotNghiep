@@ -8,7 +8,7 @@ FROM ghcr.io/cirruslabs/flutter:stable AS build
 WORKDIR /app
 
 # Tối ưu hóa Cache cho Flutter Pub Get
-COPY pubspec.* .
+COPY pubspec.* ./
 RUN flutter pub get
 
 # Copy toàn bộ mã nguồn và thực hiện build
