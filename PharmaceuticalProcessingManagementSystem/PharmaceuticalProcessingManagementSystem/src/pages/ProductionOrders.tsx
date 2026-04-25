@@ -14,6 +14,7 @@ interface UiProductionOrder {
   plannedQuantity: number;
   status: OrderStatus;
   plannedStartDate?: string;
+  plannedEndDate?: string;
 }
 
 function toRows<T>(raw: unknown): T[] {
@@ -137,6 +138,7 @@ export default function ProductionOrders() {
       plannedQuantity: Number(o.plannedQuantity ?? o.PlannedQuantity ?? 0),
       status: (o.status ?? o.Status ?? 'Draft') as OrderStatus,
       plannedStartDate: o.startDate ?? o.StartDate,
+      plannedEndDate: o.endDate ?? o.EndDate,
     };
   }), [ordersRaw, recipes]);
 
@@ -185,8 +187,8 @@ export default function ProductionOrders() {
       orderCode: orderForm.orderCode,
       recipeId: orderForm.recipeId,
       plannedQuantity: orderForm.plannedQuantity,
-      startDate: orderForm.startDate ? new Date(orderForm.startDate).toISOString() : undefined,
-      endDate: orderForm.endDate ? new Date(orderForm.endDate).toISOString() : undefined,
+      startDate: orderForm.startDate ? orderForm.startDate : undefined,
+      endDate: orderForm.endDate ? orderForm.endDate : undefined,
       status: orderForm.status,
     } as any),
     onSuccess: async () => {
@@ -200,8 +202,8 @@ export default function ProductionOrders() {
       orderCode: orderForm.orderCode,
       recipeId: orderForm.recipeId,
       plannedQuantity: orderForm.plannedQuantity,
-      startDate: orderForm.startDate ? new Date(orderForm.startDate).toISOString() : undefined,
-      endDate: orderForm.endDate ? new Date(orderForm.endDate).toISOString() : undefined,
+      startDate: orderForm.startDate ? orderForm.startDate : undefined,
+      endDate: orderForm.endDate ? orderForm.endDate : undefined,
       status: orderForm.status,
     } as any),
     onSuccess: async () => {
@@ -212,8 +214,8 @@ export default function ProductionOrders() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: ({ orderId, status }: { orderId: number; status: string }) =>
-      productionOrdersApi.update(orderId, { status } as any),
+    mutationFn: ({ orderId, status, orderCode, recipeId, plannedQuantity }: { orderId: number; status: string; orderCode: string; recipeId: number; plannedQuantity: number }) =>
+      productionOrdersApi.update(orderId, { status, orderCode, recipeId, plannedQuantity } as any),
     onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ['productionOrders'] }); },
     onError: (err: any) => alert(err?.response?.data?.message ?? err?.message ?? 'Cập nhật trạng thái thất bại.'),
   });
@@ -242,8 +244,8 @@ export default function ProductionOrders() {
       orderCode: order.orderCode,
       recipeId: order.recipeId,
       plannedQuantity: order.plannedQuantity,
-      startDate: order.plannedStartDate ? new Date(order.plannedStartDate).toISOString().slice(0, 10) : '',
-      endDate: '',
+      startDate: order.plannedStartDate ? order.plannedStartDate.split('T')[0] : '',
+      endDate: order.plannedEndDate ? order.plannedEndDate.split('T')[0] : '',
       status: order.status,
     });
     setShowOrderModal(true);
@@ -374,13 +376,20 @@ export default function ProductionOrders() {
                     <td>
                       <select
                         value={order.status}
+                        disabled={order.status === 'Completed'}
                         onChange={(e) => {
                           const newStatus = e.target.value;
                           if (confirm(`Cập nhật trạng thái thành "${newStatus}"?`)) {
-                            updateStatusMutation.mutate({ orderId: order.orderId, status: newStatus });
+                            updateStatusMutation.mutate({ 
+                              orderId: order.orderId, 
+                              status: newStatus,
+                              orderCode: order.orderCode,
+                              recipeId: order.recipeId,
+                              plannedQuantity: order.plannedQuantity
+                            });
                           }
                         }}
-                        className={`text-xs font-semibold px-2 py-1 rounded-full border-0 cursor-pointer outline-none ${statusClass(order.status)}`}
+                        className={`text-xs font-semibold px-2 py-1 rounded-full border-0 outline-none ${order.status !== 'Completed' ? 'cursor-pointer' : 'cursor-not-allowed'} ${statusClass(order.status)}`}
                       >
                         {allStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
                       </select>
@@ -391,7 +400,13 @@ export default function ProductionOrders() {
                         {(order.status === 'Draft' || order.status === 'Hold') && (
                           <button onClick={() => openEditOrder(order)} className="btn-ghost text-sm"><Pencil className="w-4 h-4 mr-1" />Sửa</button>
                         )}
-                        <button onClick={() => { if (confirm('Xóa lệnh sản xuất này?')) deleteOrderMutation.mutate(order.orderId); }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xóa</button>
+                        <button onClick={() => { 
+                          if (order.status === 'Completed') {
+                            alert('Lệnh này đã hoàn thành, không thể xoá!');
+                            return;
+                          }
+                          if (confirm('Xóa lệnh sản xuất này?')) deleteOrderMutation.mutate(order.orderId); 
+                        }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xóa</button>
                       </div>
                     </td>
                   </tr>
@@ -425,11 +440,11 @@ export default function ProductionOrders() {
                   {allStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
-              <div><label className="text-xs text-neutral-500">Ngày bắt đầu dự kiến</label>
-                <input type="date" className="input" value={orderForm.startDate} onChange={(e) => setOrderForm({ ...orderForm, startDate: e.target.value })} />
+              <div><label className="text-xs text-neutral-500">Ngày bắt đầu</label>
+                <input type="date" className="input" max={new Date().toISOString().split('T')[0]} value={orderForm.startDate ? orderForm.startDate.split('T')[0] : ''} onChange={(e) => setOrderForm({ ...orderForm, startDate: e.target.value })} />
               </div>
               <div><label className="text-xs text-neutral-500">Ngày kết thúc dự kiến</label>
-                <input type="date" className="input" value={orderForm.endDate} onChange={(e) => setOrderForm({ ...orderForm, endDate: e.target.value })} />
+                <input type="date" className="input" min={orderForm.startDate ? orderForm.startDate.split('T')[0] : new Date().toISOString().split('T')[0]} value={orderForm.endDate ? orderForm.endDate.split('T')[0] : ''} onChange={(e) => setOrderForm({ ...orderForm, endDate: e.target.value })} />
               </div>
             </div>
             <div className="flex justify-end gap-2">
@@ -443,7 +458,7 @@ export default function ProductionOrders() {
       {/* Batch popup */}
       {batchPopupOrderId !== null && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-3xl p-6 space-y-4">
+          <div className="bg-white rounded-2xl w-full max-w-5xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold">Danh sách mẻ sản xuất</h2>

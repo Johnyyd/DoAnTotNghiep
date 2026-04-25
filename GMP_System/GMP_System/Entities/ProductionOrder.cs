@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace GMP_System.Entities;
 
@@ -29,5 +30,6 @@ public partial class ProductionOrder
 
     public virtual ICollection<ProductionBatch> ProductionBatches { get; set; } = new List<ProductionBatch>();
 
+    [JsonIgnore]
     public virtual Recipe? Recipe { get; set; }
 }

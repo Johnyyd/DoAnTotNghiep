@@ -24,10 +24,7 @@ PRINT 'Starting GMP Database Initialization...';
 PRINT '-- Section 1: Schema --'
 :r $(BaseDir)Schema.sql
 
-PRINT '-- Section 2: Audit Trail --'
-:r $(BaseDir)SystemAudit.sql
-
-PRINT '-- Section 3: Full Seed Data --'
+PRINT '-- Section 2: Full Seed Data --'
 :r $(BaseDir)full_seed.sql
 
 PRINT 'GMP Database Initialization & Seeding Completed Successfully!';

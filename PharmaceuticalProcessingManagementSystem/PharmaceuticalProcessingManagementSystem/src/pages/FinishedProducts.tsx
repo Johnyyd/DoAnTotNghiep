@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { certificatesApi, inventoryApi, materialsApi } from '@/services/api';
-import { FileCheck2, Search } from 'lucide-react';
+import { FileCheck2, Plus, Search } from 'lucide-react';
 
 function normalizeMaterial(raw: any) {
   return {
@@ -24,9 +24,22 @@ function viUnit(unit: string) {
 export default function FinishedProducts() {
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState<'completed' | 'target'>('completed');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({ materialCode: '', materialName: '' });
+
+  const queryClient = useQueryClient();
 
   const { data: materialsRaw, isLoading } = useQuery({ queryKey: ['materials'], queryFn: () => materialsApi.getAll() });
   const { data: lotsRaw } = useQuery({ queryKey: ['inventoryLots'], queryFn: () => inventoryApi.getAll() });
+
+  const addMaterialMutation = useMutation({
+    mutationFn: () => materialsApi.create({ ...addForm, type: 'FinishedGood', baseUomId: 1, categoryId: 1 } as any),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      setShowAddModal(false);
+      setAddForm({ materialCode: '', materialName: '' });
+    }
+  });
 
   const materials = useMemo(() => {
     const rows = Array.isArray(materialsRaw) ? materialsRaw : (materialsRaw as any)?.data ?? [];
@@ -78,9 +91,16 @@ export default function FinishedProducts() {
       <div><h1 className="text-2xl font-bold text-neutral-900">Quản lý thành phẩm</h1></div>
 
       <div className="card space-y-3">
-        <div className="flex gap-2">
-          <button className={`px-4 py-2 rounded-lg border ${tab === 'completed' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white border-neutral-300'}`} onClick={() => setTab('completed')}>Thành phẩm đã hoàn thành</button>
-          <button className={`px-4 py-2 rounded-lg border ${tab === 'target' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white border-neutral-300'}`} onClick={() => setTab('target')}>Thành phẩm mong muốn</button>
+        <div className="flex justify-between items-center">
+          <div className="flex gap-2">
+            <button className={`px-4 py-2 rounded-lg border ${tab === 'completed' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white border-neutral-300'}`} onClick={() => setTab('completed')}>Thành phẩm đã hoàn thành</button>
+            <button className={`px-4 py-2 rounded-lg border ${tab === 'target' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white border-neutral-300'}`} onClick={() => setTab('target')}>Thành phẩm mong muốn</button>
+          </div>
+          {tab === 'target' && (
+            <button className="btn-primary flex items-center" onClick={() => setShowAddModal(true)}>
+              <Plus className="w-4 h-4 mr-1" /> Nhập thành phẩm đầu ra
+            </button>
+          )}
         </div>
         <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" /><input value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-9" placeholder="Tìm mã hoặc tên thành phẩm..." /></div>
       </div>
@@ -89,7 +109,14 @@ export default function FinishedProducts() {
         {filtered.length === 0 ? <div className="text-center py-12 text-neutral-500">Không có dữ liệu phù hợp</div> : (
           <div className="table-container">
             <table className="table">
-              <thead><tr><th>Mã</th><th>Tên thành phẩm</th><th>Số lượng thành phẩm</th><th>Giấy kiểm nghiệm</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Mã</th>
+                  <th>Tên thành phẩm</th>
+                  {tab === 'completed' && <th>Số lượng thành phẩm</th>}
+                  {tab === 'completed' && <th>Giấy kiểm nghiệm</th>}
+                </tr>
+              </thead>
               <tbody>
                 {filtered.map((m) => {
                   const g = grouped.get(m.materialId);
@@ -100,8 +127,8 @@ export default function FinishedProducts() {
                     <tr key={m.materialId}>
                       <td><code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">{m.materialCode}</code></td>
                       <td className="font-medium text-neutral-900">{m.materialName}</td>
-                      <td>{displayQty}{unit}</td>
-                      <td><a className="text-primary-600 hover:underline inline-flex items-center" href={certificatesApi.getFinishedCertificateUrl(m.materialCode)} target="_blank" rel="noreferrer"><FileCheck2 className="w-4 h-4 mr-1" /> Xem</a></td>
+                      {tab === 'completed' && <td>{displayQty}{unit}</td>}
+                      {tab === 'completed' && <td><a className="text-primary-600 hover:underline inline-flex items-center" href={certificatesApi.getFinishedCertificateUrl(m.materialCode)} target="_blank" rel="noreferrer"><FileCheck2 className="w-4 h-4 mr-1" /> Xem</a></td>}
                     </tr>
                   );
                 })}
@@ -110,6 +137,28 @@ export default function FinishedProducts() {
           </div>
         )}
       </div>
+
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-4">
+            <h3 className="text-xl font-bold">Thêm thành phẩm mong muốn</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-neutral-500">Mã thành phẩm</label>
+                <input className="input" value={addForm.materialCode} onChange={(e) => setAddForm({ ...addForm, materialCode: e.target.value })} placeholder="VD: TP-001" />
+              </div>
+              <div>
+                <label className="text-xs text-neutral-500">Tên thành phẩm</label>
+                <input className="input" value={addForm.materialName} onChange={(e) => setAddForm({ ...addForm, materialName: e.target.value })} placeholder="VD: Viên nén XYZ" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <button className="btn-ghost" onClick={() => setShowAddModal(false)}>Hủy</button>
+              <button className="btn-primary" disabled={!addForm.materialCode || !addForm.materialName} onClick={() => addMaterialMutation.mutate()}>Xác nhận</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

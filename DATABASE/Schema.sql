@@ -18,7 +18,6 @@ GO
 PRINT 'Cleaning up existing tables...';
 IF OBJECT_ID('BatchProcessParameterValue', 'U') IS NOT NULL DROP TABLE BatchProcessParameterValue;
 IF OBJECT_ID('QualityTests', 'U') IS NOT NULL DROP TABLE QualityTests;
-IF OBJECT_ID('SystemAuditLog', 'U') IS NOT NULL DROP TABLE SystemAuditLog;
 IF OBJECT_ID('MaterialUsage', 'U') IS NOT NULL DROP TABLE MaterialUsage;
 IF OBJECT_ID('BatchProcessLogs', 'U') IS NOT NULL DROP TABLE BatchProcessLogs;
 IF OBJECT_ID('ProductionBatches', 'U') IS NOT NULL DROP TABLE ProductionBatches;
@@ -49,7 +48,6 @@ CREATE TABLE AppUsers (
     IsActive BIT DEFAULT 1,               -- Soft delete: 1 - Đang làm việc, 0 - Nghỉ việc (Cấm xóa vật lý)
     PasswordHash NVARCHAR(MAX),          -- Mật khẩu đã được mã hóa Hash an toàn
     CreatedAt DATETIME2 DEFAULT GETDATE(),-- Thời gian tạo tài khoản
-    LastLogin DATETIME2                  -- Lưu lại vết đăng nhập gần nhất
 );
 
 -- -------------------------------------------------------------------------

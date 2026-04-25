@@ -56,14 +56,14 @@ PRINT 'Reset Identity Completed Successfully!';
 -- Passwords: Admin@123 | Qc@123456 | Op@123456 | Mgr@123456
 -- =====================================================================
 SET IDENTITY_INSERT AppUsers ON;
-INSERT INTO AppUsers (UserId, Username, FullName, Role, IsActive, PasswordHash, CreatedAt, LastLogin)
+INSERT INTO AppUsers (UserId, Username, FullName, Role, IsActive, PasswordHash, CreatedAt)
 VALUES
-(1, 'admin',   N'Admin Hệ Thống',           'Admin',             1, '$2b$11$hyVSDA5K2Qg1FVUosjSk4e76FBcJhE7DbNG/KDELUBotFzcSt5xIW', DATEADD(DAY,-90,GETDATE()), NULL),
-(2, 'qc01',    N'Trần Thị Kiểm Tra',        'QA_QC',             1, '$2b$11$f1zats7FFnLII0ru7JfcZu0uJsbE7DEsMLXooia8ZfAlbsj3bZKWK', DATEADD(DAY,-60,GETDATE()), NULL),
-(3, 'op01',    N'Nguyễn Văn Công Nhân',     'Operator',          1, '$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW', DATEADD(DAY,-60,GETDATE()), NULL),
-(4, 'mgr01',   N'Lê Quang Quản Lý',         'ProductionManager', 1, '$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW', DATEADD(DAY,-90,GETDATE()), NULL),
-(5, 'qc02',    N'Phạm Thị Chất Lượng',      'QA_QC',             1, '$2b$11$f1zats7FFnLII0ru7JfcZu0uJsbE7DEsMLXooia8ZfAlbsj3bZKWK', DATEADD(DAY,-30,GETDATE()), NULL),
-(6, 'op02',    N'Hoàng Văn Thao Tác',       'Operator',          1, '$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW', DATEADD(DAY,-30,GETDATE()), NULL);
+(1, 'admin',   N'Admin Hệ Thống',           'Admin',             1, '$2b$11$hyVSDA5K2Qg1FVUosjSk4e76FBcJhE7DbNG/KDELUBotFzcSt5xIW', DATEADD(DAY,-90,GETDATE())),
+(2, 'qc01',    N'Trần Thị Kiểm Tra',        'QA_QC',             1, '$2b$11$f1zats7FFnLII0ru7JfcZu0uJsbE7DEsMLXooia8ZfAlbsj3bZKWK', DATEADD(DAY,-60,GETDATE())),
+(3, 'op01',    N'Nguyễn Văn Công Nhân',     'Operator',          1, '$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW', DATEADD(DAY,-60,GETDATE())),
+(4, 'mgr01',   N'Lê Quang Quản Lý',         'ProductionManager', 1, '$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW', DATEADD(DAY,-90,GETDATE())),
+(5, 'qc02',    N'Phạm Thị Chất Lượng',      'QA_QC',             1, '$2b$11$f1zats7FFnLII0ru7JfcZu0uJsbE7DEsMLXooia8ZfAlbsj3bZKWK', DATEADD(DAY,-30,GETDATE())),
+(6, 'op02',    N'Hoàng Văn Thao Tác',       'Operator',          1, '$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW', DATEADD(DAY,-30,GETDATE()));
 SET IDENTITY_INSERT AppUsers OFF;
 GO
 PRINT 'Insert AppUsers Completed Successfully!';
@@ -90,7 +90,8 @@ INSERT INTO ProductionAreas (AreaId, AreaCode, AreaName, Description)
 VALUES 
 (1, 'PHONG-PHA-CHE', N'Phòng pha chế', N'Khu vực pha chế'),
 (2, 'PHONG-CAN', N'Phòng cân', N'Khu vực cân'),
-(3, 'PHONG-TRON-KHO', N'Phòng trộn khô', N'Khu vực trộn');
+(3, 'PHONG-TRON-KHO', N'Phòng trộn khô', N'Khu vực trộn'),
+(4, 'PHONG-DONG-GOI', N'Phòng đóng gói', N'Khu vực đóng gói');
 SET IDENTITY_INSERT ProductionAreas OFF;
 GO
 PRINT 'Insert ProductionAreas Completed Successfully!';
@@ -101,8 +102,8 @@ SET IDENTITY_INSERT UomConversions ON;
 INSERT INTO UomConversions (ConversionId, FromUomId, ToUomId, ConversionFactor, Note) VALUES
 (1, 1, 2,  1000.0, N'1 kg = 1000 g'),
 (2, 2, 1,  0.001,  N'1 g = 0.001 kg'),
-(3, 6, 5,  10.0,   N'1 hộp = 10 vỉ'),
-(4, 7, 6,  12.0,   N'1 thùng = 12 hộp'),
+(3, 6, 5,  5.0,   N'1 hộp = 5 vỉ'),
+(4, 7, 6,  20.0,   N'1 thùng = 20 hộp'),
 (5, 5, 4,  10.0,   N'1 vỉ = 10 viên');
 SET IDENTITY_INSERT UomConversions OFF;
 GO
@@ -122,7 +123,7 @@ INSERT INTO Equipments (EquipmentId, EquipmentCode, EquipmentName, TechnicalSpec
 (8,  'CNTB-TSC',      N'Tủ sấy chai',            N'1,5 m³',               N'Sấy khô chai',                1),
 (9,  'VIDEOJET-1220', N'Máy in số lô',           N'250 nhãn/ giờ',        N'In số lô, ngày SX, hạn dùng', 1),
 (10, 'ABL-M',         N'Máy dán nhãn tự động',   N'1.500 nhãn/ giờ',      N'Dán nhãn vào thân chai',      1),
-(11, 'F-262',         N'Máy gấp toa',            N'10.000 toa/ giờ',      N'Bế tờ HDSD',                  1);
+(11, 'F-262',         N'Máy gấp toa',            N'10.000 toa/ giờ',      N'In tờ HDSD',                  1);
 SET IDENTITY_INSERT Equipments OFF;
 GO
 PRINT 'Insert Equipments Completed Successfully!';
@@ -131,23 +132,23 @@ PRINT 'Insert Equipments Completed Successfully!';
 -- =====================================================================
 SET IDENTITY_INSERT Materials ON;
 INSERT INTO Materials (MaterialId, MaterialCode, MaterialName, Type, BaseUomId, IsActive, TechnicalSpecification, CreatedAt) VALUES
-(1,  'MAT-NLC-3',   N'Cao khô Trinh nữ',                   'RawMaterial',  1, 1, N'TCCS', GETDATE()),
-(2,  'MAT-TD-1',    N'Aerosil',                            'RawMaterial',  2, 1, N'USP 30', GETDATE()),
-(3,  'MAT-TD-3',    N'Sodium starch glycolate',            'RawMaterial',  1, 1, N'USP 30', GETDATE()),
-(4,  'MAT-TD-4',    N'Talc',                               'RawMaterial',  2, 1, N'DĐVN V', GETDATE()),
-(5,  'MAT-TD-5',    N'Magie Stearat',                      'RawMaterial',  2, 1, N'DĐVN V', GETDATE()),
-(6,  'MAT-TD-8',    N'Tinh bột ngô (Filler)',              'RawMaterial',  1, 1, N'DĐVN V', GETDATE()),
-(7,  'MAT-NLP-6',   N'Vỏ nang cứng',                       'FinishedGood', 4, 1, N'DĐVN V', GETDATE()),
-(8,  'MAT-PVP',     N'PVP K30',                            'RawMaterial',  1, 1, N'USP 30', GETDATE()),
-(9,  'MAT-PARA',    N'Bột Paracetamol tinh khiết',         'RawMaterial',  1, 1, N'USP 30', GETDATE()),
-(10, 'MAT-LAC',     N'Lactose kết dính',                   'RawMaterial',  1, 1, N'USP 30', GETDATE()),
-(11, 'MAT-ALU',     N'Màng nhôm ép vỉ',                    'Packaging',    1, 1, N'DĐVN V', GETDATE()),
-(12, 'MAT-PVC',     N'Màng PVC trong suốt',                'Packaging',    1, 1, N'DĐVN V', GETDATE()),
-(13, 'FG-NLC3-CAP', N'Viên nang NLC 3 (540mg)',            'FinishedGood', 4, 1, N'DĐVN V', GETDATE()),
-(14, 'FG-PARA-TAB', N'Viên nén Paracetamol 500mg',         'FinishedGood', 4, 1, N'DĐVN V', GETDATE()),
-(15, 'MAT-WATER',   N'Nước cất pha tiêm',                  'RawMaterial',  3, 1, N'DĐVN V', GETDATE()),
-(16, 'MAT-AMP',     N'Ống thủy tinh 2ml',                  'Packaging',    4, 1, N'USP 30', GETDATE()),
-(17, 'FG-DIPY-AMP', N'Thuốc ống Dipyridamole 10mg/2ml',    'FinishedGood', 4, 1, N'DĐVN V', GETDATE());
+(1,  'NLC-3',   N'Cao khô Trinh nữ',                   'RawMaterial',  1, 1, N'TCCS', GETDATE()),
+(2,  'TD-1',    N'Aerosil',                            'RawMaterial',  2, 1, N'USP 30', GETDATE()),
+(3,  'TD-3',    N'Sodium starch glycolate',            'RawMaterial',  1, 1, N'USP 30', GETDATE()),
+(4,  'TD-4',    N'Talc',                               'RawMaterial',  2, 1, N'DĐVN V', GETDATE()),
+(5,  'TD-5',    N'Magie Stearat',                      'RawMaterial',  2, 1, N'DĐVN V', GETDATE()),
+(6,  'TD-8',    N'Tinh bột ngô (Filler)',              'RawMaterial',  1, 1, N'DĐVN V', GETDATE()),
+(7,  'NLP-6',   N'Vỏ nang cứng',                       'RawMaterial', 4, 1, N'DĐVN V', GETDATE()),
+(8,  'PVP',     N'PVP K30',                            'RawMaterial',  1, 1, N'USP 30', GETDATE()),
+(9,  'PARA',    N'Bột Paracetamol tinh khiết',         'RawMaterial',  1, 1, N'USP 30', GETDATE()),
+(10, 'LAC',     N'Lactose kết dính',                   'RawMaterial',  1, 1, N'USP 30', GETDATE()),
+(11, 'WATER',   N'Nước cất pha tiêm',                  'RawMaterial',  3, 1, N'DĐVN V', GETDATE()),
+(12, 'AMP',     N'Ống thủy tinh 2ml',                  'Packaging',    4, 1, N'USP 30', GETDATE()),
+(13, 'ALU',     N'Màng nhôm ép vỉ',                    'Packaging',    1, 1, N'DĐVN V', GETDATE()),
+(14, 'PVC',     N'Màng PVC trong suốt',                'Packaging',    1, 1, N'DĐVN V', GETDATE()),
+(15, 'TP-CRILA',N'Viên nang Crila',                    'FinishedGood', 4, 1, N'DĐVN V', GETDATE()),
+(16, 'TP-PARA', N'Viên nén Paracetamol 500mg',         'FinishedGood', 4, 1, N'DĐVN V', GETDATE()),
+(17, 'TP-DIPY', N'Thuốc ống Dipyridamole 10mg/2ml',    'FinishedGood', 4, 1, N'DĐVN V', GETDATE());
 SET IDENTITY_INSERT Materials OFF;
 GO
 PRINT 'Insert Materials Completed Successfully!';
@@ -156,11 +157,7 @@ PRINT 'Insert Materials Completed Successfully!';
 -- =====================================================================
 SET IDENTITY_INSERT Recipes ON;
 INSERT INTO Recipes (RecipeId, MaterialId, VersionNumber, BatchSize, Status, ApprovedBy, ApprovedDate, CreatedAt, EffectiveDate, Note) VALUES
-(1, 13, 1, 54000.00,  'Approved', 2, DATEADD(DAY,-30,GETDATE()), DATEADD(DAY,-45,GETDATE()), DATEADD(DAY,-25,GETDATE()), N'NLC 3 mẻ 100k viên.'),
-(2, 14, 2, 500000.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Paracetamol 500mg.'),
-(3, 13, 2, 100000.00, 'Draft',    NULL, NULL,                    DATEADD(DAY,-5, GETDATE()), NULL,                      N'Cải tiến tá dược.'),
-(4, 17, 1, 10000.00,  'Approved', 2, DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-15,GETDATE()), DATEADD(DAY,-5, GETDATE()), N'Dipyridamole tiêm.'),
-(5, 14, 3, 200000.00, 'Approved', 2, DATEADD(DAY,-5,GETDATE()),  DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,1, GETDATE()),  N'Paracetamol tầng sôi.');
+(1000, 16, 2, 500.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Paracetamol 500mg');
 SET IDENTITY_INSERT Recipes OFF;
 GO
 PRINT 'Insert Recipes Completed Successfully!';
@@ -169,18 +166,11 @@ PRINT 'Insert Recipes Completed Successfully!';
 -- =====================================================================
 SET IDENTITY_INSERT RecipeBOM ON;
 INSERT INTO RecipeBOM (BomId, RecipeId, MaterialId, Quantity, UomId, WastePercentage, Note) VALUES
-(1,  1, 1,  25000.00, 2, 0.20, N'NLC 3'),
-(2,  1, 2,   162.00,  2, 0.10, N'Aerosil'),
-(3,  1, 3,  2970.00,  2, 0.20, N'SSG'),
-(4,  1, 4,   405.00,  2, 0.10, N'Talc'),
-(5,  1, 5,   405.00,  2, 0.10, N'Magnesi stearat'),
-(6,  1, 6,  25058.00, 2, 0.50, N'Tinh bột'),
-(7,  1, 7,  100000.00, 4, 0.10, N'Vỏ nang'),
-(8,  2, 9,  250000.00, 2, 0.30, N'Paracetamol'),
-(9,  2, 6,  150000.00, 2, 1.00, N'Tinh bột ngô'),
-(10, 2, 10, 80000.00, 2, 0.50, N'Lactose'),
-(11, 2, 5,   5000.00, 2, 0.10, N'Magie stearat'),
-(12, 2, 8,  10000.00, 2, 0.20, N'PVP K30');
+(1,  1000, 9,  250000.00, 2, 0.30, N'Paracetamol'),
+(2,  1000, 6,  150000.00, 2, 1.00, N'Tinh bột ngô'),
+(3,  1000, 10, 80000.00, 2, 0.50, N'Lactose'),
+(4,  1000, 5,   5000.00, 2, 0.10, N'Magie stearat'),
+(5,  1000, 8,  10000.00, 2, 0.20, N'PVP K30');
 SET IDENTITY_INSERT RecipeBOM OFF;
 GO
 PRINT 'Insert RecipeBOM Completed Successfully!';
@@ -189,28 +179,10 @@ PRINT 'Insert RecipeBOM Completed Successfully!';
 -- =====================================================================
 SET IDENTITY_INSERT RecipeRouting ON;
 INSERT INTO RecipeRouting (RoutingId, RecipeId, StepNumber, StepName, DefaultEquipmentId, EstimatedTimeMinutes, Description, NumberOfRouting) VALUES
--- Recipe 1: Viên nang NLC 3 (Existing)
-(1, 1, 1, N'Sấy Tá Dược 8 (TD 8)',              2, 180, N'Sấy tinh bột TD 8 tại 75°C, 180p. Độ ẩm < 5%.', 1),
-(2, 1, 2, N'Sấy Cao Khô NLC 3',                2, 180, N'Sấy cao khô Trinh nữ tại 75°C, 180p. Độ ẩm < 3%.', 1),
-(3, 1, 3, N'Cân Nguyên Liệu',                  1, 90,  N'Cân chính xác 6 loại theo BOM động (Section 4 BMR). Đối chiếu nhãn phụ.', 1),
-(4, 1, 4, N'Trộn Khô',                         3, 15,  N'Trộn premix bột tá dược trước. Trộn chính 15 phút, 15 vòng/phút.', 1),
-(7, 1, 5, N'Đóng Nang',                        7, 120, N'Đóng nang số 0, khối lượng đích 540mg/viên.', 1),
--- Recipe 2: Paracetamol (Existing)
-(5, 2, 1, N'Cân Paracetamol',   1, 90,  NULL, 1),
-(6, 2, 2, N'Dập Viên',          4, 180, NULL, 1),
--- Recipe 4: Thuốc ống Dipyridamole (New)
-(10, 4, 1, N'Pha chế dung dịch', 8, 60, N'Trộn hoạt chất Dipyridamole vào nước cất vô trùng.', 1),
-(11, 4, 2, N'Lọc vô trùng',      NULL, 45, N'Lọc qua màng lọc 0.22 micron.', 1),
-(12, 4, 3, N'Đóng ống - Hàn ống', NULL, 120, N'Đóng 2ml/ống, hàn kín bằng ngọn lửa.', 1),
-(13, 4, 4, N'Tiệt trùng',        NULL, 90, N'Tiệt trùng bằng hơi nước (Autoclave) 121°C.', 1),
-(14, 4, 5, N'Soi kiểm tra',      NULL, 180, N'Kiểm tra độ trong và các vật thể lạ bằng mắt.', 1),
--- Recipe 5: Viên nén Paracetamol (New - Với bước Sấy hạt có thể lặp)
-(15, 5, 1, N'Cân nguyên liệu',   1, 90,  N'Cân Paracetamol và tá dược.', 1),
-(16, 5, 2, N'Trộn khô',          3, 15,  N'Trộn đều bột Paracetamol và tá dược độn.', 1),
-(17, 5, 3, N'Tạo hạt ướt',       NULL, 60, N'Thêm dung dịch PVP K30 tạo khối ẩm.', 1),
-(18, 5, 4, N'Sấy hạt tầng sôi',  2, 120, N'Sấy hạt đến khi độ ẩm đạt < 5%. CÓ THỂ LẶP LẠI NẾU CẦN.', 2),
-(19, 5, 5, N'Sửa hạt',           NULL, 60, N'Rây hạt qua lưới rây chuẩn.', 1),
-(20, 5, 6, N'Dập viên',          4, 180, N'Dập viên nén 500mg.', 1);
+
+-- Recipe 1000: Paracetamol (Existing)
+(6, 1000, 1, N'Cân Paracetamol',   1, 90,  NULL, 1),
+(7, 1000, 2, N'Dập Viên',          4, 180, NULL, 1);
 SET IDENTITY_INSERT RecipeRouting OFF;
 GO
 PRINT 'Insert RecipeRouting Completed Successfully!';
@@ -218,15 +190,7 @@ PRINT 'Insert RecipeRouting Completed Successfully!';
 -- 10. StepParameters (Dữ liệu chốt GMP - Cấu trúc bảng và Seeding)
 -- Bảng này thường thiếu trong seed cũ, cần nạp để Mobile check Deviation.
 -- =====================================================================
-SET IDENTITY_INSERT StepParameters ON;
-INSERT INTO StepParameters (ParameterId, RoutingId, ParameterName, Unit, MinValue, MaxValue, IsCritical, Note) VALUES
-(1, 1, N'Nhiệt độ phòng', '°C', 21, 25, 1, NULL),
-(2, 1, N'Độ ẩm phòng',   '%',  45, 70, 1, NULL),
-(4, 1, N'Nhiệt độ sấy',  '°C', 73, 77, 1, NULL),
-(20, 1, N'Thời gian sấy', 'phút', 170, 190, 1, NULL),
-(24, 2, N'Nhiệt độ sấy',  '°C', 73, 77, 1, NULL),
-(7, 4, N'Tốc độ trộn',   'v/p', 14, 16, 1, NULL),
-(50, 18, N'Nhiệt độ sấy', '°C', 60, 70, 1, NULL);
+
 SET IDENTITY_INSERT StepParameters OFF;
 GO
 PRINT 'Insert StepParameters Completed Successfully!';
@@ -235,10 +199,8 @@ PRINT 'Insert StepParameters Completed Successfully!';
 -- =====================================================================
 SET IDENTITY_INSERT ProductionOrders ON;
 INSERT INTO ProductionOrders (OrderId, OrderCode, RecipeId, PlannedQuantity, ActualQuantity, StartDate, EndDate, Status, CreatedBy, CreatedAt, Note) VALUES
-(1,  'PO-26-001', 1, 100000.00, 100050.00, DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), 'Completed',  4, GETDATE(), N'Lệnh xong.'),
-(2,  'PO-26-002', 1, 300000.00, NULL,      DATEADD(DAY,-1,GETDATE()), DATEADD(DAY,3, GETDATE()), 'InProcess', 4, GETDATE(), N'Đang chạy.'),
-(4,  'PO-26-004', 2, 200000.00, NULL,      DATEADD(DAY,-2,GETDATE()), DATEADD(DAY,2, GETDATE()), 'InProcess', 4, GETDATE(), N'Para lô 1.'),
-(7,  'PO-26-007', 2, 200000.00, 197800.00, DATEADD(DAY,-10,GETDATE()),DATEADD(DAY,-7,GETDATE()), 'Completed',  4, GETDATE(), N'Lô cũ.');
+(1,  'PO-26-001', 1000, 100000.00, 100050.00, DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), 'Completed',  4, GETDATE(), N'Lệnh xong.'),
+(2,  'PO-26-002', 1000, 300000.00, NULL,      DATEADD(DAY,-1,GETDATE()), DATEADD(DAY,3, GETDATE()), 'InProcess', 4, GETDATE(), N'Đang chạy.');
 SET IDENTITY_INSERT ProductionOrders OFF;
 GO
 PRINT 'Insert ProductionOrders Completed Successfully!';
@@ -269,10 +231,9 @@ INSERT INTO InventoryLots (LotId, MaterialId, LotNumber, QuantityCurrent, Manufa
 (10, 10, 'L-LAC-01', 15.00, DATEADD(DAY,-25,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp G', GETDATE()),
 (11, 11, 'L-ALU-01', 20.00, DATEADD(DAY,-20,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp H', GETDATE()),
 (12, 12, 'L-PVC-01', 20.00, DATEADD(DAY,-15,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp I', GETDATE()),
-(13, 13, 'L-FGNLC3-01', 5.00, DATEADD(DAY,-10,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Sản xuất nội bộ', GETDATE()),
-(14, 14, 'L-FGPARA-01', 10.00, DATEADD(DAY,-5,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Sản xuất nội bộ', GETDATE()),
-(15, 15, 'L-WATER-01', 100.00, DATEADD(DAY,-5,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp J', GETDATE()),
-(16, 16, 'L-AMP-01', 50.00, DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp K', GETDATE()),
+(14, 16, 'L-FGPARA-01', 10.00, DATEADD(DAY,-5,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Sản xuất nội bộ', GETDATE()),
+(15, 11, 'L-WATER-01', 100.00, DATEADD(DAY,-5,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp J', GETDATE()),
+(16, 12, 'L-AMP-01', 50.00, DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp K', GETDATE()),
 (17, 17, 'L-FGDIPY-01', 2.00, DATEADD(DAY,-1,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Sản xuất nội bộ', GETDATE());
 SET IDENTITY_INSERT InventoryLots OFF;
 PRINT 'Insert InventoryLots Completed Successfully!';
@@ -292,8 +253,8 @@ PRINT 'Insert MaterialUsage Completed Successfully!';
 -- =====================================================================
 SET IDENTITY_INSERT BatchProcessLogs ON;
 INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData, Notes, IsDeviation, VerifiedById, VerifiedDate, NumberOfRouting) VALUES
-(1, 1, 1, 2, 3, DATEADD(HOUR,-124,GETDATE()), DATEADD(HOUR,-122,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1),
-(2, 1, 2, 2, 3, DATEADD(HOUR,-122,GETDATE()), DATEADD(HOUR,-120,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1);
+(1, 1, 6, 2, 3, DATEADD(HOUR,-124,GETDATE()), DATEADD(HOUR,-122,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1),
+(2, 1, 7, 2, 3, DATEADD(HOUR,-122,GETDATE()), DATEADD(HOUR,-120,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1);
 SET IDENTITY_INSERT BatchProcessLogs OFF;
 PRINT 'Insert BatchProcessLogs Completed Successfully!';
 

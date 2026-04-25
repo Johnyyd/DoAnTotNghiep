@@ -90,16 +90,14 @@ function formatDate(value?: string): string {
 export default function ManagerOperations() {
   const [selectedRecipeId, setSelectedRecipeId] = useState<number | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [viewedDescription, setViewedDescription] = useState<string | null>(null);
 
   const { data: recipesRaw } = useQuery({
     queryKey: ['recipes'],
     queryFn: () => recipesApi.getAll(),
   });
 
-  const { data: ordersRaw } = useQuery({
-    queryKey: ['productionOrders'],
-    queryFn: () => productionOrdersApi.getAll(),
-  });
+  const { data: ordersRaw } = useQuery({ queryKey: ['progressOrders'], queryFn: () => productionOrdersApi.getAll() });
 
   const { data: batchesRaw } = useQuery({
     queryKey: ['productionBatches'],
@@ -369,7 +367,7 @@ export default function ManagerOperations() {
               <th>Công đoạn</th>
               <th>Thiết bị được sử dụng</th>
               <th>Khu vực</th>
-              <th>Thời gian dự kiến (phút)</th>
+              <th>Thời gian cài đặt</th>
               <th>Mô tả</th>
             </tr>
           </thead>
@@ -380,8 +378,17 @@ export default function ManagerOperations() {
                 <td>{step.stepName}</td>
                 <td>{step.equipmentName}</td>
                 <td>{step.areaName}</td>
-                <td>{step.estimatedTimeMinutes}</td>
-                <td>{step.description || '-'}</td>
+                <td>{step.estimatedTimeMinutes ? `${step.estimatedTimeMinutes} phút` : '-'}</td>
+                <td>
+                  {step.description && step.description.trim() !== '' && step.description !== '-' ? (
+                    <button 
+                      onClick={() => setViewedDescription(step.description ?? null)}
+                      className="text-primary-600 hover:underline text-sm font-medium"
+                    >
+                      Xem
+                    </button>
+                  ) : '-'}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -520,6 +527,21 @@ export default function ManagerOperations() {
           </div>
           <p>Role thực hiện: Trưởng phòng (người phê duyệt)</p>
         </div>
+
+        {/* Description Modal */}
+        {viewedDescription && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-lg p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-gray-900 border-b pb-2 mb-2 w-full text-left">Mô tả công đoạn</h3>
+              </div>
+              <div className="text-sm text-neutral-700 whitespace-pre-wrap">{viewedDescription}</div>
+              <div className="flex justify-end pt-4 mt-4 border-t">
+                <button onClick={() => setViewedDescription(null)} className="btn-primary">Đóng</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
