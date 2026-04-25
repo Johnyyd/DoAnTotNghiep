@@ -64,6 +64,11 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.Username)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.PinCode)
+                .HasMaxLength(6)
+                .IsUnicode(false)
+                .HasDefaultValue("000000");
+            entity.Property(e => e.LastLogin).HasColumnType("datetime2");
         });
 
         modelBuilder.Entity<BatchProcessLog>(entity =>

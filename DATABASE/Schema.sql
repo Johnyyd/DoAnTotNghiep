@@ -57,7 +57,8 @@ CREATE TABLE AppUsers (
     IsActive BIT DEFAULT 1,
     PasswordHash NVARCHAR(MAX),
     CreatedAt DATETIME2 DEFAULT GETDATE(),
-    LastLogin DATETIME2
+    LastLogin DATETIME2,
+    PinCode VARCHAR(6) DEFAULT '000000'
 );
 GO
 

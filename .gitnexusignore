@@ -1,0 +1,33 @@
+# Bỏ qua tài liệu và file nhị phân
+DOCS/
+*.docx
+*.pdf
+*.zip
+*.rar
+
+# Bỏ qua thư mục build và cache
+bin/
+obj/
+node_modules/
+build/
+dist/
+.next/
+.dart_tool/
+.flutter-plugins*
+.vs/
+.vscode/
+
+# --- CÁC FILE DỄ GÂY CRASH PARSER ---
+# Bỏ qua Entity Framework Migrations (chỉ chứa code tự sinh)
+Migrations/
+
+# Bỏ qua các file minified và frontend assets
+*.min.js
+*.min.css
+*.svg
+wwwroot/lib/
+
+# Bỏ qua các file lock và json quá lớn
+package-lock.json
+yarn.lock
+*.json

@@ -31,5 +31,16 @@ TestResults.xml
 *.sln.docstates
 .gitnexus
 .claude
-AGENT.md
-CLAUDE.md
+DOCS/
+*.docx
+*.pdf
+*.zip
+
+# Bổ sung cho .NET / C#
+bin/
+obj/
+
+# Bổ sung cho React / Node.js
+node_modules/
+build/
+dist/c

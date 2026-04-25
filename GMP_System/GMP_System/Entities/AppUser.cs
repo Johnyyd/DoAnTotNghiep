@@ -20,6 +20,8 @@ public partial class AppUser
     public bool? IsActive { get; set; }
 
     public DateTime? CreatedAt { get; set; }
+    public DateTime? LastLogin { get; set; }
+    public string? PinCode { get; set; }
 
     [JsonIgnore]
     public virtual ICollection<MaterialUsage> MaterialUsages { get; set; } = new List<MaterialUsage>();

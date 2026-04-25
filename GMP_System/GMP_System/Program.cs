@@ -321,8 +321,8 @@ SELECT ''InventoryLots'', CAST(COALESCE(i.LotId,d.LotId) AS NVARCHAR(50)),
 CASE WHEN i.LotId IS NOT NULL AND d.LotId IS NULL THEN ''Create''
      WHEN i.LotId IS NOT NULL AND d.LotId IS NOT NULL THEN ''Update''
      ELSE ''Delete'' END,
-CASE WHEN d.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', d.LotNumber, '';Qty='', d.QuantityCurrent) END,
-CASE WHEN i.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', i.LotNumber, '';Qty='', i.QuantityCurrent) END,
+CASE WHEN d.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', d.LotNumber, '';Qty='', d.Quantity) END,
+CASE WHEN i.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', i.LotNumber, '';Qty='', i.Quantity) END,
 GETDATE()
 FROM inserted i FULL OUTER JOIN deleted d ON i.LotId = d.LotId; END');
 
