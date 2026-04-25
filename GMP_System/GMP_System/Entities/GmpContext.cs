@@ -179,14 +179,14 @@ public partial class GmpContext : DbContext
             // Tôi sẽ bỏ QCNumber mapping nếu DB không có để tránh lỗi 207.
             
             entity.Property(e => e.MaterialId).HasColumnName("MaterialId");
-            entity.Property(e => e.Status)
-                .HasMaxLength(50)
-                .HasDefaultValue("Pending")
-                .HasColumnName("QCStatus"); // Khớp với Schema.sql
 
-            entity.Property(e => e.Quantity)
-                .HasColumnName("QuantityCurrent") // Khớp với Schema.sql
+            entity.Property(e => e.QuantityCurrent)
+                .HasColumnName("QuantityCurrent")
                 .HasColumnType("decimal(18, 4)");
+
+            entity.Property(e => e.QCStatus)
+                .HasMaxLength(50)
+                .HasColumnName("QCStatus");
 
             entity.HasOne(d => d.Material).WithMany(p => p.InventoryLots)
                 .HasForeignKey(d => d.MaterialId);

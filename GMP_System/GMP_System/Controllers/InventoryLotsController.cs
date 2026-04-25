@@ -69,12 +69,12 @@ namespace GMP_System.Controllers
                 return BadRequest(new { success = false, message = "Vui lòng nhập mã lô." });
             }
 
-            if (lot.Quantity <= 0)
+            if (lot.QuantityCurrent <= 0)
             {
                 return BadRequest(new { success = false, message = "Số lượng phải lớn hơn 0." });
             }
 
-            lot.Status = string.IsNullOrWhiteSpace(lot.Status) ? "Pending" : lot.Status;
+            lot.QCStatus = string.IsNullOrWhiteSpace(lot.QCStatus) ? "Pending" : lot.QCStatus;
             await _unitOfWork.InventoryLots.AddAsync(lot);
             await _unitOfWork.CompleteAsync();
 
@@ -96,17 +96,17 @@ namespace GMP_System.Controllers
                 return BadRequest(new { success = false, message = validationError });
             }
 
-            if (request.Quantity <= 0)
+            if (request.QuantityCurrent <= 0)
             {
                 return BadRequest(new { success = false, message = "Số lượng phải lớn hơn 0." });
             }
 
-            lot.Quantity = request.Quantity;
+            lot.QuantityCurrent = request.QuantityCurrent;
             lot.ManufactureDate = request.ManufactureDate;
             lot.ExpiryDate = request.ExpiryDate;
-            if (!string.IsNullOrWhiteSpace(request.Status))
+            if (!string.IsNullOrWhiteSpace(request.QCStatus))
             {
-                lot.Status = request.Status;
+                lot.QCStatus = request.QCStatus;
             }
 
             _unitOfWork.InventoryLots.Update(lot);
@@ -144,7 +144,7 @@ namespace GMP_System.Controllers
                 return NotFound(new { success = false, message = "Không tìm thấy lô hàng." });
             }
 
-            lot.Status = request.Status;
+            lot.QCStatus = request.Status;
             _unitOfWork.InventoryLots.Update(lot);
             await _unitOfWork.CompleteAsync();
 
@@ -155,7 +155,7 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> GetAvailableLots()
         {
             var lots = await _unitOfWork.InventoryLots.Query()
-                .Where(l => l.Status == "Released" && l.Quantity > 0)
+                .Where(l => l.QCStatus == "Released" && l.QuantityCurrent > 0)
                 .Include(l => l.Material)
                 .OrderByDescending(l => l.LotId)
                 .ToListAsync();

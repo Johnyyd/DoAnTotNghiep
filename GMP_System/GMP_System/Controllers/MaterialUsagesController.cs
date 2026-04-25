@@ -30,19 +30,19 @@ namespace GMP_System.Controllers
             if (sourceLot == null) return BadRequest("Lô nguyên liệu không tồn tại.");
 
             // Kiểm tra QC: Chỉ được cấp phát lô đã 'Released'
-            if (sourceLot.Status != "Released")
+            if (sourceLot.QCStatus != "Released")
             {
-                return BadRequest($"Lô {sourceLot.LotNumber} đang ở trạng thái {sourceLot.Status}, chưa được phép sử dụng!");
+                return BadRequest($"Lô {sourceLot.LotNumber} đang ở trạng thái {sourceLot.QCStatus}, chưa được phép sử dụng!");
             }
 
             // Kiểm tra số lượng tồn
-            if (sourceLot.Quantity < usage.ActualAmount)
+            if (sourceLot.QuantityCurrent < usage.ActualAmount)
             {
-                return BadRequest($"Kho không đủ hàng! Tồn: {sourceLot.Quantity}, Yêu cầu: {usage.ActualAmount}");
+                return BadRequest($"Kho không đủ hàng! Tồn: {sourceLot.QuantityCurrent}, Yêu cầu: {usage.ActualAmount}");
             }
 
             // --- 3. Thực hiện Trừ Kho (Logic quan trọng) ---
-            sourceLot.Quantity -= usage.ActualAmount;
+            sourceLot.QuantityCurrent -= usage.ActualAmount;
             // _unitOfWork.InventoryLots.Update(sourceLot); // (Bỏ comment nếu Repo có hàm Update riêng)
 
             // --- 4. Ghi nhận lịch sử sử dụng ---
@@ -56,7 +56,7 @@ namespace GMP_System.Controllers
             {
                 Message = "Cấp phát thành công!",
                 UsageID = usage.UsageId,
-                RemainingStock = sourceLot.Quantity
+                RemainingStock = sourceLot.QuantityCurrent
             });
         }
     }

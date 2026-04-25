@@ -149,25 +149,25 @@ static async Task EnsureDefaultInventorySeedAsync(GmpContext db)
             {
                 MaterialId = material.MaterialId,
                 LotNumber = $"INIT-{material.MaterialCode}-{today:yyMMdd}",
-                Quantity = 100m,
+                QuantityCurrent = 100m,
                 ManufactureDate = today,
                 ExpiryDate = today.AddYears(2),
-                Status = "Approved"
+                QCStatus = "Approved"
             });
             continue;
         }
 
-        var total = lots.Sum(x => x.Quantity);
+        var total = lots.Sum(x => x.QuantityCurrent);
         if (total <= 0)
         {
             db.InventoryLots.Add(new InventoryLot
             {
                 MaterialId = material.MaterialId,
                 LotNumber = $"TOPUP-{material.MaterialCode}-{today:yyMMdd}",
-                Quantity = 100m,
+                QuantityCurrent = 100m,
                 ManufactureDate = today,
                 ExpiryDate = today.AddYears(2),
-                Status = "Approved"
+                QCStatus = "Approved"
             });
         }
     }
@@ -193,10 +193,10 @@ static async Task EnsureDefaultInventorySeedAsync(GmpContext db)
         {
             MaterialId = finishedGoods[i].MaterialId,
             LotNumber = code,
-            Quantity = 2m,
+            QuantityCurrent = 2m,
             ManufactureDate = today,
             ExpiryDate = today.AddYears(2),
-            Status = "Completed"
+            QCStatus = "Completed"
         });
     }
 
