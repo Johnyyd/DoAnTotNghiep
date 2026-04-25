@@ -235,11 +235,19 @@ IF COL_LENGTH('dbo.RecipeRouting','AreaId') IS NULL
 IF COL_LENGTH('dbo.RecipeRouting','CleanlinessStatus') IS NULL
     ALTER TABLE dbo.RecipeRouting ADD CleanlinessStatus NVARCHAR(50) NULL;
 IF COL_LENGTH('dbo.RecipeRouting','StandardTemperature') IS NULL
-    ALTER TABLE dbo.RecipeRouting ADD StandardTemperature DECIMAL(10,2) NULL;
+    ALTER TABLE dbo.RecipeRouting ADD StandardTemperature NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardTemperature NVARCHAR(50) NULL;
+
 IF COL_LENGTH('dbo.RecipeRouting','StandardHumidity') IS NULL
-    ALTER TABLE dbo.RecipeRouting ADD StandardHumidity DECIMAL(10,2) NULL;
+    ALTER TABLE dbo.RecipeRouting ADD StandardHumidity NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardHumidity NVARCHAR(50) NULL;
+
 IF COL_LENGTH('dbo.RecipeRouting','StandardPressure') IS NULL
-    ALTER TABLE dbo.RecipeRouting ADD StandardPressure DECIMAL(10,2) NULL;
+    ALTER TABLE dbo.RecipeRouting ADD StandardPressure NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardPressure NVARCHAR(50) NULL;
 IF COL_LENGTH('dbo.RecipeRouting','StabilityStatus') IS NULL
     ALTER TABLE dbo.RecipeRouting ADD StabilityStatus NVARCHAR(50) NULL;
 IF COL_LENGTH('dbo.RecipeRouting','SetTemperature') IS NULL

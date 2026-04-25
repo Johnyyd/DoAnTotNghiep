@@ -29,11 +29,11 @@ public partial class RecipeRouting
 
     public string? CleanlinessStatus { get; set; }
 
-    public decimal? StandardTemperature { get; set; }
+    public string? StandardTemperature { get; set; }
 
-    public decimal? StandardHumidity { get; set; }
+    public string? StandardHumidity { get; set; }
 
-    public decimal? StandardPressure { get; set; }
+    public string? StandardPressure { get; set; }
 
     public string? StabilityStatus { get; set; }
 

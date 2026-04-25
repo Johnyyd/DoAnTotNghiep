@@ -150,12 +150,29 @@ namespace GMP_System.Controllers
             var recipe = await _unitOfWork.Recipes.GetByIdAsync(id);
             if (recipe == null)
             {
-                return NotFound(new { success = false, message = "Không tìm th?y công th?c." });
+                return NotFound(new { success = false, message = "Không tìm thấy công thức." });
             }
+
+            // Kiểm tra xem công thức đã được sử dụng trong Lệnh sản xuất nào chưa
+            var hasOrders = await _context.ProductionOrders.AnyAsync(o => o.RecipeId == id);
+            if (hasOrders)
+            {
+                return BadRequest(new { success = false, message = "Không thể xóa công thức vì đã có Lệnh sản xuất sử dụng công thức này." });
+            }
+
+            // Xoá các dữ liệu liên quan (BOM và Routing) trước khi xoá Recipe để tránh lỗi Khóa ngoại
+            var boms = await _context.RecipeBoms.Where(b => b.RecipeId == id).ToListAsync();
+            var routings = await _context.RecipeRoutings.Where(r => r.RecipeId == id).ToListAsync();
+
+            if (boms.Any()) _context.RecipeBoms.RemoveRange(boms);
+            if (routings.Any()) _context.RecipeRoutings.RemoveRange(routings);
+
+            // Xoá các dữ liệu liên quan ở DB trước khi xoá dữ liệu cha
+            await _context.SaveChangesAsync();
 
             _unitOfWork.Recipes.Remove(recipe);
             await _unitOfWork.CompleteAsync();
-            return Ok(new { success = true, message = "Ðã xóa công th?c." });
+            return Ok(new { success = true, message = "Đã xóa công thức thành công." });
         }
 
         [HttpGet("{id}/bom")]

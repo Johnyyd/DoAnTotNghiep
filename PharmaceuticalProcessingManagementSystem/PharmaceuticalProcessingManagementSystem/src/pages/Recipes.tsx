@@ -21,11 +21,12 @@ type UiRouting = {
   areaName?: string;
   estimatedTimeMinutes: number;
   cleanlinessStatus?: string;
-  standardTemperature?: number;
-  standardHumidity?: number;
-  standardPressure?: number;
+  standardTemperature?: string;
+  standardHumidity?: string;
+  standardPressure?: string;
   stabilityStatus?: string;
   setTemperature?: number;
+  setPressure?: number;
   setTimeMinutes?: number;
   description?: string;
 };
@@ -40,20 +41,25 @@ type RoutingForm = {
   areaId: number;
   estimatedTimeMinutes: number;
   cleanlinessStatus: string;
-  standardTemperature: number;
-  standardHumidity: number;
-  standardPressure: number;
+  standardTemperatureMin: string;
+  standardTemperatureMax: string;
+  standardHumidityMin: string;
+  standardHumidityMax: string;
+  standardPressureMin: string;
+  standardPressureMax: string;
   stabilityStatus: string;
   setTemperature: number;
+  setPressure: number;
   setTimeMinutes: number;
   description: string;
 };
 
 function toRows<T>(raw: unknown): T[] {
   if (Array.isArray(raw)) return raw as T[];
-  if (raw && typeof raw === 'object' && 'data' in raw) {
-    const data = (raw as { data?: unknown }).data;
-    return Array.isArray(data) ? (data as T[]) : [];
+  if (raw && typeof raw === 'object') {
+    const obj = raw as { data?: unknown; items?: unknown };
+    if (Array.isArray(obj.data)) return obj.data as T[];
+    if (Array.isArray(obj.items)) return obj.items as T[];
   }
   return [];
 }
@@ -92,11 +98,12 @@ function normalizeRouting(item: any): UiRouting {
     areaName: item.defaultEquipment?.area?.areaName ?? item.DefaultEquipment?.Area?.AreaName ?? item.area?.areaName ?? item.Area?.AreaName,
     estimatedTimeMinutes: Number(item.estimatedTimeMinutes ?? item.EstimatedTimeMinutes ?? 0),
     cleanlinessStatus: item.cleanlinessStatus ?? item.CleanlinessStatus,
-    standardTemperature: (item.standardTemperature !== undefined && item.standardTemperature !== null) ? Number(item.standardTemperature) : (item.StandardTemperature !== undefined ? Number(item.StandardTemperature) : undefined),
-    standardHumidity: (item.standardHumidity !== undefined && item.standardHumidity !== null) ? Number(item.standardHumidity) : (item.StandardHumidity !== undefined ? Number(item.StandardHumidity) : undefined),
-    standardPressure: (item.standardPressure !== undefined && item.standardPressure !== null) ? Number(item.standardPressure) : (item.StandardPressure !== undefined ? Number(item.StandardPressure) : undefined),
+    standardTemperature: item.standardTemperature ?? item.StandardTemperature ?? '',
+    standardHumidity: item.standardHumidity ?? item.StandardHumidity ?? '',
+    standardPressure: item.standardPressure ?? item.StandardPressure ?? '',
     stabilityStatus: item.stabilityStatus ?? item.StabilityStatus,
     setTemperature: (item.setTemperature !== undefined && item.setTemperature !== null) ? Number(item.setTemperature) : (item.SetTemperature !== undefined ? Number(item.SetTemperature) : undefined),
+    setPressure: (item.setPressure !== undefined && item.setPressure !== null) ? Number(item.setPressure) : (item.SetPressure !== undefined ? Number(item.SetPressure) : undefined),
     setTimeMinutes: (item.setTimeMinutes !== undefined && item.setTimeMinutes !== null) ? Number(item.setTimeMinutes) : (item.SetTimeMinutes !== undefined ? Number(item.SetTimeMinutes) : undefined),
     description: item.description ?? item.Description ?? '',
   };
@@ -119,16 +126,28 @@ export default function Recipes() {
     areaId: 0,
     estimatedTimeMinutes: 0,
     cleanlinessStatus: 'Sạch',
-    standardTemperature: 25,
-    standardHumidity: 60,
-    standardPressure: 15,
+    standardTemperatureMin: '',
+    standardTemperatureMax: '',
+    standardHumidityMin: '',
+    standardHumidityMax: '',
+    standardPressureMin: '',
+    standardPressureMax: '',
     stabilityStatus: 'Ổn định',
-    setTemperature: 25,
+    setTemperature: 0,
+    setPressure: 0,
     setTimeMinutes: 0,
     description: '',
   });
 
-  const { data: recipesRaw, isLoading } = useQuery({ queryKey: ['recipes'], queryFn: () => recipesApi.getAll() });
+  const { data: recipesRaw, isLoading, isError, error } = useQuery({ 
+    queryKey: ['recipes'], 
+    queryFn: () => recipesApi.getAll(),
+    retry: 1 
+  });
+  
+  if (isError) {
+    console.error('Error loading recipes:', error);
+  }
   const { data: materialsRaw } = useQuery({ queryKey: ['materials'], queryFn: () => materialsApi.getAll() });
   const { data: equipmentsRaw } = useQuery({ queryKey: ['equipments'], queryFn: () => equipmentsApi.getAll() });
   const { data: areasRaw } = useQuery({ queryKey: ['areas'], queryFn: () => areasApi.getAll() });
@@ -231,7 +250,11 @@ export default function Recipes() {
       materialId: routingForm.materialId > 0 ? routingForm.materialId : null,
       areaId: routingForm.areaId > 0 ? routingForm.areaId : null,
       defaultEquipmentId: routingForm.defaultEquipmentId > 0 ? routingForm.defaultEquipmentId : null,
-      setTemperature: routingForm.standardTemperature,
+      standardTemperature: `${routingForm.standardTemperatureMin} - ${routingForm.standardTemperatureMax}`,
+      standardHumidity: `${routingForm.standardHumidityMin} - ${routingForm.standardHumidityMax}`,
+      standardPressure: `${routingForm.standardPressureMin} - ${routingForm.standardPressureMax}`,
+      setTemperature: routingForm.setTemperature,
+      setPressure: routingForm.setPressure,
       estimatedTimeMinutes: routingForm.setTimeMinutes,
     } as any),
     onSuccess: async () => {
@@ -247,7 +270,11 @@ export default function Recipes() {
       materialId: routingForm.materialId > 0 ? routingForm.materialId : null,
       areaId: routingForm.areaId > 0 ? routingForm.areaId : null,
       defaultEquipmentId: routingForm.defaultEquipmentId > 0 ? routingForm.defaultEquipmentId : null,
-      setTemperature: routingForm.standardTemperature,
+      standardTemperature: `${routingForm.standardTemperatureMin} - ${routingForm.standardTemperatureMax}`,
+      standardHumidity: `${routingForm.standardHumidityMin} - ${routingForm.standardHumidityMax}`,
+      standardPressure: `${routingForm.standardPressureMin} - ${routingForm.standardPressureMax}`,
+      setTemperature: routingForm.setTemperature,
+      setPressure: routingForm.setPressure,
       estimatedTimeMinutes: routingForm.setTimeMinutes,
     } as any),
     onSuccess: async () => {
@@ -292,11 +319,15 @@ export default function Recipes() {
       areaId: 0,
       estimatedTimeMinutes: 0,
       cleanlinessStatus: 'Sạch',
-      standardTemperature: 25,
-      standardHumidity: 60,
-      standardPressure: 15,
+      standardTemperatureMin: '',
+      standardTemperatureMax: '',
+      standardHumidityMin: '',
+      standardHumidityMax: '',
+      standardPressureMin: '',
+      standardPressureMax: '',
       stabilityStatus: 'Ổn định',
-      setTemperature: 25,
+      setTemperature: 0,
+      setPressure: 0,
       setTimeMinutes: 0,
       description: '',
     });
@@ -313,11 +344,15 @@ export default function Recipes() {
       areaId: item.areaId ?? 0,
       estimatedTimeMinutes: item.estimatedTimeMinutes,
       cleanlinessStatus: item.cleanlinessStatus ?? 'Sạch',
-      standardTemperature: item.standardTemperature ?? 25,
-      standardHumidity: item.standardHumidity ?? 60,
-      standardPressure: item.standardPressure ?? 15,
+      standardTemperatureMin: item.standardTemperature ? item.standardTemperature.split('-')[0]?.trim() ?? '' : '',
+      standardTemperatureMax: item.standardTemperature ? item.standardTemperature.split('-')[1]?.trim() ?? '' : '',
+      standardHumidityMin: item.standardHumidity ? item.standardHumidity.split('-')[0]?.trim() ?? '' : '',
+      standardHumidityMax: item.standardHumidity ? item.standardHumidity.split('-')[1]?.trim() ?? '' : '',
+      standardPressureMin: item.standardPressure ? item.standardPressure.split('-')[0]?.trim() ?? '' : '',
+      standardPressureMax: item.standardPressure ? item.standardPressure.split('-')[1]?.trim() ?? '' : '',
       stabilityStatus: item.stabilityStatus ?? 'Ổn định',
-      setTemperature: item.setTemperature ?? 25,
+      setTemperature: item.setTemperature ?? 0,
+      setPressure: item.setPressure ?? 0,
       setTimeMinutes: item.setTimeMinutes ?? item.estimatedTimeMinutes ?? 0,
       description: item.description ?? '',
     });
@@ -358,7 +393,13 @@ export default function Recipes() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm công thức..." className="input pl-9" />
           </div>
-          {isLoading ? <p className="text-sm text-neutral-500">Đang tải dữ liệu...</p> : (
+          {isLoading ? <p className="text-sm text-neutral-500 italic animate-pulse">Đang tải dữ liệu...</p> : isError ? (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-xs">
+              Lỗi khi tải danh sách. Vui lòng kiểm tra Backend.
+            </div>
+          ) : filteredRecipes.length === 0 ? (
+            <p className="text-sm text-neutral-400 italic">Không tìm thấy công thức nào.</p>
+          ) : (
             <div className="space-y-1.5 max-h-[200px] overflow-y-auto pr-1">
               {filteredRecipes.map((recipe) => (
                 <button key={recipe.recipeId} onClick={() => setSelectedRecipeId(recipe.recipeId)} className={`w-full text-left px-3 py-2 rounded-lg border transition text-sm ${selectedRecipeId === recipe.recipeId ? 'border-primary-300 bg-primary-50' : 'border-neutral-200 hover:border-primary-200'}`}>
@@ -498,15 +539,51 @@ export default function Recipes() {
               <div><label className="text-xs text-neutral-500">Thiết bị</label><select className="input disabled:opacity-50" value={routingForm.defaultEquipmentId} disabled={routingForm.areaId === 0} onChange={(e) => setRoutingForm({ ...routingForm, defaultEquipmentId: Number(e.target.value) })}><option value={0}>{routingForm.areaId === 0 ? 'Vui lòng chọn phòng trước' : 'Chọn thiết bị'}</option>{equipments.filter(e => e.areaId === routingForm.areaId).map((eq) => <option key={eq.equipmentId} value={eq.equipmentId}>{eq.equipmentCode} - {eq.equipmentName}</option>)}</select></div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div><label className="text-xs text-neutral-500">Nhiệt độ tiêu chuẩn (°C)</label><input type="number" className="input" value={routingForm.standardTemperature} onChange={(e) => setRoutingForm({ ...routingForm, standardTemperature: Number(e.target.value) })} /></div>
-              <div><label className="text-xs text-neutral-500">Độ ẩm tiêu chuẩn (%)</label><input type="number" className="input" value={routingForm.standardHumidity} onChange={(e) => setRoutingForm({ ...routingForm, standardHumidity: Number(e.target.value) })} /></div>
-              <div><label className="text-xs text-neutral-500">Áp suất tiêu chuẩn (Pa)</label><input type="number" className="input" value={routingForm.standardPressure} onChange={(e) => setRoutingForm({ ...routingForm, standardPressure: Number(e.target.value) })} /></div>
-            </div>
+            {(() => {
+              const currentEquipment = equipments.find((e) => e.equipmentId === routingForm.defaultEquipmentId);
+              const eqName = currentEquipment ? currentEquipment.equipmentName.toLowerCase() : '';
+              const isWeighting = eqName.includes('cân điện tử');
+              const isPackaging = /máy đóng nang|máy lau nang|máy in số lô|máy gấp toa|máy đóng chai/i.test(eqName);
+              const disableTime = isWeighting;
+              const disableSetParams = isWeighting || isPackaging;
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:pr-2"><label className="text-xs text-neutral-500">Thời gian cài đặt (phút)</label><input type="number" className="input" value={routingForm.setTimeMinutes} onChange={(e) => setRoutingForm({ ...routingForm, setTimeMinutes: Number(e.target.value) })} /></div>
-            </div>
+              return (
+                <>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-xs text-neutral-500">Nhiệt độ tiêu chuẩn (°C)</label>
+                      <div className="flex gap-2">
+                        <input type="text" className="input text-center" placeholder="Min" value={routingForm.standardTemperatureMin} onChange={(e) => setRoutingForm({ ...routingForm, standardTemperatureMin: e.target.value })} />
+                        <span className="text-neutral-400 self-center">-</span>
+                        <input type="text" className="input text-center" placeholder="Max" value={routingForm.standardTemperatureMax} onChange={(e) => setRoutingForm({ ...routingForm, standardTemperatureMax: e.target.value })} />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs text-neutral-500">Độ ẩm tiêu chuẩn (%)</label>
+                      <div className="flex gap-2">
+                        <input type="text" className="input text-center" placeholder="Min" value={routingForm.standardHumidityMin} onChange={(e) => setRoutingForm({ ...routingForm, standardHumidityMin: e.target.value })} />
+                        <span className="text-neutral-400 self-center">-</span>
+                        <input type="text" className="input text-center" placeholder="Max" value={routingForm.standardHumidityMax} onChange={(e) => setRoutingForm({ ...routingForm, standardHumidityMax: e.target.value })} />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs text-neutral-500">Áp suất tiêu chuẩn (Pa)</label>
+                      <div className="flex gap-2">
+                        <input type="text" className="input text-center" placeholder="Min" value={routingForm.standardPressureMin} onChange={(e) => setRoutingForm({ ...routingForm, standardPressureMin: e.target.value })} />
+                        <span className="text-neutral-400 self-center">-</span>
+                        <input type="text" className="input text-center" placeholder="Max" value={routingForm.standardPressureMax} onChange={(e) => setRoutingForm({ ...routingForm, standardPressureMax: e.target.value })} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div><label className="text-xs text-neutral-500">Thời gian cài đặt (phút)</label><input type="number" className="input disabled:opacity-50 disabled:bg-neutral-100" disabled={disableTime} value={routingForm.setTimeMinutes} onChange={(e) => setRoutingForm({ ...routingForm, setTimeMinutes: Number(e.target.value) })} /></div>
+                    <div><label className="text-xs text-neutral-500">Nhiệt độ cài đặt (°C)</label><input type="number" className="input disabled:opacity-50 disabled:bg-neutral-100" disabled={disableSetParams} value={routingForm.setTemperature} onChange={(e) => setRoutingForm({ ...routingForm, setTemperature: Number(e.target.value) })} /></div>
+                    <div><label className="text-xs text-neutral-500">Áp suất cài đặt (Pa)</label><input type="number" className="input disabled:opacity-50 disabled:bg-neutral-100" disabled={disableSetParams} value={routingForm.setPressure} onChange={(e) => setRoutingForm({ ...routingForm, setPressure: Number(e.target.value) })} /></div>
+                  </div>
+                </>
+              );
+            })()}
 
             <div>
               <label className="text-xs text-neutral-500">Mô tả</label>

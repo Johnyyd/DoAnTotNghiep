@@ -1,12 +1,13 @@
-﻿import { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { productionBatchesApi, productionOrdersApi } from '@/services/api';
+import { productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
 import { BarChart3, PackageCheck, Factory, Clock3 } from 'lucide-react';
 
 interface OrderStatSource {
   orderId: number;
   product: string;
   plannedQuantity: number;
+  unit: string;
 }
 
 interface BatchStatSource {
@@ -20,6 +21,7 @@ type StatRow = {
   inProgressBatches: number;
   holdBatches: number;
   totalPlannedQty: number;
+  unit: string;
 };
 
 function normalizeStatus(raw?: string): string {
@@ -53,13 +55,31 @@ export default function FinishedGoodsStats() {
     queryFn: () => productionBatchesApi.getAll(),
   });
 
-  const orders = useMemo<OrderStatSource[]>(() => {
-    return toRows<any>(ordersRaw).map((item) => ({
-      orderId: Number(item.orderId ?? item.OrderId ?? 0),
-      product: item.recipe?.material?.materialName ?? item.recipeName ?? `Recipe #${item.recipeId ?? item.RecipeId ?? '-'}`,
-      plannedQuantity: Number(item.plannedQuantity ?? item.PlannedQuantity ?? 0),
+  const { data: recipesRaw } = useQuery({
+    queryKey: ['recipes'],
+    queryFn: () => recipesApi.getAll(),
+  });
+
+  const recipes = useMemo(() => {
+    return toRows<any>(recipesRaw).map((r) => ({
+      recipeId: Number(r.recipeId ?? r.RecipeId ?? 0),
+      recipeName: r.material?.materialName ?? r.Material?.MaterialName ?? `Công thức #${r.recipeId ?? r.RecipeId}`,
+      uomName: r.material?.baseUom?.uomName ?? r.Material?.BaseUom?.UomName ?? 'đơn vị',
     }));
-  }, [ordersRaw]);
+  }, [recipesRaw]);
+
+  const orders = useMemo<OrderStatSource[]>(() => {
+    return toRows<any>(ordersRaw).map((item) => {
+      const recipeId = Number(item.recipeId ?? item.RecipeId ?? 0);
+      const recipe = recipes.find(r => r.recipeId === recipeId);
+      return {
+        orderId: Number(item.orderId ?? item.OrderId ?? 0),
+        product: item.recipe?.material?.materialName ?? item.recipeName ?? recipe?.recipeName ?? `Recipe #${recipeId || '-'}`,
+        plannedQuantity: Number(item.plannedQuantity ?? item.PlannedQuantity ?? 0),
+        unit: item.recipe?.material?.baseUom?.uomName ?? item.recipe?.uomName ?? recipe?.uomName ?? 'đơn vị',
+      };
+    });
+  }, [ordersRaw, recipes]);
 
   const batches = useMemo<BatchStatSource[]>(() => {
     return toRows<any>(batchesRaw).map((item) => ({
@@ -79,6 +99,7 @@ export default function FinishedGoodsStats() {
           inProgressBatches: 0,
           holdBatches: 0,
           totalPlannedQty: 0,
+          unit: order.unit,
         });
       }
       const row = map.get(order.product)!;
@@ -96,6 +117,7 @@ export default function FinishedGoodsStats() {
           inProgressBatches: 0,
           holdBatches: 0,
           totalPlannedQty: 0,
+          unit: order?.unit ?? 'đơn vị',
         });
       }
 
@@ -152,7 +174,7 @@ export default function FinishedGoodsStats() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-neutral-500">Số lượng kế hoạch</p>
-              <p className="text-2xl font-bold text-neutral-900">{totalPlannedQty.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-neutral-900">{totalPlannedQty.toLocaleString()} <span className="text-sm font-normal text-neutral-500">đơn vị</span></p>
             </div>
             <BarChart3 className="w-7 h-7 text-primary-600" />
           </div>
@@ -186,7 +208,7 @@ export default function FinishedGoodsStats() {
                   <td>{row.completedBatches}</td>
                   <td>{row.inProgressBatches}</td>
                   <td>{row.holdBatches}</td>
-                  <td>{row.totalPlannedQty.toLocaleString()}</td>
+                  <td>{row.totalPlannedQty.toLocaleString()} {row.unit}</td>
                 </tr>
               ))
             )}
