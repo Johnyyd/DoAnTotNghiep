@@ -259,13 +259,13 @@ GO
 SET IDENTITY_INSERT ProductionBatches ON;
 INSERT INTO ProductionBatches (BatchId, OrderId, BatchNumber, Status, ManufactureDate, EndTime, ExpiryDate, CurrentStep, CreatedAt) VALUES
 (1, 1, 'B26-001-01', 'Completed', DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
-(2, 2, 'B26-002-01', 'Completed', DATEADD(HOUR,-24,GETDATE()),DATEADD(HOUR,-12,GETDATE()),DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
-(4, 2, 'B26-002-03', 'InProcess', GETDATE(), NULL, NULL, 2, GETDATE());
+(2, 2, 'B26-002-01', 'InProcess', DATEADD(HOUR,-24,GETDATE()),DATEADD(HOUR,-12,GETDATE()),DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
+(4, 2, 'B26-002-02', 'Hold', GETDATE(), NULL, NULL, 2, GETDATE());
 SET IDENTITY_INSERT ProductionBatches OFF;
 GO
 
 -- =====================================================================
--- 13. InventoryLots
+-- 13. InventoryLotsHold
 -- =====================================================================
 SET IDENTITY_INSERT InventoryLots ON;
 INSERT INTO InventoryLots (LotId, MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, QCStatus, SupplierName, CreatedAt) VALUES
