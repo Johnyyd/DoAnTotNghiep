@@ -1,0 +1,15 @@
+# Backend
+bin/
+obj/
+*.csproj.user
+
+# Frontend
+node_modules/
+dist/
+*.log
+*.md
+.git
+
+# General
+yarn.lock
+package-lock.json

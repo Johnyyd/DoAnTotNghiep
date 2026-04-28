@@ -91,23 +91,38 @@ using (var scope = app.Services.CreateScope())
     {
         try {
             Console.WriteLine($"[BACKEND] Connection attempt {i}/{maxConnectRetries}...");
-            db.Database.CanConnect();
+            if (!db.Database.CanConnect())
+            {
+                Console.WriteLine("[BACKEND] Database.CanConnect() returned FALSE. SQL Server might not be ready for this DB yet.");
+            }
+            
+            Console.WriteLine("[BACKEND] Running EnsureCreated...");
             db.Database.EnsureCreated();
             
             // 1. Update columns
+            Console.WriteLine("[BACKEND] Running EnsureColumnsAsync...");
             await EnsureColumnsAsync(db);
             
-            // 2. Seed Data (Must happen before triggers to avoid EF Core OUTPUT clause conflict)
+            // 2. Seed Data
+            Console.WriteLine("[BACKEND] Running EnsureUserSeedAsync...");
+            await EnsureUserSeedAsync(db);
+            
+            Console.WriteLine("[BACKEND] Running EnsureDefaultInventorySeedAsync...");
             await EnsureDefaultInventorySeedAsync(db);
             
             // 3. Add triggers
+            Console.WriteLine("[BACKEND] Running EnsureTriggersAsync...");
             await EnsureTriggersAsync(db);
 
             Console.WriteLine("[BACKEND] Database is ONLINE and Initialized.");
             break;
         } catch (Exception ex) {
-            Console.WriteLine($"[BACKEND] Connection failed: {ex.Message}");
+            Console.WriteLine($"[BACKEND] Connection failed with exception: {ex.GetType().Name} - {ex.Message}");
+            if (ex.InnerException != null) 
+                Console.WriteLine($"[BACKEND] Inner Exception: {ex.InnerException.Message}");
+            
             if (i == maxConnectRetries) throw;
+            Console.WriteLine("[BACKEND] Retrying in 5 seconds...");
             Thread.Sleep(5000);
         }
     }
@@ -290,6 +305,19 @@ IF COL_LENGTH('dbo.ProductionBatches','ExpiryDate') IS NULL
     ALTER TABLE dbo.ProductionBatches ADD ExpiryDate DATETIME NULL;
 IF COL_LENGTH('dbo.ProductionBatches','EndTime') IS NULL
     ALTER TABLE dbo.ProductionBatches ADD EndTime DATETIME NULL;
+
+IF OBJECT_ID('dbo.SystemAuditLog', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.SystemAuditLog (
+        LogId INT IDENTITY(1,1) PRIMARY KEY,
+        TableName NVARCHAR(100),
+        RecordId NVARCHAR(100),
+        Action NVARCHAR(50),
+        OldValue NVARCHAR(MAX),
+        NewValue NVARCHAR(MAX),
+        ChangedDate DATETIME DEFAULT GETDATE()
+    );
+END;
 ";
 
     await db.Database.ExecuteSqlRawAsync(sql);
@@ -329,8 +357,8 @@ SELECT ''InventoryLots'', CAST(COALESCE(i.LotId,d.LotId) AS NVARCHAR(50)),
 CASE WHEN i.LotId IS NOT NULL AND d.LotId IS NULL THEN ''Create''
      WHEN i.LotId IS NOT NULL AND d.LotId IS NOT NULL THEN ''Update''
      ELSE ''Delete'' END,
-CASE WHEN d.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', d.LotNumber, '';Qty='', d.Quantity) END,
-CASE WHEN i.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', i.LotNumber, '';Qty='', i.Quantity) END,
+CASE WHEN d.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', d.LotNumber, '';Qty='', d.QuantityCurrent) END,
+CASE WHEN i.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', i.LotNumber, '';Qty='', i.QuantityCurrent) END,
 GETDATE()
 FROM inserted i FULL OUTER JOIN deleted d ON i.LotId = d.LotId; END');
 
@@ -400,4 +428,19 @@ static async Task EnsureAreaSeedAsync(GmpContext db)
         }
     }
     await db.SaveChangesAsync();
+}
+
+static async Task EnsureUserSeedAsync(GmpContext db)
+{
+    if (!await db.AppUsers.AnyAsync())
+    {
+        db.AppUsers.AddRange(
+            new AppUser { Username = "admin", FullName = "Admin Hệ Thống", Role = "Admin", IsActive = true, PasswordHash = "$2b$11$hyVSDA5K2Qg1FVUosjSk4e76FBcJhE7DbNG/KDELUBotFzcSt5xIW", PinCode = "123456" },
+            new AppUser { Username = "qc01", FullName = "Trần Thị Kiểm Tra", Role = "QA_QC", IsActive = true, PasswordHash = "$2b$11$f1zats7FFnLII0ru7JfcZu0uJsbE7DEsMLXooia8ZfAlbsj3bZKWK", PinCode = "123456" },
+            new AppUser { Username = "op01", FullName = "Nguyễn Văn Công Nhân", Role = "Operator", IsActive = true, PasswordHash = "$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW", PinCode = "123456" },
+            new AppUser { Username = "mgr01", FullName = "Lê Quang Quản Lý", Role = "ProductionManager", IsActive = true, PasswordHash = "$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW", PinCode = "123456" }
+        );
+        await db.SaveChangesAsync();
+        Console.WriteLine("[BACKEND] Default users seeded successfully.");
+    }
 }

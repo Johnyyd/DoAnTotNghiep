@@ -1,73 +1,43 @@
-version: '3.8'
 
 services:
   gmp-sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: gmp-sqlserver
-    networks:
-      - gmp-network
+    environment:
+      - SA_PASSWORD=${SA_PASSWORD}
+      - ACCEPT_EULA=Y
     ports:
       - "1435:1433"
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=GMP_Strong@Passw0rd123
-    volumes:
-      - ./DATABASE:/var/opt/mssql/backup:ro
-      - gmp-sqlserver-data:/var/opt/mssql
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "GMP_Strong@Passw0rd123", "-C", "-Q", "SELECT 1"]
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "SA", "-P", "${SA_PASSWORD}", "-Q", "SELECT 1"]
       interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 30s
-    restart: unless-stopped
+      retries: 5
 
   gmp-api:
     build:
       context: ./GMP_System/GMP_System
       dockerfile: Dockerfile
     container_name: gmp-api
-    networks:
-      - gmp-network
-    ports:
-      - "5001:5000"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=gmp-sqlserver;Database=PharmaceuticalProcessingManagementSystem;User Id=sa;Password=GMP_Strong@Passw0rd123;TrustServerCertificate=true
-      - Jwt__Key=GMP_WHO_Default_Secret_Key_Minimum_32_Characters_Long_123456789
-      - Certificates__StoragePath=/app/materials
-      - Certificates__FinishedStoragePath=/app/finished-goods
-      - Certificates__PublicMaterialsPath=/app/materials
-      - Certificates__BatchStoragePath=/app/batch-certificates
+    env_file: .env
     depends_on:
       gmp-sqlserver:
         condition: service_healthy
-    volumes:
-      - ./DATABASE:/app/DATABASE:ro
-      - ./DATABASE/materials:/app/materials
-      - ./DATABASE/finished_goods:/app/finished-goods
-      - gmp-batch-certificates:/app/batch-certificates
+    ports:
+      - "5001:5000"
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
+    # entrypoint will be set inside Dockerfile to run migrations then start the app
 
   gmp-frontend:
     build:
       context: ./PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=/api
+        VITE_API_URL: http://gmp-api:80
     container_name: gmp-frontend
-    networks:
-      - gmp-network
     ports:
       - "8080:80"
-    environment:
-      - VITE_API_URL=/api
     depends_on:
       - gmp-api
     restart: unless-stopped
@@ -77,8 +47,6 @@ services:
       context: ./MobileApp
       dockerfile: Dockerfile
     container_name: gmp-mobile
-    networks:
-      - gmp-network
     ports:
       - "8081:80"
     depends_on:
@@ -86,8 +54,5 @@ services:
     restart: unless-stopped
 
 networks:
-  gmp-network:
-
-volumes:
-  gmp-sqlserver-data:
-  gmp-batch-certificates:
+  default:
+    name: gmp-network

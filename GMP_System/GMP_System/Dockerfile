@@ -11,6 +11,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
+# Install curl for healthchecks in development (when using 'build' target)
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 # BƯỚC 1.1: Tranh thủ nạp Thư viện C# ngầm trước (Restore)
 # Chiến thuật: Nhặt mỗi file .csproj thả vào trước để đoạt trọn cơ chế Cache Layer của nền Docker.
 # Lợi ích: Nếu bạn sửa file CS logic mà không tải thêm thư viện mới -> Docker tua thẳng qua dòng này khỏi tải lại -> Tốc độ Build tính bằng mili giây.
@@ -50,4 +53,7 @@ COPY --from=build /app/publish .
 EXPOSE 5000
 
 # Nút Kích Hoạt (ENTRYPOINT): Chốt hạ lệnh còi sẽ thổi khi vừa khởi động xong hệ thống ảo -> Server bật nguồn ngay tắp lự.
-ENTRYPOINT ["dotnet", "GMP_System.dll"]
+# Copy custom entrypoint that runs EF Core migrations before starting the API
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
