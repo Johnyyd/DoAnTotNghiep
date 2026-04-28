@@ -201,6 +201,13 @@ namespace GMP_System.Controllers
                 return BadRequest(new { success = false, message = "Thi?u nguyên li?u ho?c kh?i lu?ng không h?p l?." });
             }
 
+            var duplicatedMaterial = await _context.RecipeBoms
+                .AnyAsync(b => b.RecipeId == id && b.MaterialId == request.MaterialId);
+            if (duplicatedMaterial)
+            {
+                return BadRequest(new { success = false, message = "Nguyen lieu nay da co trong danh sach dinh muc." });
+            }
+
             var bom = new RecipeBom
             {
                 RecipeId = id,
@@ -229,6 +236,13 @@ namespace GMP_System.Controllers
             if (!request.MaterialId.HasValue || request.Quantity <= 0)
             {
                 return BadRequest(new { success = false, message = "D? li?u d?nh m?c không h?p l?." });
+            }
+
+            var duplicatedMaterial = await _context.RecipeBoms
+                .AnyAsync(b => b.RecipeId == id && b.BomId != bomId && b.MaterialId == request.MaterialId);
+            if (duplicatedMaterial)
+            {
+                return BadRequest(new { success = false, message = "Nguyen lieu nay da co trong danh sach dinh muc." });
             }
 
             bom.MaterialId = request.MaterialId;

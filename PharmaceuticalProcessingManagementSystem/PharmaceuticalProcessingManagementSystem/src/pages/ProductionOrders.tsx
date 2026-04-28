@@ -38,6 +38,18 @@ function statusClass(status: string) {
 
 type MassUnit = 'kg' | 'g' | 'vien';
 
+function buildPlanOrderCode(now: Date) {
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mi = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+  const ms = String(now.getMilliseconds()).padStart(3, '0');
+  const rand = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `PO-${yyyy}${mm}${dd}-${hh}${mi}${ss}-${ms}${rand}`;
+}
+
 export default function ProductionOrders() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -165,7 +177,7 @@ export default function ProductionOrders() {
       if (insufficientMaterials.length) throw new Error('Không đủ nguyên liệu tồn kho.');
       const now = new Date();
       const end = new Date(now); end.setDate(end.getDate() + 7);
-      const orderCode = `PO-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+      const orderCode = buildPlanOrderCode(now);
       await productionOrdersApi.create({
         orderCode,
         recipeId: planForm.recipeId,
@@ -177,9 +189,11 @@ export default function ProductionOrders() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['productionOrders'] });
+      await queryClient.invalidateQueries({ queryKey: ['inventoryLots'] });
+      await queryClient.invalidateQueries({ queryKey: ['inventory-lots'] });
       alert('Đã tạo lệnh sản xuất thành công.');
     },
-    onError: (err: any) => alert(err?.message ?? 'Không thể tạo lệnh sản xuất'),
+    onError: (err: any) => alert(err?.response?.data?.message ?? err?.message ?? 'Không thể tạo lệnh sản xuất'),
   });
 
   const createOrderMutation = useMutation({

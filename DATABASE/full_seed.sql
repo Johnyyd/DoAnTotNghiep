@@ -78,7 +78,8 @@ INSERT INTO UnitOfMeasure (UomId, UomName, Description) VALUES
 (4, 'Viên',    N'Viên'),
 (5, 'Vỉ',      N'Vỉ (10 viên/vỉ)'),
 (6, 'Hộp',     N'Hộp (10 vỉ/hộp)'),
-(7, 'Thùng',   N'Thùng (12 hộp/thùng)');
+(7, 'Thùng',   N'Thùng (12 hộp/thùng)'),
+(8, N'Cái',    N'Đơn vị cái');
 SET IDENTITY_INSERT UnitOfMeasure OFF;
 GO
 PRINT 'Insert UnitOfMeasure Completed Successfully!';
@@ -143,7 +144,7 @@ INSERT INTO Materials (MaterialId, MaterialCode, MaterialName, Type, BaseUomId, 
 (9,  'PARA',    N'Bột Paracetamol tinh khiết',         'RawMaterial',  1, 1, N'USP 30', GETDATE()),
 (10, 'LAC',     N'Lactose kết dính',                   'RawMaterial',  1, 1, N'USP 30', GETDATE()),
 (11, 'WATER',   N'Nước cất pha tiêm',                  'RawMaterial',  3, 1, N'DĐVN V', GETDATE()),
-(12, 'AMP',     N'Ống thủy tinh 2ml',                  'Packaging',    4, 1, N'USP 30', GETDATE()),
+(12, 'AMP',     N'Ống thủy tinh 2ml',                  'Packaging',    8, 1, N'USP 30', GETDATE()),
 (13, 'ALU',     N'Màng nhôm ép vỉ',                    'Packaging',    1, 1, N'DĐVN V', GETDATE()),
 (14, 'PVC',     N'Màng PVC trong suốt',                'Packaging',    1, 1, N'DĐVN V', GETDATE()),
 (15, 'TP-CRILA',N'Viên nang Crila',                    'FinishedGood', 4, 1, N'DĐVN V', GETDATE()),
@@ -229,12 +230,12 @@ INSERT INTO InventoryLots (LotId, MaterialId, LotNumber, QuantityCurrent, Manufa
 (8, 8, 'L-PVP-01', 10.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp F', GETDATE()),
 (9, 9, 'L-PARA-01', 3.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'Released', N'Ấn Độ', GETDATE()),
 (10, 10, 'L-LAC-01', 15.00, DATEADD(DAY,-25,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp G', GETDATE()),
-(11, 11, 'L-ALU-01', 20.00, DATEADD(DAY,-20,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp H', GETDATE()),
-(12, 12, 'L-PVC-01', 20.00, DATEADD(DAY,-15,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp I', GETDATE()),
-(14, 16, 'L-FGPARA-01', 10.00, DATEADD(DAY,-5,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Sản xuất nội bộ', GETDATE()),
+(11, 13, 'L-ALU-01', 20.00, DATEADD(DAY,-20,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp H', GETDATE()),
+(12, 14, 'L-PVC-01', 20.00, DATEADD(DAY,-15,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp I', GETDATE()),
 (15, 11, 'L-WATER-01', 100.00, DATEADD(DAY,-5,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp J', GETDATE()),
 (16, 12, 'L-AMP-01', 50.00, DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp K', GETDATE()),
-(17, 17, 'L-FGDIPY-01', 2.00, DATEADD(DAY,-1,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Sản xuất nội bộ', GETDATE());
+(17, 13, 'L-ALU-02', 12.00, DATEADD(DAY,-1,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp H2', GETDATE()),
+(18, 14, 'L-PVC-02', 14.00, DATEADD(DAY,-1,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp I2', GETDATE());
 SET IDENTITY_INSERT InventoryLots OFF;
 PRINT 'Insert InventoryLots Completed Successfully!';
 -- =====================================================================
@@ -259,3 +260,4 @@ SET IDENTITY_INSERT BatchProcessLogs OFF;
 PRINT 'Insert BatchProcessLogs Completed Successfully!';
 
 PRINT 'GMP Database Initialization & Full Seeding Completed Successfully!';
+
