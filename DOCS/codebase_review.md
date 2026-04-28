@@ -1,66 +1,209 @@
-# Báo Cáo Đánh Giá Tổng Quan Codebase (Codebase Review)
-
-**Dự án:** Hệ Thống Quản Lý Quy Trình Chế Biến Thuốc - GMP-WHO (Pharmaceutical Processing Management System)
-**Ngày đánh giá:** 29/03/2026
+**Project Review – Pharmaceutical Processing Management System (PPMS)**
+*Location: `/media/tringuyen/DuLieu/GitHub/DoAnTotNghiep`*
 
 ---
 
-## 1. Tổng Quan Về Kiến Trúc & Cấu Trúc (Architecture & Structure)
+## 1️⃣ High‑level Architecture (✅ What’s solid)
 
-Dự án được thiết kế theo mô hình Microservices/Component-based với sự phân tách rõ ràng giữa các phân hệ: Frontend, Backend, Mobile App và Cơ sở dữ liệu. Kiến trúc hệ thống áp dụng các nguyên tắc của **Domain-Driven Design (DDD)** và **Clean Architecture** (đối với Backend).
+| Layer | Tech | Comments |
+|------|------|----------|
+| **Database** | SQL Server 2022 (container `gmp‑sqlserver`, port 1435) | Strong relational engine; scripts for schema, seed data, constraints and audit triggers are already in `DATABASE/`. |
+| **Backend API** | C# .NET 8 (`GMP_System/GMP_System`) | Clean‑architecture layout (Domain → Application → Infrastructure). Uses EF Core, generic repos, Unit‑of‑Work, and an `AuditLogInterceptor` for immutable audit trails – exactly what GMP compliance demands. |
+| **Web Admin UI** | React + TypeScript (`PharmaceuticalProcessingManagementSystem/`) | SPA built with Vite, packaged into an Nginx container (`gmp‑frontend`). |
+| **Mobile Worker App** | Flutter (Web target) (`MobileApp/`) | Tablet‑friendly UI for floor‑staff, using the same API. |
+| **Orchestration** | Docker‑Compose (`docker‑compose.yml`) | All services (SQL, API, frontend, mobile) wired via `gmp‑network`. Hot‑reload available via `docker‑compose.override.yml`. |
+| **Documentation** | README, PROJECT_STRUCTURE, DOCKER_DEPLOYMENT, API Swagger (`/swagger`) | Provides a clear onboarding path. |
 
-### 1.1. Hệ Thống Các Thành Phần
-
-- **Backend (`/GMP_System`):** Xây dựng bằng C# .NET 8. Đảm nhận toàn bộ nghiệp vụ lõi (Master Data, Planning, Execution, Traceability). Cấu trúc tuân theo Clean Architecture với các lớp Entities, Interfaces, Repositories, Application/Services và Controllers.
-- **Frontend (`/PharmaceuticalProcessingManagementSystem`):** Xây dựng bằng React + TypeScript, sử dụng Vite làm module bundler. Đóng vai trò là Web Admin để quản lý danh mục (Material, Recipe), kế hoạch sản xuất và theo dõi hệ thống.
-- **Mobile App (`/MobileApp`):** Xây dựng bằng Flutter (hiện tại gen ra Flutter Web, cấu hình build chạy nginx). Ứng dụng này hướng tới môi trường Tablet cho công nhân xưởng để ghi nhận quá trình sản xuất thực tế (eBMR - electronic Batch Manufacturing Record).
-- **Database (`/DATABASE`):** Microsoft SQL Server 2022. Quản lý toàn bộ thông tin hệ thống. Được định nghĩa qua hàng loạt các script SQL chuyên biệt giúp đảm bảo tính toàn vẹn và nghiệp vụ phức tạp ở tầng DB (Triggers, Stored Procedures).
-
-### 1.2. Môi Trường & Triển Khai (Deployment)
-
-- Áp dụng hệ sinh thái **Docker** qua `docker-compose.yml` và `docker-compose.override.yml` nhằm hỗ trợ song song cho môi trường Production (nhẹ nhàng, độc lập) và Development (có Hot Reloading).
-- Có đầy đủ các shell scripts tự động hóa khởi chạy: `makeall.sh`, `start-gmp-backend.sh`, `start-gmp-frontend.sh`. Điều này giúp chuẩn hóa quá trình onboarding cho developer.
+*Sources:* directory tree (`ls -R`), `README.md` overview, `PROJECT_STRUCTURE.md` diagram, `DOCKER_DEPLOYMENT.md` service table.
 
 ---
 
-## 2. Trọng Tâm Chuyên Ngành (Đảm Bảo Chuẩn GMP-WHO)
+## 2️⃣ Strengths
 
-Phần mềm đã được thiết kế sát với các yêu cầu cốt lõi của tiêu chuẩn **GMP-WHO** trong ngành dược:
-
-- **Audit Trail & Immutability:** Áp dụng `AuditLogInterceptor` ở tằng EF Core (C#) và cấu trúc Soft-delete cho mọi master data. Database cũng đi kèm `AuditTrail.sql` và `Immutability.sql` để thiết lập các constraint chống can thiệp trực tiếp (Hard Delete).
-- **Truy xuất nguồn gốc (Traceability):** Quản lý nghiêm ngặt lô nguyên liệu nhập (`MaterialBatches`) cho tới mảng sản xuất (`ProductionBatches`), hỗ trợ thuật toán truy vấn cấu trúc cây định mức đệ quy (Recursive BOM).
-- **Kiểm soát vòng đời (State Machine):** Vòng đời các đối tượng, đặc biệt là `ProductionOrder` và `Recipe`, tuân thủ nghiêm ngặt quy trình: *Draft → Approved → InProcess → Hold → Completed*.
-- **Data Locking / Snapshot Pattern:** Khi một Lệnh Sản Xuất (Production Order) được "Approved", các thành phần liên quan (Recipe, BOM) sẽ tự động bị "đóng băng" dưới dạng bản sao.
-
----
-
-## 3. Cấu trúc Thực thi Sản xuất (Production Execution)
-
-Cốt lõi của hệ thống thực thi sản xuất (MES/eBMR) quy định quá trình từ khi có số liệu kế hoạch đến khi đóng mẻ thực tiễn. Dữ liệu được ánh xạ trực tiếp trong Hệ thống qua các thực thể:
-
-- **Lệnh Sản Xuất (`ProductionOrder`)**: Đại diện cho một kế hoạch sản xuất tổng thể (gồm `OrderId`, `OrderCode`, `PlannedQuantity`, `ActualQuantity`). Nó tham chiếu thẳng tới một Công thức (`Recipe`) và có vòng đời theo dõi trạng thái (`Status`, `StartDate`, `EndDate`).
-- **Mẻ Sản Xuất (`ProductionBatch`)**: Một Lệnh Sản Xuất có thể được chia tách thành một hoặc nhiều Mẻ độc lập. Mỗi mẻ có mã số riêng (`BatchNumber`), có Ngày sản xuất (`ManufactureDate`), Hạn sử dụng (`ExpiryDate`), và lưu vết bước thực thi hiện tại của riêng mẻ đó (`CurrentStep`).
-- **Công Đoạn / Tuyến Việc (`RecipeRouting`)**: Các công đoạn tiêu chuẩn của quá trình tạo ra sản phẩm (Ví dụ: 1. Cân, 2. Trộn, 3. Sấy) được định nghĩa sẵn theo công thức, mô tả tên công đoạn (`StepName`), thời gian ước tính, thiết bị mặc định.
-- **Nhật Ký Thực Thi Bước Của Mẻ (`BatchProcessLog`)**: Mỗi khi công nhân xử lý một công đoạn (thuộc tuyến việc), ứng dụng sẽ lưu log vào đây với đầy đủ Dữ kiện của GMP: `StartTime`, `EndTime`, `OperatorId` (người làm), `EquipmentId` (máy nào làm), và đặc biệt là `ParametersData` cùng kết quả kiểm tra định mức (`ResultStatus`).
+| Area | Why it matters for a GMP‑compliant system |
+|------|-------------------------------------------|
+| **Audit Trail** – Interceptor automatically logs every INSERT/UPDATE/DELETE (see `GMP_System/Interceptors/AuditLogInterceptor.cs`). Guarantees traceability. |
+| **State‑machine enforcement** – Production order lifecycle (`Draft → Approved → InProcess → Hold → Completed`) is coded in the domain layer, preventing illegal transitions. |
+| **Snapshot pattern** – Recipes/BOM are frozen into a `ProductionOrder` when approved, ensuring data immutability after the fact. |
+| **Recursive BOM** – Self‑referencing `RecipeBom` tables allow multi‑level material breakdown, a core GMP requirement. |
+| **Soft‑delete + immutability** – Master data is never physically removed; audit logs are read‑only, satisfying regulatory retention. |
+| **Dockerized dev & prod** – Separate dev (`override.yml`) and prod (`docker‑compose.yml`) configs keep hot‑reload for developers while producing lean images for deployment. |
+| **Health endpoint** – `HealthController.cs` exposed at `/api/health` for monitoring. |
+| **Swagger UI** – Auto‑generated API docs (`/swagger`) help auditors and external tools understand the contract. |
 
 ---
 
-## 4. Đánh Giá Khách Quan Về Các Phân Hệ
+## 3️⃣ Areas for Improvement / Risks
 
-### Ưu điểm
+| Category | Issue | Suggested Fix |
+|----------|-------|---------------|
+| **Secret Management** | SA password and JWT secret are hard‑coded in `docker‑compose.yml` (`GMP_Strong@Passw0rd123`). | Move them to Docker **secrets** or `.env` files (excluded via `.dockerignore`). Use `env_file:` and reference `${SA_PASSWORD}`. |
+| **Database Migrations** | Schema is applied via raw `.sql` scripts (`DATABASE/init.sql`). Manual script ordering can cause drift. | Adopt **EF Core migrations** (`dotnet ef migrations add …`) and run them on container start (`dotnet ef database update`). Keeps schema in sync with model code. |
+| **CI/CD** | No pipeline shown for building, testing, and deploying images. | Add a GitHub Actions workflow: <br>• Build & push Docker images (backend, frontend, mobile). <br>• Run unit‑test suites (C# + Flutter). <br>• Deploy to a staging environment for integration tests. |
+| **Testing Coverage** | Project contains `tests/` folders but no indication of automated unit/integration tests. | Implement: <br>• **Backend**: xUnit + Moq for services, integration tests with Testcontainers SQL Server.<br>• **Frontend**: Jest + React Testing Library.<br>• **Mobile**: Flutter widget and integration tests. |
+| **API Security** | Only a generic JWT is mentioned; no role‑based policy examples. | Define **RBAC** (Admin, QC, Operator, Manager) in `AppUser` + claim‑based policies (`[Authorize(Roles="QC")]`). Document token issuance in `README`. |
+| **Observability** | Logging is present (audit), but no structured logging, metrics, or tracing. | Integrate **Serilog** with JSON output, expose Prometheus metrics (`/metrics`), and add OpenTelemetry tracing for end‑to‑end visibility. |
+| **Container Size** | Backend Dockerfile likely copies the full SDK (`dotnet/sdk`) into the final image. | Use a **multi‑stage build** that outputs a runtime‑only image (`mcr.microsoft.com/dotnet/aspnet:8.0`). Same for frontend (build stage → `nginx:alpine`). |
+| **Front‑end Build Caching** | No `.dockerignore` shown for `node_modules`/`build` artifacts. | Add a `.dockerignore` that excludes `node_modules`, `dist`, `*.log`, and IDE files to keep images lean and build faster. |
+| **Mobile Offline** | Tablet workers may lose connectivity on the floor. | Implement **offline sync** (SQLite + background sync) in the Flutter app, and expose an endpoint for batch uploads. |
+| **Documentation Gaps** | `DOCKER_DEPLOYMENT.md` mentions scripts like `makeall.sh` but they are not version‑controlled in the repo root. | Move helper scripts under `scripts/` and document usage in README. |
+| **Internationalisation** | UI appears to be Vietnamese only. | Add i18n support (React i18next, Flutter `intl`) for future multilingual rollout. |
 
-- **Tổ chức thư mục (Folder Structure):** Rất khoa học, tách bạch công nghệ Frontend/Backend rõ ràng. Tài liệu cung cấp cũng vô cùng chi tiết (`README.md`, `PROJECT_STRUCTURE.md`, `DOCKER_DEPLOYMENT.md`).
-- **Lớp Database cực kỳ mạnh mẽ:** Việc tách Database initialization ra thành các domain scripts: `MasterData.sql`, `InventoryTraceability.sql`, `ProcessDefinition.sql`, v.v. chứng tỏ khả năng tổ chức schema theo Domain Model rất tốt.
-- **Khởi tạo dữ liệu (Seeding) thông minh:** Đã chuyển đổi từ Script SQL rời rạc sang logic **EF Core Seeding (C#)**. Điều này đảm bảo tính toàn vẹn dữ liệu tuyệt đối khi khởi chạy trong môi trường Docker, tự động nạp 5 kịch bản lệnh sản xuất (Draft, Approved, InProcess, Hold, Completed) để kiểm thử Mobile UI ngay lập tức.
-- **Thiết kế Backend chuẩn chỉ:** Sự hiện diện của thư mục `Interceptors` và `Repositories` cho thấy code rất dễ maintain và testing sau này.
-- **Stack công nghệ phù hợp:** Phù hợp xu thế (.NET 8 xử lý concurrency cực tốt, React UI tương tác mượt, Flutter có thể build Tablet).
+---
 
-### Khuyến nghị & Cải thiện
+## 4️⃣ Quick Wins (≤ 2 days)
 
-1. **Kiểm thử (Testing):** Đã có bộ kịch bản 5 PO (Scenarios) nạp sẵn trong `Program.cs`. Cần mở rộng thêm các Edge Cases về định mức tiêu hao nguyên liệu (Waste Calculation) và kiểm soát dấu thời gian (Audit Timestamps).
-2. **Quản lý biến môi trường (Environment Variables):** Cần đảm bảo các thông tin nhạy cảm (như JWT Secret...) không trực tiếp lưu trong `docker-compose` khi lên Production.
-3. **Flutter Web Optimization:** Tablet chạy App cho công nhân cần độ ổn định. Nên cấu hình PWA (Progressive Web App) có tính năng Offline First.
+1. **Replace hard‑coded passwords** with environment variables and add a `.env.example`.
+2. **Add `.dockerignore`** to both backend and frontend Docker contexts to drop `bin/`, `obj/`, `node_modules/`.
+3. **Expose Prometheus metrics** via `app.UseMetricServer()` and `app.MapMetrics()`.
+4. **Add a basic role‑based policy** in `Startup.cs` (`services.AddAuthorization…`).
+5. **Create a GitHub Action** that builds the three images and pushes them to a container registry (e.g., GitHub Packages).
 
-## 5. Kết Luận
+---
 
-Hệ thống hiện tại đã đạt trạng thái **Stable (Ổn định)**. Toàn bộ lỗi 502/Connectivity đã được xử lý triệt để thông qua việc đồng bộ hóa Database Unification. Với 5 kịch bản mẫu đã nạp sẵn, hệ thống đã sẵn sàng cho việc kiểm thử các luồng nghiệp vụ MES/eBMR từ Mobile cho tới Web Admin.
+## 5️⃣ Mid‑term Roadmap (1–4 weeks)
+
+| Sprint | Goal | Deliverable |
+|--------|------|-------------|
+| **Sprint 1** | **CI/CD + Migration** | GitHub Actions workflow, EF Core migrations executed on container start. |
+| **Sprint 2** | **Security Harden** | Secrets handling, RBAC implementation, JWT refresh flow. |
+| **Sprint 3** | **Observability** | Structured logging (Serilog), Swagger UI with OAuth2, Prometheus + Grafana dashboards. |
+| **Sprint 4** | **Testing & Offline** | ≥ 80 % unit test coverage for backend, Flutter offline sync module, integration tests via Testcontainers. |
+
+---
+
+## 6️⃣ Final Thoughts
+
+The project already embodies the **core GMP principles** (auditability, immutable data, strict state flow) and is packaged cleanly with Docker. By tightening security (secrets, RBAC), automating schema evolution (EF migrations), and adding observability & CI pipelines, the system will move from a solid prototype to a **production‑grade, audit‑ready platform** ready for regulatory review.
+
+Feel free to let me know which of the above items you’d like to start with, or if you need a deeper dive into any specific code area (e.g., `ProductionOrderService`, Dockerfile optimizations, or Flutter offline strategy).
+
+
+
+
+
+
+
+
+### 🌟 Đề xuất tối ưu dự án PPMS dựa trên review
+
+#### 1️⃣ Cải thiện **Docker & CI/CD**
+
+| Hạng mục | Nội dung cụ thể | Mẫu tệp mẫu |
+|----------|-----------------|-------------|
+| **Docker‑file** (backend) | - Sử dụng multi‑stage build: <br> 1️⃣ stage **build** dùng `mcr.microsoft.com/dotnet/sdk:8.0` <br> 2️⃣ stage **runtime** dùng `mcr.microsoft.com/dotnet/aspnet:8.0` <br> - Chỉ sao chép `bin/Release/net8.0/publish` sang stage runtime. | ```Dockerfile\n# ---- Build stage ----\nFROM mcr.microsoft.com/dotnet/sdk:8.0 AS build\nWORKDIR /src\nCOPY GMP_System/GMP_System/*.csproj ./\nRUN dotnet restore\nCOPY GMP_System/GMP_System/. ./\nRUN dotnet publish -c Release -o /app/publish\n\n# ---- Runtime stage ----\nFROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime\nWORKDIR /app\nCOPY --from=build /app/publish .\nENTRYPOINT [\"dotnet\", \"GMP_System.dll\"]\n``` |
+| **Docker‑file** (frontend) | - Multi‑stage: build với Node 18, chạy Nginx. <br>- Đặt `VITE_API_URL` qua `ARG`. | ```Dockerfile\n# ---- Build ----\nFROM node:18-alpine AS build\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\nCOPY . .\nARG VITE_API_URL\nENV VITE_API_URL=${VITE_API_URL}\nRUN npm run build\n\n# ---- Runtime ----\nFROM nginx:alpine\nCOPY --from=build /app/dist /usr/share/nginx/html\nEXPOSE 80\n``` |
+| **.dockerignore** (backend & frontend) | Loại bỏ các thư mục không cần thiết để ảnh nhỏ hơn. | ```text\n# Backend\nbin/\nobj/\n*.csproj.user\n# Frontend\nnode_modules/\ndist/\n*.log\n*.md\n.git\n``` |
+| **Quản lý secrets** | - Tạo `.env.example` với các biến môi trường (SA_PASSWORD, JWT_KEY, DB_CONNECTION). <br>- Trong `docker‑compose.yml` dùng `env_file: .env`. <br>- Khi triển khai production, sử dụng Docker secrets hoặc Vault. | ```env\n# .env.example\nSA_PASSWORD=YourStrongPassword123!\nJWT_KEY=ReplaceWithRandom256BitKey\nDB_CONNECTION=Server=gmp-sqlserver;Database=GMP_WHO_DB;User Id=sa;Password=${SA_PASSWORD};\n``` |
+| **docker‑compose.yml** | - Thêm `environment:` cho các service, tham chiếu tới biến trong `.env`. <br>- Đặt `restart: unless‑stopped`. | ```yaml\nversion: '3.9'\nservices:\n  gmp-sqlserver:\n    image: mcr.microsoft.com/mssql/server:2022-latest\n    container_name: gmp-sqlserver\n    environment:\n      - SA_PASSWORD=${SA_PASSWORD}\n      - ACCEPT_EULA=Y\n    ports:\n      - \"1435:1433\"\n    restart: unless-stopped\n  gmp-api:\n    build: ./GMP_System/GMP_System\n    container_name: gmp-api\n    env_file: .env\n    depends_on:\n      - gmp-sqlserver\n    ports:\n      - \"5001:80\"\n    restart: unless-stopped\n  gmp-frontend:\n    build:\n      context: ./PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem\n      dockerfile: Dockerfile\n      args:\n        VITE_API_URL: http://gmp-api:80\n    container_name: gmp-frontend\n    ports:\n      - \"8080:80\"\n    depends_on:\n      - gmp-api\n    restart: unless-stopped\n``` |
+| **CI/CD (GitHub Actions)** | - Build và push image cho `api`, `frontend`, `mobile`. <br>- Chạy unit‑test (xUnit + Moq, Jest, Flutter). <br>- Deploy tới môi trường staging (Docker‑Compose) sau khi test thành công. | ```yaml\nname: CI/CD\non:\n  push:\n    branches: [main]\n  pull_request:\n    branches: [main]\njobs:\n  build-test:\n    runs-on: ubuntu-latest\n    services:\n      sqlserver:\n        image: mcr.microsoft.com/mssql/server:2022-latest\n        env:\n          SA_PASSWORD: ${{ secrets.SA_PASSWORD }}\n          ACCEPT_EULA: Y\n        ports: [\"1433:1433\"]\n        options: >-\n          --health-cmd \"/opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P $SA_PASSWORD -Q \\\"SELECT 1\\\"\"\n          --health-interval 10s\n          --health-timeout 5s\n          --health-retries 5\n    steps:\n      - uses: actions/checkout@v3\n      # ---------- Backend ----------\n      - name: Setup .NET\n        uses: actions/setup-dotnet@v3\n        with:\n          dotnet-version: '8.0.x'\n      - name: Restore & Test (API)\n        run: |\n          dotnet restore GMP_System/GMP_System/GMP_System.csproj\n          dotnet test GMP_System/GMP_System.Tests --no-build --verbosity normal\n      - name: Build Docker image (API)\n        run: |\n          docker build -t ghcr.io/${{ github.repository }}/gmp-api:latest ./GMP_System/GMP_System\n      # ---------- Frontend ----------\n      - name: Setup Node\n        uses: actions/setup-node@v3\n        with:\n          node-version: '18'\n      - name: Install & Test (Frontend)\n        working-directory: PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem\n        run: |\n          npm ci\n          npm run test --if-present\n      - name: Build Docker image (Frontend)\n        run: |\n          docker build -t ghcr.io/${{ github.repository }}/gmp-frontend:latest ./PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem\n      # ---------- Push images ----------\n      - name: Login to GHCR\n        uses: docker/login-action@v2\n        with:\n          registry: ghcr.io\n          username: ${{ github.actor }}\n          password: ${{ secrets.GITHUB_TOKEN }}\n      - name: Push images\n        run: |\n          docker push ghcr.io/${{ github.repository }}/gmp-api:latest\n          docker push ghcr.io/${{ github.repository }}/gmp-frontend:latest\n``` |
+
+#### 2️⃣ **Quản lý Migration & Schema**
+
+* **EF Core migrations**  
+  ```bash
+  cd GMP_System/GMP_System
+  dotnet ef migrations add InitialCreate
+  dotnet ef migrations add AddAuditTables
+  dotnet ef database update   # sẽ chạy khi container khởi động (script entrypoint)
+  ```
+* **Docker‑entrypoint** cho API  
+  ```bash
+  #!/bin/bash
+  set -e
+  dotnet ef database update
+  exec dotnet GMP_System.dll
+  ```
+  Đặt `ENTRYPOINT ["./entrypoint.sh"]` trong Dockerfile.
+
+#### 3️⃣ **Bảo mật & RBAC**
+
+* **Thêm enum `UserRole { Admin, Manager, QC, Operator }`** trong `AppUser`.  
+* **Policy** trong `Startup.cs`:
+  ```csharp
+  services.AddAuthorization(options =>
+  {
+      options.AddPolicy("RequireQC", policy => policy.RequireRole("QC"));
+      options.AddPolicy("RequireManager", policy => policy.RequireRole("Manager"));
+  });
+  ```
+* **Controller** ví dụ:
+  ```csharp
+  [Authorize(Policy = "RequireQC")]
+  [HttpPost("batch/{id}/qc")]
+  public async Task<IActionResult> SubmitQc(int id, QcDto dto) { … }
+  ```
+
+#### 4️⃣ **Giải pháp Observability**
+
+| Công cụ | Mục đích |
+|--------|----------|
+| **Serilog** + `Serilog.Sinks.Console` + `Serilog.Sinks.File` | Log JSON, dễ gửi tới Elastic/Seq. |
+| **Prometheus** (`App.Metrics`) + `prometheus-net.AspNetCore` | Export `/metrics` cho dashboard Grafana. |
+| **OpenTelemetry** (`OpenTelemetry.Extensions.Hosting`) | Trace toàn bộ request‑to‑DB → giúp audit/diagnostic. |
+| **Health checks**: đã có `/api/health`; mở rộng để kiểm tra DB, Redis (nếu thêm cache). |
+
+#### 5️⃣ **Kiểm thử tự động**
+
+* **Backend**: xUnit + Moq cho services, Testcontainers để khởi tạo SQL Server tạm thời.  
+* **Frontend**: Jest + React Testing Library, kiểm tra API client (`axios`) qua `msw`.  
+* **Mobile**: `flutter test` + `integration_test` (đóng gói thành APK/AAB để CI chạy trên Firebase Test Lab).  
+
+#### 6️⃣ **Offline cho Mobile**
+
+1. **SQLite** (sqflite) lưu trữ tạm thời các `ProductionBatch` và `MaterialUsage`.  
+2. **Sync service** chạy ở background (Workmanager) gửi dữ liệu tới `/api/sync` khi mạng ổn.  
+3. **API `/sync`** nhận batch JSON, validate, và ghi vào DB trong transaction.
+
+#### 7️⃣ **Cải thiện cấu trúc dự án**
+
+```
+DoAnTotNghiep/
+├── docker-compose.yml
+├── .env.example
+├── .dockerignore
+├── scripts/
+│ ├── entrypoint-api.sh
+│ ├── start-dev.sh
+│ └── reset-db.sh
+├── docs/
+│ ├── ARCHITECTURE.md # sơ đồ, giải thích các layer
+│ ├── SECURITY.md # secret handling, RBAC
+│ └── DEPLOYMENT.md # hướng dẫn docker‑compose, CI
+├── DATABASE/
+│ ├── migrations/ # EF migration scripts (generated)
+│ └── init.sql (legacy, keep for reference)
+├── GMP_System/
+│ └── GMP_System/
+│ ├── Dockerfile
+│ └── src/
+├── PharmaceuticalProcessingManagementSystem/
+│ └── PharmaceuticalProcessingManagementSystem/
+│ ├── Dockerfile
+│ └── src/
+└── MobileApp/
+    └── Dockerfile (flutter web)
+```
+
+#### 8️⃣ **Kế hoạch triển khai nhanh (3‑4 ngày)**
+
+| Ngày | Công việc |
+|------|------------|
+| **Day 1** | Thêm `.dockerignore`, viết lại Dockerfile (backend + frontend), tạo `.env.example`. |
+| **Day 2** | Thiết lập entrypoint cho API, chạy EF migrations tự động, kiểm tra chạy `docker‑compose up`. |
+| **Day 3** | Thêm RBAC vào `AppUser`, cập nhật một vài controller để dùng policy, test bằng Postman. |
+| **Day 4** | Đưa CI workflow lên GitHub Actions, chạy unit test, push image tới GHCR, triển khai staging. |
+
+---
+
+### 📦 Kết luận
+
+- **Bảo mật**: secret, RBAC, JWT refresh.
+- **Quản lý DB**: EF migrations → giảm rủi ro drift.
+- **Docker**: multi‑stage, .dockerignore, size tối ưu, health‑restart.
+- **CI/CD**: tự động build, test, push, deploy.
+- **Observability**: structured log, metrics, tracing.
+- **Kiểm thử**: coverage >80 % cho backend, basic front & mobile.
+- **Mobile offline**: SQLite + sync service.
+
+Với những thay đổi này dự án sẽ **nhỏ hơn, an toàn hơn, có thể CI/CD, dễ bảo trì** và đáp ứng đầy đủ yêu cầu GMP‑WHO cũng như chuẩn DevOps hiện đại. Nếu muốn tôi thực hiện một phần nào đó (ví dụ viết Dockerfile mới, thêm .env, hoặc tạo workflow CI), cứ chỉ định nhé!

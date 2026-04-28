@@ -30,9 +30,9 @@ namespace GMP_System.Controllers
             if (sourceLot == null) return BadRequest("Lô nguyên liệu không tồn tại.");
 
             // Kiểm tra QC: Chỉ được cấp phát lô đã 'Released'
-            if (sourceLot.Qcstatus != "Released")
+            if (sourceLot.QCStatus != "Released")
             {
-                return BadRequest($"Lô {sourceLot.LotNumber} đang ở trạng thái {sourceLot.Qcstatus}, chưa được phép sử dụng!");
+                return BadRequest($"Lô {sourceLot.LotNumber} đang ở trạng thái {sourceLot.QCStatus}, chưa được phép sử dụng!");
             }
 
             // Kiểm tra số lượng tồn

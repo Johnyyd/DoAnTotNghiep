@@ -7,7 +7,7 @@ services:
     networks:
       - gmp-network
     ports:
-      - "1434:1433"
+      - "1435:1433"
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=GMP_Strong@Passw0rd123

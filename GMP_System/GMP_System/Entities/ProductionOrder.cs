@@ -23,12 +23,14 @@ public partial class ProductionOrder
     public string? Status { get; set; }
 
     public int? CreatedBy { get; set; }
-
+    public int? PlannedCartons { get; set; }
     public DateTime? CreatedAt { get; set; }
+    public string? Note { get; set; }
 
     public virtual AppUser? CreatedByNavigation { get; set; }
 
     public virtual ICollection<ProductionBatch> ProductionBatches { get; set; } = new List<ProductionBatch>();
+    public virtual ICollection<RecipeRouting> RecipeRoutings { get; set; } = new List<RecipeRouting>();
 
     [JsonIgnore]
     public virtual Recipe? Recipe { get; set; }

@@ -74,7 +74,7 @@ namespace GMP_System.Controllers
                 return BadRequest(new { success = false, message = "Số lượng phải lớn hơn 0." });
             }
 
-            lot.Qcstatus = string.IsNullOrWhiteSpace(lot.Qcstatus) ? "Pending" : lot.Qcstatus;
+            lot.QCStatus = string.IsNullOrWhiteSpace(lot.QCStatus) ? "Pending" : lot.QCStatus;
             await _unitOfWork.InventoryLots.AddAsync(lot);
             await _unitOfWork.CompleteAsync();
 
@@ -104,9 +104,9 @@ namespace GMP_System.Controllers
             lot.QuantityCurrent = request.QuantityCurrent;
             lot.ManufactureDate = request.ManufactureDate;
             lot.ExpiryDate = request.ExpiryDate;
-            if (!string.IsNullOrWhiteSpace(request.Qcstatus))
+            if (!string.IsNullOrWhiteSpace(request.QCStatus))
             {
-                lot.Qcstatus = request.Qcstatus;
+                lot.QCStatus = request.QCStatus;
             }
 
             _unitOfWork.InventoryLots.Update(lot);
@@ -136,7 +136,7 @@ namespace GMP_System.Controllers
         }
 
         [HttpPost("{id}/qc")]
-        public async Task<IActionResult> UpdateQcStatus(int id, [FromBody] QcUpdateDto request)
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] QcUpdateDto request)
         {
             var lot = await _unitOfWork.InventoryLots.GetByIdAsync(id);
             if (lot == null)
@@ -144,11 +144,23 @@ namespace GMP_System.Controllers
                 return NotFound(new { success = false, message = "Không tìm thấy lô hàng." });
             }
 
-            lot.Qcstatus = request.Status;
+            lot.QCStatus = request.Status;
             _unitOfWork.InventoryLots.Update(lot);
             await _unitOfWork.CompleteAsync();
 
             return Ok(new { success = true, message = "Cập nhật trạng thái QC thành công." });
+        }
+
+        [HttpGet("available")]
+        public async Task<IActionResult> GetAvailableLots()
+        {
+            var lots = await _unitOfWork.InventoryLots.Query()
+                .Where(l => l.QCStatus == "Released" && l.QuantityCurrent > 0)
+                .Include(l => l.Material)
+                .OrderByDescending(l => l.LotId)
+                .ToListAsync();
+
+            return Ok(new { success = true, data = lots });
         }
 
         private static string? ValidateLotDates(DateTime? manufactureDate, DateTime expiryDate)

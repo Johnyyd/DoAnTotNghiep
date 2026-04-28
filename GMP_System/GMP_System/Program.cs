@@ -93,7 +93,17 @@ using (var scope = app.Services.CreateScope())
             Console.WriteLine($"[BACKEND] Connection attempt {i}/{maxConnectRetries}...");
             db.Database.CanConnect();
             db.Database.EnsureCreated();
-            Console.WriteLine("[BACKEND] Database is ONLINE.");
+            
+            // 1. Update columns
+            await EnsureColumnsAsync(db);
+            
+            // 2. Seed Data (Must happen before triggers to avoid EF Core OUTPUT clause conflict)
+            await EnsureDefaultInventorySeedAsync(db);
+            
+            // 3. Add triggers
+            await EnsureTriggersAsync(db);
+
+            Console.WriteLine("[BACKEND] Database is ONLINE and Initialized.");
             break;
         } catch (Exception ex) {
             Console.WriteLine($"[BACKEND] Connection failed: {ex.Message}");
@@ -142,7 +152,7 @@ static async Task EnsureDefaultInventorySeedAsync(GmpContext db)
                 QuantityCurrent = 100m,
                 ManufactureDate = today,
                 ExpiryDate = today.AddYears(2),
-                Qcstatus = "Approved"
+                QCStatus = "Approved"
             });
             continue;
         }
@@ -157,7 +167,7 @@ static async Task EnsureDefaultInventorySeedAsync(GmpContext db)
                 QuantityCurrent = 100m,
                 ManufactureDate = today,
                 ExpiryDate = today.AddYears(2),
-                Qcstatus = "Approved"
+                QCStatus = "Approved"
             });
         }
     }
@@ -186,14 +196,14 @@ static async Task EnsureDefaultInventorySeedAsync(GmpContext db)
             QuantityCurrent = 2m,
             ManufactureDate = today,
             ExpiryDate = today.AddYears(2),
-            Qcstatus = "Completed"
+            QCStatus = "Completed"
         });
     }
 
     await db.SaveChangesAsync();
 }
 
-static async Task EnsureSchemaExtensionsAsync(GmpContext db)
+static async Task EnsureColumnsAsync(GmpContext db)
 {
     const string sql = @"
 IF OBJECT_ID('dbo.ProductionAreas', 'U') IS NULL
@@ -250,6 +260,44 @@ IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_RecipeRouting_Mat
 IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_RecipeRouting_ProductionAreas')
     ALTER TABLE dbo.RecipeRouting ADD CONSTRAINT FK_RecipeRouting_ProductionAreas FOREIGN KEY (AreaId) REFERENCES dbo.ProductionAreas(AreaId);
 
+-- Missing column for RecipeRouting
+IF COL_LENGTH('dbo.RecipeRouting','NumberOfRouting') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD NumberOfRouting INT NULL DEFAULT 1;
+
+IF COL_LENGTH('dbo.RecipeRouting','OrderId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD OrderId INT NULL;
+
+-- Missing column for Materials
+IF COL_LENGTH('dbo.Materials','TechnicalSpecification') IS NULL
+    ALTER TABLE dbo.Materials ADD TechnicalSpecification NVARCHAR(MAX) NULL;
+
+-- Missing columns for ProductionOrders
+IF COL_LENGTH('dbo.ProductionOrders','Note') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD Note NVARCHAR(MAX) NULL;
+IF COL_LENGTH('dbo.ProductionOrders','PlannedCartons') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD PlannedCartons INT NULL;
+IF COL_LENGTH('dbo.ProductionOrders','StartDate') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD StartDate DATETIME NULL;
+IF COL_LENGTH('dbo.ProductionOrders','EndDate') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD EndDate DATETIME NULL;
+
+-- Missing columns for ProductionBatches
+IF COL_LENGTH('dbo.ProductionBatches','PlannedQuantity') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD PlannedQuantity DECIMAL(18,4) NULL;
+IF COL_LENGTH('dbo.ProductionBatches','CreatedAt') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD CreatedAt DATETIME NULL DEFAULT GETDATE();
+IF COL_LENGTH('dbo.ProductionBatches','ExpiryDate') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD ExpiryDate DATETIME NULL;
+IF COL_LENGTH('dbo.ProductionBatches','EndTime') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD EndTime DATETIME NULL;
+";
+
+    await db.Database.ExecuteSqlRawAsync(sql);
+}
+
+static async Task EnsureTriggersAsync(GmpContext db)
+{
+    const string sql = @"
 IF OBJECT_ID('dbo.trg_Audit_Materials', 'TR') IS NULL
 EXEC('CREATE TRIGGER dbo.trg_Audit_Materials ON dbo.Materials AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
 INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
@@ -281,8 +329,8 @@ SELECT ''InventoryLots'', CAST(COALESCE(i.LotId,d.LotId) AS NVARCHAR(50)),
 CASE WHEN i.LotId IS NOT NULL AND d.LotId IS NULL THEN ''Create''
      WHEN i.LotId IS NOT NULL AND d.LotId IS NOT NULL THEN ''Update''
      ELSE ''Delete'' END,
-CASE WHEN d.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', d.LotNumber, '';Qty='', d.QuantityCurrent) END,
-CASE WHEN i.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', i.LotNumber, '';Qty='', i.QuantityCurrent) END,
+CASE WHEN d.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', d.LotNumber, '';Qty='', d.Quantity) END,
+CASE WHEN i.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', i.LotNumber, '';Qty='', i.Quantity) END,
 GETDATE()
 FROM inserted i FULL OUTER JOIN deleted d ON i.LotId = d.LotId; END');
 

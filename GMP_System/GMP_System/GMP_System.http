@@ -1,11 +1,11 @@
-﻿@GMP_System_HostAddress = https://localhost:7193
+@GMP_System_HostAddress = https://localhost:7193
 
 ### -------------------------------------------------------
-### BƯỚC 1: TẠO MASTER DATA (NGUYÊN LIỆU & CÔNG THỨC)
+### BU?C 1: T?O MASTER DATA (NGUY�N LI?U & C�NG TH?C)
 ### -------------------------------------------------------
 
-### 1. Tạo Thành Phẩm (Product): Panadol
-# Dự kiến: ID = 1
+### 1. T?o Th�nh Ph?m (Product): Panadol
+# D? ki?n: ID = 1
 POST {{GMP_System_HostAddress}}/api/Materials
 Content-Type: application/json
 
@@ -14,48 +14,48 @@ Content-Type: application/json
   "materialName": "Panadol Extra 500mg",
   "type": "FinishedGood", 
   "baseUomId": 1, 
-  "description": "Thành phẩm thuốc giảm đau"
+  "description": "Th�nh ph?m thu?c gi?m dau"
 }
 
-### 2. Tạo Nguyên Liệu (Raw Material): Tinh Bột
-# Dự kiến: ID = 2
+### 2. T?o Nguy�n Li?u (Raw Material): Tinh B?t
+# D? ki?n: ID = 2
 POST {{GMP_System_HostAddress}}/api/Materials
 Content-Type: application/json
 
 {
   "materialCode": "MAT-STARCH",
-  "materialName": "Tinh bột sắn (Starch)",
+  "materialName": "Tinh b?t s?n (Starch)",
   "type": "RawMaterial",
   "baseUomId": 1
 }
 
-### 3. Tạo Công Thức (Recipe)
-# Quy định: Để làm ra Panadol (ID=1), cần dùng Tinh bột (ID=2)
-# Dự kiến RecipeID = 1
+### 3. T?o C�ng Th?c (Recipe)
+# Quy d?nh: �? l�m ra Panadol (ID=1), c?n d�ng Tinh b?t (ID=2)
+# D? ki?n RecipeID = 1
 POST {{GMP_System_HostAddress}}/api/Recipes
 Content-Type: application/json
 
 {
   "materialId": 1,  
   "batchSize": 100000,
-  "note": "Công thức chuẩn 2026",
+  "note": "C�ng th?c chu?n 2026",
   "recipeBoms": [
     {
       "materialId": 2, 
       "quantity": 50.0,
       "uomId": 1,
-      "note": "Tá dược độn"
+      "note": "T� du?c d?n"
     }
   ]
 }
 
 ### -------------------------------------------------------
-### BƯỚC 2: LẬP KẾ HOẠCH SẢN XUẤT
+### BU?C 2: L?P K? HO?CH S?N XU?T
 ### -------------------------------------------------------
 
-### 4. Lập Lệnh Sản Xuất (Production Order)
-# Dựa trên RecipeID = 1
-# Dự kiến OrderID = 1
+### 4. L?p L?nh S?n Xu?t (Production Order)
+# D?a tr�n RecipeID = 1
+# D? ki?n OrderID = 1
 POST {{GMP_System_HostAddress}}/api/ProductionOrders
 Content-Type: application/json
 
@@ -64,22 +64,22 @@ Content-Type: application/json
   "recipeId": 1, 
   "plannedQuantity": 50000,
   "unitId": 1,
-  "note": "Lệnh SX đầu tiên"
+  "note": "L?nh SX d?u ti�n"
 }
 
-### 5. Khởi động Lô sản xuất (Start Batch)
-# Dựa trên OrderID = 1
-# Dự kiến BatchID = 1
+### 5. Kh?i d?ng L� s?n xu?t (Start Batch)
+# D?a tr�n OrderID = 1
+# D? ki?n BatchID = 1
 POST {{GMP_System_HostAddress}}/api/ProductionBatches
 Content-Type: application/json
 
 {
   "orderId": 1,
   "batchNumber": "BATCH-2026-001",
-  "note": "Ca sáng"
+  "note": "Ca s�ng"
 }
 
-### 6. Ghi nhật ký vận hành (Log)
+### 6. Ghi nh?t k� v?n h�nh (Log)
 # Ghi cho BatchID = 1
 POST {{GMP_System_HostAddress}}/api/BatchProcessLogs
 Content-Type: application/json
@@ -89,34 +89,34 @@ Content-Type: application/json
   "resultStatus": "Passed",
   "startTime": "2026-02-07T08:00:00",
   "endTime": "2026-02-07T08:30:00",
-  "note": "Chuẩn bị máy xong"
+  "note": "Chu?n b? m�y xong"
 }
 
 ### -------------------------------------------------------
-### BƯỚC 3: QUẢN LÝ KHO (MUA HÀNG & CẤP PHÁT)
+### BU?C 3: QU?N L� KHO (MUA H�NG & C?P PH�T)
 ### -------------------------------------------------------
 
-### 7. Nhập kho Nguyên liệu Tinh Bột (ID=2)
-# Mua Tinh bột (ID=2) về nhập kho
-# Dự kiến LotID = 1
+### 7. Nh?p kho Nguy�n li?u Tinh B?t (ID=2)
+# Mua Tinh b?t (ID=2) v? nh?p kho
+# D? ki?n LotID = 1
 POST {{GMP_System_HostAddress}}/api/InventoryLots
 Content-Type: application/json
 
 {
   "materialID": 2, 
   "lotNumber": "LOT-NCC-STARCH-01",
-  "quantityCurrent": 500.0,
+  "Quantity": 500.0,
   "expiryDate": "2028-01-01T00:00:00",
-  "qcStatus": "Quarantine" 
+  "Status": "Quarantine" 
 }
 
-### 8. QC Duyệt Lô Nguyên Liệu (Approve)
-# Duyệt LotID = 1 sang trạng thái 'Released' để được phép dùng
+### 8. QC Duy?t L� Nguy�n Li?u (Approve)
+# Duy?t LotID = 1 sang tr?ng th�i 'Released' d? du?c ph�p d�ng
 POST {{GMP_System_HostAddress}}/api/InventoryLots/approve?lotId=1&status=Released
 
-### 9. Cấp phát Nguyên liệu cho Sản xuất (Dispense)
-# Lấy Tinh bột từ Kho (LotID=1) đổ vào Lô SX (BatchID=1)
-# Hợp lệ vì: Công thức (Bước 3) có chứa Tinh bột (ID=2)
+### 9. C?p ph�t Nguy�n li?u cho S?n xu?t (Dispense)
+# L?y Tinh b?t t? Kho (LotID=1) d? v�o L� SX (BatchID=1)
+# H?p l? v�: C�ng th?c (Bu?c 3) c� ch?a Tinh b?t (ID=2)
 POST {{GMP_System_HostAddress}}/api/MaterialUsages
 Content-Type: application/json
 
@@ -125,76 +125,76 @@ Content-Type: application/json
   "inventoryLotID": 1, 
   "plannedAmount": 50.0,
   "actualAmount": 50.0,
-  "note": "Cấp phát 50kg Tinh bột"
+  "note": "C?p ph�t 50kg Tinh b?t"
 }
 
-### 10. Kiểm tra lại Tồn kho
-# Tồn đầu 500 - Cấp 50 = Còn 450
+### 10. Ki?m tra l?i T?n kho
+# T?n d?u 500 - C?p 50 = C�n 450
 GET {{GMP_System_HostAddress}}/api/InventoryLots/available
 
 
 
 ### -------------------------------------------------------
-### BƯỚC 4: HOÀN TẤT SẢN XUẤT & NHẬP THÀNH PHẨM
+### BU?C 4: HO�N T?T S?N XU?T & NH?P TH�NH PH?M
 ### -------------------------------------------------------
 
-### 11. Kết thúc Lô sản xuất (Finish Batch)
-# BatchID = 1 đã chạy xong, giờ đóng lại.
+### 11. K?t th�c L� s?n xu?t (Finish Batch)
+# BatchID = 1 d� ch?y xong, gi? d�ng l?i.
 POST {{GMP_System_HostAddress}}/api/ProductionBatches/finish?batchId=1
 
-### 12. Nhập kho Thành Phẩm (Finished Goods Receipt)
-# Nhập Panadol (ID=1) vào kho từ Lô SX số 1
-# Lưu ý: Trạng thái ban đầu luôn là 'Quarantine' (Chờ duyệt)
+### 12. Nh?p kho Th�nh Ph?m (Finished Goods Receipt)
+# Nh?p Panadol (ID=1) v�o kho t? L� SX s? 1
+# Luu �: Tr?ng th�i ban d?u lu�n l� 'Quarantine' (Ch? duy?t)
 POST {{GMP_System_HostAddress}}/api/InventoryLots
 Content-Type: application/json
 
 {
   "materialID": 1, 
   "lotNumber": "LOT-PANADOL-2026-001",
-  "quantityCurrent": 100000, 
+  "Quantity": 100000, 
   "expiryDate": "2029-02-07T00:00:00",
-  "qcStatus": "Quarantine"
+  "Status": "Quarantine"
 }
 
-### 13. Kiểm tra tồn kho Thành phẩm
-# Xem Panadol (ID=1) đã vào kho chưa?
+### 13. Ki?m tra t?n kho Th�nh ph?m
+# Xem Panadol (ID=1) d� v�o kho chua?
 GET {{GMP_System_HostAddress}}/api/InventoryLots/available
-# Lưu ý: Nếu API "available" của bạn chỉ hiện lô 'Released', thì lệnh này có thể trả về Rỗng []
-# Vì lô vừa nhập đang là 'Quarantine'. 
+# Luu �: N?u API "available" c?a b?n ch? hi?n l� 'Released', th� l?nh n�y c� th? tr? v? R?ng []
+# V� l� v?a nh?p dang l� 'Quarantine'. 
 
-### 14. QC Duyệt Thành Phẩm (Release Finished Goods)
-# Sau khi kiểm nghiệm đạt, cho phép xuất bán
+### 14. QC Duy?t Th�nh Ph?m (Release Finished Goods)
+# Sau khi ki?m nghi?m d?t, cho ph�p xu?t b�n
 POST {{GMP_System_HostAddress}}/api/InventoryLots/approve?lotId=2&status=Released
-# Lưu ý: LotId ở đây là 2 (Vì Lot 1 là Tinh bột, Lot 2 là Panadol mới nhập)
+# Luu �: LotId ? d�y l� 2 (V� Lot 1 l� Tinh b?t, Lot 2 l� Panadol m?i nh?p)
 
-### 15. Kiểm tra lại Tồn kho (Lần cuối)
-# Bây giờ lô Panadol đã Released, nó phải hiện ra
+### 15. Ki?m tra l?i T?n kho (L?n cu?i)
+# B�y gi? l� Panadol d� Released, n� ph?i hi?n ra
 GET {{GMP_System_HostAddress}}/api/InventoryLots/available
 
 
 ### -------------------------------------------------------
-### TEST AUDIT TRAIL (NHẬT KÝ TỰ ĐỘNG)
+### TEST AUDIT TRAIL (NH?T K� T? �?NG)
 ### -------------------------------------------------------
 
-### 16. Sửa tên Nguyên Liệu (Để xem hệ thống có bắt được không)
-# Đổi tên "Tinh bột sắn" thành "Tinh bột Ngô cao cấp"
-# Giả sử Tinh bột có ID = 2 (Hãy thay ID đúng của bạn vào URL)
+### 16. S?a t�n Nguy�n Li?u (�? xem h? th?ng c� b?t du?c kh�ng)
+# �?i t�n "Tinh b?t s?n" th�nh "Tinh b?t Ng� cao c?p"
+# Gi? s? Tinh b?t c� ID = 2 (H�y thay ID d�ng c?a b?n v�o URL)
 PUT {{GMP_System_HostAddress}}/api/Materials/2
 Content-Type: application/json
 
 {
   "materialId": 2,
   "materialCode": "MAT-STARCH",
-  "materialName": "Tinh bột Ngô Cao Cấp (Đã sửa)",
+  "materialName": "Tinh b?t Ng� Cao C?p (�� s?a)",
   "type": "RawMaterial",
   "baseUomId": 1
 }
 
-### Lưu ý: Nếu chưa có API PUT (Update) cho Material, bạn có thể dùng tạm
-# API Duyệt Công Thức hoặc API Finish Batch ở trên để test.
-# Hoặc đơn giản nhất: Tạo thêm 1 Nguyên liệu mới.
+### Luu �: N?u chua c� API PUT (Update) cho Material, b?n c� th? d�ng t?m
+# API Duy?t C�ng Th?c ho?c API Finish Batch ? tr�n d? test.
+# Ho?c don gi?n nh?t: T?o th�m 1 Nguy�n li?u m?i.
 
-### 17. Tạo Nguyên liệu test log
+### 17. T?o Nguy�n li?u test log
 POST {{GMP_System_HostAddress}}/api/Materials
 Content-Type: application/json
 
@@ -205,5 +205,5 @@ Content-Type: application/json
   "baseUomId": 1
 }
 
-### 18. XEM NHẬT KÝ HỆ THỐNG (The Moment of Truth)
+### 18. XEM NH?T K� H? TH?NG (The Moment of Truth)
 GET {{GMP_System_HostAddress}}/api/SystemAuditLogs

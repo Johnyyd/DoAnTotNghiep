@@ -10,7 +10,7 @@ services: # Danh sách các services trong hệ thống
     networks:
       - gmp-network # Đưa container vào mạng nội bộ chung
     ports:
-      - "1434:1433" # Ánh xạ cổng 1433 trong container ra cổng 1434 trên máy host (để tráng trùng với SQL có sẵn)
+      - "1435:1433" # Ánh xạ cổng 1433 trong container ra cổng 1435 trên máy host (để tráng trùng với SQL có sẵn)
     environment: # Thông số cấu hình
       - ACCEPT_EULA=Y # Bắt buộc chấp thuận EULA để chạy SQL Server
       - SA_PASSWORD=GMP_Strong@Passw0rd123 # Mật khẩu của tài khoản quản trị viên root (SA)
@@ -53,7 +53,7 @@ services: # Danh sách các services trong hệ thống
         condition: service_healthy 
     volumes:
       - ./DATABASE:/app/DATABASE:ro # Liên kết thư mục Script nếu Controller có nhu cầu truy vấn tĩnh
-#      - ./GMP_System/GMP_System:/src # Ánh xạ qua bộ nhớ Host và mã nguồn Container tại gốc
+      - ./GMP_System/GMP_System:/src # Ánh xạ qua bộ nhớ Host và mã nguồn Container tại gốc
     command: dotnet watch run --project GMP_System.csproj --urls "http://0.0.0.0:5000" --no-hot-reload
     restart: unless-stopped
     healthcheck:

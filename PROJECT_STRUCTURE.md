@@ -136,7 +136,7 @@ Hoặc dùng menu script:
 │  Controllers → Services → Repositories → SQL Server       │
 ├─────────────────────────────────────────────────────────────┤
 │                     DATABASE (SQL Server)                 │
-│  Port: 1433 (container) → 1434 (host)                     │
+│  Port: 1433 (container) → 1435 (host)                     │
 │  GMP_WHO_DB                                                │
 └─────────────────────────────────────────────────────────────┘
 ```

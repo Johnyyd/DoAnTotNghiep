@@ -42,6 +42,7 @@ namespace GMP_System.Controllers
                         }
                     }
                 })
+                .OrderBy(b => b.BatchId)
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -52,64 +53,120 @@ namespace GMP_System.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var batch = await _unitOfWork.ProductionBatches
-                .Query()
+            var batch = await _unitOfWork.ProductionBatches.Query()
+                .Include(b => b.Order)
+                    .ThenInclude(o => o.Recipe)
+                        .ThenInclude(r => r.Material)
+                            .ThenInclude(m => m.BaseUom)
+                .Include(b => b.Order)
+                    .ThenInclude(o => o.Recipe)
+                        .ThenInclude(r => r.RecipeBoms)
+                            .ThenInclude(bom => bom.Material)
                 .Where(b => b.BatchId == id)
-                .Select(b => new {
-                    b.BatchId,
-                    b.OrderId,
-                    b.BatchNumber,
-                    b.Status,
-                    b.ManufactureDate,
-                    b.EndTime,
-                    b.ExpiryDate,
-                    b.CurrentStep,
-                    Order = b.Order == null ? null : new {
-                        b.Order.OrderCode,
-                        Recipe = b.Order.Recipe == null ? null : new {
-                            b.Order.Recipe.RecipeId,
-                            Material = b.Order.Recipe.Material == null ? null : new {
-                                b.Order.Recipe.Material.MaterialName,
-                                UnitOfMeasure = b.Order.Recipe.Material.BaseUom == null ? null : new {
-                                    b.Order.Recipe.Material.BaseUom.UomName
-                                }
-                            },
-                            RecipeBoms = b.Order.Recipe.RecipeBoms.Select(bom => new {
-                                bom.BomId,
-                                bom.Quantity,
-                                Material = bom.Material == null ? null : new { bom.Material.MaterialName },
-                                Uom = bom.Uom == null ? null : new { bom.Uom.UomName }
-                            }),
-                            RecipeRoutings = b.Order.Recipe.RecipeRoutings.Select(r => new {
-                                r.RoutingId,
-                                r.StepNumber,
-                                r.StepName,
-                                r.Description,
-                                r.EstimatedTimeMinutes,
-                                r.DefaultEquipmentId,
-                                StepParameters = r.StepParameters.Select(sp => new {
-                                    sp.ParameterId,
-                                    sp.ParameterName,
-                                    sp.MinValue,
-                                    sp.MaxValue,
-                                    sp.Unit
-                                })
-                            })
-                        }
-                    },
-                    BatchProcessLogs = b.BatchProcessLogs.Select(l => new {
-                        l.LogId,
-                        l.RoutingId,
-                        l.ResultStatus,
-                        l.StartTime,
-                        l.EndTime
-                    })
-                })
-                .AsNoTracking()
                 .FirstOrDefaultAsync();
 
-            if (batch == null) return NotFound(new { success = false, message = "Không tìm thấy mẻ sản xuất." });
-            return Ok(new { data = batch, success = true, message = "Success" });
+            if (batch == null) return NotFound(new { success = false, message = "KhÃ´ng tÃ¬m tháº¥y máº» sáº£n xuáº¥t." });
+
+            // Fetch Routings separately with StepParameters included
+            var routingsQuery = _unitOfWork.RecipeRoutings.Query()
+                .Include(r => r.DefaultEquipment)
+                .Include(r => r.StepParameters);
+            
+            var orderRoutings = await routingsQuery.Where(r => r.OrderId == batch.OrderId).ToListAsync();
+            var recipeId = batch.Order?.RecipeId;
+            var finalRoutings = orderRoutings.Any() 
+                ? orderRoutings 
+                : await routingsQuery.Where(r => r.RecipeId == recipeId && r.OrderId == null).ToListAsync();
+
+            // Truy vấn trực tiếp từ bảng RecipeBom để đảm bảo không bị mất dữ liệu do nạp lồng
+            var bomsWithQC = new List<object>();
+            if (batch.Order != null && batch.Order.RecipeId != null)
+            {
+                var boms = await _unitOfWork.RecipeBoms.Query()
+                    .Where(bom => bom.RecipeId == batch.Order.RecipeId)
+                    .Include(bom => bom.Material)
+                    .Select(bom => new {
+                        bom.BomId,
+                        bom.MaterialId,
+                        bom.Quantity,
+                        bom.UomId,
+                        MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
+                        MaterialCode = bom.Material != null ? bom.Material.MaterialCode : "N/A"
+                    }).ToListAsync();
+
+                foreach (var bom in boms) 
+                {
+                    var suggestedQC = await _unitOfWork.InventoryLots.Query()
+                        .Where(l => l.MaterialId == bom.MaterialId && l.QCStatus == "Released" && l.QuantityCurrent > 0)
+                        .OrderByDescending(l => l.LotId)
+                        .Select(l => l.LotNumber) 
+                        .FirstOrDefaultAsync();
+
+                    bomsWithQC.Add(new {
+                        bom.BomId,
+                        bom.MaterialId,
+                        bom.Quantity,
+                        bom.UomId,
+                        Material = new {
+                            MaterialName = bom.MaterialName,
+                            MaterialCode = bom.MaterialCode,
+                            SuggestedQCNumber = suggestedQC
+                        }
+                    });
+                }
+            }
+
+            var result = new {
+                batch.BatchId,
+                batch.OrderId,
+                batch.BatchNumber,
+                batch.Status,
+                batch.PlannedQuantity,
+                batch.ManufactureDate,
+                batch.EndTime,
+                batch.ExpiryDate,
+                batch.CurrentStep,
+                Order = batch.Order == null ? null : new {
+                    batch.Order.OrderId,
+                    batch.Order.OrderCode,
+                    batch.Order.RecipeId,
+                    Recipe = batch.Order.Recipe == null ? null : new {
+                        batch.Order.Recipe.RecipeId,
+                        Material = batch.Order.Recipe.Material == null ? null : new {
+                            batch.Order.Recipe.Material.MaterialName,
+                            UnitOfMeasure = batch.Order.Recipe.Material.BaseUom == null ? null : new {
+                                batch.Order.Recipe.Material.BaseUom.UomName
+                            }
+                        },
+                        RecipeBoms = bomsWithQC
+                    }
+                },
+                Routings = finalRoutings.OrderBy(r => r.StepNumber).Select(r => new {
+                    r.RoutingId,
+                    r.StepNumber,
+                    r.StepName,
+                    r.EstimatedTimeMinutes,
+                    r.Description,
+                    r.NumberOfRouting,
+                    r.SetTemperature,
+                    r.SetTimeMinutes,
+                    DefaultEquipment = r.DefaultEquipment == null ? null : new {
+                        r.DefaultEquipment.EquipmentId,
+                        r.DefaultEquipment.EquipmentCode,
+                        r.DefaultEquipment.EquipmentName
+                    },
+                    StepParameters = r.StepParameters.Select(sp => new {
+                        sp.ParameterId,
+                        sp.ParameterName,
+                        sp.Unit,
+                        sp.MinValue,
+                        sp.MaxValue
+                    }).ToList()
+                }).ToList()
+            };
+
+            return Ok(new { data = result, success = true, message = "Success" });
+
         }
 
         // POST: api/production-batches — Tạo mẻ sản xuất mới
@@ -153,9 +210,49 @@ namespace GMP_System.Controllers
         [HttpPost("{id}/finish")]
         public async Task<IActionResult> FinishBatch(int id)
         {
-            var batch = await _unitOfWork.ProductionBatches.GetByIdAsync(id);
+            var batch = await _unitOfWork.ProductionBatches.Query()
+                .Include(b => b.Order)
+                .FirstOrDefaultAsync(b => b.BatchId == id);
+
             if (batch == null) return NotFound(new { success = false, message = "Không tìm thấy mẻ sản xuất." });
             if (batch.Status == "Completed") return BadRequest(new { success = false, message = "Mẻ này đã kết thúc rồi." });
+
+            // [GMP ENFORCEMENT] Verify all steps are Passed
+            var routingsQuery = _unitOfWork.RecipeRoutings.Query();
+            var orderRoutings = await routingsQuery.Where(r => r.OrderId == batch.OrderId).ToListAsync();
+            var recipeId = batch.Order?.RecipeId;
+            var finalRoutings = orderRoutings.Any()
+                ? orderRoutings
+                : await routingsQuery.Where(r => r.RecipeId == recipeId && r.OrderId == null).ToListAsync();
+
+            if (finalRoutings.Any())
+            {
+                var passedLogs = await _unitOfWork.BatchProcessLogs.Query()
+                    .Where(l => l.BatchId == id && (l.ResultStatus == "Passed" || l.ResultStatus == "Approved"))
+                    .Select(l => l.RoutingId)
+                    .Distinct()
+                    .ToListAsync();
+
+                var missingStepIds = finalRoutings
+                    .Select(r => r.RoutingId)
+                    .Where(rid => !passedLogs.Contains(rid))
+                    .ToList();
+
+                if (missingStepIds.Any())
+                {
+                    var missingStepNames = finalRoutings
+                        .Where(r => missingStepIds.Contains(r.RoutingId))
+                        .Select(r => r.StepName)
+                        .ToList();
+
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "⚠ Vi phạm quy trình GMP: Không thể kết thúc mẻ vì vẫn còn công đoạn chưa hoàn thành hoặc chưa được QC duyệt.",
+                        details = $"Công đoạn chưa xong: {string.Join(", ", missingStepNames)}"
+                    });
+                }
+            }
 
             batch.Status = "Completed";
             batch.EndTime = DateTime.Now;

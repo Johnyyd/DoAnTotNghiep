@@ -71,7 +71,7 @@ namespace GMP_System.Controllers
                         uom = u.InventoryLot?.Material?.BaseUom?.UomName ?? string.Empty,
                         usedAt = u.Timestamp,
                         usedBy = u.DispensedBy,
-                        qcStatus = u.InventoryLot?.Qcstatus ?? "N/A",
+                        Status = u.InventoryLot?.QCStatus ?? "N/A",
                         lotQuantityCurrent = u.InventoryLot?.QuantityCurrent,
                         ratioPercent = ratio,
                         certificateUrl = $"/api/certificates/material/{Uri.EscapeDataString(materialCode)}"
@@ -90,7 +90,7 @@ namespace GMP_System.Controllers
                         uom = b.Uom?.UomName ?? b.Material?.BaseUom?.UomName ?? "mg",
                         usedAt = (DateTime?)null,
                         usedBy = (int?)null,
-                        qcStatus = "N/A",
+                        Status = "N/A",
                         lotQuantityCurrent = (decimal?)null,
                         ratioPercent = fallbackTotal > 0 ? Math.Round((b.Quantity / fallbackTotal) * 100m, 2) : 0m,
                         certificateUrl = $"/api/certificates/material/{Uri.EscapeDataString(b.Material?.MaterialCode ?? "")}" 
@@ -151,7 +151,7 @@ namespace GMP_System.Controllers
                     uom = b.Uom?.UomName ?? b.Material?.BaseUom?.UomName ?? "mg",
                     usedAt = (DateTime?)null,
                     usedBy = (int?)null,
-                    qcStatus = "N/A",
+                    Status = "N/A",
                     lotQuantityCurrent = (decimal?)null,
                     ratioPercent = total > 0 ? Math.Round((b.Quantity / total) * 100m, 2) : 0m,
                     certificateUrl = $"/api/certificates/material/{Uri.EscapeDataString(b.Material?.MaterialCode ?? "")}"
@@ -178,7 +178,7 @@ namespace GMP_System.Controllers
                         uom = m.BaseUom?.UomName ?? string.Empty,
                         usedAt = (DateTime?)null,
                         usedBy = (int?)null,
-                        qcStatus = "N/A",
+                        Status = "N/A",
                         lotQuantityCurrent = (decimal?)null,
                         ratioPercent = ratio,
                         certificateUrl = $"/api/certificates/material/{Uri.EscapeDataString(m.MaterialCode ?? "")}"

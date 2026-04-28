@@ -7,15 +7,24 @@ import 'package:http/http.dart' as http;
 /// Mọi request đều tự động gắn JWT token từ [AuthService].
 class ApiService {
   // Khi chạy trong Docker Compose (Nginx proxy), baseUrl nên là đường dẫn tương đối '/api'
-  // Khi chạy dev local Windows thì dùng 'http://localhost:5001/api' hoặc IP Tailscale
+  // Khi chạy dev local Windows thì dùng 'http://localhost:5001/api' hoặc IP máy chủ
+  static String? _manualBaseUrl;
+  static void setManualBaseUrl(String url) => _manualBaseUrl = url;
+
   static String get baseUrl {
+    if (_manualBaseUrl != null) return _manualBaseUrl!;
     if (kIsWeb) {
       // Trên Web, dùng origin hiện tại (vd http://localhost:8081) + /api
       final origin = Uri.base.origin;
       return '$origin/api';
     }
-    // Mobile/Emulator fallback
-    return 'http://localhost:5001/api';
+    // QUAN TRỌNG: Thay 'localhost' thành địa chỉ IP máy tính của bạn (vd: 192.168.1.10) để kết nối từ điện thoại thật.
+    return 'http://192.168.1.13:5001/api'; // <--- HÃY THAY IP NÀY BẰNG IP MÁY TÍNH CỦA BẠN
+  }
+
+  /// Tiện ích log lỗi cho dev
+  static void _logError(String context, dynamic error) {
+    debugPrint('[ApiService Error] $context: $error');
   }
 
   /// Headers mặc định kèm JWT token
@@ -94,6 +103,7 @@ class ApiService {
             'totalBatches': totalBatches,
             'completedBatches': completedBatches,
             'status': order['status'] ?? 'Draft',
+            'productionBatches': batches, // Include batches for status tracking
             'recipe':
                 order['recipe'], // Keep full recipe for BOM access in pre-check
           };
@@ -180,7 +190,8 @@ class ApiService {
   /// Lấy nhật ký công đoạn của một mẻ (Virtual Workflow: Routing + Logs)
   static Future<List<Map<String, dynamic>>> getProcessLogs(int batchId) async {
     try {
-      final url = Uri.parse('$baseUrl/batch-process-logs/batch/$batchId?t=${DateTime.now().millisecondsSinceEpoch}');
+      final url = Uri.parse(
+          '$baseUrl/batch-process-logs/batch/$batchId?t=${DateTime.now().millisecondsSinceEpoch}');
       final response = await http.get(url, headers: await _headers());
 
       debugPrint('ApiService.getProcessLogs status: ${response.statusCode}');

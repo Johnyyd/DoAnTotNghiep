@@ -20,15 +20,15 @@ extension ExecutionPhaseExtension on ExecutionPhase {
   String get label {
     switch (this) {
       case ExecutionPhase.precheck:
-        return 'Kiểm tra (Pre-check)';
+        return 'Kiểm tra giá trị đầu vào';
       case ExecutionPhase.input:
-        return 'Nhập liệu (Input)';
+        return 'Nhập thông số kỹ thuật';
       case ExecutionPhase.verification:
-        return 'QC Xác nhận';
+        return 'Đợi QC xét duyệt';
       case ExecutionPhase.execution:
-        return 'Thực hiện (Execute)';
+        return 'Vận hành công đoạn';
       case ExecutionPhase.completed:
-        return 'Hoàn thành (Done)';
+        return 'Đã hoàn tất';
     }
   }
 

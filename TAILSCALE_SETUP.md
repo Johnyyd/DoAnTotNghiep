@@ -25,60 +25,71 @@ Hệ thống GMP-WHO đã được cấu hình để truy cập từ xa thông q
 
 ## 🔌 Ports Mapped to Host (Tailscale Accessible)
 
-| Service | Container Port | Host Port | Access via Tailscale |
-|---------|---------------|-----------|---------------------|
-| **Frontend (Nginx)** | 80 | 80 | `http://100.89.137.3` |
-| **Mobile App (Flutter)** | 80 | 8081 | `http://100.89.137.3:8081` |
-| **Backend API** | 5000 | 5001 | `http://100.89.137.3:5001` |
-| **SQL Server** | 1433 | 1434 | `100.89.137.3,1434` |
+| Service                  | Container Port | Host Port | Access via Tailscale       |
+| ------------------------ | -------------- | --------- | -------------------------- |
+| **Frontend (Nginx)**     | 80             | 80        | `http://100.89.137.3`      |
+| **Mobile App (Flutter)** | 80             | 8081      | `http://100.89.137.3:8081` |
+| **Backend API**          | 5000           | 5001      | `http://100.89.137.3:5001` |
+| **SQL Server**           | 1433           | 1435      | `100.89.137.3,1435`        |
 
 ## 🚀 Cách Truy Cập
 
 ### 1. Web Frontend (Admin Interface)
+
 ```
 URL: http://100.89.137.3
 ```
+
 - Giao diện quản trị React
 - Tự động proxy API requests qua `/api/` đến backend
 - Single Page Application với routing phía client
 
 ### 2. Mobile App (eBMR - Tablet/Android)
+
 ```
 URL: http://100.89.137.3:8081
 ```
+
 - Giao diện thao tác cho công nhân dưới xưởng
 - Tích hợp Flutter Web để dễ dùng trên thiết bị di động với browser
 
 ### 3. Backend API Direct
+
 ```
 URL: http://100.89.137.3:5001
 ```
+
 - REST API endpoints
 - Health check: `http://100.89.137.3:5001/api/health`
 - Không có Swagger UI (đã tắt để đơn giản)
 - API documentation xem trong code hoặc `README.md`
 
 ### 3. Database Connection (from other Tailscale nodes)
+
 ```
-Server: 100.89.137.3,1434
+Server: 100.89.137.3,1435
 Database: GMP_WHO_DB
 Username: sa
 Password: GMP_Strong@Passw0rd123
 ```
+
 - Dùng SQL Server Management Studio, Azure Data Studio, hoặc connection string:
+
 ```
-Server=100.89.137.3,1434;Database=GMP_WHO_DB;User Id=sa;Password=GMP_Strong@Passw0rd123;TrustServerCertificate=true
+Server=100.89.137.3,1435;Database=GMP_WHO_DB;User Id=sa;Password=GMP_Strong@Passw0rd123;TrustServerCertificate=true
 ```
 
 ## 📦 Docker Setup Commands
 
 ### Quick Start (All-in-One)
+
 ```bash
 cd /home/tringuyen/openclaw-app/workspace/DoAnTotNghiep
 docker-compose up -d
 ```
 
 ### Or Manual Start
+
 ```bash
 # 1. Ensure network exists
 docker network create gmp-network 2>/dev/null || true
@@ -88,7 +99,7 @@ docker run -d --name gmp-sqlserver \
   --network gmp-network \
   -e ACCEPT_EULA=Y \
   -e SA_PASSWORD=GMP_Strong@Passw0rd123 \
-  -p 1434:1433 \
+  -p 1435:1433 \
   -v $(pwd)/DATABASE:/var/opt/mssql/backup:ro \
   mcr.microsoft.com/mssql/server:2022-latest
 
@@ -134,6 +145,7 @@ curl -I http://localhost
 ## ⚙️ Configuration Details
 
 ### Backend (C# .NET 8)
+
 - **Image:** `gmp-who-api`
 - **Port:** 5000 (internal), 5001 (host mapping)
 - **Environment:**
@@ -147,6 +159,7 @@ curl -I http://localhost
   - Repositories + Unit of Work pattern
 
 ### Frontend (React + TypeScript + Vite)
+
 - **Image:** `gmp-who-frontend`
 - **Port:** 80 (nginx)
 - **Build args:**
@@ -166,8 +179,9 @@ curl -I http://localhost
   - Traceability (placeholder)
 
 ### Database (SQL Server 2022)
+
 - **Image:** `mcr.microsoft.com/mssql/server:2022-latest`
-- **Port:** 1433 (internal), 1434 (host)
+- **Port:** 1433 (internal), 1435 (host)
 - **Authentication:** SA account
 - **Initialization:**
   - Auto-run `init.sql` from backend container
@@ -181,8 +195,8 @@ curl -I http://localhost
 - Frontend: `http://100.89.137.3`
   - Mobile App: `http://100.89.137.3:8081`
   - Backend API: `http://100.89.137.3:5001`
-  - Database: `100.89.137.3,1434` (需要 SQL Server client)
-- **Firewall:** Ensure your host firewall allows inbound on ports 80, 5001, 1434 from Tailscale subnet (100.89.0.0/16 typically)
+  - Database: `100.89.137.3,1435` (需要 SQL Server client)
+- **Firewall:** Ensure your host firewall allows inbound on ports 80, 5001, 1435 from Tailscale subnet (100.89.0.0/16 typically)
 
 ## 🔐 Security Considerations
 
@@ -200,17 +214,20 @@ curl -I http://localhost
 ## 🐛 Troubleshooting
 
 ### Frontend shows blank page
+
 - Check browser console for errors
 - Verify API connectivity: `curl http://localhost/api/health` (should proxy to backend)
 - Check nginx logs: `docker logs gmp-frontend`
 
 ### Backend API not accessible
+
 - Check if container running: `docker ps | grep gmp-api`
 - Check logs: `docker logs gmp-api`
 - Test health: `curl http://localhost:5001/api/health`
 - Verify port mapping: `docker port gmp-api`
 
 ### Database connection fails
+
 - Ensure SQL Server is healthy: `docker logs gmp-sqlserver`
 - Test connection from backend container:
   ```bash
@@ -219,6 +236,7 @@ curl -I http://localhost
 - Check if database exists: `SELECT name FROM sys.databases WHERE name = 'GMP_WHO_DB'`
 
 ### Cannot access from other Tailscale nodes
+
 - Verify Tailscale is running on host: `tailscale status`
 - Check firewall: `sudo ufw status` or `iptables -L`
 - Test from another node: `curl http://100.89.137.3/api/health`

@@ -64,6 +64,11 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.Username)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.PinCode)
+                .HasMaxLength(6)
+                .IsUnicode(false)
+                .HasDefaultValue("000000");
+            entity.Property(e => e.LastLogin).HasColumnType("datetime2");
         });
 
         modelBuilder.Entity<BatchProcessLog>(entity =>
@@ -139,6 +144,8 @@ public partial class GmpContext : DbContext
         {
             entity.HasKey(e => e.EquipmentId).HasName("PK__Equipmen__34474599F11FEE84");
 
+            entity.ToTable(tb => tb.HasTrigger("trg_Audit_Equipments"));
+
             entity.HasIndex(e => e.EquipmentCode, "UQ__Equipmen__09E4417E23FBF8F4").IsUnique();
 
             entity.Property(e => e.EquipmentId).HasColumnName("EquipmentID");
@@ -158,27 +165,38 @@ public partial class GmpContext : DbContext
 
         modelBuilder.Entity<InventoryLot>(entity =>
         {
-            entity.HasKey(e => e.LotId).HasName("PK__Inventor__4160EF4DD676A0B9");
+            entity.HasKey(e => e.LotId);
 
-            entity.Property(e => e.LotId).HasColumnName("LotID");
+            entity.ToTable(tb => tb.HasTrigger("trg_Audit_InventoryLots"));
+
+            entity.Property(e => e.LotId).HasColumnName("LotId");
             entity.Property(e => e.LotNumber)
                 .HasMaxLength(50)
                 .IsUnicode(false);
-            entity.Property(e => e.MaterialId).HasColumnName("MaterialID");
-            entity.Property(e => e.Qcstatus)
+            
+            // Nếu dùng QCNumber trong code, ánh xạ tạm vào LotNumber hoặc để trống nếu DB không có.
+            // Trong Schema.sql chỉ có LotNumber và QCStatus.
+            // Tôi sẽ bỏ QCNumber mapping nếu DB không có để tránh lỗi 207.
+            
+            entity.Property(e => e.MaterialId).HasColumnName("MaterialId");
+
+            entity.Property(e => e.QuantityCurrent)
+                .HasColumnName("QuantityCurrent")
+                .HasColumnType("decimal(18, 4)");
+
+            entity.Property(e => e.QCStatus)
                 .HasMaxLength(50)
-                .HasDefaultValue("Quarantine")
                 .HasColumnName("QCStatus");
-            entity.Property(e => e.QuantityCurrent).HasColumnType("decimal(18, 4)");
 
             entity.HasOne(d => d.Material).WithMany(p => p.InventoryLots)
-                .HasForeignKey(d => d.MaterialId)
-                .HasConstraintName("FK__Inventory__Mater__02084FDA");
+                .HasForeignKey(d => d.MaterialId);
         });
 
         modelBuilder.Entity<Material>(entity =>
         {
             entity.HasKey(e => e.MaterialId).HasName("PK__Material__C50613177C517D7B");
+
+            entity.ToTable(tb => tb.HasTrigger("trg_Audit_Materials"));
 
             entity.HasIndex(e => e.MaterialCode, "UQ__Material__170C54BAB161407D").IsUnique();
 
@@ -256,6 +274,8 @@ public partial class GmpContext : DbContext
         modelBuilder.Entity<ProductionOrder>(entity =>
         {
             entity.HasKey(e => e.OrderId).HasName("PK__Producti__C3905BAF770F7793");
+
+            entity.ToTable(tb => tb.HasTrigger("trg_Audit_ProductionOrders"));
 
             entity.HasIndex(e => e.OrderCode, "UQ__Producti__999B5229EBD49113").IsUnique();
 
@@ -342,6 +362,7 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.RoutingId).HasColumnName("RoutingID");
             entity.Property(e => e.DefaultEquipmentId).HasColumnName("DefaultEquipmentID");
             entity.Property(e => e.RecipeId).HasColumnName("RecipeID");
+            entity.Property(e => e.OrderId).HasColumnName("OrderID");
             entity.Property(e => e.StepName).HasMaxLength(200);
             entity.Property(e => e.NumberOfRouting).HasDefaultValue(1);
 
@@ -352,6 +373,10 @@ public partial class GmpContext : DbContext
             entity.HasOne(d => d.Recipe).WithMany(p => p.RecipeRoutings)
                 .HasForeignKey(d => d.RecipeId)
                 .HasConstraintName("FK__RecipeRou__Recip__6C190EBB");
+
+            entity.HasOne(d => d.Order).WithMany(p => p.RecipeRoutings)
+                .HasForeignKey(d => d.OrderId)
+                .HasConstraintName("FK_RecipeRouting_ProductionOrders");
         });
 
 

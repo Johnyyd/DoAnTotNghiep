@@ -40,10 +40,15 @@ public partial class RecipeRouting
     public decimal? SetTemperature { get; set; }
 
     public int? SetTimeMinutes { get; set; }
+    
+    public int? OrderId { get; set; }
 
     public virtual ICollection<BatchProcessLog> BatchProcessLogs { get; set; } = new List<BatchProcessLog>();
 
     public virtual ProductionArea? Area { get; set; }
+
+    [JsonIgnore]
+    public virtual ProductionOrder? Order { get; set; }
 
     public virtual Equipment? DefaultEquipment { get; set; }
 

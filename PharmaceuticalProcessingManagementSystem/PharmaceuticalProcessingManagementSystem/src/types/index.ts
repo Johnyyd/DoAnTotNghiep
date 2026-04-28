@@ -77,14 +77,26 @@ export interface RecipeBOM {
 
 export interface RecipeRouting {
   routingId: number;
-  recipeId: number;
-  stepOrder: number;
+  recipeId?: number;
+  orderId?: number;
+  stepNumber: number;
   stepName: string;
-  equipmentId?: number;
-  equipmentName?: string;
-  durationMin: number;
-  qcRequired: boolean;
   description?: string;
+  estimatedTimeMinutes?: number;
+  defaultEquipmentId?: number;
+  numberOfRouting?: number;
+  stepParameters?: StepParameter[];
+}
+
+export interface StepParameter {
+  parameterId: number;
+  routingId?: number;
+  parameterName: string;
+  unit?: string;
+  minValue?: number;
+  maxValue?: number;
+  isCritical?: boolean;
+  note?: string;
 }
 
 export interface ProductionOrder {

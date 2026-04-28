@@ -22,14 +22,23 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> GetAll()
         {
             var recipes = await _context.Recipes
-                .Include(r => r.Material)
-                .Include(r => r.RecipeBoms)
-                    .ThenInclude(b => b.Material)
-                .Include(r => r.RecipeBoms)
-                    .ThenInclude(b => b.Uom)
-                .Include(r => r.RecipeRoutings)
-                    .ThenInclude(rt => rt.DefaultEquipment)
-                .Include(r => r.ApprovedByNavigation)
+                .Select(r => new {
+                    r.RecipeId,
+                    r.MaterialId,
+                    r.VersionNumber,
+                    r.BatchSize,
+                    r.Status,
+                    r.ApprovedBy,
+                    r.ApprovedDate,
+                    r.CreatedAt,
+                    r.EffectiveDate,
+                    r.Note,
+                    Material = r.Material == null ? null : new {
+                        r.Material.MaterialId,
+                        r.Material.MaterialName,
+                        r.Material.MaterialCode
+                    }
+                })
                 .OrderBy(r => r.RecipeId)
                 .ToListAsync();
 
@@ -40,14 +49,25 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var recipe = await _context.Recipes
-                .Include(r => r.Material)
-                .Include(r => r.RecipeBoms)
-                    .ThenInclude(b => b.Material)
-                .Include(r => r.RecipeBoms)
-                    .ThenInclude(b => b.Uom)
-                .Include(r => r.RecipeRoutings)
-                    .ThenInclude(rt => rt.DefaultEquipment)
-                .FirstOrDefaultAsync(r => r.RecipeId == id);
+                .Where(r => r.RecipeId == id)
+                .Select(r => new {
+                    r.RecipeId,
+                    r.MaterialId,
+                    r.VersionNumber,
+                    r.BatchSize,
+                    r.Status,
+                    r.ApprovedBy,
+                    r.ApprovedDate,
+                    r.CreatedAt,
+                    r.EffectiveDate,
+                    r.Note,
+                    Material = r.Material == null ? null : new {
+                        r.Material.MaterialId,
+                        r.Material.MaterialName,
+                        r.Material.MaterialCode
+                    }
+                })
+                .FirstOrDefaultAsync();
 
             if (recipe == null)
             {

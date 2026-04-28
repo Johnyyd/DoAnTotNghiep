@@ -112,17 +112,109 @@ namespace GMP_System.Controllers
             var batches = await _unitOfWork.ProductionBatches
                 .Query()
                 .Where(b => b.OrderId == orderId)
-                .Include(b => b.MaterialUsages)
-                    .ThenInclude(u => u.InventoryLot)
-                        .ThenInclude(l => l!.Material)
+                .OrderBy(b => b.BatchId)
+                .Select(b => new
+                {
+                    b.BatchId,
+                    b.OrderId,
+                    b.BatchNumber,
+                    b.Status,
+                    b.ManufactureDate,
+                    b.EndTime,
+                    b.ExpiryDate,
+                    b.CurrentStep,
+                    Order = b.Order == null ? null : new
+                    {
+                        b.Order.OrderId,
+                        b.Order.OrderCode,
+                        Recipe = b.Order.Recipe == null ? null : new
+                        {
+                            b.Order.Recipe.RecipeId,
+                            Material = b.Order.Recipe.Material == null ? null : new
+                            {
+                                b.Order.Recipe.Material.MaterialName
+                            }
+                        }
+                    }
+                })
+                .AsNoTracking()
                 .ToListAsync();
 
             return Ok(new { data = batches, success = true, message = "Success" });
         }
 
+        [HttpGet("{orderId}/routings")]
+        public async Task<IActionResult> GetCustomRoutings(int orderId)
+        {
+            var order = await _unitOfWork.ProductionOrders.GetByIdAsync(orderId);
+            if (order == null) return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
+
+            var routings = await _unitOfWork.RecipeRoutings.Query()
+                .Where(r => r.OrderId == orderId)
+                .Include(r => r.StepParameters)
+                .OrderBy(r => r.StepNumber)
+                .ToListAsync();
+
+            // If no custom routings, fallback to Recipe routings (for preview/initial state)
+            if (!routings.Any() && order.RecipeId.HasValue)
+            {
+                routings = await _unitOfWork.RecipeRoutings.Query()
+                    .Where(r => r.RecipeId == order.RecipeId && r.OrderId == null)
+                    .Include(r => r.StepParameters)
+                    .OrderBy(r => r.StepNumber)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
+
+            return Ok(new { success = true, data = routings });
+        }
+
+        [HttpPost("{orderId}/routings")]
+        public async Task<IActionResult> SaveCustomRoutings(int orderId, [FromBody] List<RecipeRouting> routings)
+        {
+            var order = await _unitOfWork.ProductionOrders.GetByIdAsync(orderId);
+            if (order == null) return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
+
+            // Remove existing custom routings for this order
+            var existing = await _unitOfWork.RecipeRoutings.Query()
+                .Where(r => r.OrderId == orderId)
+                .ToListAsync();
+            
+            foreach (var r in existing)
+            {
+                _unitOfWork.RecipeRoutings.Remove(r);
+            }
+
+            // Add new custom routings
+            foreach (var r in routings)
+            {
+                r.RoutingId = 0; // Ensure new ID
+                r.OrderId = orderId;
+                r.RecipeId = order.RecipeId;
+                
+                // Clear links to avoid EF issues
+                r.Order = null;
+                r.Recipe = null;
+                r.DefaultEquipment = null;
+                r.Area = null;
+                r.BatchProcessLogs = new List<BatchProcessLog>();
+
+                await _unitOfWork.RecipeRoutings.AddAsync(r);
+            }
+
+            await _unitOfWork.CompleteAsync();
+            return Ok(new { success = true, message = "Đã cập nhật cấu hình công đoạn cho lệnh sản xuất." });
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ProductionOrder order)
         {
+            if (string.IsNullOrWhiteSpace(order.OrderCode))
+            {
+                // Auto-generate if missing
+                order.OrderCode = $"PO-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
+            }
+
             if (order.RecipeId == null)
             {
                 return BadRequest(new { success = false, message = "Vui lòng ch?n công th?c (RecipeId)." });
@@ -163,6 +255,7 @@ namespace GMP_System.Controllers
                 order.CreatedBy = userId;
             }
 
+<<<<<<< HEAD
             await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
@@ -199,6 +292,41 @@ namespace GMP_System.Controllers
                     success = false,
                     message = $"Không thể tạo lệnh sản xuất: {ex.Message}"
                 });
+=======
+            await _unitOfWork.ProductionOrders.AddAsync(order);
+            await _unitOfWork.CompleteAsync(); // Save to get OrderId
+
+            // Auto-split into batches if not already present
+            if (order.RecipeId.HasValue && order.PlannedQuantity > 0)
+            {
+                var recipes = await _unitOfWork.Recipes.Query().FirstOrDefaultAsync(r => r.RecipeId == order.RecipeId);
+                decimal batchSize = recipes?.BatchSize ?? 0;
+                
+                // Only split if we don't already have batches (to avoid duplication if frontend already created some)
+                var existingBatches = await _unitOfWork.ProductionBatches.Query().AnyAsync(b => b.OrderId == order.OrderId);
+                if (!existingBatches)
+                {
+                    int numBatches = 1;
+                    if (batchSize > 0)
+                    {
+                        numBatches = (int)Math.Ceiling(order.PlannedQuantity / batchSize);
+                    }
+
+                    for (int i = 0; i < numBatches; i++)
+                    {
+                        string batchNumber = $"{order.OrderCode.Replace("PO", "B")}-{(i + 1):D2}";
+                        await _unitOfWork.ProductionBatches.AddAsync(new ProductionBatch
+                        {
+                            OrderId = order.OrderId,
+                            BatchNumber = batchNumber,
+                            Status = i == 0 ? "In-Process" : "Scheduled",
+                            CurrentStep = 0,
+                            ManufactureDate = DateTime.Now
+                        });
+                    }
+                    await _unitOfWork.CompleteAsync();
+                }
+>>>>>>> 942073caaa5929f497057c3760a8050703629323
             }
 
             return Ok(new { success = true, message = "T?o l?nh s?n xu?t thành công.", data = new { orderId = order.OrderId, status = order.Status } });

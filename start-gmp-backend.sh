@@ -20,7 +20,7 @@ if ! docker ps --format '{{.Names}}' | grep -q '^gmp-sqlserver$'; then
         --network gmp-network \
         -e 'ACCEPT_EULA=Y' \
         -e 'SA_PASSWORD=GMP_Strong@Passw0rd123' \
-        -p 1434:1433 \
+        -p 1435:1433 \
         -v "$(pwd)/DATABASE:/var/opt/mssql/backup:ro" \
         -v "gmp-sqlserver-data:/var/opt/mssql" \
         mcr.microsoft.com/mssql/server:2022-latest
@@ -29,7 +29,7 @@ else
 fi
 
 # 3. Wait for SQL Server to accept connections
-echo "Waiting for SQL Server to accept connections on port 1434..."
+echo "Waiting for SQL Server to accept connections on port 1435..."
 attempt=0
 max_attempts=60
 while ! docker exec gmp-sqlserver /bin/bash -c "timeout 1 bash -c '</dev/tcp/localhost/1433'" 2>/dev/null; do
@@ -96,7 +96,7 @@ echo "Swagger UI: http://localhost:5001/swagger"
 echo "Scalar API: http://localhost:5001/scalar"
 echo ""
 echo "Database:"
-echo "  Server: localhost,1434"
+echo "  Server: localhost,1435"
 echo "  Database: GMP_WHO_DB"
 echo "  User: sa"
 echo ""

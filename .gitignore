@@ -29,3 +29,18 @@ TestResults.xml
 *.suo
 *.userosscache
 *.sln.docstates
+.gitnexus
+.claude
+DOCS/
+*.docx
+*.pdf
+*.zip
+
+# Bổ sung cho .NET / C#
+bin/
+obj/
+
+# Bổ sung cho React / Node.js
+node_modules/
+build/
+dist/c

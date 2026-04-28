@@ -17,7 +17,11 @@ public partial class InventoryLot
 
     public DateTime ExpiryDate { get; set; }
 
-    public string? Qcstatus { get; set; }
+    public string? QCStatus { get; set; }
+
+    public string? SupplierName { get; set; }
+
+    public DateTime? CreatedAt { get; set; }
 
     public virtual Material? Material { get; set; }
 

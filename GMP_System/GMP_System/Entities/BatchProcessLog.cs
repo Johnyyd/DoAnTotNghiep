@@ -30,6 +30,8 @@ public partial class BatchProcessLog
     public bool? IsDeviation { get; set; }
     
     public string? Notes { get; set; }
+    
+    public int? NumberOfRouting { get; set; } = 1;
 
     public virtual ProductionBatch? Batch { get; set; }
 
