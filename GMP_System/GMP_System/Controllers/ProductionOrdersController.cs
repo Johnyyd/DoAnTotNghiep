@@ -10,10 +10,12 @@ namespace GMP_System.Controllers
     public class ProductionOrdersController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly GmpContext _context;
 
-        public ProductionOrdersController(IUnitOfWork unitOfWork)
+        public ProductionOrdersController(IUnitOfWork unitOfWork, GmpContext context)
         {
             _unitOfWork = unitOfWork;
+            _context = context;
         }
 
         [HttpGet]
@@ -238,6 +240,14 @@ namespace GMP_System.Controllers
             order.CreatedAt = DateTime.Now;
             if (!order.StartDate.HasValue) order.StartDate = DateTime.Now;
             if (!order.EndDate.HasValue) order.EndDate = order.StartDate!.Value.AddDays(2);
+            if (string.IsNullOrWhiteSpace(order.OrderCode))
+            {
+                order.OrderCode = BuildUniqueOrderCode();
+            }
+            else
+            {
+                order.OrderCode = await EnsureUniqueOrderCodeAsync(order.OrderCode);
+            }
 
             var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (int.TryParse(userIdClaim, out var userId))
@@ -245,6 +255,44 @@ namespace GMP_System.Controllers
                 order.CreatedBy = userId;
             }
 
+<<<<<<< HEAD
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var shortages = await DeductInventoryForOrderAsync(order.RecipeId.Value, order.PlannedQuantity);
+                if (shortages.Count > 0)
+                {
+                    await transaction.RollbackAsync();
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Khong du nguyen lieu ton kho de tao lenh san xuat.",
+                        shortages
+                    });
+                }
+
+                await _unitOfWork.ProductionOrders.AddAsync(order);
+                await _unitOfWork.CompleteAsync();
+                await transaction.CommitAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                await transaction.RollbackAsync();
+                return BadRequest(new
+                {
+                    success = false,
+                    message = $"Không thể tạo lệnh sản xuất: {GetInnermostMessage(ex)}"
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = $"Không thể tạo lệnh sản xuất: {ex.Message}"
+                });
+=======
             await _unitOfWork.ProductionOrders.AddAsync(order);
             await _unitOfWork.CompleteAsync(); // Save to get OrderId
 
@@ -278,9 +326,135 @@ namespace GMP_System.Controllers
                     }
                     await _unitOfWork.CompleteAsync();
                 }
+>>>>>>> 942073caaa5929f497057c3760a8050703629323
             }
 
             return Ok(new { success = true, message = "T?o l?nh s?n xu?t thành công.", data = new { orderId = order.OrderId, status = order.Status } });
+        }
+
+        private async Task<string> EnsureUniqueOrderCodeAsync(string requestedCode)
+        {
+            var normalized = requestedCode.Trim();
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                return BuildUniqueOrderCode();
+            }
+
+            var exists = await _context.ProductionOrders.AnyAsync(x => x.OrderCode == normalized);
+            if (!exists)
+            {
+                return normalized;
+            }
+
+            for (var i = 1; i <= 999; i++)
+            {
+                var candidate = $"{normalized}-{i:000}";
+                var taken = await _context.ProductionOrders.AnyAsync(x => x.OrderCode == candidate);
+                if (!taken)
+                {
+                    return candidate;
+                }
+            }
+
+            return BuildUniqueOrderCode();
+        }
+
+        private static string BuildUniqueOrderCode()
+        {
+            var now = DateTime.Now;
+            return $"PO-{now:yyyyMMdd-HHmmss}-{now:fff}";
+        }
+
+        private static string GetInnermostMessage(Exception ex)
+        {
+            var current = ex;
+            while (current.InnerException != null)
+            {
+                current = current.InnerException;
+            }
+
+            return current.Message;
+        }
+
+        private sealed class InventoryShortageDto
+        {
+            public int MaterialId { get; set; }
+            public string MaterialCode { get; set; } = string.Empty;
+            public string MaterialName { get; set; } = string.Empty;
+            public decimal RequiredKg { get; set; }
+            public decimal AvailableKg { get; set; }
+        }
+
+        private async Task<List<InventoryShortageDto>> DeductInventoryForOrderAsync(int recipeId, decimal plannedQuantity)
+        {
+            var bomItems = await _context.RecipeBoms
+                .Where(b => b.RecipeId == recipeId && b.MaterialId != null && b.Quantity > 0)
+                .Include(b => b.Material)
+                .ToListAsync();
+
+            var shortages = new List<InventoryShortageDto>();
+            if (bomItems.Count == 0)
+            {
+                return shortages;
+            }
+
+            foreach (var bom in bomItems)
+            {
+                var materialId = bom.MaterialId!.Value;
+                var requiredKg = CalculateRequiredKg(plannedQuantity, bom.Quantity, bom.WastePercentage);
+                if (requiredKg <= 0)
+                {
+                    continue;
+                }
+
+                var lots = await _context.InventoryLots
+                    .Where(l => l.MaterialId == materialId && l.QuantityCurrent > 0)
+                    .OrderBy(l => l.ExpiryDate)
+                    .ThenBy(l => l.ManufactureDate)
+                    .ThenBy(l => l.LotId)
+                    .ToListAsync();
+
+                var availableKg = lots.Sum(l => l.QuantityCurrent);
+                if (availableKg < requiredKg)
+                {
+                    shortages.Add(new InventoryShortageDto
+                    {
+                        MaterialId = materialId,
+                        MaterialCode = bom.Material?.MaterialCode ?? string.Empty,
+                        MaterialName = bom.Material?.MaterialName ?? string.Empty,
+                        RequiredKg = decimal.Round(requiredKg, 4, MidpointRounding.AwayFromZero),
+                        AvailableKg = decimal.Round(availableKg, 4, MidpointRounding.AwayFromZero)
+                    });
+                    continue;
+                }
+
+                var remaining = requiredKg;
+                foreach (var lot in lots)
+                {
+                    if (remaining <= 0)
+                    {
+                        break;
+                    }
+
+                    var deduct = Math.Min(lot.QuantityCurrent, remaining);
+                    lot.QuantityCurrent = decimal.Round(lot.QuantityCurrent - deduct, 4, MidpointRounding.AwayFromZero);
+                    remaining -= deduct;
+                }
+            }
+
+            if (shortages.Count == 0)
+            {
+                await _unitOfWork.CompleteAsync();
+            }
+
+            return shortages;
+        }
+
+        private static decimal CalculateRequiredKg(decimal plannedQuantity, decimal mgPerUnit, decimal? wastePercentage)
+        {
+            var baseKg = (plannedQuantity * mgPerUnit) / 1_000_000m;
+            var wasteFactor = 1m + ((wastePercentage ?? 0m) / 100m);
+            return decimal.Round(baseKg * wasteFactor, 6, MidpointRounding.AwayFromZero);
         }
 
         [HttpPut("{id}")]

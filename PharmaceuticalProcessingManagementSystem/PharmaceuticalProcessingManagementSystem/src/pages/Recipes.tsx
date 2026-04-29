@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { areasApi, equipmentsApi, materialsApi, recipesApi } from '@/services/api';
 import { CheckCircle2, ListTree, Pencil, Plus, Route, Search, Trash2 } from 'lucide-react';
@@ -8,7 +8,7 @@ type AreaOption = { areaId: number; areaCode: string; areaName: string };
 type EquipmentOption = { equipmentId: number; equipmentName: string; equipmentCode: string; areaId: number; technicalSpecification?: string };
 
 type UiRecipe = { recipeId: number; materialId: number; materialName?: string; batchSize: number; status: string; versionNumber: number };
-type UiBom = { bomId: number; materialId: number; materialName: string; quantity: number; technicalStandard?: string };
+type UiBom = { bomId: number; materialId: number; materialName: string; quantity: number; technicalStandard?: string; uomId?: number; uomName?: string };
 type UiRouting = {
   routingId: number;
   stepNumber: number;
@@ -32,7 +32,8 @@ type UiRouting = {
 };
 
 type RecipeCreateForm = { materialId: number; batchSize: number };
-type BomDraftRow = { materialId: number; technicalStandard: string; ratioPercent: number; quantity: number };
+type BomDraftRow = { materialId: number; technicalStandard: string; ratioPercent: number; quantity: number; uomId: number };
+type BomEditRow = { bomId: number; materialId: number; technicalStandard: string; ratioPercent: number; quantity: number; uomId: number };
 type RoutingForm = {
   stepNumber: number;
   stepName: string;
@@ -82,7 +83,18 @@ function normalizeBom(item: any): UiBom {
     materialName: item.material?.materialName ?? item.Material?.MaterialName ?? 'Nguyên liệu',
     quantity: Number(item.quantity ?? item.Quantity ?? 0),
     technicalStandard: item.technicalStandard ?? item.TechnicalStandard ?? '',
+    uomId: Number(item.uomId ?? item.UomId ?? 0) || undefined,
+    uomName: item.uom?.uomName ?? item.Uom?.UomName,
   };
+}
+
+
+function isPackagingMaterial(material?: { materialCode?: string; materialName?: string; type?: string }) {
+  if (!material) return false;
+  const type = String(material.type ?? '').toLowerCase();
+  const code = String(material.materialCode ?? '').toLowerCase();
+  const name = String(material.materialName ?? '').toLowerCase();
+  return type === 'packaging' || code.includes('nlp') || name.includes('vỏ') || name.includes('ống') || name.includes('màng') || name.includes('pvc');
 }
 
 function normalizeRouting(item: any): UiRouting {
@@ -117,7 +129,8 @@ export default function Recipes() {
   const [editingRouting, setEditingRouting] = useState<UiRouting | null>(null);
 
   const [createForm, setCreateForm] = useState<RecipeCreateForm>({ materialId: 0, batchSize: 0 });
-  const [bomDraftRows, setBomDraftRows] = useState<BomDraftRow[]>([{ materialId: 0, technicalStandard: '', ratioPercent: 0, quantity: 0 }]);
+  const [bomDraftRows, setBomDraftRows] = useState<BomDraftRow[]>([{ materialId: 0, technicalStandard: '', ratioPercent: 0, quantity: 0, uomId: 2 }]);
+  const [editingBomRows, setEditingBomRows] = useState<Record<number, BomEditRow>>({});
   const [routingForm, setRoutingForm] = useState<RoutingForm>({
     stepNumber: 1,
     stepName: '',
@@ -198,6 +211,8 @@ export default function Recipes() {
 
   const bomItems = useMemo(() => toRows<any>(bomRaw).map(normalizeBom), [bomRaw]);
   const routingSteps = useMemo(() => toRows<any>(routingRaw).map(normalizeRouting).sort((a, b) => a.stepNumber - b.stepNumber), [routingRaw]);
+  const materialById = useMemo(() => new Map(inputMaterials.map((m) => [m.materialId, m])), [inputMaterials]);
+  const selectedMaterialIds = useMemo(() => new Set<number>(bomItems.map((i) => i.materialId)), [bomItems]);
 
   const totalPerTabletMg = useMemo(() => bomItems.reduce((sum, item) => sum + item.quantity, 0), [bomItems]);
 
@@ -233,7 +248,7 @@ export default function Recipes() {
     mutationFn: (row: BomDraftRow) => recipesApi.addBOMItem(selectedRecipeId as number, {
       materialId: row.materialId,
       quantity: row.quantity,
-      uomId: 2,
+      uomId: row.uomId,
       technicalStandard: row.technicalStandard,
     } as any),
     onSuccess: async () => queryClient.invalidateQueries({ queryKey: ['recipeBom', selectedRecipeId] }),
@@ -242,6 +257,36 @@ export default function Recipes() {
   const deleteBomMutation = useMutation({
     mutationFn: (bomId: number) => recipesApi.removeBOMItem(selectedRecipeId as number, bomId),
     onSuccess: async () => queryClient.invalidateQueries({ queryKey: ['recipeBom', selectedRecipeId] }),
+  });
+
+  const updateBomMutation = useMutation({
+    mutationFn: async (row: BomEditRow) => {
+      const material = materialById.get(row.materialId);
+      const isPackaging = isPackagingMaterial(material);
+      if (!isPackaging && row.ratioPercent > 0 && selectedRecipe?.batchSize) {
+        row.quantity = (selectedRecipe.batchSize * row.ratioPercent) / 100;
+      }
+      await recipesApi.updateBOMItem(selectedRecipeId as number, row.bomId, {
+        materialId: row.materialId,
+        quantity: row.quantity,
+        uomId: row.uomId,
+      } as any);
+
+      if (material?.materialId && row.technicalStandard !== undefined) {
+        await materialsApi.update(material.materialId, {
+          materialId: material.materialId,
+          materialCode: material.materialCode,
+          materialName: material.materialName,
+          type: material.type,
+          technicalSpecification: row.technicalStandard,
+        } as any);
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recipeBom', selectedRecipeId] });
+      await queryClient.invalidateQueries({ queryKey: ['materials'] });
+      setEditingBomRows({});
+    },
   });
 
   const addRoutingMutation = useMutation({
@@ -294,8 +339,33 @@ export default function Recipes() {
     return (oneTablet * Math.max(ratioPercent, 0)) / 100;
   };
 
-  const addDraftRow = () => setBomDraftRows((prev) => [...prev, { materialId: 0, technicalStandard: '', ratioPercent: 0, quantity: 0 }]);
+  const addDraftRow = () => setBomDraftRows((prev) => [...prev, { materialId: 0, technicalStandard: '', ratioPercent: 0, quantity: 0, uomId: 2 }]);
   const removeDraftRow = (idx: number) => setBomDraftRows((prev) => prev.filter((_, i) => i !== idx));
+
+  const beginEditBom = (item: UiBom) => {
+    const material = materialById.get(item.materialId);
+    const isPackaging = isPackagingMaterial(material);
+    const ratioPercent = !isPackaging && selectedRecipe?.batchSize ? (item.quantity / selectedRecipe.batchSize) * 100 : 0;
+    setEditingBomRows((prev) => ({
+      ...prev,
+      [item.bomId]: {
+        bomId: item.bomId,
+        materialId: item.materialId,
+        technicalStandard: item.technicalStandard ?? '',
+        ratioPercent,
+        quantity: item.quantity,
+        uomId: item.uomId ?? (isPackaging ? 4 : 2),
+      },
+    }));
+  };
+
+  const cancelEditBom = (bomId: number) => {
+    setEditingBomRows((prev) => {
+      const clone = { ...prev };
+      delete clone[bomId];
+      return clone;
+    });
+  };
 
   const saveDraftRows = async () => {
     const validRows = bomDraftRows.filter((r) => r.materialId > 0 && r.quantity > 0);
@@ -303,10 +373,31 @@ export default function Recipes() {
       alert('Vui lòng nhập ít nhất 1 dòng nguyên liệu hợp lệ.');
       return;
     }
+
+    const uniqueRows = new Set<number>();
+    for (const row of validRows) {
+      if (selectedMaterialIds.has(row.materialId) || uniqueRows.has(row.materialId)) {
+        alert('Có nguyên liệu bị trùng trong danh sách. Vui lòng chỉ giữ mỗi nguyên liệu 1 dòng.');
+        return;
+      }
+      uniqueRows.add(row.materialId);
+    }
+
     for (const row of validRows) {
       await addBomMutation.mutateAsync(row);
+      const material = materialById.get(row.materialId);
+      if (material) {
+        await materialsApi.update(material.materialId, {
+          materialId: material.materialId,
+          materialCode: material.materialCode,
+          materialName: material.materialName,
+          type: material.type,
+          technicalSpecification: row.technicalStandard,
+        } as any);
+      }
     }
-    setBomDraftRows([{ materialId: 0, technicalStandard: '', ratioPercent: 0, quantity: 0 }]);
+    setBomDraftRows([{ materialId: 0, technicalStandard: '', ratioPercent: 0, quantity: 0, uomId: 2 }]);
+    await queryClient.invalidateQueries({ queryKey: ['materials'] });
   };
 
   const openCreateRouting = () => {
@@ -318,14 +409,14 @@ export default function Recipes() {
       materialId: 0,
       areaId: 0,
       estimatedTimeMinutes: 0,
-      cleanlinessStatus: 'Sạch',
+      cleanlinessStatus: 'Sáº¡ch',
       standardTemperatureMin: '',
       standardTemperatureMax: '',
       standardHumidityMin: '',
       standardHumidityMax: '',
       standardPressureMin: '',
       standardPressureMax: '',
-      stabilityStatus: 'Ổn định',
+      stabilityStatus: 'ổn định',
       setTemperature: 0,
       setPressure: 0,
       setTimeMinutes: 0,
@@ -343,14 +434,14 @@ export default function Recipes() {
       materialId: item.materialId ?? 0,
       areaId: item.areaId ?? 0,
       estimatedTimeMinutes: item.estimatedTimeMinutes,
-      cleanlinessStatus: item.cleanlinessStatus ?? 'Sạch',
+      cleanlinessStatus: item.cleanlinessStatus ?? 'Sáº¡ch',
       standardTemperatureMin: item.standardTemperature ? item.standardTemperature.split('-')[0]?.trim() ?? '' : '',
       standardTemperatureMax: item.standardTemperature ? item.standardTemperature.split('-')[1]?.trim() ?? '' : '',
       standardHumidityMin: item.standardHumidity ? item.standardHumidity.split('-')[0]?.trim() ?? '' : '',
       standardHumidityMax: item.standardHumidity ? item.standardHumidity.split('-')[1]?.trim() ?? '' : '',
       standardPressureMin: item.standardPressure ? item.standardPressure.split('-')[0]?.trim() ?? '' : '',
       standardPressureMax: item.standardPressure ? item.standardPressure.split('-')[1]?.trim() ?? '' : '',
-      stabilityStatus: item.stabilityStatus ?? 'Ổn định',
+      stabilityStatus: item.stabilityStatus ?? 'ổn định',
       setTemperature: item.setTemperature ?? 0,
       setPressure: item.setPressure ?? 0,
       setTimeMinutes: item.setTimeMinutes ?? item.estimatedTimeMinutes ?? 0,
@@ -447,15 +538,68 @@ export default function Recipes() {
                     </thead>
                     <tbody>
                       {bomItems.map((item, idx) => {
+                        const material = materialById.get(item.materialId);
+                        const isPackaging = isPackagingMaterial(material);
+                        const editing = editingBomRows[item.bomId];
                         const ratio = totalPerTabletMg > 0 ? (item.quantity / totalPerTabletMg) * 100 : 0;
                         return (
                           <tr key={`bom-${item.bomId}`}>
                             <td>{idx + 1}</td>
-                            <td>{item.materialName}</td>
-                            <td>{item.technicalStandard || '-'}</td>
-                            <td>{ratio.toFixed(2)}</td>
-                            <td>{item.quantity.toFixed(2)}</td>
-                            <td className="text-right"><button onClick={() => { if (confirm('Xóa nguyên liệu này?')) deleteBomMutation.mutate(item.bomId); }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xóa</button></td>
+                            <td>
+                              {editing ? (
+                                <select className="input" value={editing.materialId} onChange={(e) => {
+                                  const materialId = Number(e.target.value);
+                                  const nextMaterial = materialById.get(materialId);
+                                  const nextPackaging = isPackagingMaterial(nextMaterial);
+                                  setEditingBomRows((prev) => ({
+                                    ...prev,
+                                    [item.bomId]: {
+                                      ...prev[item.bomId],
+                                      materialId,
+                                      uomId: nextPackaging ? 4 : 2,
+                                      ratioPercent: nextPackaging ? 0 : prev[item.bomId].ratioPercent,
+                                      quantity: nextPackaging ? Math.max(1, Math.round(prev[item.bomId].quantity || 1)) : prev[item.bomId].quantity,
+                                    },
+                                  }));
+                                }}>
+                                  {inputMaterials.filter((m) => m.materialId === editing.materialId || !selectedMaterialIds.has(m.materialId)).map((m) => (
+                                    <option key={m.materialId} value={m.materialId}>{m.materialCode} - {m.materialName}</option>
+                                  ))}
+                                </select>
+                              ) : item.materialName}
+                            </td>
+                            <td>{editing ? <input className="input" value={editing.technicalStandard} onChange={(e) => setEditingBomRows((prev) => ({ ...prev, [item.bomId]: { ...prev[item.bomId], technicalStandard: e.target.value } }))} /> : (item.technicalStandard || '-')}</td>
+                            <td>
+                              {editing ? (
+                                <input type="number" className="input" disabled={isPackagingMaterial(materialById.get(editing.materialId))} value={editing.ratioPercent} onChange={(e) => {
+                                  const ratioPercent = Number(e.target.value);
+                                  const quantity = recalcMgFromRatio(ratioPercent);
+                                  setEditingBomRows((prev) => ({ ...prev, [item.bomId]: { ...prev[item.bomId], ratioPercent, quantity } }));
+                                }} />
+                              ) : (
+                                isPackaging ? '-' : ratio.toFixed(2)
+                              )}
+                            </td>
+                            <td>{editing ? <input type="number" step={isPackagingMaterial(materialById.get(editing.materialId)) ? 1 : 0.01} className="input" value={editing.quantity} onChange={(e) => {
+                              const currentPackaging = isPackagingMaterial(materialById.get(editing.materialId));
+                              const quantityInput = Number(e.target.value);
+                              const quantity = currentPackaging ? Math.max(1, Math.round(quantityInput)) : quantityInput;
+                              const ratioPercent = currentPackaging ? 0 : (selectedRecipe?.batchSize ? (quantity / selectedRecipe.batchSize) * 100 : 0);
+                              setEditingBomRows((prev) => ({ ...prev, [item.bomId]: { ...prev[item.bomId], quantity, ratioPercent } }));
+                            }} /> : item.quantity.toFixed(2)}</td>
+                            <td className="text-right">
+                              {editing ? (
+                                <div className="flex justify-end gap-2">
+                                  <button className="btn-secondary text-xs" onClick={() => updateBomMutation.mutate(editing)}>Lưu</button>
+                                  <button className="btn-ghost text-xs" onClick={() => cancelEditBom(item.bomId)}>Hủy</button>
+                                </div>
+                              ) : (
+                                <div className="flex justify-end gap-2">
+                                  <button className="btn-ghost text-sm" onClick={() => beginEditBom(item)}><Pencil className="w-4 h-4 mr-1" />Sửa</button>
+                                  <button onClick={() => { if (confirm('Xóa nguyên liệu này?')) deleteBomMutation.mutate(item.bomId); }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xóa</button>
+                                </div>
+                              )}
+                            </td>
                           </tr>
                         );
                       })}
@@ -466,21 +610,25 @@ export default function Recipes() {
                           <td>
                             <select className="input" value={row.materialId} onChange={(e) => {
                               const materialId = Number(e.target.value);
-                              setBomDraftRows((prev) => prev.map((x, i) => i === idx ? { ...x, materialId } : x));
+                              const material = materialById.get(materialId);
+                              const isPackaging = isPackagingMaterial(material);
+                              setBomDraftRows((prev) => prev.map((x, i) => i === idx ? { ...x, materialId, ratioPercent: isPackaging ? 0 : x.ratioPercent, quantity: isPackaging ? Math.max(1, Math.round(x.quantity || 1)) : x.quantity, uomId: isPackaging ? 4 : 2 } : x));
                             }}>
                               <option value={0}>Chọn nguyên liệu</option>
-                              {inputMaterials.map((m) => <option key={m.materialId} value={m.materialId}>{m.materialCode} - {m.materialName}</option>)}
+                              {inputMaterials.filter((m) => !selectedMaterialIds.has(m.materialId) && !bomDraftRows.some((r, rIndex) => rIndex !== idx && r.materialId === m.materialId)).map((m) => <option key={m.materialId} value={m.materialId}>{m.materialCode} - {m.materialName}</option>)}
                             </select>
                           </td>
                           <td><input className="input" value={row.technicalStandard} onChange={(e) => setBomDraftRows((prev) => prev.map((x, i) => i === idx ? { ...x, technicalStandard: e.target.value } : x))} placeholder="Ví dụ: USP 30" /></td>
-                          <td><input type="number" className="input" value={row.ratioPercent} onChange={(e) => {
+                          <td><input type="number" className="input" disabled={isPackagingMaterial(materialById.get(row.materialId))} value={row.ratioPercent} onChange={(e) => {
                             const ratioPercent = Number(e.target.value);
                             const quantity = recalcMgFromRatio(ratioPercent);
                             setBomDraftRows((prev) => prev.map((x, i) => i === idx ? { ...x, ratioPercent, quantity } : x));
                           }} /></td>
-                          <td><input type="number" className="input" value={row.quantity} onChange={(e) => {
-                            const quantity = Number(e.target.value);
-                            const ratioPercent = selectedRecipe?.batchSize ? (quantity / selectedRecipe.batchSize) * 100 : 0;
+                          <td><input type="number" step={isPackagingMaterial(materialById.get(row.materialId)) ? 1 : 0.01} className="input" value={row.quantity} onChange={(e) => {
+                            const isPackaging = isPackagingMaterial(materialById.get(row.materialId));
+                            const quantityInput = Number(e.target.value);
+                            const quantity = isPackaging ? Math.max(1, Math.round(quantityInput)) : quantityInput;
+                            const ratioPercent = isPackaging ? 0 : (selectedRecipe?.batchSize ? (quantity / selectedRecipe.batchSize) * 100 : 0);
                             setBomDraftRows((prev) => prev.map((x, i) => i === idx ? { ...x, quantity, ratioPercent } : x));
                           }} /></td>
                           <td className="text-right"><button className="btn-ghost text-sm text-red-600" onClick={() => removeDraftRow(idx)}><Trash2 className="w-4 h-4 mr-1" />Xóa dòng</button></td>

@@ -90,7 +90,8 @@ INSERT INTO UnitOfMeasure (UomId, UomName, Description) VALUES
 (4, 'Viên',    N'Viên'),
 (5, 'Vỉ',      N'Vỉ (10 viên/vỉ)'),
 (6, 'Hộp',     N'Hộp (10 vỉ/hộp)'),
-(7, 'Thùng',   N'Thùng (12 hộp/thùng)');
+(7, 'Thùng',   N'Thùng (12 hộp/thùng)'),
+(8, N'Cái',    N'Đơn vị cái');
 SET IDENTITY_INSERT UnitOfMeasure OFF;
 GO
 
@@ -143,6 +144,25 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT Materials ON;
 INSERT INTO Materials (MaterialId, MaterialCode, MaterialName, Type, BaseUomId, IsActive, TechnicalSpecification, CreatedAt) VALUES
+<<<<<<< HEAD
+(1,  'NLC-3',   N'Cao khô Trinh nữ',                   'RawMaterial',  1, 1, N'TCCS', GETDATE()),
+(2,  'TD-1',    N'Aerosil',                            'RawMaterial',  2, 1, N'USP 30', GETDATE()),
+(3,  'TD-3',    N'Sodium starch glycolate',            'RawMaterial',  1, 1, N'USP 30', GETDATE()),
+(4,  'TD-4',    N'Talc',                               'RawMaterial',  2, 1, N'DĐVN V', GETDATE()),
+(5,  'TD-5',    N'Magie Stearat',                      'RawMaterial',  2, 1, N'DĐVN V', GETDATE()),
+(6,  'TD-8',    N'Tinh bột ngô (Filler)',              'RawMaterial',  1, 1, N'DĐVN V', GETDATE()),
+(7,  'NLP-6',   N'Vỏ nang cứng',                       'RawMaterial', 4, 1, N'DĐVN V', GETDATE()),
+(8,  'PVP',     N'PVP K30',                            'RawMaterial',  1, 1, N'USP 30', GETDATE()),
+(9,  'PARA',    N'Bột Paracetamol tinh khiết',         'RawMaterial',  1, 1, N'USP 30', GETDATE()),
+(10, 'LAC',     N'Lactose kết dính',                   'RawMaterial',  1, 1, N'USP 30', GETDATE()),
+(11, 'WATER',   N'Nước cất pha tiêm',                  'RawMaterial',  3, 1, N'DĐVN V', GETDATE()),
+(12, 'AMP',     N'Ống thủy tinh 2ml',                  'Packaging',    8, 1, N'USP 30', GETDATE()),
+(13, 'ALU',     N'Màng nhôm ép vỉ',                    'Packaging',    1, 1, N'DĐVN V', GETDATE()),
+(14, 'PVC',     N'Màng PVC trong suốt',                'Packaging',    1, 1, N'DĐVN V', GETDATE()),
+(15, 'TP-CRILA',N'Viên nang Crila',                    'FinishedGood', 4, 1, N'DĐVN V', GETDATE()),
+(16, 'TP-PARA', N'Viên nén Paracetamol 500mg',         'FinishedGood', 4, 1, N'DĐVN V', GETDATE()),
+(17, 'TP-DIPY', N'Thuốc ống Dipyridamole 10mg/2ml',    'FinishedGood', 4, 1, N'DĐVN V', GETDATE());
+=======
 (1,  'MAT-NLC-3',   N'Cao khô Trinh nữ',                   'RawMaterial',  1, 1, N'TCCS', GETDATE()),
 (2,  'MAT-TD-1',    N'Aerosil',                            'RawMaterial',  2, 1, N'USP 30', GETDATE()),
 (3,  'MAT-TD-3',    N'Sodium starch glycolate',            'RawMaterial',  1, 1, N'USP 30', GETDATE()),
@@ -160,6 +180,7 @@ INSERT INTO Materials (MaterialId, MaterialCode, MaterialName, Type, BaseUomId, 
 (15, 'MAT-WATER',   N'Nước cất pha tiêm',                  'RawMaterial',  3, 1, N'DĐVN V', GETDATE()),
 (16, 'MAT-AMP',     N'Ống thủy tinh 2ml',                  'Packaging',    4, 1, N'USP 30', GETDATE()),
 (17, 'FG-DIPY-AMP', N'Thuốc ống Dipyridamole 10mg/2ml',    'FinishedGood', 4, 1, N'DĐVN V', GETDATE());
+>>>>>>> 942073caaa5929f497057c3760a8050703629323
 SET IDENTITY_INSERT Materials OFF;
 GO
 
@@ -269,6 +290,24 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT InventoryLots ON;
 INSERT INTO InventoryLots (LotId, MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, QCStatus, SupplierName, CreatedAt) VALUES
+<<<<<<< HEAD
+(1, 1, 'L-NLC3-01', 2.00, DATEADD(DAY,-60,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Dược liệu TW', GETDATE()),
+(2, 2, 'L-AEROSIL-01', 5.00, DATEADD(DAY,-55,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp A', GETDATE()),
+(3, 3, 'L-SSG-01', 3.00, DATEADD(DAY,-50,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp B', GETDATE()),
+(4, 4, 'L-TALC-01', 5.00, DATEADD(DAY,-45,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp C', GETDATE()),
+(5, 5, 'L-MAGIE-01', 3.00, DATEADD(DAY,-40,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp D', GETDATE()),
+(6, 6, 'L-STR-01', 2.00, DATEADD(DAY,-45,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'Released', N'Đồng Nai', GETDATE()),
+(7, 7, 'L-NANG-01', 50.00, DATEADD(DAY,-35,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp E', GETDATE()),
+(8, 8, 'L-PVP-01', 10.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp F', GETDATE()),
+(9, 9, 'L-PARA-01', 3.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'Released', N'Ấn Độ', GETDATE()),
+(10, 10, 'L-LAC-01', 15.00, DATEADD(DAY,-25,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp G', GETDATE()),
+(11, 13, 'L-ALU-01', 20.00, DATEADD(DAY,-20,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp H', GETDATE()),
+(12, 14, 'L-PVC-01', 20.00, DATEADD(DAY,-15,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp I', GETDATE()),
+(15, 11, 'L-WATER-01', 100.00, DATEADD(DAY,-5,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp J', GETDATE()),
+(16, 12, 'L-AMP-01', 50.00, DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp K', GETDATE()),
+(17, 13, 'L-ALU-02', 12.00, DATEADD(DAY,-1,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp H2', GETDATE()),
+(18, 14, 'L-PVC-02', 14.00, DATEADD(DAY,-1,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp I2', GETDATE());
+=======
 (1, 1, 'L-NLC3-01', 2.00, DATEADD(DAY,-60,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Dược liệu TW', DATEADD(DAY,-60,GETDATE())),
 (2, 2, 'L-AEROSIL-01', 5.00, DATEADD(DAY,-55,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp A', DATEADD(DAY,-55,GETDATE())),
 (3, 3, 'L-SSG-01', 3.00, DATEADD(DAY,-50,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp B', DATEADD(DAY,-50,GETDATE())),
@@ -286,6 +325,7 @@ INSERT INTO InventoryLots (LotId, MaterialId, LotNumber, QuantityCurrent, Manufa
 (15, 15, 'L-WATER-01', 100.00, DATEADD(DAY,-5,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp J', DATEADD(DAY,-5,GETDATE())),
 (16, 16, 'L-AMP-01', 50.00, DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Nhà cung cấp K', DATEADD(DAY,-2,GETDATE())),
 (17, 17, 'L-FGDIPY-01', 2.00, DATEADD(DAY,-1,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'Released', N'Sản xuất nội bộ', DATEADD(DAY,-1,GETDATE()));
+>>>>>>> 942073caaa5929f497057c3760a8050703629323
 SET IDENTITY_INSERT InventoryLots OFF;
 GO
 
@@ -318,3 +358,4 @@ EXEC sp_msforeachtable 'ALTER TABLE ? ENABLE TRIGGER ALL';
 GO
 
 PRINT 'GMP Database Initialization & Full Seeding Completed Successfully!';
+

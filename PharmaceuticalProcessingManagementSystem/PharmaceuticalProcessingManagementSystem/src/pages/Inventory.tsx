@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { inventoryApi } from '@/services/api';
 import { Search, PackageOpen } from 'lucide-react';
@@ -18,10 +18,18 @@ export default function Inventory() {
 
     for (const lot of lotsData) {
       const material = lot.material ?? {};
+      const materialType = String(material.type ?? lot.type ?? '').toLowerCase();
+      if (materialType === 'finishedgood') {
+        continue;
+      }
+
       const materialCode = material.materialCode ?? lot.materialCode ?? `MAT-${lot.materialId}`;
       const materialName = material.materialName ?? lot.materialName ?? 'Nguyên liệu chưa rõ';
-      const uom = material.baseUom?.uomName ?? material.baseUomName ?? lot.uomName ?? '';
-      const qty = Number(lot.quantityCurrent ?? 0);
+      const rawUom = String(material.baseUom?.uomName ?? material.baseUomName ?? lot.uomName ?? '').trim();
+      const uomLower = rawUom.toLowerCase();
+      const qtyRaw = Number(lot.quantityCurrent ?? 0);
+      const qty = uomLower === 'kg' ? qtyRaw * 1000 : qtyRaw;
+      const uom = uomLower === 'kg' || uomLower === 'g' ? 'g' : rawUom;
       const key = String(materialCode);
 
       if (!map.has(key)) {
