@@ -55,5 +55,6 @@ EXPOSE 5000
 # Nút Kích Hoạt (ENTRYPOINT): Chốt hạ lệnh còi sẽ thổi khi vừa khởi động xong hệ thống ảo -> Server bật nguồn ngay tắp lự.
 # Copy custom entrypoint that runs EF Core migrations before starting the API
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+COPY entrypoint-api.sh /entrypoint-api.sh
+RUN chmod +x /entrypoint.sh /entrypoint-api.sh
+ENTRYPOINT ["/entrypoint-api.sh"]

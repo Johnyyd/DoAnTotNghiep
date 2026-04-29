@@ -1,4 +1,5 @@
 using GMP_System.Interfaces;
+using GMP_System.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -6,10 +7,10 @@ namespace GMP_System.Repositories
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
-        protected readonly GMP_System.Entities.GmpContext _context;
+        protected readonly GmpContext _context;
         internal DbSet<T> _dbSet;
 
-        public GenericRepository(GMP_System.Entities.GmpContext context)
+        public GenericRepository(GmpContext context)
         {
             _context = context;
             _dbSet = context.Set<T>();

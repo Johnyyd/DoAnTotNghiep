@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/src/GMP_System.csproj": {}
+    "/src/GMP_System/GMP_System/GMP_System.csproj": {}
   },
   "projects": {
-    "/src/GMP_System.csproj": {
+    "/src/GMP_System/GMP_System/GMP_System.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/src/GMP_System.csproj",
+        "projectUniqueName": "/src/GMP_System/GMP_System/GMP_System.csproj",
         "projectName": "GMP_System",
-        "projectPath": "/src/GMP_System.csproj",
+        "projectPath": "/src/GMP_System/GMP_System/GMP_System.csproj",
         "packagesPath": "/root/.nuget/packages/",
-        "outputPath": "/src/obj/",
+        "outputPath": "/src/GMP_System/GMP_System/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/root/.nuget/NuGet/NuGet.Config"
@@ -71,9 +71,25 @@
               "target": "Package",
               "version": "[8.0.10, )"
             },
+            "Serilog.AspNetCore": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Serilog.Sinks.Console": {
+              "target": "Package",
+              "version": "[6.1.1, )"
+            },
+            "Serilog.Sinks.File": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[6.9.0, )"
+            },
+            "prometheus-net.AspNetCore": {
+              "target": "Package",
+              "version": "[8.0.0, )"
             }
           },
           "imports": [

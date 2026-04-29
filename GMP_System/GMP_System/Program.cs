@@ -1,4 +1,6 @@
 using GMP_System.Entities;
+using Serilog;
+using Prometheus;
 using GMP_System.Interfaces;
 using GMP_System.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -16,6 +18,26 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ------------------------------------------------------------
+// 0. LOGGING: Serilog configuration (JSON to console & file)
+// ------------------------------------------------------------
+builder.Host.UseSerilog((context, services, configuration) =>
+    configuration
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
+    );
+
+// ============================================================
+// 4. AUTHORIZATION: RBAC Policies
+// ============================================================
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAdmin", policy => policy.RequireClaim("role", "Admin"));
+    options.AddPolicy("RequireQC", policy => policy.RequireClaim("role", "QC"));
+    options.AddPolicy("RequireOperator", policy => policy.RequireClaim("role", "Operator"));
+});
 
 // ============================================================
 // 1. CONTROLLERS + JSON
@@ -137,14 +159,24 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapGet("/health", () => Results.Json(new { status = "healthy", time = DateTime.UtcNow }))
-   .AllowAnonymous();
-
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 app.UseAuthentication();   
 app.UseAuthorization();
 app.MapControllers();
+
+// ------------------------------------------------------------
+// 8. METRICS & EXTENDED HEALTH
+// ------------------------------------------------------------
+app.UseHttpMetrics(); // Prometheus HTTP metrics middleware
+app.MapMetrics(); // Expose /metrics endpoint
+
+// Enhanced health check with DB connectivity
+app.MapGet("/health", async (GmpContext db) =>
+{
+    var canConnect = await db.Database.CanConnectAsync();
+    return Results.Json(new { status = canConnect ? "healthy" : "unhealthy", time = DateTime.UtcNow });
+}).AllowAnonymous();
 
 app.Run();
 
