@@ -5519,3 +5519,293 @@ SELECT 1
 2026-04-29 03:57:08.569 +00:00 [INF] Writing value of type '<>f__AnonymousType83`2' as Json.
 2026-04-29 03:57:08.570 +00:00 [INF] Executed endpoint 'HTTP: GET /health'
 2026-04-29 03:57:08.570 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/health - 200 null application/json; charset=utf-8 8.2009ms
+2026-04-29 04:03:46.415 +00:00 [WRN] No store type was specified for the decimal property 'PlannedQuantity' on entity type 'ProductionBatch'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-29 04:03:46.483 +00:00 [WRN] No store type was specified for the decimal property 'SetTemperature' on entity type 'RecipeRouting'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-29 04:03:47.695 +00:00 [INF] Executed DbCommand (31ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-29 04:03:47.719 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-29 04:03:47.766 +00:00 [INF] Executed DbCommand (42ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF EXISTS
+    (SELECT *
+     FROM [sys].[objects] o
+     WHERE [o].[type] = 'U'
+     AND [o].[is_ms_shipped] = 0
+     AND NOT EXISTS (SELECT *
+         FROM [sys].[extended_properties] AS [ep]
+         WHERE [ep].[major_id] = [o].[object_id]
+             AND [ep].[minor_id] = 0
+             AND [ep].[class] = 1
+             AND [ep].[name] = N'microsoft_database_tools_support'
+    )
+)
+SELECT 1 ELSE SELECT 0
+2026-04-29 04:03:47.859 +00:00 [INF] Executed DbCommand (68ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF OBJECT_ID('dbo.ProductionAreas', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ProductionAreas (
+        AreaId INT IDENTITY(1,1) PRIMARY KEY,
+        AreaCode VARCHAR(50) NOT NULL UNIQUE,
+        AreaName NVARCHAR(200) NOT NULL,
+        Description NVARCHAR(500) NULL
+    );
+END;
+
+IF COL_LENGTH('dbo.Equipments','TechnicalSpecification') IS NULL
+    ALTER TABLE dbo.Equipments ADD TechnicalSpecification NVARCHAR(300) NULL;
+IF COL_LENGTH('dbo.Equipments','UsagePurpose') IS NULL
+    ALTER TABLE dbo.Equipments ADD UsagePurpose NVARCHAR(300) NULL;
+IF COL_LENGTH('dbo.Equipments','AreaId') IS NULL
+    ALTER TABLE dbo.Equipments ADD AreaId INT NULL;
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_Equipments_ProductionAreas')
+    ALTER TABLE dbo.Equipments ADD CONSTRAINT FK_Equipments_ProductionAreas FOREIGN KEY (AreaId) REFERENCES dbo.ProductionAreas(AreaId);
+
+IF COL_LENGTH('dbo.RecipeBom','TechnicalStandard') IS NULL
+    ALTER TABLE dbo.RecipeBom ADD TechnicalStandard NVARCHAR(100) NULL;
+
+IF COL_LENGTH('dbo.RecipeRouting','MaterialId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD MaterialId INT NULL;
+IF COL_LENGTH('dbo.RecipeRouting','AreaId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD AreaId INT NULL;
+IF COL_LENGTH('dbo.RecipeRouting','CleanlinessStatus') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD CleanlinessStatus NVARCHAR(50) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','StandardTemperature') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StandardTemperature NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardTemperature NVARCHAR(50) NULL;
+
+IF COL_LENGTH('dbo.RecipeRouting','StandardHumidity') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StandardHumidity NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardHumidity NVARCHAR(50) NULL;
+
+IF COL_LENGTH('dbo.RecipeRouting','StandardPressure') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StandardPressure NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardPressure NVARCHAR(50) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','StabilityStatus') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StabilityStatus NVARCHAR(50) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','SetTemperature') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD SetTemperature DECIMAL(10,2) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','SetTimeMinutes') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD SetTimeMinutes INT NULL;
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_RecipeRouting_Materials')
+    ALTER TABLE dbo.RecipeRouting ADD CONSTRAINT FK_RecipeRouting_Materials FOREIGN KEY (MaterialId) REFERENCES dbo.Materials(MaterialId);
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_RecipeRouting_ProductionAreas')
+    ALTER TABLE dbo.RecipeRouting ADD CONSTRAINT FK_RecipeRouting_ProductionAreas FOREIGN KEY (AreaId) REFERENCES dbo.ProductionAreas(AreaId);
+
+-- Missing column for RecipeRouting
+IF COL_LENGTH('dbo.RecipeRouting','NumberOfRouting') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD NumberOfRouting INT NULL DEFAULT 1;
+
+IF COL_LENGTH('dbo.RecipeRouting','OrderId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD OrderId INT NULL;
+
+-- Missing column for Materials
+IF COL_LENGTH('dbo.Materials','TechnicalSpecification') IS NULL
+    ALTER TABLE dbo.Materials ADD TechnicalSpecification NVARCHAR(MAX) NULL;
+
+-- Missing columns for ProductionOrders
+IF COL_LENGTH('dbo.ProductionOrders','Note') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD Note NVARCHAR(MAX) NULL;
+IF COL_LENGTH('dbo.ProductionOrders','PlannedCartons') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD PlannedCartons INT NULL;
+IF COL_LENGTH('dbo.ProductionOrders','StartDate') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD StartDate DATETIME NULL;
+IF COL_LENGTH('dbo.ProductionOrders','EndDate') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD EndDate DATETIME NULL;
+
+-- Missing columns for ProductionBatches
+IF COL_LENGTH('dbo.ProductionBatches','PlannedQuantity') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD PlannedQuantity DECIMAL(18,4) NULL;
+IF COL_LENGTH('dbo.ProductionBatches','CreatedAt') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD CreatedAt DATETIME NULL DEFAULT GETDATE();
+IF COL_LENGTH('dbo.ProductionBatches','ExpiryDate') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD ExpiryDate DATETIME NULL;
+IF COL_LENGTH('dbo.ProductionBatches','EndTime') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD EndTime DATETIME NULL;
+
+IF OBJECT_ID('dbo.SystemAuditLog', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.SystemAuditLog (
+        LogId INT IDENTITY(1,1) PRIMARY KEY,
+        TableName NVARCHAR(100),
+        RecordId NVARCHAR(100),
+        Action NVARCHAR(50),
+        OldValue NVARCHAR(MAX),
+        NewValue NVARCHAR(MAX),
+        ChangedDate DATETIME DEFAULT GETDATE()
+    );
+END;
+2026-04-29 04:03:48.480 +00:00 [INF] Executed DbCommand (30ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [AppUsers] AS [a]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-29 04:03:48.548 +00:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [ProductionAreas] AS [p]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-29 04:03:48.684 +00:00 [INF] Executed DbCommand (7ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[AreaId], [p].[AreaCode], [p].[AreaName], [p].[Description]
+FROM [ProductionAreas] AS [p]
+2026-04-29 04:03:48.948 +00:00 [INF] Executed DbCommand (43ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[EquipmentID], [e].[AreaId], [e].[EquipmentCode], [e].[EquipmentName], [e].[TechnicalSpecification], [e].[UsagePurpose]
+FROM [Equipments] AS [e]
+2026-04-29 04:03:49.211 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [m].[MaterialID], [m].[BaseUomID], [m].[CreatedAt], [m].[IsActive], [m].[MaterialCode], [m].[MaterialName], [m].[TechnicalSpecification], [m].[Type], [m].[UpdatedAt]
+FROM [Materials] AS [m]
+2026-04-29 04:03:49.413 +00:00 [INF] Executed DbCommand (32ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-29 04:03:49.470 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-29 04:03:49.473 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-29 04:03:49.478 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-29 04:03:49.482 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-29 04:03:49.485 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-29 04:03:49.489 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-29 04:03:49.494 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-29 04:03:49.497 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-29 04:03:49.500 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-29 04:03:49.504 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-29 04:03:49.509 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-29 04:03:49.514 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-29 04:03:49.532 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__code_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [InventoryLots] AS [i]
+        WHERE [i].[LotNumber] = @__code_0) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-29 04:03:49.536 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__code_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [InventoryLots] AS [i]
+        WHERE [i].[LotNumber] = @__code_0) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-29 04:03:49.597 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF OBJECT_ID('dbo.trg_Audit_Materials', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_Materials ON dbo.Materials AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''Materials'', CAST(COALESCE(i.MaterialId,d.MaterialId) AS NVARCHAR(50)),
+CASE WHEN i.MaterialId IS NOT NULL AND d.MaterialId IS NULL THEN ''Create''
+     WHEN i.MaterialId IS NOT NULL AND d.MaterialId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.MaterialId IS NULL THEN NULL ELSE CONCAT(''Code='', d.MaterialCode, '';Name='', d.MaterialName) END,
+CASE WHEN i.MaterialId IS NULL THEN NULL ELSE CONCAT(''Code='', i.MaterialCode, '';Name='', i.MaterialName) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.MaterialId = d.MaterialId; END');
+
+IF OBJECT_ID('dbo.trg_Audit_ProductionOrders', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_ProductionOrders ON dbo.ProductionOrders AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''ProductionOrders'', CAST(COALESCE(i.OrderId,d.OrderId) AS NVARCHAR(50)),
+CASE WHEN i.OrderId IS NOT NULL AND d.OrderId IS NULL THEN ''Create''
+     WHEN i.OrderId IS NOT NULL AND d.OrderId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.OrderId IS NULL THEN NULL ELSE CONCAT(''Code='', d.OrderCode, '';Status='', d.Status) END,
+CASE WHEN i.OrderId IS NULL THEN NULL ELSE CONCAT(''Code='', i.OrderCode, '';Status='', i.Status) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.OrderId = d.OrderId; END');
+
+IF OBJECT_ID('dbo.trg_Audit_InventoryLots', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_InventoryLots ON dbo.InventoryLots AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''InventoryLots'', CAST(COALESCE(i.LotId,d.LotId) AS NVARCHAR(50)),
+CASE WHEN i.LotId IS NOT NULL AND d.LotId IS NULL THEN ''Create''
+     WHEN i.LotId IS NOT NULL AND d.LotId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', d.LotNumber, '';Qty='', d.QuantityCurrent) END,
+CASE WHEN i.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', i.LotNumber, '';Qty='', i.QuantityCurrent) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.LotId = d.LotId; END');
+
+IF OBJECT_ID('dbo.trg_Audit_Equipments', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_Equipments ON dbo.Equipments AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''Equipments'', CAST(COALESCE(i.EquipmentId,d.EquipmentId) AS NVARCHAR(50)),
+CASE WHEN i.EquipmentId IS NOT NULL AND d.EquipmentId IS NULL THEN ''Create''
+     WHEN i.EquipmentId IS NOT NULL AND d.EquipmentId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.EquipmentId IS NULL THEN NULL ELSE CONCAT(''Code='', d.EquipmentCode) END,
+CASE WHEN i.EquipmentId IS NULL THEN NULL ELSE CONCAT(''Code='', i.EquipmentCode) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.EquipmentId = d.EquipmentId; END');
+2026-04-29 04:03:49.924 +00:00 [WRN] Storing keys in a directory '/root/.aspnet/DataProtection-Keys' that may not be persisted outside of the container. Protected data will be unavailable when container is destroyed. For more information go to https://aka.ms/aspnet/dataprotectionwarning
+2026-04-29 04:03:49.925 +00:00 [INF] User profile is available. Using '/root/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-29 04:03:49.976 +00:00 [WRN] Overriding HTTP_PORTS '8080' and HTTPS_PORTS ''. Binding to values defined by URLS instead 'http://0.0.0.0:5000'.
+2026-04-29 04:03:50.191 +00:00 [INF] Now listening on: http://0.0.0.0:5000
+2026-04-29 04:03:50.193 +00:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-29 04:03:50.193 +00:00 [INF] Hosting environment: Development
+2026-04-29 04:03:50.193 +00:00 [INF] Content root path: /src
+2026-04-29 04:04:10.556 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/health - null null
+2026-04-29 04:04:10.701 +00:00 [WRN] Failed to determine the https port for redirect.
+2026-04-29 04:04:10.760 +00:00 [INF] Executing endpoint 'HTTP: GET /health'
+2026-04-29 04:04:10.802 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-29 04:04:10.828 +00:00 [INF] Writing value of type '<>f__AnonymousType83`2' as Json.
+2026-04-29 04:04:10.846 +00:00 [INF] Executed endpoint 'HTTP: GET /health'
+2026-04-29 04:04:10.880 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/health - 200 null application/json; charset=utf-8 329.7566ms
+2026-04-29 04:04:40.955 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/health - null null
+2026-04-29 04:04:40.965 +00:00 [INF] Executing endpoint 'HTTP: GET /health'
+2026-04-29 04:04:41.105 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-29 04:04:41.113 +00:00 [INF] Writing value of type '<>f__AnonymousType83`2' as Json.
+2026-04-29 04:04:41.116 +00:00 [INF] Executed endpoint 'HTTP: GET /health'
+2026-04-29 04:04:41.122 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/health - 200 null application/json; charset=utf-8 165.9661ms
+2026-04-29 04:05:11.224 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/health - null null
+2026-04-29 04:05:11.232 +00:00 [INF] Executing endpoint 'HTTP: GET /health'
+2026-04-29 04:05:11.243 +00:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-29 04:05:11.244 +00:00 [INF] Writing value of type '<>f__AnonymousType83`2' as Json.
+2026-04-29 04:05:11.244 +00:00 [INF] Executed endpoint 'HTTP: GET /health'
+2026-04-29 04:05:11.245 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/health - 200 null application/json; charset=utf-8 20.8518ms

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/src/GMP_System/GMP_System/GMP_System.csproj": {}
+    "/src/GMP_System.csproj": {}
   },
   "projects": {
-    "/src/GMP_System/GMP_System/GMP_System.csproj": {
+    "/src/GMP_System.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/src/GMP_System/GMP_System/GMP_System.csproj",
+        "projectUniqueName": "/src/GMP_System.csproj",
         "projectName": "GMP_System",
-        "projectPath": "/src/GMP_System/GMP_System/GMP_System.csproj",
+        "projectPath": "/src/GMP_System.csproj",
         "packagesPath": "/root/.nuget/packages/",
-        "outputPath": "/src/GMP_System/GMP_System/obj/",
+        "outputPath": "/src/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/root/.nuget/NuGet/NuGet.Config"
