@@ -255,7 +255,6 @@ namespace GMP_System.Controllers
                 order.CreatedBy = userId;
             }
 
-<<<<<<< HEAD
             await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
@@ -273,6 +272,38 @@ namespace GMP_System.Controllers
 
                 await _unitOfWork.ProductionOrders.AddAsync(order);
                 await _unitOfWork.CompleteAsync();
+
+                // Auto-split into batches if not already present
+                if (order.RecipeId.HasValue && order.PlannedQuantity > 0)
+                {
+                    var recipes = await _unitOfWork.Recipes.Query().FirstOrDefaultAsync(r => r.RecipeId == order.RecipeId);
+                    decimal batchSize = recipes?.BatchSize ?? 0;
+                    
+                    var existingBatches = await _unitOfWork.ProductionBatches.Query().AnyAsync(b => b.OrderId == order.OrderId);
+                    if (!existingBatches)
+                    {
+                        int numBatches = 1;
+                        if (batchSize > 0)
+                        {
+                            numBatches = (int)Math.Ceiling(order.PlannedQuantity / batchSize);
+                        }
+
+                        for (int i = 0; i < numBatches; i++)
+                        {
+                            string batchNumber = $"{order.OrderCode.Replace("PO", "B")}-{(i + 1):D2}";
+                            await _unitOfWork.ProductionBatches.AddAsync(new ProductionBatch
+                            {
+                                OrderId = order.OrderId,
+                                BatchNumber = batchNumber,
+                                Status = i == 0 ? "In-Process" : "Scheduled",
+                                CurrentStep = 0,
+                                ManufactureDate = DateTime.Now
+                            });
+                        }
+                        await _unitOfWork.CompleteAsync();
+                    }
+                }
+
                 await transaction.CommitAsync();
             }
             catch (DbUpdateException ex)
@@ -292,44 +323,9 @@ namespace GMP_System.Controllers
                     success = false,
                     message = $"Không thể tạo lệnh sản xuất: {ex.Message}"
                 });
-=======
-            await _unitOfWork.ProductionOrders.AddAsync(order);
-            await _unitOfWork.CompleteAsync(); // Save to get OrderId
-
-            // Auto-split into batches if not already present
-            if (order.RecipeId.HasValue && order.PlannedQuantity > 0)
-            {
-                var recipes = await _unitOfWork.Recipes.Query().FirstOrDefaultAsync(r => r.RecipeId == order.RecipeId);
-                decimal batchSize = recipes?.BatchSize ?? 0;
-                
-                // Only split if we don't already have batches (to avoid duplication if frontend already created some)
-                var existingBatches = await _unitOfWork.ProductionBatches.Query().AnyAsync(b => b.OrderId == order.OrderId);
-                if (!existingBatches)
-                {
-                    int numBatches = 1;
-                    if (batchSize > 0)
-                    {
-                        numBatches = (int)Math.Ceiling(order.PlannedQuantity / batchSize);
-                    }
-
-                    for (int i = 0; i < numBatches; i++)
-                    {
-                        string batchNumber = $"{order.OrderCode.Replace("PO", "B")}-{(i + 1):D2}";
-                        await _unitOfWork.ProductionBatches.AddAsync(new ProductionBatch
-                        {
-                            OrderId = order.OrderId,
-                            BatchNumber = batchNumber,
-                            Status = i == 0 ? "In-Process" : "Scheduled",
-                            CurrentStep = 0,
-                            ManufactureDate = DateTime.Now
-                        });
-                    }
-                    await _unitOfWork.CompleteAsync();
-                }
->>>>>>> 942073caaa5929f497057c3760a8050703629323
             }
 
-            return Ok(new { success = true, message = "T?o l?nh s?n xu?t thành công.", data = new { orderId = order.OrderId, status = order.Status } });
+            return Ok(new { success = true, message = "Tạo lệnh sản xuất thành công.", data = new { orderId = order.OrderId, status = order.Status } });
         }
 
         private async Task<string> EnsureUniqueOrderCodeAsync(string requestedCode)

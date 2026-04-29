@@ -172,7 +172,7 @@ app.UseHttpMetrics(); // Prometheus HTTP metrics middleware
 app.MapMetrics(); // Expose /metrics endpoint
 
 // Enhanced health check with DB connectivity
-app.MapGet("/health", async (GmpContext db) =>
+app.MapGet("/healthcheck", async (GmpContext db) =>
 {
     var canConnect = await db.Database.CanConnectAsync();
     return Results.Json(new { status = canConnect ? "healthy" : "unhealthy", time = DateTime.UtcNow });
