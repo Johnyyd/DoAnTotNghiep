@@ -31,9 +31,6 @@ TestResults.xml
 *.sln.docstates
 .gitnexus
 .claude
-DOCS/
-*.docx
-*.pdf
 *.zip
 
 # Bổ sung cho .NET / C#
