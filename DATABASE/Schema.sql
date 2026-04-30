@@ -166,6 +166,7 @@ CREATE TABLE RecipeBom (
     Quantity DECIMAL(18, 4) NOT NULL,
     UomId INT REFERENCES UnitOfMeasure(UomId),
     WastePercentage DECIMAL(5, 2) DEFAULT 0,
+    TechnicalStandard NVARCHAR(100) NULL,
     Note NVARCHAR(200)
 );
 GO

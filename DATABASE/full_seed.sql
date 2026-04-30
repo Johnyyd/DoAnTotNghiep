@@ -317,5 +317,33 @@ EXEC sp_msforeachtable 'ALTER TABLE ? CHECK CONSTRAINT ALL';
 EXEC sp_msforeachtable 'ALTER TABLE ? ENABLE TRIGGER ALL';
 GO
 
+-- =====================================================================
+-- 17. BỔ SUNG TRIGGER AUDIT (NẾU CHƯA CÓ)
+-- =====================================================================
+IF OBJECT_ID('dbo.trg_Audit_InventoryLots', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_InventoryLots ON dbo.InventoryLots AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''InventoryLots'', CAST(COALESCE(i.LotId,d.LotId) AS NVARCHAR(50)),
+CASE WHEN i.LotId IS NOT NULL AND d.LotId IS NULL THEN ''Create''
+     WHEN i.LotId IS NOT NULL AND d.LotId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', d.LotNumber, '';Qty='', d.QuantityCurrent) END,
+CASE WHEN i.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', i.LotNumber, '';Qty='', i.QuantityCurrent) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.LotId = d.LotId; END');
+
+IF OBJECT_ID('dbo.trg_Audit_Equipments', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_Equipments ON dbo.Equipments AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''Equipments'', CAST(COALESCE(i.EquipmentId,d.EquipmentId) AS NVARCHAR(50)),
+CASE WHEN i.EquipmentId IS NOT NULL AND d.EquipmentId IS NULL THEN ''Create''
+     WHEN i.EquipmentId IS NOT NULL AND d.EquipmentId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.EquipmentId IS NULL THEN NULL ELSE CONCAT(''Code='', d.EquipmentCode) END,
+CASE WHEN i.EquipmentId IS NULL THEN NULL ELSE CONCAT(''Code='', i.EquipmentCode) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.EquipmentId = d.EquipmentId; END');
+GO
+
 PRINT 'GMP Database Initialization & Full Seeding Completed Successfully!';
 
