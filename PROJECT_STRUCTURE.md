@@ -89,7 +89,20 @@ DoAnTotNghiep/
 ├── 🚀 makeall.sh                      # Menu script tổng hợp
 │
 ├── 🐳 docker-compose.yml              # Orchesrate tất cả services (KHÔNG DÙNG start- scripts)
-├── 🐳 .dockerignore
+├── 🐳 docker-compose.override.yml     # Cấu hình override cho môi trường dev
+├── 🐳 .dockerignore                   # Cấu hình ignore của Docker
+├── 🔐 .env                            # Tệp chứa biến môi trường (Secrets)
+├── 🔐 .env.example                    # Tệp mẫu chứa biến môi trường
+├── 📄 .gitignore                      # Cấu hình Git ignore
+├── 📄 .gitnexusignore                 # Cấu hình GitNexus ignore
+├── 📄 AGENTS.md                       # Cấu hình Agents
+├── 📄 CLAUDE.md                       # Cấu hình Claude
+├── 📄 TASKS.md                        # Theo dõi công việc (Tasks)
+├── 📄 HEARTBEAT.md                    # Health check và heartbeat info
+├── 📄 TAILSCALE_SETUP.md              # Hướng dẫn setup VPN Tailscale
+├── 💻 Hasher.cs                       # Tiện ích hash mật khẩu
+├── 📦 DATABASE.rar                    # Backup nén của Database
+├── 📂 scratch/                        # Thư mục nháp
 │
 └── 📄 LICENSE                         # Giấy phép dự án
 

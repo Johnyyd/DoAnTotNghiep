@@ -37,27 +37,32 @@
 
 | Category | Issue | Suggested Fix |
 |----------|-------|---------------|
-| **Secret Management** | SA password and JWT secret are hard‑coded in `docker‑compose.yml` (`GMP_Strong@Passw0rd123`). | Move them to Docker **secrets** or `.env` files (excluded via `.dockerignore`). Use `env_file:` and reference `${SA_PASSWORD}`. |
-| **Database Migrations** | Schema is applied via raw `.sql` scripts (`DATABASE/init.sql`). Manual script ordering can cause drift. | Adopt **EF Core migrations** (`dotnet ef migrations add …`) and run them on container start (`dotnet ef database update`). Keeps schema in sync with model code. |
+| **Secret Management** (✅ Đã giải quyết) | SA password and JWT secret are hard‑coded in `docker‑compose.yml` (`GMP_Strong@Passw0rd123`). | Move them to Docker **secrets** or `.env` files (excluded via `.dockerignore`). Use `env_file:` and reference `${SA_PASSWORD}`. |
+| **Database Migrations** (✅ Đã giải quyết) | Schema is applied via raw `.sql` scripts (`DATABASE/init.sql`). Manual script ordering can cause drift. | Adopt **EF Core migrations** (`dotnet ef migrations add …`) and run them on container start (`dotnet ef database update`). Keeps schema in sync with model code. |
 | **CI/CD** | No pipeline shown for building, testing, and deploying images. | Add a GitHub Actions workflow: <br>• Build & push Docker images (backend, frontend, mobile). <br>• Run unit‑test suites (C# + Flutter). <br>• Deploy to a staging environment for integration tests. |
 | **Testing Coverage** | Project contains `tests/` folders but no indication of automated unit/integration tests. | Implement: <br>• **Backend**: xUnit + Moq for services, integration tests with Testcontainers SQL Server.<br>• **Frontend**: Jest + React Testing Library.<br>• **Mobile**: Flutter widget and integration tests. |
 | **API Security** | Only a generic JWT is mentioned; no role‑based policy examples. | Define **RBAC** (Admin, QC, Operator, Manager) in `AppUser` + claim‑based policies (`[Authorize(Roles="QC")]`). Document token issuance in `README`. |
 | **Observability** | Logging is present (audit), but no structured logging, metrics, or tracing. | Integrate **Serilog** with JSON output, expose Prometheus metrics (`/metrics`), and add OpenTelemetry tracing for end‑to‑end visibility. |
-| **Container Size** | Backend Dockerfile likely copies the full SDK (`dotnet/sdk`) into the final image. | Use a **multi‑stage build** that outputs a runtime‑only image (`mcr.microsoft.com/dotnet/aspnet:8.0`). Same for frontend (build stage → `nginx:alpine`). |
-| **Front‑end Build Caching** | No `.dockerignore` shown for `node_modules`/`build` artifacts. | Add a `.dockerignore` that excludes `node_modules`, `dist`, `*.log`, and IDE files to keep images lean and build faster. |
+| **Container Size** (✅ Đã giải quyết) | Backend Dockerfile likely copies the full SDK (`dotnet/sdk`) into the final image. | Use a **multi‑stage build** that outputs a runtime‑only image (`mcr.microsoft.com/dotnet/aspnet:8.0`). Same for frontend (build stage → `nginx:alpine`). |
+| **Front‑end Build Caching** (✅ Đã giải quyết) | No `.dockerignore` shown for `node_modules`/`build` artifacts. | Add a `.dockerignore` that excludes `node_modules`, `dist`, `*.log`, and IDE files to keep images lean and build faster. |
 | **Mobile Offline** | Tablet workers may lose connectivity on the floor. | Implement **offline sync** (SQLite + background sync) in the Flutter app, and expose an endpoint for batch uploads. |
 | **Documentation Gaps** | `DOCKER_DEPLOYMENT.md` mentions scripts like `makeall.sh` but they are not version‑controlled in the repo root. | Move helper scripts under `scripts/` and document usage in README. |
 | **Internationalisation** | UI appears to be Vietnamese only. | Add i18n support (React i18next, Flutter `intl`) for future multilingual rollout. |
 
 ---
 
-## 4️⃣ Quick Wins (≤ 2 days)
+## 4️⃣ Quick Wins & Completed Improvements
 
-1. **Replace hard‑coded passwords** with environment variables and add a `.env.example`.
-2. **Add `.dockerignore`** to both backend and frontend Docker contexts to drop `bin/`, `obj/`, `node_modules/`.
-3. **Expose Prometheus metrics** via `app.UseMetricServer()` and `app.MapMetrics()`.
-4. **Add a basic role‑based policy** in `Startup.cs` (`services.AddAuthorization…`).
-5. **Create a GitHub Action** that builds the three images and pushes them to a container registry (e.g., GitHub Packages).
+✅ **COMPLETED:**
+- **Secret Management**: Di chuyển mật khẩu và cấu hình nhạy cảm sang `.env` và thiết lập `env_file:` trong `docker-compose.yml`.
+- **Docker Image Size**: Đã áp dụng Multi-stage build cho `GMP_System/Dockerfile` giúp tách biệt build SDK và runtime siêu nhẹ.
+- **Build Caching**: Đã bổ sung `.dockerignore` để tránh tải `bin/`, `obj/`, `node_modules/` vào Docker Context.
+- **Database Migrations**: Thiết lập script tự động chạy migrations qua `entrypoint-api.sh` mỗi khi khởi động container API.
+
+⚠️ **TBD (Cần thực hiện):**
+1. **Expose Prometheus metrics** qua `app.UseMetricServer()` và `app.MapMetrics()`.
+2. **Add a basic role-based policy** trong `Startup.cs` (`services.AddAuthorization…`).
+3. **Create a GitHub Action** xây dựng quy trình CI/CD build và push image.
 
 ---
 

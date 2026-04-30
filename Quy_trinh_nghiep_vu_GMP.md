@@ -56,11 +56,14 @@ stateDiagram-v2
     Completed --> [*]
 
     state InProcess {
-      [*] --> Step1_Weighing : Mobile App - Cân nguyên liệu
-      Step1_Weighing --> Step2_Mixing : Ký xác nhận & Check Sai lệch BOM (<5%)
-      Step2_Mixing --> Step3_Drying : Ký xác nhận công đoạn Trộn
-      Step3_Drying --> Finalizing : Ký xác nhận công đoạn Sấy
-      Finalizing --> [*] : Hoàn thành Mẻ (Batch Process)
+      [*] --> Step1_CanNguyenLieu : Cân nguyên liệu (NLC 2, TD 1)
+      Step1_CanNguyenLieu --> Step2_TronUot : Trộn ướt (MTU-1, 20 phút)
+      Step2_TronUot --> Step3_XatHatUot : Xát hạt ướt (KBC-SHU-100, lưới 2mm)
+      Step3_XatHatUot --> Step4_SayHatUot : Sấy hạt ướt (KBC-TS-50, 60°C/30p & 50°C/20p)
+      Step4_SayHatUot --> Step5_SuaHatKho : Sửa hạt khô (KBC-XB-300, lưới 2mm & 1mm)
+      Step5_SuaHatKho --> Step6_DongGoi : Đóng gói (Túi PE 2 lớp)
+      Step6_DongGoi --> Step7_GiaoKho : Giao kho thành phẩm / Biệt trữ
+      Step7_GiaoKho --> [*] : Hoàn thành Mẻ (Batch Process)
     }
 ```
 
@@ -104,7 +107,24 @@ sequenceDiagram
 
 ---
 
-## 4. Kiến trúc và Luồng Dữ Liệu Hệ Thống (Data Flow)
+## 4. Tiêu chuẩn Môi trường và Máy móc (Phòng Pha Chế / Sản Xuất)
+
+Theo chuẩn GMP-WHO và thực tế dự án Sản xuất Cao Khô, hệ thống yêu cầu nhân viên phải thực hiện **Kiểm tra môi trường** (Use-case Kiểm tra môi trường) trước khi tiến hành sản xuất. Các thông số cần đáp ứng:
+- **Nhiệt độ phòng:** $21^\circ\text{C} - 25^\circ\text{C}$
+- **Độ ẩm:** $45\% - 70\%$
+- **Áp lực phòng:** $\ge 10 \text{ Pa}$
+- **Tình trạng vệ sinh:** Đảm bảo sạch sẽ, không có rác thải.
+
+Các thiết bị, máy móc cần được kiểm tra tình trạng hoạt động bao gồm:
+- Cân điện tử IW2-60
+- Máy trộn ướt MTU-1
+- Máy xát hạt ướt KBC-SHU-100
+- Máy sấy tầng sôi KBC-TS-50
+- Máy sửa hạt khô KBC-XB-300
+
+---
+
+## 5. Kiến trúc và Luồng Dữ Liệu Hệ Thống (Data Flow)
 
 Cấu trúc kiến trúc vật lý và sơ đồ giao tiếp Client-Server của toàn hệ thống.
 

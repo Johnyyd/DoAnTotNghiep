@@ -19,7 +19,7 @@ class ApiService {
       return '$origin/api';
     }
     // QUAN TRỌNG: Thay 'localhost' thành địa chỉ IP máy tính của bạn (vd: 192.168.1.10) để kết nối từ điện thoại thật.
-    return 'http://192.168.1.13:5001/api'; // <--- HÃY THAY IP NÀY BẰNG IP MÁY TÍNH CỦA BẠN
+    return 'http://192.168.100.152:5001/api'; // <--- HÃY THAY IP NÀY BẰNG IP MÁY TÍNH CỦA BẠN
   }
 
   /// Tiện ích log lỗi cho dev
