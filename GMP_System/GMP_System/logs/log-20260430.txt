@@ -3469,3 +3469,1581 @@ SELECT 1
 2026-04-30 18:12:14.603 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
 2026-04-30 18:12:14.603 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
 2026-04-30 18:12:14.604 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.3395ms
+2026-04-30 18:12:44.750 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:12:44.750 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:12:44.753 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:12:44.753 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:12:44.754 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:12:44.754 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.1935ms
+2026-04-30 18:13:14.932 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:13:14.933 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:13:14.935 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:13:14.936 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:13:14.936 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:13:14.936 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.629ms
+2026-04-30 18:13:45.068 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:13:45.069 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:13:45.072 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:13:45.073 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:13:45.073 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:13:45.073 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.8502ms
+2026-04-30 18:14:15.213 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:14:15.213 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:14:15.217 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:14:15.218 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:14:15.218 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:14:15.218 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.5458ms
+2026-04-30 18:14:45.330 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:14:45.331 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:14:45.343 +00:00 [INF] Executed DbCommand (11ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:14:45.344 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:14:45.344 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:14:45.345 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 14.4065ms
+2026-04-30 18:15:15.478 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:15:15.478 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:15:15.481 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:15:15.481 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:15:15.481 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:15:15.481 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.1918ms
+2026-04-30 18:15:45.597 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:15:45.597 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:15:45.600 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:15:45.600 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:15:45.600 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:15:45.601 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.6904ms
+2026-04-30 18:16:15.779 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:16:15.780 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:16:15.784 +00:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:16:15.784 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:16:15.785 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:16:15.785 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.6906ms
+2026-04-30 18:16:45.885 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:16:45.886 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:16:45.888 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:16:45.889 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:16:45.890 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:16:45.890 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.7134ms
+2026-04-30 18:17:01.587 +00:00 [INF] Request starting HTTP/1.1 GET http://localhost/api/production-orders - application/json null
+2026-04-30 18:17:01.588 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-04-30 18:17:01.589 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-04-30 18:17:01.626 +00:00 [INF] Executed DbCommand (34ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[OrderID], [p].[OrderCode], [p].[RecipeID], [p].[PlannedQuantity], [p].[ActualQuantity], [p].[Status], [p].[StartDate], [p].[EndDate], [p].[CreatedAt], [p].[CreatedBy], [a].[FullName], CASE
+    WHEN [r].[RecipeID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [r].[RecipeID], [r].[BatchSize], CASE
+    WHEN [m].[MaterialID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [m].[MaterialName], CASE
+    WHEN [u].[UomID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [u].[UomName], [a].[UserID], [m].[MaterialID], [u].[UomID], [p0].[BatchID], [p0].[BatchNumber], [p0].[Status]
+FROM [ProductionOrders] AS [p]
+LEFT JOIN [AppUsers] AS [a] ON [p].[CreatedBy] = [a].[UserID]
+LEFT JOIN [Recipes] AS [r] ON [p].[RecipeID] = [r].[RecipeID]
+LEFT JOIN [Materials] AS [m] ON [r].[MaterialID] = [m].[MaterialID]
+LEFT JOIN [UnitOfMeasure] AS [u] ON [m].[BaseUomID] = [u].[UomID]
+LEFT JOIN [ProductionBatches] AS [p0] ON [p].[OrderID] = [p0].[OrderID]
+ORDER BY [p].[OrderID], [a].[UserID], [r].[RecipeID], [m].[MaterialID], [u].[UomID]
+2026-04-30 18:17:01.627 +00:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType44`4[[System.Collections.Generic.List`1[[<>f__AnonymousType41`13[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType42`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType33`2[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType34`1[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Collections.Generic.IEnumerable`1[[<>f__AnonymousType43`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-04-30 18:17:01.628 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System) in 38.8949ms
+2026-04-30 18:17:01.628 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-04-30 18:17:01.629 +00:00 [INF] Request finished HTTP/1.1 GET http://localhost/api/production-orders - 200 null application/json; charset=utf-8 41.0575ms
+2026-04-30 18:17:16.027 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:17:16.027 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:17:16.029 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:17:16.030 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:17:16.030 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:17:16.030 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.3851ms
+2026-04-30 18:17:46.228 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:17:46.232 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:17:46.236 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:17:46.237 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:17:46.237 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:17:46.238 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 9.3891ms
+2026-04-30 18:18:16.342 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:18:16.342 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:18:16.345 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:18:16.345 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:18:16.345 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:18:16.345 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.4728ms
+2026-04-30 18:18:46.457 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:18:46.457 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:18:46.460 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:18:46.460 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:18:46.461 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:18:46.461 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.4411ms
+2026-04-30 18:19:16.562 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:19:16.562 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:19:16.565 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:19:16.565 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:19:16.566 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:19:16.566 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.4222ms
+2026-04-30 18:19:46.700 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:19:46.700 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:19:46.703 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:19:46.703 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:19:46.704 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:19:46.704 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.7127ms
+2026-04-30 18:20:16.856 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:20:16.856 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:20:16.858 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:20:16.859 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:20:16.859 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:20:16.859 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.1976ms
+2026-04-30 18:20:46.985 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:20:46.985 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:20:46.987 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:20:46.988 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:20:46.988 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:20:46.988 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.2625ms
+2026-04-30 18:21:17.094 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:21:17.094 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:21:17.097 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:21:17.098 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:21:17.098 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:21:17.098 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.6469ms
+2026-04-30 18:21:47.188 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:21:47.188 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:21:47.191 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:21:47.191 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:21:47.191 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:21:47.191 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.2444ms
+2026-04-30 18:22:17.317 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:22:17.317 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:22:17.319 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:22:17.320 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:22:17.321 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:22:17.321 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.9164ms
+2026-04-30 18:22:47.432 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:22:47.432 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:22:47.434 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:22:47.435 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:22:47.435 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:22:47.435 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.4087ms
+2026-04-30 18:23:17.561 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:23:17.562 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:23:17.565 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:23:17.565 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:23:17.565 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:23:17.566 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.7086ms
+2026-04-30 18:23:47.663 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:23:47.663 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:23:47.666 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:23:47.666 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:23:47.666 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:23:47.667 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.746ms
+2026-04-30 18:24:17.755 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:24:17.756 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:24:17.758 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:24:17.758 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:24:17.759 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:24:17.759 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.0198ms
+2026-04-30 18:24:47.845 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:24:47.845 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:24:47.847 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:24:47.847 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:24:47.848 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:24:47.848 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.1993ms
+2026-04-30 18:25:17.942 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:25:17.942 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:25:17.945 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:25:17.945 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:25:17.945 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:25:17.946 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.7912ms
+2026-04-30 18:25:48.031 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:25:48.031 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:25:48.035 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:25:48.036 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:25:48.036 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:25:48.036 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.189ms
+2026-04-30 18:26:18.127 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:26:18.128 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:26:18.130 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:26:18.130 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:26:18.130 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:26:18.130 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.0585ms
+2026-04-30 18:26:48.244 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:26:48.245 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:26:48.249 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:26:48.250 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:26:48.251 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:26:48.251 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 7.0029ms
+2026-04-30 18:27:18.387 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:27:18.388 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:27:18.392 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:27:18.392 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:27:18.392 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:27:18.393 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.4007ms
+2026-04-30 18:27:48.535 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:27:48.535 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:27:48.538 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:27:48.538 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:27:48.538 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:27:48.538 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.821ms
+2026-04-30 18:28:18.633 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:28:18.634 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:28:18.637 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:28:18.637 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:28:18.638 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:28:18.638 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.0979ms
+2026-04-30 18:28:48.823 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:28:48.825 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:28:48.868 +00:00 [INF] Executed DbCommand (10ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:28:48.868 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:28:48.868 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:28:48.869 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 45.3438ms
+2026-04-30 18:29:18.962 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:29:18.963 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:29:18.965 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:29:18.965 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:29:18.966 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:29:18.966 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.8633ms
+2026-04-30 18:29:49.068 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:29:49.069 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:29:49.071 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:29:49.072 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:29:49.072 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:29:49.072 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.3469ms
+2026-04-30 18:30:19.193 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:30:19.194 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:30:19.198 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:30:19.199 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:30:19.199 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:30:19.199 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.8058ms
+2026-04-30 18:30:49.322 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:30:49.323 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:30:49.327 +00:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:30:49.327 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:30:49.328 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:30:49.328 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.7947ms
+2026-04-30 18:31:19.446 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:31:19.447 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:31:19.449 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:31:19.450 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:31:19.450 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:31:19.450 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.6747ms
+2026-04-30 18:31:49.547 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:31:49.547 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:31:49.550 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:31:49.550 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:31:49.550 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:31:49.551 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.3998ms
+2026-04-30 18:32:19.646 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:32:19.646 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:32:19.649 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:32:19.649 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:32:19.649 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:32:19.649 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.6317ms
+2026-04-30 18:32:49.741 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:32:49.741 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:32:49.745 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:32:49.745 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:32:49.745 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:32:49.746 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.2123ms
+2026-04-30 18:33:19.861 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:33:19.862 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:33:19.865 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:33:19.865 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:33:19.865 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:33:19.865 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.3475ms
+2026-04-30 18:33:49.952 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:33:49.952 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:33:49.954 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:33:49.954 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:33:49.954 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:33:49.954 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 2.7938ms
+2026-04-30 18:34:20.112 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:34:20.114 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:34:20.117 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:34:20.117 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:34:20.118 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:34:20.118 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.912ms
+2026-04-30 18:34:50.238 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:34:50.239 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:34:50.242 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:34:50.242 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:34:50.243 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:34:50.244 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.9408ms
+2026-04-30 18:35:20.351 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:35:20.352 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:35:20.355 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:35:20.356 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:35:20.356 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:35:20.356 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.5006ms
+2026-04-30 18:35:50.477 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:35:50.485 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:35:50.497 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:35:50.505 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:35:50.507 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:35:50.508 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 30.9813ms
+2026-04-30 18:36:20.615 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:36:20.615 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:36:20.618 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:36:20.618 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:36:20.619 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:36:20.619 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.8715ms
+2026-04-30 18:36:50.733 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:36:50.733 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:36:50.736 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:36:50.737 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:36:50.737 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:36:50.738 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.7185ms
+2026-04-30 18:37:20.868 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:37:20.868 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:37:20.871 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:37:20.871 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:37:20.871 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:37:20.872 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.6049ms
+2026-04-30 18:37:50.978 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:37:50.979 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:37:50.983 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:37:50.983 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:37:50.983 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:37:50.984 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.5484ms
+2026-04-30 18:38:21.110 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:38:21.111 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:38:21.115 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:38:21.115 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:38:21.115 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:38:21.115 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.7546ms
+2026-04-30 18:38:51.281 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:38:51.281 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:38:51.285 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:38:51.285 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:38:51.285 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:38:51.286 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.0285ms
+2026-04-30 18:39:21.386 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:39:21.386 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:39:21.388 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:39:21.389 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:39:21.389 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:39:21.390 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.151ms
+2026-04-30 18:39:51.533 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:39:51.534 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:39:51.537 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:39:51.537 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:39:51.537 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:39:51.537 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.6222ms
+2026-04-30 18:40:21.636 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:40:21.637 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:40:21.639 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:40:21.639 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:40:21.640 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:40:21.640 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.4561ms
+2026-04-30 18:40:51.751 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:40:51.751 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:40:51.757 +00:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:40:51.758 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:40:51.758 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:40:51.760 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 9.163ms
+2026-04-30 18:41:21.883 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:41:21.884 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:41:21.888 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:41:21.888 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:41:21.888 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:41:21.888 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.8138ms
+2026-04-30 18:41:51.981 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:41:51.982 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:41:51.985 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:41:51.985 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:41:51.986 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:41:51.986 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.7208ms
+2026-04-30 18:42:22.074 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:42:22.074 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:42:22.077 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:42:22.077 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:42:22.078 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:42:22.078 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.8854ms
+2026-04-30 18:42:52.185 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:42:52.186 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:42:52.189 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:42:52.189 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:42:52.189 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:42:52.190 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.6057ms
+2026-04-30 18:43:22.330 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:43:22.330 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:43:22.333 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:43:22.333 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:43:22.334 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:43:22.334 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.0244ms
+2026-04-30 18:43:52.461 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:43:52.462 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:43:52.465 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:43:52.465 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:43:52.466 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:43:52.466 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.1603ms
+2026-04-30 18:44:22.552 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:44:22.553 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:44:22.555 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:44:22.555 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:44:22.556 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:44:22.556 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.5721ms
+2026-04-30 18:44:52.648 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:44:52.649 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:44:52.652 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:44:52.653 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:44:52.653 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:44:52.653 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.6972ms
+2026-04-30 18:45:22.789 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:45:22.790 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:45:22.793 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:45:22.794 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:45:22.794 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:45:22.795 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.5003ms
+2026-04-30 18:45:52.959 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:45:52.960 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:45:52.966 +00:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:45:52.966 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:45:52.966 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:45:52.966 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 6.9546ms
+2026-04-30 18:46:23.052 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:46:23.053 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:46:23.055 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:46:23.055 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:46:23.055 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:46:23.055 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 2.9607ms
+2026-04-30 18:46:53.144 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:46:53.144 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:46:53.147 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:46:53.147 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:46:53.147 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:46:53.147 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.288ms
+2026-04-30 18:47:31.825 +00:00 [WRN] No store type was specified for the decimal property 'PlannedQuantity' on entity type 'ProductionBatch'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-30 18:47:31.933 +00:00 [WRN] No store type was specified for the decimal property 'SetTemperature' on entity type 'RecipeRouting'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-30 18:47:33.702 +00:00 [INF] Executed DbCommand (34ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:47:33.730 +00:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:47:33.759 +00:00 [INF] Executed DbCommand (23ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF EXISTS
+    (SELECT *
+     FROM [sys].[objects] o
+     WHERE [o].[type] = 'U'
+     AND [o].[is_ms_shipped] = 0
+     AND NOT EXISTS (SELECT *
+         FROM [sys].[extended_properties] AS [ep]
+         WHERE [ep].[major_id] = [o].[object_id]
+             AND [ep].[minor_id] = 0
+             AND [ep].[class] = 1
+             AND [ep].[name] = N'microsoft_database_tools_support'
+    )
+)
+SELECT 1 ELSE SELECT 0
+2026-04-30 18:47:33.856 +00:00 [INF] Executed DbCommand (75ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF OBJECT_ID('dbo.ProductionAreas', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ProductionAreas (
+        AreaId INT IDENTITY(1,1) PRIMARY KEY,
+        AreaCode VARCHAR(50) NOT NULL UNIQUE,
+        AreaName NVARCHAR(200) NOT NULL,
+        Description NVARCHAR(500) NULL
+    );
+END;
+
+IF COL_LENGTH('dbo.Equipments','TechnicalSpecification') IS NULL
+    ALTER TABLE dbo.Equipments ADD TechnicalSpecification NVARCHAR(300) NULL;
+IF COL_LENGTH('dbo.Equipments','UsagePurpose') IS NULL
+    ALTER TABLE dbo.Equipments ADD UsagePurpose NVARCHAR(300) NULL;
+IF COL_LENGTH('dbo.Equipments','AreaId') IS NULL
+    ALTER TABLE dbo.Equipments ADD AreaId INT NULL;
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_Equipments_ProductionAreas')
+    ALTER TABLE dbo.Equipments ADD CONSTRAINT FK_Equipments_ProductionAreas FOREIGN KEY (AreaId) REFERENCES dbo.ProductionAreas(AreaId);
+
+IF COL_LENGTH('dbo.RecipeBom','TechnicalStandard') IS NULL
+    ALTER TABLE dbo.RecipeBom ADD TechnicalStandard NVARCHAR(100) NULL;
+
+IF COL_LENGTH('dbo.RecipeRouting','MaterialId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD MaterialId INT NULL;
+IF COL_LENGTH('dbo.RecipeRouting','AreaId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD AreaId INT NULL;
+IF COL_LENGTH('dbo.RecipeRouting','CleanlinessStatus') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD CleanlinessStatus NVARCHAR(50) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','StandardTemperature') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StandardTemperature NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardTemperature NVARCHAR(50) NULL;
+
+IF COL_LENGTH('dbo.RecipeRouting','StandardHumidity') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StandardHumidity NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardHumidity NVARCHAR(50) NULL;
+
+IF COL_LENGTH('dbo.RecipeRouting','StandardPressure') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StandardPressure NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardPressure NVARCHAR(50) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','StabilityStatus') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StabilityStatus NVARCHAR(50) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','SetTemperature') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD SetTemperature DECIMAL(10,2) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','SetTimeMinutes') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD SetTimeMinutes INT NULL;
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_RecipeRouting_Materials')
+    ALTER TABLE dbo.RecipeRouting ADD CONSTRAINT FK_RecipeRouting_Materials FOREIGN KEY (MaterialId) REFERENCES dbo.Materials(MaterialId);
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_RecipeRouting_ProductionAreas')
+    ALTER TABLE dbo.RecipeRouting ADD CONSTRAINT FK_RecipeRouting_ProductionAreas FOREIGN KEY (AreaId) REFERENCES dbo.ProductionAreas(AreaId);
+
+-- Missing column for RecipeRouting
+IF COL_LENGTH('dbo.RecipeRouting','NumberOfRouting') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD NumberOfRouting INT NULL DEFAULT 1;
+
+IF COL_LENGTH('dbo.RecipeRouting','OrderId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD OrderId INT NULL;
+
+-- Missing column for Materials
+IF COL_LENGTH('dbo.Materials','TechnicalSpecification') IS NULL
+    ALTER TABLE dbo.Materials ADD TechnicalSpecification NVARCHAR(MAX) NULL;
+
+-- Missing columns for ProductionOrders
+IF COL_LENGTH('dbo.ProductionOrders','Note') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD Note NVARCHAR(MAX) NULL;
+IF COL_LENGTH('dbo.ProductionOrders','PlannedCartons') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD PlannedCartons INT NULL;
+IF COL_LENGTH('dbo.ProductionOrders','StartDate') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD StartDate DATETIME NULL;
+IF COL_LENGTH('dbo.ProductionOrders','EndDate') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD EndDate DATETIME NULL;
+
+-- Missing columns for ProductionBatches
+IF COL_LENGTH('dbo.ProductionBatches','PlannedQuantity') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD PlannedQuantity DECIMAL(18,4) NULL;
+IF COL_LENGTH('dbo.ProductionBatches','CreatedAt') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD CreatedAt DATETIME NULL DEFAULT GETDATE();
+IF COL_LENGTH('dbo.ProductionBatches','ExpiryDate') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD ExpiryDate DATETIME NULL;
+IF COL_LENGTH('dbo.ProductionBatches','EndTime') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD EndTime DATETIME NULL;
+
+IF OBJECT_ID('dbo.SystemAuditLog', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.SystemAuditLog (
+        LogId INT IDENTITY(1,1) PRIMARY KEY,
+        TableName NVARCHAR(100),
+        RecordId NVARCHAR(100),
+        Action NVARCHAR(50),
+        OldValue NVARCHAR(MAX),
+        NewValue NVARCHAR(MAX),
+        ChangedDate DATETIME DEFAULT GETDATE()
+    );
+END;
+2026-04-30 18:47:34.341 +00:00 [INF] Executed DbCommand (32ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [AppUsers] AS [a]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-30 18:47:34.390 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [ProductionAreas] AS [p]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-30 18:47:34.476 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[AreaId], [p].[AreaCode], [p].[AreaName], [p].[Description]
+FROM [ProductionAreas] AS [p]
+2026-04-30 18:47:34.591 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[EquipmentID], [e].[AreaId], [e].[EquipmentCode], [e].[EquipmentName], [e].[TechnicalSpecification], [e].[UsagePurpose]
+FROM [Equipments] AS [e]
+2026-04-30 18:47:34.764 +00:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [m].[MaterialID], [m].[BaseUomID], [m].[CreatedAt], [m].[IsActive], [m].[MaterialCode], [m].[MaterialName], [m].[TechnicalSpecification], [m].[Type], [m].[UpdatedAt]
+FROM [Materials] AS [m]
+2026-04-30 18:47:51.077 +00:00 [WRN] No store type was specified for the decimal property 'PlannedQuantity' on entity type 'ProductionBatch'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-30 18:47:51.180 +00:00 [WRN] No store type was specified for the decimal property 'SetTemperature' on entity type 'RecipeRouting'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-30 18:47:52.603 +00:00 [INF] Executed DbCommand (29ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:47:52.623 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:47:52.652 +00:00 [INF] Executed DbCommand (23ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF EXISTS
+    (SELECT *
+     FROM [sys].[objects] o
+     WHERE [o].[type] = 'U'
+     AND [o].[is_ms_shipped] = 0
+     AND NOT EXISTS (SELECT *
+         FROM [sys].[extended_properties] AS [ep]
+         WHERE [ep].[major_id] = [o].[object_id]
+             AND [ep].[minor_id] = 0
+             AND [ep].[class] = 1
+             AND [ep].[name] = N'microsoft_database_tools_support'
+    )
+)
+SELECT 1 ELSE SELECT 0
+2026-04-30 18:47:52.723 +00:00 [INF] Executed DbCommand (53ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF OBJECT_ID('dbo.ProductionAreas', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ProductionAreas (
+        AreaId INT IDENTITY(1,1) PRIMARY KEY,
+        AreaCode VARCHAR(50) NOT NULL UNIQUE,
+        AreaName NVARCHAR(200) NOT NULL,
+        Description NVARCHAR(500) NULL
+    );
+END;
+
+IF COL_LENGTH('dbo.Equipments','TechnicalSpecification') IS NULL
+    ALTER TABLE dbo.Equipments ADD TechnicalSpecification NVARCHAR(300) NULL;
+IF COL_LENGTH('dbo.Equipments','UsagePurpose') IS NULL
+    ALTER TABLE dbo.Equipments ADD UsagePurpose NVARCHAR(300) NULL;
+IF COL_LENGTH('dbo.Equipments','AreaId') IS NULL
+    ALTER TABLE dbo.Equipments ADD AreaId INT NULL;
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_Equipments_ProductionAreas')
+    ALTER TABLE dbo.Equipments ADD CONSTRAINT FK_Equipments_ProductionAreas FOREIGN KEY (AreaId) REFERENCES dbo.ProductionAreas(AreaId);
+
+IF COL_LENGTH('dbo.RecipeBom','TechnicalStandard') IS NULL
+    ALTER TABLE dbo.RecipeBom ADD TechnicalStandard NVARCHAR(100) NULL;
+
+IF COL_LENGTH('dbo.RecipeRouting','MaterialId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD MaterialId INT NULL;
+IF COL_LENGTH('dbo.RecipeRouting','AreaId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD AreaId INT NULL;
+IF COL_LENGTH('dbo.RecipeRouting','CleanlinessStatus') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD CleanlinessStatus NVARCHAR(50) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','StandardTemperature') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StandardTemperature NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardTemperature NVARCHAR(50) NULL;
+
+IF COL_LENGTH('dbo.RecipeRouting','StandardHumidity') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StandardHumidity NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardHumidity NVARCHAR(50) NULL;
+
+IF COL_LENGTH('dbo.RecipeRouting','StandardPressure') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StandardPressure NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardPressure NVARCHAR(50) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','StabilityStatus') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StabilityStatus NVARCHAR(50) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','SetTemperature') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD SetTemperature DECIMAL(10,2) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','SetTimeMinutes') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD SetTimeMinutes INT NULL;
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_RecipeRouting_Materials')
+    ALTER TABLE dbo.RecipeRouting ADD CONSTRAINT FK_RecipeRouting_Materials FOREIGN KEY (MaterialId) REFERENCES dbo.Materials(MaterialId);
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_RecipeRouting_ProductionAreas')
+    ALTER TABLE dbo.RecipeRouting ADD CONSTRAINT FK_RecipeRouting_ProductionAreas FOREIGN KEY (AreaId) REFERENCES dbo.ProductionAreas(AreaId);
+
+-- Missing column for RecipeRouting
+IF COL_LENGTH('dbo.RecipeRouting','NumberOfRouting') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD NumberOfRouting INT NULL DEFAULT 1;
+
+IF COL_LENGTH('dbo.RecipeRouting','OrderId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD OrderId INT NULL;
+
+-- Missing column for Materials
+IF COL_LENGTH('dbo.Materials','TechnicalSpecification') IS NULL
+    ALTER TABLE dbo.Materials ADD TechnicalSpecification NVARCHAR(MAX) NULL;
+
+-- Missing columns for ProductionOrders
+IF COL_LENGTH('dbo.ProductionOrders','Note') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD Note NVARCHAR(MAX) NULL;
+IF COL_LENGTH('dbo.ProductionOrders','PlannedCartons') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD PlannedCartons INT NULL;
+IF COL_LENGTH('dbo.ProductionOrders','StartDate') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD StartDate DATETIME NULL;
+IF COL_LENGTH('dbo.ProductionOrders','EndDate') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD EndDate DATETIME NULL;
+
+-- Missing columns for ProductionBatches
+IF COL_LENGTH('dbo.ProductionBatches','PlannedQuantity') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD PlannedQuantity DECIMAL(18,4) NULL;
+IF COL_LENGTH('dbo.ProductionBatches','CreatedAt') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD CreatedAt DATETIME NULL DEFAULT GETDATE();
+IF COL_LENGTH('dbo.ProductionBatches','ExpiryDate') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD ExpiryDate DATETIME NULL;
+IF COL_LENGTH('dbo.ProductionBatches','EndTime') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD EndTime DATETIME NULL;
+
+IF OBJECT_ID('dbo.SystemAuditLog', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.SystemAuditLog (
+        LogId INT IDENTITY(1,1) PRIMARY KEY,
+        TableName NVARCHAR(100),
+        RecordId NVARCHAR(100),
+        Action NVARCHAR(50),
+        OldValue NVARCHAR(MAX),
+        NewValue NVARCHAR(MAX),
+        ChangedDate DATETIME DEFAULT GETDATE()
+    );
+END;
+2026-04-30 18:47:53.090 +00:00 [INF] Executed DbCommand (19ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [AppUsers] AS [a]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-30 18:47:53.124 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [ProductionAreas] AS [p]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-30 18:47:53.198 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[AreaId], [p].[AreaCode], [p].[AreaName], [p].[Description]
+FROM [ProductionAreas] AS [p]
+2026-04-30 18:47:53.325 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[EquipmentID], [e].[AreaId], [e].[EquipmentCode], [e].[EquipmentName], [e].[TechnicalSpecification], [e].[UsagePurpose]
+FROM [Equipments] AS [e]
+2026-04-30 18:47:53.515 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [m].[MaterialID], [m].[BaseUomID], [m].[CreatedAt], [m].[IsActive], [m].[MaterialCode], [m].[MaterialName], [m].[TechnicalSpecification], [m].[Type], [m].[UpdatedAt]
+FROM [Materials] AS [m]
+2026-04-30 18:47:53.752 +00:00 [INF] Executed DbCommand (26ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:47:53.806 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:47:53.809 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:47:53.811 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:47:53.814 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:47:53.818 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:47:53.821 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:47:53.824 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:47:53.827 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:47:53.830 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:47:53.833 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:47:53.836 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:47:53.839 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:47:53.852 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__code_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [InventoryLots] AS [i]
+        WHERE [i].[LotNumber] = @__code_0) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-30 18:47:53.856 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__code_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [InventoryLots] AS [i]
+        WHERE [i].[LotNumber] = @__code_0) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-30 18:47:53.949 +00:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF OBJECT_ID('dbo.trg_Audit_Materials', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_Materials ON dbo.Materials AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''Materials'', CAST(COALESCE(i.MaterialId,d.MaterialId) AS NVARCHAR(50)),
+CASE WHEN i.MaterialId IS NOT NULL AND d.MaterialId IS NULL THEN ''Create''
+     WHEN i.MaterialId IS NOT NULL AND d.MaterialId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.MaterialId IS NULL THEN NULL ELSE CONCAT(''Code='', d.MaterialCode, '';Name='', d.MaterialName) END,
+CASE WHEN i.MaterialId IS NULL THEN NULL ELSE CONCAT(''Code='', i.MaterialCode, '';Name='', i.MaterialName) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.MaterialId = d.MaterialId; END');
+
+IF OBJECT_ID('dbo.trg_Audit_ProductionOrders', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_ProductionOrders ON dbo.ProductionOrders AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''ProductionOrders'', CAST(COALESCE(i.OrderId,d.OrderId) AS NVARCHAR(50)),
+CASE WHEN i.OrderId IS NOT NULL AND d.OrderId IS NULL THEN ''Create''
+     WHEN i.OrderId IS NOT NULL AND d.OrderId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.OrderId IS NULL THEN NULL ELSE CONCAT(''Code='', d.OrderCode, '';Status='', d.Status) END,
+CASE WHEN i.OrderId IS NULL THEN NULL ELSE CONCAT(''Code='', i.OrderCode, '';Status='', i.Status) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.OrderId = d.OrderId; END');
+
+IF OBJECT_ID('dbo.trg_Audit_InventoryLots', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_InventoryLots ON dbo.InventoryLots AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''InventoryLots'', CAST(COALESCE(i.LotId,d.LotId) AS NVARCHAR(50)),
+CASE WHEN i.LotId IS NOT NULL AND d.LotId IS NULL THEN ''Create''
+     WHEN i.LotId IS NOT NULL AND d.LotId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', d.LotNumber, '';Qty='', d.QuantityCurrent) END,
+CASE WHEN i.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', i.LotNumber, '';Qty='', i.QuantityCurrent) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.LotId = d.LotId; END');
+
+IF OBJECT_ID('dbo.trg_Audit_Equipments', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_Equipments ON dbo.Equipments AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''Equipments'', CAST(COALESCE(i.EquipmentId,d.EquipmentId) AS NVARCHAR(50)),
+CASE WHEN i.EquipmentId IS NOT NULL AND d.EquipmentId IS NULL THEN ''Create''
+     WHEN i.EquipmentId IS NOT NULL AND d.EquipmentId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.EquipmentId IS NULL THEN NULL ELSE CONCAT(''Code='', d.EquipmentCode) END,
+CASE WHEN i.EquipmentId IS NULL THEN NULL ELSE CONCAT(''Code='', i.EquipmentCode) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.EquipmentId = d.EquipmentId; END');
+2026-04-30 18:47:54.322 +00:00 [WRN] Storing keys in a directory '/root/.aspnet/DataProtection-Keys' that may not be persisted outside of the container. Protected data will be unavailable when container is destroyed. For more information go to https://aka.ms/aspnet/dataprotectionwarning
+2026-04-30 18:47:54.323 +00:00 [INF] User profile is available. Using '/root/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-30 18:47:54.382 +00:00 [WRN] Overriding HTTP_PORTS '8080' and HTTPS_PORTS ''. Binding to values defined by URLS instead 'http://0.0.0.0:5000'.
+2026-04-30 18:47:54.589 +00:00 [INF] Now listening on: http://0.0.0.0:5000
+2026-04-30 18:47:54.590 +00:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-30 18:47:54.590 +00:00 [INF] Hosting environment: Development
+2026-04-30 18:47:54.590 +00:00 [INF] Content root path: /src
+2026-04-30 18:48:24.300 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:48:24.487 +00:00 [WRN] Failed to determine the https port for redirect.
+2026-04-30 18:48:24.572 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:48:24.654 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:48:24.715 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:48:24.742 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:48:24.796 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 499.0077ms
+2026-04-30 18:48:54.919 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:48:54.931 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:48:55.097 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:48:55.104 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:48:55.106 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:48:55.109 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 190.4573ms
+2026-04-30 18:49:25.192 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:49:25.198 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:49:25.201 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:49:25.202 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:49:25.202 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:49:25.204 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 10.7055ms
+2026-04-30 18:49:55.288 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:49:55.289 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:49:55.292 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:49:55.293 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:49:55.293 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:49:55.294 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 6.1842ms
+2026-04-30 18:50:25.376 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:50:25.378 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:50:25.382 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:50:25.383 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:50:25.384 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:50:25.385 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 8.4388ms
+2026-04-30 18:50:55.475 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:50:55.476 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:50:55.479 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:50:55.479 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:50:55.480 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:50:55.480 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.0579ms
+2026-04-30 18:51:25.610 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:51:25.610 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:51:25.620 +00:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:51:25.621 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:51:25.622 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:51:25.623 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 13.2992ms
+2026-04-30 18:51:55.730 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:51:55.731 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:51:55.744 +00:00 [INF] Executed DbCommand (8ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:51:55.745 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:51:55.745 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:51:55.746 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 15.5418ms
+2026-04-30 18:52:25.835 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:52:25.835 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:52:25.839 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:52:25.839 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:52:25.840 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:52:25.840 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.3665ms
+2026-04-30 18:52:55.974 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:52:55.975 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:52:55.979 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:52:55.979 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:52:55.980 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:52:55.981 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 7.1464ms
+2026-04-30 18:53:27.122 +00:00 [WRN] No store type was specified for the decimal property 'PlannedQuantity' on entity type 'ProductionBatch'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-30 18:53:27.279 +00:00 [WRN] No store type was specified for the decimal property 'SetTemperature' on entity type 'RecipeRouting'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-30 18:53:28.664 +00:00 [INF] Executed DbCommand (29ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:53:28.684 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:53:28.713 +00:00 [INF] Executed DbCommand (23ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF EXISTS
+    (SELECT *
+     FROM [sys].[objects] o
+     WHERE [o].[type] = 'U'
+     AND [o].[is_ms_shipped] = 0
+     AND NOT EXISTS (SELECT *
+         FROM [sys].[extended_properties] AS [ep]
+         WHERE [ep].[major_id] = [o].[object_id]
+             AND [ep].[minor_id] = 0
+             AND [ep].[class] = 1
+             AND [ep].[name] = N'microsoft_database_tools_support'
+    )
+)
+SELECT 1 ELSE SELECT 0
+2026-04-30 18:53:28.787 +00:00 [INF] Executed DbCommand (56ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF OBJECT_ID('dbo.ProductionAreas', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ProductionAreas (
+        AreaId INT IDENTITY(1,1) PRIMARY KEY,
+        AreaCode VARCHAR(50) NOT NULL UNIQUE,
+        AreaName NVARCHAR(200) NOT NULL,
+        Description NVARCHAR(500) NULL
+    );
+END;
+
+IF COL_LENGTH('dbo.Equipments','TechnicalSpecification') IS NULL
+    ALTER TABLE dbo.Equipments ADD TechnicalSpecification NVARCHAR(300) NULL;
+IF COL_LENGTH('dbo.Equipments','UsagePurpose') IS NULL
+    ALTER TABLE dbo.Equipments ADD UsagePurpose NVARCHAR(300) NULL;
+IF COL_LENGTH('dbo.Equipments','AreaId') IS NULL
+    ALTER TABLE dbo.Equipments ADD AreaId INT NULL;
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_Equipments_ProductionAreas')
+    ALTER TABLE dbo.Equipments ADD CONSTRAINT FK_Equipments_ProductionAreas FOREIGN KEY (AreaId) REFERENCES dbo.ProductionAreas(AreaId);
+
+IF COL_LENGTH('dbo.RecipeBom','TechnicalStandard') IS NULL
+    ALTER TABLE dbo.RecipeBom ADD TechnicalStandard NVARCHAR(100) NULL;
+
+IF COL_LENGTH('dbo.RecipeRouting','MaterialId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD MaterialId INT NULL;
+IF COL_LENGTH('dbo.RecipeRouting','AreaId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD AreaId INT NULL;
+IF COL_LENGTH('dbo.RecipeRouting','CleanlinessStatus') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD CleanlinessStatus NVARCHAR(50) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','StandardTemperature') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StandardTemperature NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardTemperature NVARCHAR(50) NULL;
+
+IF COL_LENGTH('dbo.RecipeRouting','StandardHumidity') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StandardHumidity NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardHumidity NVARCHAR(50) NULL;
+
+IF COL_LENGTH('dbo.RecipeRouting','StandardPressure') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StandardPressure NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardPressure NVARCHAR(50) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','StabilityStatus') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StabilityStatus NVARCHAR(50) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','SetTemperature') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD SetTemperature DECIMAL(10,2) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','SetTimeMinutes') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD SetTimeMinutes INT NULL;
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_RecipeRouting_Materials')
+    ALTER TABLE dbo.RecipeRouting ADD CONSTRAINT FK_RecipeRouting_Materials FOREIGN KEY (MaterialId) REFERENCES dbo.Materials(MaterialId);
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_RecipeRouting_ProductionAreas')
+    ALTER TABLE dbo.RecipeRouting ADD CONSTRAINT FK_RecipeRouting_ProductionAreas FOREIGN KEY (AreaId) REFERENCES dbo.ProductionAreas(AreaId);
+
+-- Missing column for RecipeRouting
+IF COL_LENGTH('dbo.RecipeRouting','NumberOfRouting') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD NumberOfRouting INT NULL DEFAULT 1;
+
+IF COL_LENGTH('dbo.RecipeRouting','OrderId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD OrderId INT NULL;
+
+-- Missing column for Materials
+IF COL_LENGTH('dbo.Materials','TechnicalSpecification') IS NULL
+    ALTER TABLE dbo.Materials ADD TechnicalSpecification NVARCHAR(MAX) NULL;
+
+-- Missing columns for ProductionOrders
+IF COL_LENGTH('dbo.ProductionOrders','Note') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD Note NVARCHAR(MAX) NULL;
+IF COL_LENGTH('dbo.ProductionOrders','PlannedCartons') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD PlannedCartons INT NULL;
+IF COL_LENGTH('dbo.ProductionOrders','StartDate') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD StartDate DATETIME NULL;
+IF COL_LENGTH('dbo.ProductionOrders','EndDate') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD EndDate DATETIME NULL;
+
+-- Missing columns for ProductionBatches
+IF COL_LENGTH('dbo.ProductionBatches','PlannedQuantity') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD PlannedQuantity DECIMAL(18,4) NULL;
+IF COL_LENGTH('dbo.ProductionBatches','CreatedAt') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD CreatedAt DATETIME NULL DEFAULT GETDATE();
+IF COL_LENGTH('dbo.ProductionBatches','ExpiryDate') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD ExpiryDate DATETIME NULL;
+IF COL_LENGTH('dbo.ProductionBatches','EndTime') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD EndTime DATETIME NULL;
+
+IF OBJECT_ID('dbo.SystemAuditLog', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.SystemAuditLog (
+        LogId INT IDENTITY(1,1) PRIMARY KEY,
+        TableName NVARCHAR(100),
+        RecordId NVARCHAR(100),
+        Action NVARCHAR(50),
+        OldValue NVARCHAR(MAX),
+        NewValue NVARCHAR(MAX),
+        ChangedDate DATETIME DEFAULT GETDATE()
+    );
+END;
+2026-04-30 18:53:29.251 +00:00 [INF] Executed DbCommand (24ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [AppUsers] AS [a]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-30 18:53:29.295 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [ProductionAreas] AS [p]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-30 18:53:29.399 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[AreaId], [p].[AreaCode], [p].[AreaName], [p].[Description]
+FROM [ProductionAreas] AS [p]
+2026-04-30 18:53:29.532 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[EquipmentID], [e].[AreaId], [e].[EquipmentCode], [e].[EquipmentName], [e].[TechnicalSpecification], [e].[UsagePurpose]
+FROM [Equipments] AS [e]
+2026-04-30 18:53:29.642 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [m].[MaterialID], [m].[BaseUomID], [m].[CreatedAt], [m].[IsActive], [m].[MaterialCode], [m].[MaterialName], [m].[TechnicalSpecification], [m].[Type], [m].[UpdatedAt]
+FROM [Materials] AS [m]
+2026-04-30 18:53:29.783 +00:00 [INF] Executed DbCommand (23ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:53:29.843 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:53:29.846 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:53:29.851 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:53:29.855 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:53:29.858 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:53:29.862 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:53:29.865 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:53:29.868 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:53:29.871 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:53:29.873 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:53:29.877 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:53:29.880 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:53:29.894 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__code_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [InventoryLots] AS [i]
+        WHERE [i].[LotNumber] = @__code_0) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-30 18:53:29.897 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__code_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [InventoryLots] AS [i]
+        WHERE [i].[LotNumber] = @__code_0) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-30 18:53:29.953 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF OBJECT_ID('dbo.trg_Audit_Materials', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_Materials ON dbo.Materials AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''Materials'', CAST(COALESCE(i.MaterialId,d.MaterialId) AS NVARCHAR(50)),
+CASE WHEN i.MaterialId IS NOT NULL AND d.MaterialId IS NULL THEN ''Create''
+     WHEN i.MaterialId IS NOT NULL AND d.MaterialId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.MaterialId IS NULL THEN NULL ELSE CONCAT(''Code='', d.MaterialCode, '';Name='', d.MaterialName) END,
+CASE WHEN i.MaterialId IS NULL THEN NULL ELSE CONCAT(''Code='', i.MaterialCode, '';Name='', i.MaterialName) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.MaterialId = d.MaterialId; END');
+
+IF OBJECT_ID('dbo.trg_Audit_ProductionOrders', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_ProductionOrders ON dbo.ProductionOrders AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''ProductionOrders'', CAST(COALESCE(i.OrderId,d.OrderId) AS NVARCHAR(50)),
+CASE WHEN i.OrderId IS NOT NULL AND d.OrderId IS NULL THEN ''Create''
+     WHEN i.OrderId IS NOT NULL AND d.OrderId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.OrderId IS NULL THEN NULL ELSE CONCAT(''Code='', d.OrderCode, '';Status='', d.Status) END,
+CASE WHEN i.OrderId IS NULL THEN NULL ELSE CONCAT(''Code='', i.OrderCode, '';Status='', i.Status) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.OrderId = d.OrderId; END');
+
+IF OBJECT_ID('dbo.trg_Audit_InventoryLots', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_InventoryLots ON dbo.InventoryLots AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''InventoryLots'', CAST(COALESCE(i.LotId,d.LotId) AS NVARCHAR(50)),
+CASE WHEN i.LotId IS NOT NULL AND d.LotId IS NULL THEN ''Create''
+     WHEN i.LotId IS NOT NULL AND d.LotId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', d.LotNumber, '';Qty='', d.QuantityCurrent) END,
+CASE WHEN i.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', i.LotNumber, '';Qty='', i.QuantityCurrent) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.LotId = d.LotId; END');
+
+IF OBJECT_ID('dbo.trg_Audit_Equipments', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_Equipments ON dbo.Equipments AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''Equipments'', CAST(COALESCE(i.EquipmentId,d.EquipmentId) AS NVARCHAR(50)),
+CASE WHEN i.EquipmentId IS NOT NULL AND d.EquipmentId IS NULL THEN ''Create''
+     WHEN i.EquipmentId IS NOT NULL AND d.EquipmentId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.EquipmentId IS NULL THEN NULL ELSE CONCAT(''Code='', d.EquipmentCode) END,
+CASE WHEN i.EquipmentId IS NULL THEN NULL ELSE CONCAT(''Code='', i.EquipmentCode) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.EquipmentId = d.EquipmentId; END');
+2026-04-30 18:53:30.325 +00:00 [WRN] Storing keys in a directory '/root/.aspnet/DataProtection-Keys' that may not be persisted outside of the container. Protected data will be unavailable when container is destroyed. For more information go to https://aka.ms/aspnet/dataprotectionwarning
+2026-04-30 18:53:30.326 +00:00 [INF] User profile is available. Using '/root/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-30 18:53:30.402 +00:00 [WRN] Overriding HTTP_PORTS '8080' and HTTPS_PORTS ''. Binding to values defined by URLS instead 'http://0.0.0.0:5000'.
+2026-04-30 18:53:30.654 +00:00 [INF] Now listening on: http://0.0.0.0:5000
+2026-04-30 18:53:30.656 +00:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-30 18:53:30.656 +00:00 [INF] Hosting environment: Development
+2026-04-30 18:53:30.657 +00:00 [INF] Content root path: /src
+2026-04-30 18:53:56.380 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:53:56.508 +00:00 [WRN] Failed to determine the https port for redirect.
+2026-04-30 18:53:56.575 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:53:56.633 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:53:56.676 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:53:56.701 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:53:56.749 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 370.3393ms
+2026-04-30 18:54:26.880 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:54:26.896 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:54:27.080 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:54:27.090 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:54:27.092 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:54:27.097 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 217.2573ms
+2026-04-30 18:55:05.704 +00:00 [WRN] No store type was specified for the decimal property 'PlannedQuantity' on entity type 'ProductionBatch'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-30 18:55:05.771 +00:00 [WRN] No store type was specified for the decimal property 'SetTemperature' on entity type 'RecipeRouting'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-30 18:55:06.819 +00:00 [INF] Executed DbCommand (36ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:55:06.838 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:55:06.860 +00:00 [INF] Executed DbCommand (19ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF EXISTS
+    (SELECT *
+     FROM [sys].[objects] o
+     WHERE [o].[type] = 'U'
+     AND [o].[is_ms_shipped] = 0
+     AND NOT EXISTS (SELECT *
+         FROM [sys].[extended_properties] AS [ep]
+         WHERE [ep].[major_id] = [o].[object_id]
+             AND [ep].[minor_id] = 0
+             AND [ep].[class] = 1
+             AND [ep].[name] = N'microsoft_database_tools_support'
+    )
+)
+SELECT 1 ELSE SELECT 0
+2026-04-30 18:55:06.927 +00:00 [INF] Executed DbCommand (51ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF OBJECT_ID('dbo.ProductionAreas', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ProductionAreas (
+        AreaId INT IDENTITY(1,1) PRIMARY KEY,
+        AreaCode VARCHAR(50) NOT NULL UNIQUE,
+        AreaName NVARCHAR(200) NOT NULL,
+        Description NVARCHAR(500) NULL
+    );
+END;
+
+IF COL_LENGTH('dbo.Equipments','TechnicalSpecification') IS NULL
+    ALTER TABLE dbo.Equipments ADD TechnicalSpecification NVARCHAR(300) NULL;
+IF COL_LENGTH('dbo.Equipments','UsagePurpose') IS NULL
+    ALTER TABLE dbo.Equipments ADD UsagePurpose NVARCHAR(300) NULL;
+IF COL_LENGTH('dbo.Equipments','AreaId') IS NULL
+    ALTER TABLE dbo.Equipments ADD AreaId INT NULL;
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_Equipments_ProductionAreas')
+    ALTER TABLE dbo.Equipments ADD CONSTRAINT FK_Equipments_ProductionAreas FOREIGN KEY (AreaId) REFERENCES dbo.ProductionAreas(AreaId);
+
+IF COL_LENGTH('dbo.RecipeBom','TechnicalStandard') IS NULL
+    ALTER TABLE dbo.RecipeBom ADD TechnicalStandard NVARCHAR(100) NULL;
+
+IF COL_LENGTH('dbo.RecipeRouting','MaterialId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD MaterialId INT NULL;
+IF COL_LENGTH('dbo.RecipeRouting','AreaId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD AreaId INT NULL;
+IF COL_LENGTH('dbo.RecipeRouting','CleanlinessStatus') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD CleanlinessStatus NVARCHAR(50) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','StandardTemperature') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StandardTemperature NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardTemperature NVARCHAR(50) NULL;
+
+IF COL_LENGTH('dbo.RecipeRouting','StandardHumidity') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StandardHumidity NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardHumidity NVARCHAR(50) NULL;
+
+IF COL_LENGTH('dbo.RecipeRouting','StandardPressure') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StandardPressure NVARCHAR(50) NULL;
+ELSE
+    ALTER TABLE dbo.RecipeRouting ALTER COLUMN StandardPressure NVARCHAR(50) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','StabilityStatus') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD StabilityStatus NVARCHAR(50) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','SetTemperature') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD SetTemperature DECIMAL(10,2) NULL;
+IF COL_LENGTH('dbo.RecipeRouting','SetTimeMinutes') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD SetTimeMinutes INT NULL;
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_RecipeRouting_Materials')
+    ALTER TABLE dbo.RecipeRouting ADD CONSTRAINT FK_RecipeRouting_Materials FOREIGN KEY (MaterialId) REFERENCES dbo.Materials(MaterialId);
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_RecipeRouting_ProductionAreas')
+    ALTER TABLE dbo.RecipeRouting ADD CONSTRAINT FK_RecipeRouting_ProductionAreas FOREIGN KEY (AreaId) REFERENCES dbo.ProductionAreas(AreaId);
+
+-- Missing column for RecipeRouting
+IF COL_LENGTH('dbo.RecipeRouting','NumberOfRouting') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD NumberOfRouting INT NULL DEFAULT 1;
+
+IF COL_LENGTH('dbo.RecipeRouting','OrderId') IS NULL
+    ALTER TABLE dbo.RecipeRouting ADD OrderId INT NULL;
+
+-- Missing column for Materials
+IF COL_LENGTH('dbo.Materials','TechnicalSpecification') IS NULL
+    ALTER TABLE dbo.Materials ADD TechnicalSpecification NVARCHAR(MAX) NULL;
+
+-- Missing columns for ProductionOrders
+IF COL_LENGTH('dbo.ProductionOrders','Note') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD Note NVARCHAR(MAX) NULL;
+IF COL_LENGTH('dbo.ProductionOrders','PlannedCartons') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD PlannedCartons INT NULL;
+IF COL_LENGTH('dbo.ProductionOrders','StartDate') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD StartDate DATETIME NULL;
+IF COL_LENGTH('dbo.ProductionOrders','EndDate') IS NULL
+    ALTER TABLE dbo.ProductionOrders ADD EndDate DATETIME NULL;
+
+-- Missing columns for ProductionBatches
+IF COL_LENGTH('dbo.ProductionBatches','PlannedQuantity') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD PlannedQuantity DECIMAL(18,4) NULL;
+IF COL_LENGTH('dbo.ProductionBatches','CreatedAt') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD CreatedAt DATETIME NULL DEFAULT GETDATE();
+IF COL_LENGTH('dbo.ProductionBatches','ExpiryDate') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD ExpiryDate DATETIME NULL;
+IF COL_LENGTH('dbo.ProductionBatches','EndTime') IS NULL
+    ALTER TABLE dbo.ProductionBatches ADD EndTime DATETIME NULL;
+
+IF OBJECT_ID('dbo.SystemAuditLog', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.SystemAuditLog (
+        LogId INT IDENTITY(1,1) PRIMARY KEY,
+        TableName NVARCHAR(100),
+        RecordId NVARCHAR(100),
+        Action NVARCHAR(50),
+        OldValue NVARCHAR(MAX),
+        NewValue NVARCHAR(MAX),
+        ChangedDate DATETIME DEFAULT GETDATE()
+    );
+END;
+2026-04-30 18:55:07.368 +00:00 [INF] Executed DbCommand (19ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [AppUsers] AS [a]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-30 18:55:07.402 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [ProductionAreas] AS [p]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-30 18:55:07.468 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[AreaId], [p].[AreaCode], [p].[AreaName], [p].[Description]
+FROM [ProductionAreas] AS [p]
+2026-04-30 18:55:07.562 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[EquipmentID], [e].[AreaId], [e].[EquipmentCode], [e].[EquipmentName], [e].[TechnicalSpecification], [e].[UsagePurpose]
+FROM [Equipments] AS [e]
+2026-04-30 18:55:07.682 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [m].[MaterialID], [m].[BaseUomID], [m].[CreatedAt], [m].[IsActive], [m].[MaterialCode], [m].[MaterialName], [m].[TechnicalSpecification], [m].[Type], [m].[UpdatedAt]
+FROM [Materials] AS [m]
+2026-04-30 18:55:07.835 +00:00 [INF] Executed DbCommand (20ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:55:07.889 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:55:07.892 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:55:07.895 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:55:07.898 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:55:07.901 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:55:07.905 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:55:07.908 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:55:07.911 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:55:07.915 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:55:07.919 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:55:07.922 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:55:07.925 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__material_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QCStatus], [i].[QuantityCurrent], [i].[SupplierName]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__material_MaterialId_0
+2026-04-30 18:55:07.939 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__code_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [InventoryLots] AS [i]
+        WHERE [i].[LotNumber] = @__code_0) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-30 18:55:07.941 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__code_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [InventoryLots] AS [i]
+        WHERE [i].[LotNumber] = @__code_0) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-30 18:55:07.996 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF OBJECT_ID('dbo.trg_Audit_Materials', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_Materials ON dbo.Materials AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''Materials'', CAST(COALESCE(i.MaterialId,d.MaterialId) AS NVARCHAR(50)),
+CASE WHEN i.MaterialId IS NOT NULL AND d.MaterialId IS NULL THEN ''Create''
+     WHEN i.MaterialId IS NOT NULL AND d.MaterialId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.MaterialId IS NULL THEN NULL ELSE CONCAT(''Code='', d.MaterialCode, '';Name='', d.MaterialName) END,
+CASE WHEN i.MaterialId IS NULL THEN NULL ELSE CONCAT(''Code='', i.MaterialCode, '';Name='', i.MaterialName) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.MaterialId = d.MaterialId; END');
+
+IF OBJECT_ID('dbo.trg_Audit_ProductionOrders', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_ProductionOrders ON dbo.ProductionOrders AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''ProductionOrders'', CAST(COALESCE(i.OrderId,d.OrderId) AS NVARCHAR(50)),
+CASE WHEN i.OrderId IS NOT NULL AND d.OrderId IS NULL THEN ''Create''
+     WHEN i.OrderId IS NOT NULL AND d.OrderId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.OrderId IS NULL THEN NULL ELSE CONCAT(''Code='', d.OrderCode, '';Status='', d.Status) END,
+CASE WHEN i.OrderId IS NULL THEN NULL ELSE CONCAT(''Code='', i.OrderCode, '';Status='', i.Status) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.OrderId = d.OrderId; END');
+
+IF OBJECT_ID('dbo.trg_Audit_InventoryLots', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_InventoryLots ON dbo.InventoryLots AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''InventoryLots'', CAST(COALESCE(i.LotId,d.LotId) AS NVARCHAR(50)),
+CASE WHEN i.LotId IS NOT NULL AND d.LotId IS NULL THEN ''Create''
+     WHEN i.LotId IS NOT NULL AND d.LotId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', d.LotNumber, '';Qty='', d.QuantityCurrent) END,
+CASE WHEN i.LotId IS NULL THEN NULL ELSE CONCAT(''Lot='', i.LotNumber, '';Qty='', i.QuantityCurrent) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.LotId = d.LotId; END');
+
+IF OBJECT_ID('dbo.trg_Audit_Equipments', 'TR') IS NULL
+EXEC('CREATE TRIGGER dbo.trg_Audit_Equipments ON dbo.Equipments AFTER INSERT, UPDATE, DELETE AS BEGIN SET NOCOUNT ON;
+INSERT INTO dbo.SystemAuditLog(TableName, RecordId, Action, OldValue, NewValue, ChangedDate)
+SELECT ''Equipments'', CAST(COALESCE(i.EquipmentId,d.EquipmentId) AS NVARCHAR(50)),
+CASE WHEN i.EquipmentId IS NOT NULL AND d.EquipmentId IS NULL THEN ''Create''
+     WHEN i.EquipmentId IS NOT NULL AND d.EquipmentId IS NOT NULL THEN ''Update''
+     ELSE ''Delete'' END,
+CASE WHEN d.EquipmentId IS NULL THEN NULL ELSE CONCAT(''Code='', d.EquipmentCode) END,
+CASE WHEN i.EquipmentId IS NULL THEN NULL ELSE CONCAT(''Code='', i.EquipmentCode) END,
+GETDATE()
+FROM inserted i FULL OUTER JOIN deleted d ON i.EquipmentId = d.EquipmentId; END');
+2026-04-30 18:55:08.197 +00:00 [WRN] Storing keys in a directory '/root/.aspnet/DataProtection-Keys' that may not be persisted outside of the container. Protected data will be unavailable when container is destroyed. For more information go to https://aka.ms/aspnet/dataprotectionwarning
+2026-04-30 18:55:08.198 +00:00 [INF] User profile is available. Using '/root/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-04-30 18:55:08.231 +00:00 [WRN] Overriding HTTP_PORTS '8080' and HTTPS_PORTS ''. Binding to values defined by URLS instead 'http://0.0.0.0:5000'.
+2026-04-30 18:55:08.363 +00:00 [INF] Now listening on: http://0.0.0.0:5000
+2026-04-30 18:55:08.364 +00:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-30 18:55:08.365 +00:00 [INF] Hosting environment: Development
+2026-04-30 18:55:08.365 +00:00 [INF] Content root path: /src
+2026-04-30 18:55:27.321 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:55:27.425 +00:00 [WRN] Failed to determine the https port for redirect.
+2026-04-30 18:55:27.494 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:55:27.553 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:55:27.588 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:55:27.609 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:55:27.646 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 328.2518ms
+2026-04-30 18:55:57.718 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:55:57.726 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:55:57.836 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:55:57.842 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:55:57.844 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:55:57.849 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 129.746ms
+2026-04-30 18:56:27.942 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:56:27.949 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:56:27.954 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:56:27.955 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:56:27.955 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:56:27.956 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 13.4765ms
+2026-04-30 18:56:58.050 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:56:58.051 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:56:58.055 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:56:58.057 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:56:58.057 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:56:58.057 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 7.3008ms
+2026-04-30 18:57:28.149 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-04-30 18:57:28.149 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:57:28.154 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-30 18:57:28.155 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-04-30 18:57:28.155 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-04-30 18:57:28.156 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 7.1934ms

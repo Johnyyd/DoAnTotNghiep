@@ -67,12 +67,18 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // ============================================================
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
+    options.AddPolicy("AllowVercelAndLocal",
+        policy =>
+        {
+            policy.WithOrigins(
+                    "https://do-an-tot-nghiep-mz49c8gbc-johnyyds-projects.vercel.app", // Link Vercel
+                    "http://localhost:8080", // Frontend Local
+                    "http://localhost:8081"  // Mobile Local
+                  )
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials(); // Bắt buộc phải có để gửi token/cookie
+        });
 });
 
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "GMP_WHO_Default_Secret_Key_Minimum_32_Characters_Long_123456789";
@@ -96,6 +102,20 @@ builder.Services.AddAuthentication(x =>
         ClockSkew = TimeSpan.Zero
     };
 });
+
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowVercel",
+        policy =>
+        {
+            policy.WithOrigins("https://do-an-tot-nghiep-mz49c8gbc-johnyyds-projects.vercel.app") // Thay bằng đúng link Vercel ở ảnh của bạn
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials(); 
+        });
+});
+
 
 var app = builder.Build();
 
@@ -159,8 +179,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
+
+app.UseCors("AllowVercelAndLocal");
+
 app.UseAuthentication();   
 app.UseAuthorization();
 app.MapControllers();
