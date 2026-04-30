@@ -192,7 +192,7 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: color.withOpacity(0.12),
+                            color: color.withAlpha((0.12 * 255).toInt()),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
@@ -240,9 +240,9 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: color.withOpacity(0.1),
+                                color: color.withAlpha((0.1 * 255).toInt()),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: color.withOpacity(0.5)),
+                                border: Border.all(color: color.withAlpha((0.5 * 255).toInt())),
                               ),
                               child: Text(
                                 isBlocked ? 'Chưa được phép' : _statusLabel(status),

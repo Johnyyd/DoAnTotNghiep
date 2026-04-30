@@ -30,7 +30,7 @@ class DynamicStepScreen extends StatefulWidget {
 class _DynamicStepScreenState extends State<DynamicStepScreen>
     with GmpStepMixin<DynamicStepScreen> {
   ExecutionPhase _currentPhase = ExecutionPhase.precheck;
-  Map<String, dynamic>? _stepData;
+  // _stepData removed – not used
   List<dynamic> _parameters = [];
   final Map<int, TextEditingController> _controllers = {};
   bool _isLoading = true;
@@ -62,7 +62,7 @@ class _DynamicStepScreenState extends State<DynamicStepScreen>
 
       if (mounted) {
         setState(() {
-          _stepData = log;
+          // _stepData assignment removed
           _parameters = pList;
           _isLoading = false;
 

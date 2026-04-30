@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -311,6 +312,9 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
     setState(() => isSaving = true);
     final verifierId = AuthService.currentUser?['userId'] ?? 0;
 
+    // Capture context and messenger before async call
+    final BuildContext ctx = context;
+    final messenger = ScaffoldMessenger.of(ctx);
     final success = await ApiService.verifyStepData(
       logId: _currentLog['logId'] ?? _currentLog['id'],
       verifierId: verifierId,
@@ -325,8 +329,8 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
           await ApiService.updateOrderStatus(widget.orderId!, 'In-Process');
         }
         await _loadDataFromDB();
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('✔ QC đã xác nhận: $status')));
+        messenger.showSnackBar(
+            SnackBar(content: Text('✔ QC đã xác nhận: $status')));
       }
     }
   }
@@ -454,6 +458,8 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
       return false;
     }
 
+    final BuildContext ctx = context;
+    final messenger = ScaffoldMessenger.of(ctx);
     bool success = await ApiService.submitStepData(
       batchId: widget.batchId!,
       stepId: widget.stepId!,
@@ -462,18 +468,23 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
       notes: finalNotes.isNotEmpty ? finalNotes : null,
     );
 
-    if (success) {
-      await _loadDataFromDB();
-      if (resultStatus == 'Passed') Navigator.pop(context, true);
-    }
-
-    if (mounted) setState(() => isSaving = false);
-
-    if (!isInternal && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(success
-              ? '✔ Cập nhật dữ liệu thành công!'
-              : '❌ Lỗi khi lưu dữ liệu!')));
+    if (mounted) {
+      setState(() => isSaving = false);
+      if (success) {
+        await _loadDataFromDB();
+        if (resultStatus == 'Passed') {
+          Navigator.pop(ctx, true);
+        }
+        if (!isInternal) {
+          messenger.showSnackBar(const SnackBar(
+              content: Text('✔ Cập nhật dữ liệu thành công!')));
+        }
+      } else {
+        if (!isInternal) {
+          messenger.showSnackBar(const SnackBar(
+              content: Text('❌ Lỗi khi lưu dữ liệu!')));
+        }
+      }
     }
     return success;
   }

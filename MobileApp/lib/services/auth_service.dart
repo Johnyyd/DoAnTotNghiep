@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// [AuthService] — Quản lý trạng thái đăng nhập (persistent).
-/// Lưu token và thông tin user cục bộ qua shared_preferences.
+/// Lưu token và thông tin user cục bộ qua flutter_secure_storage.
 class AuthService {
   static String? _token;
   static Map<String, dynamic>? _currentUser;
@@ -12,10 +12,11 @@ class AuthService {
   static bool get isLoggedIn => _token != null;
 
   /// Gọi khi app vừa khởi động
+  static const _storage = FlutterSecureStorage();
+
   static Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
-    _token = prefs.getString('auth_token');
-    final userStr = prefs.getString('auth_user');
+    _token = await _storage.read(key: 'auth_token');
+    final userStr = await _storage.read(key: 'auth_user');
     if (userStr != null) {
       try {
         _currentUser = jsonDecode(userStr);
@@ -32,18 +33,16 @@ class AuthService {
   static Future<void> setSession(String token, Map<String, dynamic> user) async {
     _token = token;
     _currentUser = user;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', token);
-    await prefs.setString('auth_user', jsonEncode(user));
+    await _storage.write(key: 'auth_token', value: token);
+    await _storage.write(key: 'auth_user', value: jsonEncode(user));
   }
 
   /// Xóa phiên đăng nhập
   static Future<void> clearSession() async {
     _token = null;
     _currentUser = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
-    await prefs.remove('auth_user');
+    await _storage.delete(key: 'auth_token');
+    await _storage.delete(key: 'auth_user');
   }
 
   /// Xác thực PIN chữ ký cá nhân (GMP Electronic Signature)

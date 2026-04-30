@@ -94,7 +94,7 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
             for (var log in logs) {
               final st = log['resultStatus']?.toString().replaceAll(' ', '').toUpperCase() ?? '';
               final lId = log['logId'] ?? log['id'] as int?;
-              final sId = log['stepId'] ?? log['id'] as int?; // RoutingId phục vụ Create mới
+              // final sId = log['stepId'] ?? log['id'] as int?; // RoutingId phục vụ Create mới (unused)
 
               if (st == 'PENDINGQC' || st == 'PENDING_QC') {
                 if (lId != null) {

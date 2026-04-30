@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart'; // Added for kIsWeb
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'auth_service.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -13,19 +14,20 @@ class ApiService {
 
   static String get baseUrl {
     if (_manualBaseUrl != null) return _manualBaseUrl!;
+    // Đọc biến môi trường API_BASE_URL nếu có (được load từ .env)
+    final envUrl = dotenv.maybeGet('API_BASE_URL');
+    if (envUrl != null && envUrl.isNotEmpty) return envUrl;
     if (kIsWeb) {
       // Trên Web, dùng origin hiện tại (vd http://localhost:8081) + /api
       final origin = Uri.base.origin;
       return '$origin/api';
     }
-    // QUAN TRỌNG: Thay 'localhost' thành địa chỉ IP máy tính của bạn (vd: 192.168.1.10) để kết nối từ điện thoại thật.
-    return 'http://192.168.100.152:5001/api'; // <--- HÃY THAY IP NÀY BẰNG IP MÁY TÍNH CỦA BẠN
+    // Mặc định fallback cho môi trường dev nội bộ (đổi IP trong .env cho thiết bị thực)
+    return 'http://192.168.100.152:5001/api';
   }
 
   /// Tiện ích log lỗi cho dev
-  static void _logError(String context, dynamic error) {
-    debugPrint('[ApiService Error] $context: $error');
-  }
+  // Removed unused _logError helper (errors are now logged inline where needed).
 
   /// Headers mặc định kèm JWT token
   static Future<Map<String, String>> _headers() async {
