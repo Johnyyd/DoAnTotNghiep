@@ -1,28 +1,14 @@
 # ==============================================================================================
-# GMP-WHO Mobile Application (Flutter Web)
+# GMP-WHO Mobile Application (Nginx Only)
+# Hướng dẫn: Bạn cần chạy 'flutter build web --release' trên máy thật trước khi build Docker.
 # ==============================================================================================
 
-# STAGE 1: Build Flutter Web
-# Sử dụng Image Flutter chính thức để đóng gói mã nguồn
-FROM ghcr.io/cirruslabs/flutter:stable AS build
-WORKDIR /app
-
-# Tối ưu hóa Cache cho Flutter Pub Get
-COPY pubspec.* ./
-RUN flutter pub get
-
-# Copy toàn bộ mã nguồn và thực hiện build
-COPY . .
-RUN flutter build web --release
-
-# ----------------------------------------------------------------------------------------------
-# STAGE 2: Production (Phân phối qua Nginx)
-# ----------------------------------------------------------------------------------------------
 FROM nginx:alpine AS production
 WORKDIR /usr/share/nginx/html
 
-# Chuyển thành phẩm từ Stage Build sang
-COPY --from=build /app/build/web .
+# Copy thành phẩm đã build sẵn từ máy thật vào
+# Đảm bảo bạn đã chạy lệnh build trước đó
+COPY build/web .
 
 # Cấu hình Nginx để hỗ trợ Single Page Application (SPA)
 COPY nginx.conf /etc/nginx/conf.d/default.conf

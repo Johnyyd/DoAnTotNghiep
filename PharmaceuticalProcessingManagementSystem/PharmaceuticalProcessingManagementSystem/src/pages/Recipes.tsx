@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { areasApi, equipmentsApi, materialsApi, recipesApi } from '@/services/api';
 import { CheckCircle2, ListTree, Pencil, Plus, Route, Search, Trash2 } from 'lucide-react';
@@ -307,6 +307,9 @@ export default function Recipes() {
       setShowRoutingModal(false);
       setEditingRouting(null);
     },
+    onError: (error: any) => {
+      alert(error?.response?.data?.message || error?.message || 'Có lỗi xảy ra khi lưu công đoạn. Vui lòng kiểm tra lại thông tin.');
+    }
   });
 
   const updateRoutingMutation = useMutation({
@@ -327,6 +330,9 @@ export default function Recipes() {
       setShowRoutingModal(false);
       setEditingRouting(null);
     },
+    onError: (error: any) => {
+      alert(error?.response?.data?.message || error?.message || 'Có lỗi xảy ra khi lưu công đoạn. Vui lòng kiểm tra lại thông tin.');
+    }
   });
 
   const deleteRoutingMutation = useMutation({

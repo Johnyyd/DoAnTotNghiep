@@ -26,13 +26,11 @@ const navigation = [
   { name: 'Lệnh Sản Xuất', href: '/production-orders', icon: Warehouse, roles: ['Admin', 'Manager'] },
   { name: 'Thành Phẩm', href: '/finished-products', icon: Package, roles: ['Admin', 'Manager', 'QualityControl'] },
   { name: 'Truy Xuất', href: '/traceability', icon: Search, roles: ['Admin', 'Manager', 'QualityControl'] },
-  { name: 'Tồn Kho', href: '/inventory', icon: Package, roles: ['Admin', 'Manager'] },
   { name: 'Thiết Bị', href: '/equipments', icon: Settings, roles: ['Admin', 'Manager'] },
   { name: 'Theo Dõi Tiến Độ', href: '/manager-operations', icon: FileText, roles: ['Admin', 'Manager'] },
   { name: 'Phòng Sản Xuất', href: '/production-areas', icon: Factory, roles: ['Admin', 'Manager'] },
   { name: 'Thống Kê Thành Phẩm', href: '/finished-goods-stats', icon: BarChart3, roles: ['Admin', 'Manager'] },
   { name: 'Tài Khoản', href: '/users', icon: Users, roles: ['Admin'] },
-
 ];
 
 const roleLabels: Record<string, string> = {

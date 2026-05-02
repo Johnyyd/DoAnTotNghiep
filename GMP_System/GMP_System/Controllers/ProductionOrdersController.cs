@@ -233,10 +233,12 @@ namespace GMP_System.Controllers
 
             if (recipe.Status != "Approved" && recipe.Status != "Draft")
             {
-                return BadRequest(new { success = false, message = "Công th?c ph?i ? tr?ng thái Draft ho?c Approved d? l?p l?nh s?n xu?t." });
+                return BadRequest(new { success = false, message = "Công thức phải ở trạng thái Draft hoặc Approved để lập lệnh sản xuất." });
             }
 
-            order.Status = string.IsNullOrWhiteSpace(order.Status) ? "Draft" : order.Status;
+            bool isAnyOrderRunning = await _context.ProductionOrders.AnyAsync(o => o.Status == "InProcess" || o.Status == "In-Process");
+
+            order.Status = isAnyOrderRunning ? "Approved" : "In-Process";
             order.CreatedAt = DateTime.Now;
             if (!order.StartDate.HasValue) order.StartDate = DateTime.Now;
             if (!order.EndDate.HasValue) order.EndDate = order.StartDate!.Value.AddDays(2);
@@ -295,7 +297,7 @@ namespace GMP_System.Controllers
                             {
                                 OrderId = order.OrderId,
                                 BatchNumber = batchNumber,
-                                Status = i == 0 ? "In-Process" : "Scheduled",
+                                Status = (i == 0 && order.Status == "In-Process") ? "In-Process" : "Scheduled",
                                 CurrentStep = 0,
                                 ManufactureDate = DateTime.Now
                             });

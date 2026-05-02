@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { certificatesApi, inventoryApi, materialsApi } from '@/services/api';
 import { Plus, Search, Eye, FileCheck2, Upload, Pencil, Trash2 } from 'lucide-react';
@@ -343,10 +343,10 @@ export default function Materials() {
               <thead>
                 <tr>
                   <th>Mã</th>
-                  <th>Tên nguyên liệu</th>
-                  <th>Số đợt nhập</th>
+                  <th className="w-1/3">Tên nguyên liệu</th>
+                  <th>Tổng tồn hiện tại</th>
                   <th>Giấy kiểm nghiệm</th>
-                  <th className="text-right">Thao tác</th>
+                  <th className="text-right w-32">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -356,7 +356,9 @@ export default function Materials() {
                     <tr key={m.materialId}>
                       <td><code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">{m.materialCode}</code></td>
                       <td className="font-medium text-neutral-900">{m.materialName}</td>
-                      <td>{materialLots.length}</td>
+                      <td>
+                        {materialLots.reduce((sum: number, lot: any) => sum + (lot.quantityCurrent ?? 0), 0).toLocaleString()} {m.baseUomName || ''}
+                      </td>
                       <td>
                         <a className="text-primary-600 hover:underline inline-flex items-center" href={certificatesApi.getMaterialCertificateUrl(m.materialCode)} target="_blank" rel="noreferrer">
                           <FileCheck2 className="w-4 h-4 mr-1" /> Xem

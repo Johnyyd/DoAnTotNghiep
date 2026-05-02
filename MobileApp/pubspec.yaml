@@ -38,7 +38,7 @@ dependencies:
   flutter_dotenv: ^5.0.2
   web: ^0.5.1
   http: ^1.2.0
-  shared_preferences: ^2.5.5
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:

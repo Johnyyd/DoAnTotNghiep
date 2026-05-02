@@ -103,7 +103,8 @@ INSERT INTO ProductionAreas (AreaId, AreaCode, AreaName, Description)
 VALUES 
 (1, 'PHONG-PHA-CHE', N'Phòng pha chế', N'Khu vực pha chế'),
 (2, 'PHONG-CAN', N'Phòng cân', N'Khu vực cân'),
-(3, 'PHONG-TRON-KHO', N'Phòng trộn khô', N'Khu vực trộn');
+(3, 'PHONG-TRON-KHO', N'Phòng trộn khô', N'Khu vực trộn'),
+(4, 'PHONG-DONG-GOI', N'Phòng đóng gói', N'Khu vực đóng gói');
 SET IDENTITY_INSERT ProductionAreas OFF;
 GO
 
@@ -135,7 +136,9 @@ INSERT INTO Equipments (EquipmentId, EquipmentCode, EquipmentName, TechnicalSpec
 (8,  'CNTB-TSC',      N'Tủ sấy chai',            N'1,5 m³',               N'Sấy khô chai',                1),
 (9,  'VIDEOJET-1220', N'Máy in số lô',           N'250 nhãn/ giờ',        N'In số lô, ngày SX, hạn dùng', 1),
 (10, 'ABL-M',         N'Máy dán nhãn tự động',   N'1.500 nhãn/ giờ',      N'Dán nhãn vào thân chai',      1),
-(11, 'F-262',         N'Máy gấp toa',            N'10.000 toa/ giờ',      N'Bế tờ HDSD',                  1);
+(11, 'F-262',         N'Máy gấp toa',            N'10.000 toa/ giờ',      N'Bế tờ HDSD',                  1),
+(12, 'KBC-TS-50',     N'Máy sấy tầng sôi',       N'50 kg/ mẻ',            N'Sấy khô dược liệu',           1);
+
 SET IDENTITY_INSERT Equipments OFF;
 GO
 
@@ -169,11 +172,11 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT Recipes ON;
 INSERT INTO Recipes (RecipeId, MaterialId, VersionNumber, BatchSize, Status, ApprovedBy, ApprovedDate, CreatedAt, EffectiveDate, Note) VALUES
-(1, 13, 1, 54000.00,  'Approved', 2, DATEADD(DAY,-30,GETDATE()), DATEADD(DAY,-45,GETDATE()), DATEADD(DAY,-25,GETDATE()), N'NLC 3 mẻ 100k viên.'),
-(2, 14, 2, 500000.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Paracetamol 500mg.'),
-(3, 13, 2, 100000.00, 'Draft',    NULL, NULL,                    DATEADD(DAY,-5, GETDATE()), NULL,                      N'Cải tiến tá dược.'),
+(1, 15, 1, 54000.00,  'Approved', 2, DATEADD(DAY,-30,GETDATE()), DATEADD(DAY,-45,GETDATE()), DATEADD(DAY,-25,GETDATE()), N'NLC 3 mẻ 100k viên.'),
+(2, 16, 2, 500000.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Paracetamol 500mg.'),
+(3, 15, 2, 100000.00, 'Draft',    NULL, NULL,                    DATEADD(DAY,-5, GETDATE()), NULL,                      N'Cải tiến tá dược.'),
 (4, 17, 1, 10000.00,  'Approved', 2, DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-15,GETDATE()), DATEADD(DAY,-5, GETDATE()), N'Dipyridamole tiêm.'),
-(5, 14, 3, 200000.00, 'Approved', 2, DATEADD(DAY,-5,GETDATE()),  DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,1, GETDATE()),  N'Paracetamol tầng sôi.');
+(5, 16, 3, 200000.00, 'Approved', 2, DATEADD(DAY,-5,GETDATE()),  DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,1, GETDATE()),  N'Paracetamol tầng sôi.');
 SET IDENTITY_INSERT Recipes OFF;
 GO
 

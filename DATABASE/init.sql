@@ -31,4 +31,7 @@ PRINT '-- Section 2: Audit Trail --'
 PRINT '-- Section 3: Full Seed Data --'
 :r $(BaseDir)/full_seed.sql
 
+PRINT '-- Section 4: Data hotfix --'
+:r $(BaseDir)/hotfix.sql
+
 PRINT 'GMP Database Initialization & Seeding Completed Successfully!';

@@ -227,12 +227,6 @@ export default function ProductionOrders() {
     },
   });
 
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ orderId, status, orderCode, recipeId, plannedQuantity }: { orderId: number; status: string; orderCode: string; recipeId: number; plannedQuantity: number }) =>
-      productionOrdersApi.update(orderId, { status, orderCode, recipeId, plannedQuantity } as any),
-    onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ['productionOrders'] }); },
-    onError: (err: any) => alert(err?.response?.data?.message ?? err?.message ?? 'Cập nhật trạng thái thất bại.'),
-  });
 
   const deleteOrderMutation = useMutation({
     mutationFn: (id: number) => productionOrdersApi.delete(id),
@@ -388,25 +382,9 @@ export default function ProductionOrders() {
                     <td className="font-medium text-neutral-900">{order.recipeName || `Công thức #${order.recipeId}`}</td>
                     <td>{order.plannedQuantity.toLocaleString()} <span className="text-neutral-500 text-xs">{order.uomName}</span></td>
                     <td>
-                      <select
-                        value={order.status}
-                        disabled={order.status === 'Completed'}
-                        onChange={(e) => {
-                          const newStatus = e.target.value;
-                          if (confirm(`Cập nhật trạng thái thành "${newStatus}"?`)) {
-                            updateStatusMutation.mutate({ 
-                              orderId: order.orderId, 
-                              status: newStatus,
-                              orderCode: order.orderCode,
-                              recipeId: order.recipeId,
-                              plannedQuantity: order.plannedQuantity
-                            });
-                          }
-                        }}
-                        className={`text-xs font-semibold px-2 py-1 rounded-full border-0 outline-none ${order.status !== 'Completed' ? 'cursor-pointer' : 'cursor-not-allowed'} ${statusClass(order.status)}`}
-                      >
-                        {allStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
-                      </select>
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${statusClass(order.status)}`}>
+                        {order.status}
+                      </span>
                     </td>
                     <td>{order.plannedStartDate ? new Date(order.plannedStartDate).toLocaleDateString('vi-VN') : '-'}</td>
                     <td className="text-right">
@@ -450,7 +428,7 @@ export default function ProductionOrders() {
                 <input type="number" className="input" placeholder="Số lượng kế hoạch" value={orderForm.plannedQuantity} onChange={(e) => setOrderForm({ ...orderForm, plannedQuantity: Number(e.target.value) })} />
               </div>
               <div><label className="text-xs text-neutral-500">Trạng thái</label>
-                <select className="input" value={orderForm.status} onChange={(e) => setOrderForm({ ...orderForm, status: e.target.value as OrderStatus })}>
+                <select disabled className="input bg-neutral-100 cursor-not-allowed" value={orderForm.status} onChange={(e) => setOrderForm({ ...orderForm, status: e.target.value as OrderStatus })}>
                   {allStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>

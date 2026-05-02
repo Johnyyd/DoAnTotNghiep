@@ -356,6 +356,12 @@ Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
 **Đề tài:** Xây dựng hệ thống quản lý quy trình chế biến thuốc theo tiêu chuẩn GMP-WHO  
 **Ngày:** 2026-04-20
 **Trạng thái:** Đang phát triển
+
+**Câu lệnh khởi động dự án**
 ```
-docker-compose up -d --build gmp-sqlserver gmp-api gmp-frontend
+cd .\MobileApp\
+flutter build web --release
+cd ..
+docker-compose up -d --build
+
 ```

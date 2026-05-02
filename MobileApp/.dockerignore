@@ -10,3 +10,5 @@ linux/
 macos/
 android/
 ios/
+.flutter-plugins
+.flutter-plugins-dependencies
