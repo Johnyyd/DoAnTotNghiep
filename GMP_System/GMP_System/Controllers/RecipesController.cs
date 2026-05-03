@@ -163,6 +163,14 @@ namespace GMP_System.Controllers
             // Xoá các dữ liệu liên quan (BOM và Routing) trước khi xoá Recipe để tránh lỗi Khóa ngoại
             var boms = await _context.RecipeBoms.Where(b => b.RecipeId == id).ToListAsync();
             var routings = await _context.RecipeRoutings.Where(r => r.RecipeId == id).ToListAsync();
+            
+            // Xoá StepParameters của các Routing thuộc Recipe này
+            if (routings.Any())
+            {
+                var routingIds = routings.Select(rt => (int?)rt.RoutingId).ToList();
+                var stepParams = await _context.StepParameters.Where(p => routingIds.Contains(p.RoutingId)).ToListAsync();
+                if (stepParams.Any()) _context.StepParameters.RemoveRange(stepParams);
+            }
 
             if (boms.Any()) _context.RecipeBoms.RemoveRange(boms);
             if (routings.Any()) _context.RecipeRoutings.RemoveRange(routings);

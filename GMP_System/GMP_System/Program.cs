@@ -139,7 +139,76 @@ using (var scope = app.Services.CreateScope())
             }
             
             Console.WriteLine("[BACKEND] Running EnsureCreated...");
-            db.Database.EnsureCreated();
+            bool isNewlyCreated = db.Database.EnsureCreated();
+            
+            // Check if AppUsers table is empty to determine if we need to seed
+            bool needsSeeding = isNewlyCreated || !db.AppUsers.Any();
+            
+            if (needsSeeding)
+            {
+                Console.WriteLine("[BACKEND] Database is new or empty. Seeding data via EF Core...");
+                try 
+                {
+                    string[] possiblePaths = {
+                        "/app/DATABASE",
+                        Path.Combine(Directory.GetCurrentDirectory(), "DATABASE"),
+                        Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())?.FullName ?? "", "DATABASE")
+                    };
+                    
+                    string baseDir = possiblePaths.FirstOrDefault(Directory.Exists) ?? "";
+
+                    var scripts = new[] { "Schema.sql", "SystemAudit.sql", "full_seed.sql", "hotfix.sql" };
+                    foreach (var script in scripts)
+                    {
+                        var path = Path.Combine(baseDir, script);
+                        if (System.IO.File.Exists(path))
+                        {
+                            Console.WriteLine($"[BACKEND] Running script: {script}");
+                            var sql = System.IO.File.ReadAllText(path, System.Text.Encoding.UTF8);
+                            // Split by GO batch separator
+                            var batches = System.Text.RegularExpressions.Regex.Split(
+                                sql, 
+                                @"^\s*GO\s*$", 
+                                System.Text.RegularExpressions.RegexOptions.Multiline | System.Text.RegularExpressions.RegexOptions.IgnoreCase
+                            );
+                            
+                            foreach (var batch in batches)
+                            {
+                                var trimmedBatch = batch.Trim();
+                                if (!string.IsNullOrWhiteSpace(trimmedBatch))
+                                {
+                                    // Remove USE statements as they are not needed/supported in this context
+                                    if (trimmedBatch.StartsWith("USE [", StringComparison.OrdinalIgnoreCase) || 
+                                        trimmedBatch.StartsWith("USE master", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        continue;
+                                    }
+                                    
+                                    using (var command = db.Database.GetDbConnection().CreateCommand())
+                                    {
+                                        command.CommandText = trimmedBatch;
+                                        command.CommandType = System.Data.CommandType.Text;
+                                        if (command.Connection.State != System.Data.ConnectionState.Open)
+                                        {
+                                            command.Connection.Open();
+                                        }
+                                        command.ExecuteNonQuery();
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[BACKEND] WARNING: Script {script} not found at {path}");
+                        }
+                    }
+                    Console.WriteLine("[BACKEND] Database Seeding Completed Successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[BACKEND] Seeding failed: {ex.Message}");
+                }
+            }
             
             Console.WriteLine("[BACKEND] Database is ONLINE and Initialized.");
             break;
