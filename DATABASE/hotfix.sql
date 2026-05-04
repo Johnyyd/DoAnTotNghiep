@@ -38,15 +38,15 @@ DECLARE @MatPvcId INT = (SELECT TOP 1 MaterialId FROM Materials WHERE MaterialCo
 IF @MatAluId IS NOT NULL
 AND NOT EXISTS (SELECT 1 FROM InventoryLots WHERE MaterialId = @MatAluId)
 BEGIN
-    INSERT INTO InventoryLots (MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, QCStatus, SupplierName, CreatedAt)
-    VALUES (@MatAluId, 'L-ALU-01', 20.00, DATEADD(DAY, -20, GETDATE()), DATEADD(YEAR, 3, GETDATE()), 'Released', N'Nhà cung cấp H', GETDATE());
+    INSERT INTO InventoryLots (MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, SupplierName, CreatedAt)
+    VALUES (@MatAluId, 'L-ALU-01', 20.00, DATEADD(DAY, -20, GETDATE()), DATEADD(YEAR, 3, GETDATE()), N'Nhà cung cấp H', GETDATE());
 END
 
 IF @MatPvcId IS NOT NULL
 AND NOT EXISTS (SELECT 1 FROM InventoryLots WHERE MaterialId = @MatPvcId)
 BEGIN
-    INSERT INTO InventoryLots (MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, QCStatus, SupplierName, CreatedAt)
-    VALUES (@MatPvcId, 'L-PVC-01', 20.00, DATEADD(DAY, -15, GETDATE()), DATEADD(YEAR, 3, GETDATE()), 'Released', N'Nhà cung cấp I', GETDATE());
+    INSERT INTO InventoryLots (MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, SupplierName, CreatedAt)
+    VALUES (@MatPvcId, 'L-PVC-01', 20.00, DATEADD(DAY, -15, GETDATE()), DATEADD(YEAR, 3, GETDATE()), N'Nhà cung cấp I', GETDATE());
 END
 GO
 

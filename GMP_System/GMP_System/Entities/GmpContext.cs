@@ -184,9 +184,6 @@ public partial class GmpContext : DbContext
                 .HasColumnName("QuantityCurrent")
                 .HasColumnType("decimal(18, 4)");
 
-            entity.Property(e => e.QCStatus)
-                .HasMaxLength(50)
-                .HasColumnName("QCStatus");
 
             entity.HasOne(d => d.Material).WithMany(p => p.InventoryLots)
                 .HasForeignKey(d => d.MaterialId);

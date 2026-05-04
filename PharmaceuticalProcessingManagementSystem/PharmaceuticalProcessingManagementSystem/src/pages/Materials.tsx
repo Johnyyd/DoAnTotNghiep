@@ -18,7 +18,6 @@ interface EditLotForm {
   quantityCurrent: number;
   manufactureDate: string;
   expiryDate: string;
-  qcstatus: string;
 }
 
 function normalizeMaterial(raw: any) {
@@ -39,7 +38,7 @@ function normalizeLot(raw: any) {
     quantityCurrent: Number(raw.quantityCurrent ?? raw.QuantityCurrent ?? 0),
     manufactureDate: raw.manufactureDate ?? raw.ManufactureDate,
     expiryDate: raw.expiryDate ?? raw.ExpiryDate,
-    qcStatus: raw.qcStatus ?? raw.QCStatus ?? raw.Qcstatus ?? '-',
+    createdAt: raw.createdAt ?? raw.CreatedAt,
   };
 }
 
@@ -89,8 +88,8 @@ function validateLotDates(manufactureDate: string, expiryDate: string) {
     return 'Ngày sản xuất phải bằng hoặc trước ngày hiện tại của hệ thống.';
   }
 
-  if (exp < today) {
-    return 'Hạn sử dụng phải bằng hoặc sau ngày hiện tại của hệ thống.';
+  if (exp <= today) {
+    return 'Hạn sử dụng phải là ngày trong tương lai (sau ngày hiện tại).';
   }
 
   if (exp < mfg) {
@@ -168,7 +167,6 @@ export default function Materials() {
         quantityCurrent: importForm.quantityCurrent,
         manufactureDate: importForm.manufactureDate,
         expiryDate: importForm.expiryDate,
-        qcstatus: 'Pending',
       } as any);
 
       if (importCertFile) {
@@ -224,7 +222,6 @@ export default function Materials() {
         quantityCurrent: form.quantityCurrent,
         manufactureDate: form.manufactureDate,
         expiryDate: form.expiryDate,
-        qcstatus: 'Pending',
       } as any);
 
       if (certificateFile) {
@@ -277,7 +274,6 @@ export default function Materials() {
         quantityCurrent: payload.quantityCurrent,
         manufactureDate: payload.manufactureDate,
         expiryDate: payload.expiryDate,
-        qcstatus: payload.qcstatus,
       });
     },
     onSuccess: async () => {
@@ -312,6 +308,9 @@ export default function Materials() {
   }
 
   const todayInput = new Date().toISOString().slice(0, 10);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowInput = tomorrow.toISOString().slice(0, 10);
 
   return (
     <div className="space-y-6">
@@ -343,10 +342,9 @@ export default function Materials() {
               <thead>
                 <tr>
                   <th>Mã</th>
-                  <th className="w-1/3">Tên nguyên liệu</th>
+                  <th className="w-1/2">Tên nguyên liệu</th>
                   <th>Tổng tồn hiện tại</th>
-                  <th>Giấy kiểm nghiệm</th>
-                  <th className="text-right w-32">Thao tác</th>
+                  <th className="text-right w-24">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -359,15 +357,11 @@ export default function Materials() {
                       <td>
                         {materialLots.reduce((sum: number, lot: any) => sum + (lot.quantityCurrent ?? 0), 0).toLocaleString()} {m.baseUomName || ''}
                       </td>
-                      <td>
-                        <a className="text-primary-600 hover:underline inline-flex items-center" href={certificatesApi.getMaterialCertificateUrl(m.materialCode)} target="_blank" rel="noreferrer">
-                          <FileCheck2 className="w-4 h-4 mr-1" /> Xem
-                        </a>
-                      </td>
+
                       <td className="text-right">
                         <div className="flex justify-end gap-2">
                           <button className="btn-ghost text-sm" onClick={() => setDetailMaterial(m)}>
-                            <Eye className="w-4 h-4 mr-1" /> Xem chi tiết
+                            <Eye className="w-4 h-4 mr-1" /> Xem
                           </button>
                           <button
                             className="btn-ghost text-sm text-red-600"
@@ -416,7 +410,7 @@ export default function Materials() {
               </div>
               <div>
                 <label className="text-xs text-neutral-500">Hạn dùng</label>
-                <input type="date" min={todayInput} className="input" value={form.expiryDate} onChange={(e) => setForm({ ...form, expiryDate: e.target.value })} />
+                <input type="date" min={tomorrowInput} className="input" value={form.expiryDate} onChange={(e) => setForm({ ...form, expiryDate: e.target.value })} />
               </div>
             </div>
 
@@ -460,7 +454,7 @@ export default function Materials() {
                 </div>
                 <div>
                   <label className="text-xs text-neutral-500">Hạn dùng</label>
-                  <input type="date" min={new Date().toISOString().slice(0,10)} className="input" value={importForm.expiryDate} onChange={(e) => setImportForm({ ...importForm, expiryDate: e.target.value })} />
+                  <input type="date" min={tomorrowInput} className="input" value={importForm.expiryDate} onChange={(e) => setImportForm({ ...importForm, expiryDate: e.target.value })} />
                 </div>
               </div>
             </div>
@@ -480,7 +474,7 @@ export default function Materials() {
 
       {detailMaterial && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-4xl p-6 space-y-4">
+          <div className="bg-white rounded-2xl w-full max-w-6xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold">Chi tiết: {detailMaterial.materialName}</h3>
               <button className="btn-ghost" onClick={() => setDetailMaterial(null)}>Đóng</button>
@@ -492,18 +486,19 @@ export default function Materials() {
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>Mã đợt</th>
+                       <th className="min-w-[140px]">Mã đợt</th>
                       <th>Số lượng</th>
                       <th>Ngày sản xuất</th>
                       <th>Hạn dùng</th>
-                      <th>QC</th>
+                      <th>Ngày nhập kho</th>
+                      <th>Giấy kiểm nghiệm</th>
                       <th className="text-right">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
                     {getMaterialLots(detailMaterial.materialId).length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="text-center text-neutral-500 py-4">Chưa có dữ liệu đợt nhập</td>
+                        <td colSpan={7} className="text-center text-neutral-500 py-4">Chưa có dữ liệu đợt nhập</td>
                       </tr>
                     ) : (
                       getMaterialLots(detailMaterial.materialId).map((lot) => (
@@ -512,7 +507,12 @@ export default function Materials() {
                           <td>{lot.quantityCurrent.toLocaleString()} {detailMaterial.baseUomName || ''}</td>
                           <td>{formatDateDDMMYYYY(lot.manufactureDate)}</td>
                           <td>{formatDateDDMMYYYY(lot.expiryDate)}</td>
-                          <td>{lot.qcStatus || '-'}</td>
+                          <td>{formatDateDDMMYYYY(lot.createdAt)}</td>
+                          <td>
+                            <a className="text-primary-600 hover:underline inline-flex items-center" href={certificatesApi.getMaterialCertificateUrl(detailMaterial.materialCode)} target="_blank" rel="noreferrer">
+                              <FileCheck2 className="w-4 h-4 mr-1" /> Xem
+                            </a>
+                          </td>
                           <td className="text-right">
                             <div className="flex justify-end gap-2">
                               <button
@@ -523,7 +523,6 @@ export default function Materials() {
                                   quantityCurrent: lot.quantityCurrent,
                                   manufactureDate: toInputDate(lot.manufactureDate),
                                   expiryDate: toInputDate(lot.expiryDate),
-                                  qcstatus: lot.qcStatus || 'Pending',
                                 })}
                               >
                                 <Pencil className="w-4 h-4 mr-1" /> Sửa
@@ -570,14 +569,7 @@ export default function Materials() {
                   onChange={(e) => setEditingLot({ ...editingLot, quantityCurrent: Number(e.target.value) })}
                 />
               </div>
-              <div>
-                <label className="text-xs text-neutral-500">Trạng thái QC</label>
-                <select className="input" value={editingLot.qcstatus} onChange={(e) => setEditingLot({ ...editingLot, qcstatus: e.target.value })}>
-                  <option value="Pending">Pending</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Rejected">Rejected</option>
-                </select>
-              </div>
+
               <div>
                 <label className="text-xs text-neutral-500">Ngày sản xuất</label>
                 <input
@@ -592,7 +584,7 @@ export default function Materials() {
                 <label className="text-xs text-neutral-500">Hạn dùng</label>
                 <input
                   type="date"
-                  min={todayInput}
+                  min={tomorrowInput}
                   className="input"
                   value={editingLot.expiryDate}
                   onChange={(e) => setEditingLot({ ...editingLot, expiryDate: e.target.value })}
@@ -607,6 +599,7 @@ export default function Materials() {
           </div>
         </div>
       )}
+
     </div>
   );
 }

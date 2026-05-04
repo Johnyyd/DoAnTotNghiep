@@ -71,7 +71,7 @@ namespace GMP_System.Controllers
                         uom = u.InventoryLot?.Material?.BaseUom?.UomName ?? string.Empty,
                         usedAt = u.Timestamp,
                         usedBy = u.DispensedBy,
-                        Status = u.InventoryLot?.QCStatus ?? "N/A",
+                        Status = "N/A",
                         lotQuantityCurrent = u.InventoryLot?.QuantityCurrent,
                         ratioPercent = ratio,
                         certificateUrl = $"/api/certificates/material/{Uri.EscapeDataString(materialCode)}"

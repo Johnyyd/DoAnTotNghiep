@@ -206,11 +206,11 @@ CREATE TABLE RecipeRouting (
     MaterialId INT,
     AreaId INT,
     CleanlinessStatus NVARCHAR(50),
-    StandardTemperature DECIMAL(10, 2),
-    StandardHumidity DECIMAL(10, 2),
-    StandardPressure DECIMAL(10, 2),
+    StandardTemperature NVARCHAR(50),
+    StandardHumidity NVARCHAR(50),
+    StandardPressure NVARCHAR(50),
     StabilityStatus NVARCHAR(50),
-    SetTemperature DECIMAL(10, 2),
+    SetTemperature NVARCHAR(50),
     SetTimeMinutes INT,
     CONSTRAINT CK_RecipeRouting_NumberOfRouting CHECK (NumberOfRouting >= 1)
 );
@@ -292,7 +292,6 @@ CREATE TABLE InventoryLots (
     QuantityCurrent DECIMAL(18, 4) NOT NULL,
     ManufactureDate DATETIME2,
     ExpiryDate DATETIME2 NOT NULL,
-    QCStatus NVARCHAR(50) DEFAULT 'Pending',
     SupplierName NVARCHAR(200),
     CreatedAt DATETIME2 DEFAULT GETDATE()
 );

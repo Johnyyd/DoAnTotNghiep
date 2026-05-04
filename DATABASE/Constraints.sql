@@ -7,29 +7,7 @@
 USE [PharmaceuticalProcessingManagementSystem];
 GO
 
--- 1. TRIGGER: KIỂM TRA TRẠNG THÁI QC NGUYÊN LIỆU (QC RELEASE ONLY)
--- Chặn việc sử dụng bất kỳ lô nguyên vật liệu nào chưa được "Released".
-IF EXISTS (SELECT * FROM sys.triggers WHERE name = 'trg_Check_Material_QC')
-    DROP TRIGGER trg_Check_Material_QC;
-GO
 
-CREATE TRIGGER trg_Check_Material_QC
-ON MaterialUsage
-AFTER INSERT, UPDATE
-AS
-BEGIN
-    SET NOCOUNT ON;
-    IF EXISTS (
-        SELECT 1 FROM inserted i
-        JOIN InventoryLots l ON i.InventoryLotID = l.LotID
-        WHERE l.QCStatus <> 'Released'
-    )
-    BEGIN
-        RAISERROR(N'LỖI GMP: Lô nguyên vật liệu chưa được QC duyệt (Released). Không thể cấp phát!', 16, 1);
-        ROLLBACK TRANSACTION;
-    END
-END;
-GO
 
 -- 2. TRIGGER: CHẶN HOÀN TOÀN MẺ SẤY VƯỢT QUÁ 50KG
 -- Kiểm tra giá trị thông số "Khối lượng trước sấy" trong bảng BatchProcessParameterValues.

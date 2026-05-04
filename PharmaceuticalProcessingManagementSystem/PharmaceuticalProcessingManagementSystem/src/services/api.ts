@@ -166,8 +166,6 @@ export const inventoryApi = {
     api.put<ApiResponse<any>>(`/inventory-lots/${lotId}`, data),
   deleteLot: (lotId: number) =>
     api.delete<ApiResponse<any>>(`/inventory-lots/${lotId}`),
-  updateQc: (lotId: number, status: string) =>
-    api.post<ApiResponse<any>>(`/inventory-lots/${lotId}/qc`, { status }),
 
   // Traceability: track finished goods back to raw materials
   traceBackward: (finishedGoodBatchNumber: string) =>

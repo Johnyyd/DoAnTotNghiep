@@ -359,9 +359,14 @@ Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
 
 **Câu lệnh khởi động dự án**
 ```
+npm audit fix
 cd .\MobileApp\
 flutter build web --release
 cd ..
 docker-compose up -d --build
+
+```
+```
+docker-compose down -v
 
 ```

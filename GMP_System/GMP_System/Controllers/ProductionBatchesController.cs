@@ -98,7 +98,7 @@ namespace GMP_System.Controllers
                 foreach (var bom in boms) 
                 {
                     var suggestedQC = await _unitOfWork.InventoryLots.Query()
-                        .Where(l => l.MaterialId == bom.MaterialId && l.QCStatus == "Released" && l.QuantityCurrent > 0)
+                        .Where(l => l.MaterialId == bom.MaterialId && l.QuantityCurrent > 0)
                         .OrderByDescending(l => l.LotId)
                         .Select(l => l.LotNumber) 
                         .FirstOrDefaultAsync();

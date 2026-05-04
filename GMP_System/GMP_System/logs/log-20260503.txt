@@ -16820,3 +16820,24 @@ SELECT 1
 2026-05-03 18:02:11.976 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
 2026-05-03 18:02:11.976 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
 2026-05-03 18:02:11.977 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.824ms
+2026-05-03 18:02:42.037 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-03 18:02:42.038 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-03 18:02:42.040 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-03 18:02:42.041 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-05-03 18:02:42.041 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-03 18:02:42.042 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.3644ms
+2026-05-03 18:03:12.088 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-03 18:03:12.089 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-03 18:03:12.091 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-03 18:03:12.092 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-05-03 18:03:12.092 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-03 18:03:12.093 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.2134ms
+2026-05-03 18:03:42.151 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-03 18:03:42.152 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-03 18:03:42.154 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-03 18:03:42.155 +00:00 [INF] Writing value of type '<>f__AnonymousType84`2' as Json.
+2026-05-03 18:03:42.155 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-03 18:03:42.156 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.3242ms
