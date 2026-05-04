@@ -150,6 +150,7 @@ namespace GMP_System.Controllers
                     r.Description,
                     r.NumberOfRouting,
                     r.SetTemperature,
+                    r.SetPressure,
                     r.SetTimeMinutes,
                     DefaultEquipment = r.DefaultEquipment == null ? null : new {
                         r.DefaultEquipment.EquipmentId,

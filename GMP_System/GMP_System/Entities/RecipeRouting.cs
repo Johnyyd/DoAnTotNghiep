@@ -39,6 +39,8 @@ public partial class RecipeRouting
 
     public decimal? SetTemperature { get; set; }
 
+    public decimal? SetPressure { get; set; }
+
     public int? SetTimeMinutes { get; set; }
     
     public int? OrderId { get; set; }

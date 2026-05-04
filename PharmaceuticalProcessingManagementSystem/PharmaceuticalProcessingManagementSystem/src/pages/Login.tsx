@@ -47,10 +47,8 @@ export default function Login() {
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl mb-4 shadow-lg">
-              <span className="text-white font-bold text-xl">GMP</span>
-            </div>
-            <h1 className="text-2xl font-bold text-neutral-900">GMP-WHO System</h1>
+            <img src="/icon.png" alt="Logo" className="w-16 h-16 object-contain mb-4 mx-auto" />
+            <h1 className="text-2xl font-bold text-neutral-900">eBMR</h1>
             <p className="text-sm text-neutral-500 mt-1">Hệ thống quản lý sản xuất dược phẩm</p>
           </div>
 

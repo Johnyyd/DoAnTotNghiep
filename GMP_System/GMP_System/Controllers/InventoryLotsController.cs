@@ -75,6 +75,7 @@ namespace GMP_System.Controllers
             }
 
 
+            lot.CreatedAt = DateTime.Now;
             await _unitOfWork.InventoryLots.AddAsync(lot);
             await _unitOfWork.CompleteAsync();
 

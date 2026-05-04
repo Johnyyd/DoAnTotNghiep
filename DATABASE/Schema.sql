@@ -210,7 +210,8 @@ CREATE TABLE RecipeRouting (
     StandardHumidity NVARCHAR(50),
     StandardPressure NVARCHAR(50),
     StabilityStatus NVARCHAR(50),
-    SetTemperature NVARCHAR(50),
+    SetTemperature DECIMAL(18, 2),
+    SetPressure DECIMAL(18, 2),
     SetTimeMinutes INT,
     CONSTRAINT CK_RecipeRouting_NumberOfRouting CHECK (NumberOfRouting >= 1)
 );

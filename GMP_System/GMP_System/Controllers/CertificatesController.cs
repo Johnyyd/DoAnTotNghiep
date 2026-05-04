@@ -25,7 +25,7 @@ namespace GMP_System.Controllers
                 return configured;
             }
 
-            return Path.Combine(_env.ContentRootPath, "certificates");
+            return Path.Combine(_env.ContentRootPath, "certificates", "materials");
         }
 
         private string GetFinishedStorageDirectory()
@@ -36,7 +36,7 @@ namespace GMP_System.Controllers
                 return configured;
             }
 
-            return Path.Combine(_env.ContentRootPath, "wwwroot", "certificates");
+            return Path.Combine(_env.ContentRootPath, "certificates", "finished_goods");
         }
 
         private string GetPublicMaterialsDirectory()

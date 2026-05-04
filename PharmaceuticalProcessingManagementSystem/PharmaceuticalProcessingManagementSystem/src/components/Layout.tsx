@@ -65,9 +65,7 @@ export default function Layout() {
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-neutral-200">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">GMP</span>
-            </div>
+            <img src="/icon.png" alt="Logo" className="w-10 h-10 object-contain" />
             <div>
               <h1 className="text-lg font-bold text-primary-700">GMP-WHO</h1>
               <p className="text-xs text-neutral-500 -mt-1">Dược phẩm</p>

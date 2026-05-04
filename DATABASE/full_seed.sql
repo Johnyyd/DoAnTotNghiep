@@ -172,11 +172,8 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT Recipes ON;
 INSERT INTO Recipes (RecipeId, MaterialId, VersionNumber, BatchSize, Status, ApprovedBy, ApprovedDate, CreatedAt, EffectiveDate, Note) VALUES
-(1, 15, 1, 54000.00,  'Approved', 2, DATEADD(DAY,-30,GETDATE()), DATEADD(DAY,-45,GETDATE()), DATEADD(DAY,-25,GETDATE()), N'NLC 3 mẻ 100k viên.'),
-(2, 16, 2, 500000.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Paracetamol 500mg.'),
-(3, 15, 2, 100000.00, 'Draft',    NULL, NULL,                    DATEADD(DAY,-5, GETDATE()), NULL,                      N'Cải tiến tá dược.'),
-(4, 17, 1, 10000.00,  'Approved', 2, DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-15,GETDATE()), DATEADD(DAY,-5, GETDATE()), N'Dipyridamole tiêm.'),
-(5, 16, 3, 200000.00, 'Approved', 2, DATEADD(DAY,-5,GETDATE()),  DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,1, GETDATE()),  N'Paracetamol tầng sôi.');
+(1, 15, 1, 540.00,  'Approved', 2, DATEADD(DAY,-30,GETDATE()), DATEADD(DAY,-45,GETDATE()), DATEADD(DAY,-25,GETDATE()), N'NLC 3 mẻ 100k viên.'),
+(2, 16, 2, 5000.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Paracetamol 500mg.');
 SET IDENTITY_INSERT Recipes OFF;
 GO
 
@@ -185,18 +182,18 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT RecipeBOM ON;
 INSERT INTO RecipeBOM (BomId, RecipeId, MaterialId, Quantity, UomId, WastePercentage, Note) VALUES
-(1,  1, 1,  25000.00, 2, 0.20, N'NLC 3'),
-(2,  1, 2,   162.00,  2, 0.10, N'Aerosil'),
-(3,  1, 3,  2970.00,  2, 0.20, N'SSG'),
-(4,  1, 4,   405.00,  2, 0.10, N'Talc'),
-(5,  1, 5,   405.00,  2, 0.10, N'Magnesi stearat'),
-(6,  1, 6,  25058.00, 2, 0.50, N'Tinh bột'),
-(7,  1, 7,  100000.00, 4, 0.10, N'Vỏ nang'),
-(8,  2, 9,  250000.00, 2, 0.30, N'Paracetamol'),
-(9,  2, 6,  150000.00, 2, 1.00, N'Tinh bột ngô'),
-(10, 2, 10, 80000.00, 2, 0.50, N'Lactose'),
-(11, 2, 5,   5000.00, 2, 0.10, N'Magie stearat'),
-(12, 2, 8,  10000.00, 2, 0.20, N'PVP K30');
+(1,  1, 1,  250.00, 2, 0.20, N'NLC 3'),
+(2,  1, 2,   1.62,  2, 0.10, N'Aerosil'),
+(3,  1, 3,  29.70,  2, 0.20, N'SSG'),
+(4,  1, 4,   4.05,  2, 0.10, N'Talc'),
+(5,  1, 5,   4.05,  2, 0.10, N'Magnesi stearat'),
+(6,  1, 6,  250.58, 2, 0.50, N'Tinh bột'),
+(7,  1, 7,  1.00, 4, 0.10, N'Vỏ nang'),
+(8,  2, 9,  250.00, 2, 0.30, N'Paracetamol'),
+(9,  2, 6,  150.00, 2, 1.00, N'Tinh bột ngô'),
+(10, 2, 10, 80.00, 2, 0.50, N'Lactose'),
+(11, 2, 5,   5.00, 2, 0.10, N'Magie stearat'),
+(12, 2, 8,  10.00, 2, 0.20, N'PVP K30');
 SET IDENTITY_INSERT RecipeBOM OFF;
 GO
 
@@ -204,29 +201,29 @@ GO
 -- 9. RecipeRouting
 -- =====================================================================
 SET IDENTITY_INSERT RecipeRouting ON;
-INSERT INTO RecipeRouting (RoutingId, RecipeId, OrderId, StepNumber, StepName, DefaultEquipmentId, EstimatedTimeMinutes, Description, NumberOfRouting) VALUES
+INSERT INTO RecipeRouting (RoutingId, RecipeId, OrderId, StepNumber, StepName, DefaultEquipmentId, EstimatedTimeMinutes, Description, NumberOfRouting, MaterialId, AreaId, CleanlinessStatus, StandardTemperature, StandardHumidity, StandardPressure, StabilityStatus, SetTemperature, SetPressure, SetTimeMinutes) VALUES
 -- Recipe 1: Viên nang NLC 3 (Existing)
-(1, 1, NULL, 1, N'Sấy Tá Dược 8 (TD 8)',              2, 180, N'Sấy tinh bột TD 8 tại 75°C, 180p. Độ ẩm < 5%.', 1),
-(2, 1, NULL, 2, N'Sấy Cao Khô NLC 3',                2, 180, N'Sấy cao khô Trinh nữ tại 75°C, 180p. Độ ẩm < 3%.', 1),
-(3, 1, NULL, 3, N'Cân Nguyên Liệu',                  1, 90,  N'Cân chính xác 6 loại theo BOM động (Section 4 BMR). Đối chiếu nhãn phụ.', 1),
-(4, 1, NULL, 4, N'Trộn Khô',                         3, 15,  N'Trộn premix bột tá dược trước. Trộn chính 15 phút, 15 vòng/phút.', 1),
-(7, 1, NULL, 5, N'Đóng Nang',                        7, 120, N'Đóng nang số 0, khối lượng đích 540mg/viên.', 1),
+(1, 1, NULL, 1, N'Sấy Tá Dược 8 (TD 8)', 12, 180, N'Sấy tinh bột TD 8 tại 75°C, 180p. Độ ẩm < 5%.', 1, 6, 1, N'Sạch', N'21 - 25', N'45 - 70', N'10 - 999', N'ổn định', 75.00, 10.00, 180),
+(2, 1, NULL, 2, N'Sấy Cao Khô NLC 3', 12, 180, N'Sấy cao khô Trinh nữ tại 75°C, 180p. Độ ẩm < 3%.', 1, 1, 1, N'Sạch', N'21 - 25', N'45 - 70', N'10 - 999', N'ổn định', 75.00, 10.00, 180),
+(3, 1, NULL, 3, N'Cân Nguyên Liệu', 1, 90, N'Cân chính xác 6 loại theo BOM động (Section 4 BMR). Đối chiếu nhãn phụ.', 1, NULL, 2, N'Sạch', N' - ', N' - ', N' - ', N'ổn định', 0.00, 0.00, 90),
+(4, 1, NULL, 4, N'Trộn Khô', 4, 15, N'Trộn premix bột tá dược trước. Trộn chính 15 phút, 15 vòng/phút.', 1, NULL, 3, N'Sạch', N'21 - 25', N'45 - 70', N'10 - 999', N'ổn định', 0.00, 10.00, 15),
+(7, 1, NULL, 5, N'Đóng Nang', NULL, 120, N'Đóng nang số 0, khối lượng đích 540mg/viên.', 1, NULL, 4, N'Sạch', N' - ', N' - ', N' - ', N'ổn định', 0.00, 0.00, 120),
 -- Recipe 2: Paracetamol (Existing)
-(5, 2, NULL, 1, N'Cân Paracetamol',   1, 90,  NULL, 1),
-(6, 2, NULL, 2, N'Dập Viên',          4, 180, NULL, 1),
+(5, 2, NULL, 1, N'Cân Paracetamol', 1, 90, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(6, 2, NULL, 2, N'Dập Viên', 4, 180, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 -- Recipe 4: Thuốc ống Dipyridamole (New)
-(10, 4, NULL, 1, N'Pha chế dung dịch', 8, 60, N'Trộn hoạt chất Dipyridamole vào nước cất vô trùng.', 1),
-(11, 4, NULL, 2, N'Lọc vô trùng',      NULL, 45, N'Lọc qua màng lọc 0.22 micron.', 1),
-(12, 4, NULL, 3, N'Đóng ống - Hàn ống', NULL, 120, N'Đóng 2ml/ống, hàn kín bằng ngọn lửa.', 1),
-(13, 4, NULL, 4, N'Tiệt trùng',        NULL, 90, N'Tiệt trùng bằng hơi nước (Autoclave) 121°C.', 1),
-(14, 4, NULL, 5, N'Soi kiểm tra',      NULL, 180, N'Kiểm tra độ trong và các vật thể lạ bằng mắt.', 1),
--- Recipe 5: Viên nén Paracetamol (New - Với bước Sấy hạt có thể lặp)
-(15, 5, NULL, 1, N'Cân nguyên liệu',   1, 90,  N'Cân Paracetamol và tá dược.', 1),
-(16, 5, NULL, 2, N'Trộn khô',          3, 15,  N'Trộn đều bột Paracetamol và tá dược độn.', 1),
-(17, 5, NULL, 3, N'Tạo hạt ướt',       NULL, 60, N'Thêm dung dịch PVP K30 tạo khối ẩm.', 1),
-(18, 5, NULL, 4, N'Sấy hạt tầng sôi',  2, 120, N'Sấy hạt đến khi độ ẩm đạt < 5%. CÓ THỂ LẶP LẠI NẾU CẦN.', 2),
-(19, 5, NULL, 5, N'Sửa hạt',           NULL, 60, N'Rây hạt qua lưới rây chuẩn.', 1),
-(20, 5, NULL, 6, N'Dập viên',          4, 180, N'Dập viên nén 500mg.', 1);
+(10, 4, NULL, 1, N'Pha chế dung dịch', 8, 60, N'Trộn hoạt chất Dipyridamole vào nước cất vô trùng.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(11, 4, NULL, 2, N'Lọc vô trùng', NULL, 45, N'Lọc qua màng lọc 0.22 micron.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(12, 4, NULL, 3, N'Đóng ống - Hàn ống', NULL, 120, N'Đóng 2ml/ống, hàn kín bằng ngọn lửa.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(13, 4, NULL, 4, N'Tiệt trùng', NULL, 90, N'Tiệt trùng bằng hơi nước (Autoclave) 121°C.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(14, 4, NULL, 5, N'Soi kiểm tra', NULL, 180, N'Kiểm tra độ trong và các vật thể lạ bằng mắt.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+-- Recipe 5: Viên nén Paracetamol (New)
+(15, 5, NULL, 1, N'Cân nguyên liệu', 1, 90, N'Cân Paracetamol và tá dược.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(16, 5, NULL, 2, N'Trộn khô', 3, 15, N'Trộn đều bột Paracetamol và tá dược độn.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(17, 5, NULL, 3, N'Tạo hạt ướt', NULL, 60, N'Thêm dung dịch PVP K30 tạo khối ẩm.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(18, 5, NULL, 4, N'Sấy hạt tầng sôi', 2, 120, N'Sấy hạt đến khi độ ẩm đạt < 5%. CÓ THỂ LẶP LẠI NẾU CẦN.', 2, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(19, 5, NULL, 5, N'Sửa hạt', NULL, 60, N'Rây hạt qua lưới rây chuẩn.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(20, 5, NULL, 6, N'Dập viên', 4, 180, N'Dập viên nén 500mg.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 SET IDENTITY_INSERT RecipeRouting OFF;
 GO
 
@@ -351,6 +348,45 @@ CASE WHEN i.EquipmentId IS NULL THEN NULL ELSE CONCAT(''Code='', i.EquipmentCode
 GETDATE()
 FROM inserted i FULL OUTER JOIN deleted d ON i.EquipmentId = d.EquipmentId; END');
 GO
+
+-- =====================================================================
+-- 15. Hotfixes & Final Adjustments
+-- =====================================================================
+-- Populate CreatedAt for existing inventory lots
+UPDATE InventoryLots 
+SET CreatedAt = COALESCE(ManufactureDate, GETDATE()) 
+WHERE CreatedAt IS NULL;
+
+-- Ensure UOM "Cái" exists
+IF NOT EXISTS (SELECT 1 FROM UnitOfMeasure WHERE UomName = N'Cái')
+BEGIN
+    INSERT INTO UnitOfMeasure (UomName, Description) VALUES (N'Cái', N'Đơn vị cái');
+END
+
+-- Force AMP (Ống thủy tinh 2ml) to use UOM "Cái"
+DECLARE @UomCaiId INT = (SELECT TOP 1 UomId FROM UnitOfMeasure WHERE UomName = N'Cái');
+UPDATE Materials SET BaseUomId = @UomCaiId WHERE MaterialCode = 'AMP' AND @UomCaiId IS NOT NULL;
+
+-- Ensure ALU/PVC materials exist
+IF NOT EXISTS (SELECT 1 FROM Materials WHERE MaterialCode = 'ALU')
+    INSERT INTO Materials (MaterialCode, MaterialName, Type, BaseUomId, IsActive, TechnicalSpecification, CreatedAt)
+    VALUES ('ALU', N'Màng nhôm ép vỉ', 'Packaging', 1, 1, N'ĐĐVN V', GETDATE());
+
+IF NOT EXISTS (SELECT 1 FROM Materials WHERE MaterialCode = 'PVC')
+    INSERT INTO Materials (MaterialCode, MaterialName, Type, BaseUomId, IsActive, TechnicalSpecification, CreatedAt)
+    VALUES ('PVC', N'Màng PVC trong suốt', 'Packaging', 1, 1, N'ĐĐVN V', GETDATE());
+
+-- Ensure ALU/PVC have inventory lots
+DECLARE @MatAluId INT = (SELECT TOP 1 MaterialId FROM Materials WHERE MaterialCode = 'ALU');
+DECLARE @MatPvcId INT = (SELECT TOP 1 MaterialId FROM Materials WHERE MaterialCode = 'PVC');
+
+IF @MatAluId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM InventoryLots WHERE MaterialId = @MatAluId)
+    INSERT INTO InventoryLots (MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, SupplierName, CreatedAt)
+    VALUES (@MatAluId, 'L-ALU-01', 20.00, DATEADD(DAY, -20, GETDATE()), DATEADD(YEAR, 3, GETDATE()), N'Nhà cung cấp H', GETDATE());
+
+IF @MatPvcId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM InventoryLots WHERE MaterialId = @MatPvcId)
+    INSERT INTO InventoryLots (MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, SupplierName, CreatedAt)
+    VALUES (@MatPvcId, 'L-PVC-01', 20.00, DATEADD(DAY, -15, GETDATE()), DATEADD(YEAR, 3, GETDATE()), N'Nhà cung cấp I', GETDATE());
 
 PRINT 'GMP Database Initialization & Full Seeding Completed Successfully!';
 

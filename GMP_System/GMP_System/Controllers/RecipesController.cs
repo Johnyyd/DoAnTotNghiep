@@ -328,6 +328,7 @@ namespace GMP_System.Controllers
                     r.StandardPressure,
                     r.StabilityStatus,
                     r.SetTemperature,
+                    r.SetPressure,
                     r.SetTimeMinutes,
                     Material = r.Material == null ? null : new { r.Material.MaterialName },
                     Area = r.Area == null ? null : new { r.Area.AreaName },
@@ -379,6 +380,7 @@ namespace GMP_System.Controllers
                 StandardPressure = request.StandardPressure,
                 StabilityStatus = request.StabilityStatus,
                 SetTemperature = request.SetTemperature,
+                SetPressure = request.SetPressure,
                 SetTimeMinutes = request.SetTimeMinutes
             };
 
@@ -414,6 +416,7 @@ namespace GMP_System.Controllers
             step.StandardPressure = request.StandardPressure;
             step.StabilityStatus = request.StabilityStatus;
             step.SetTemperature = request.SetTemperature;
+            step.SetPressure = request.SetPressure;
             step.SetTimeMinutes = request.SetTimeMinutes;
 
             await _context.SaveChangesAsync();
