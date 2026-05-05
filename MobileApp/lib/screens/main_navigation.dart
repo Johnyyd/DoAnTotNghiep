@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import '../services/api_service.dart';
 import '../components/sticky_batch_header.dart';
 import 'batch_dashboard_screen.dart';
 import 'login_screen.dart';
@@ -26,15 +25,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   Future<void> _calculateProgress() async {
-    final batches =
-        await ApiService.getBatches(orderId: widget.orderData['orderId']);
-    if (batches.isNotEmpty) {
-      int completed = batches.where((b) => b['status'] == 'Completed').length;
-      if (mounted) {
-        setState(() {
-          _batchProgress = completed / batches.length;
-        });
-      }
+    if (mounted) {
+      setState(() {
+        _batchProgress = (widget.orderData['progress'] ?? 0.0) as double;
+      });
     }
   }
 

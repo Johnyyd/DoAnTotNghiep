@@ -203,7 +203,14 @@ class _HomeScreenState extends State<HomeScreen>
           final order = orders[index];
           final displayStatus = _getOrderDisplayStatus(order);
           final color = _statusColor(displayStatus);
-          final progress = (order['progress'] ?? 0.0) as double;
+          double progress = (order['progress'] ?? 0.0) as double;
+          int completedBatches = order['completedBatches'] ?? 0;
+          final totalBatches = order['totalBatches'] ?? 1;
+
+          if (displayStatus == 'Completed') {
+            progress = 1.0;
+            completedBatches = totalBatches;
+          }
 
           return Card(
             margin: const EdgeInsets.only(bottom: 16),
@@ -341,7 +348,7 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Đã hoàn thành: ${order['completedBatches']} / ${order['totalBatches']} mẻ',
+                        'Đã hoàn thành: $completedBatches / $totalBatches mẻ',
                         style: const TextStyle(
                             color: Colors.black45, fontSize: 12),
                       ),

@@ -234,28 +234,30 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
                             ],
                           ),
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: color.withAlpha((0.1 * 255).toInt()),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: color.withAlpha((0.5 * 255).toInt())),
-                              ),
-                              child: Text(
-                                isBlocked ? 'Chưa được phép' : _statusLabel(status),
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: color,
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: color.withAlpha((0.1 * 255).toInt()),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: color.withAlpha((0.5 * 255).toInt())),
+                                ),
+                                child: Text(
+                                  isBlocked ? 'Chưa được phép' : _statusLabel(status),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: color,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            const Icon(Icons.chevron_right, size: 18, color: Colors.black26),
-                          ],
+                              const SizedBox(height: 4),
+                              const Icon(Icons.chevron_right, size: 18, color: Colors.black26),
+                            ],
+                          ),
                         ),
                       ],
                     ),

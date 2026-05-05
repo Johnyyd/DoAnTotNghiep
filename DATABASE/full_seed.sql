@@ -256,6 +256,7 @@ GO
 
 -- =====================================================================
 -- 12. ProductionBatches
+/*
 SET IDENTITY_INSERT ProductionBatches ON;
 INSERT INTO ProductionBatches (BatchId, OrderId, BatchNumber, Status, ManufactureDate, EndTime, ExpiryDate, CurrentStep, CreatedAt) VALUES
 (1, 1, 'B26-001-01', 'Completed', DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
@@ -291,21 +292,24 @@ GO
 
 -- =====================================================================
 -- 14. MaterialUsage
+/*
 SET IDENTITY_INSERT MaterialUsage ON;
 INSERT INTO MaterialUsage (UsageId, BatchId, InventoryLotId, ActualAmount, UsedDate, DispensedBy, Note) VALUES
 (1, 1, 1, 1.50, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất NLC3'),
 (2, 1, 6, 1.00, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất Tinh bột');
 SET IDENTITY_INSERT MaterialUsage OFF;
-
+*/
 GO
 
 -- =====================================================================
 -- 15. BatchProcessLogs
+/*
 SET IDENTITY_INSERT BatchProcessLogs ON;
 INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData, Notes, IsDeviation, VerifiedById, VerifiedDate, NumberOfRouting) VALUES
 (1, 1, 1, 2, 3, DATEADD(HOUR,-124,GETDATE()), DATEADD(HOUR,-122,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1),
 (2, 1, 2, 2, 3, DATEADD(HOUR,-122,GETDATE()), DATEADD(HOUR,-120,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1);
 SET IDENTITY_INSERT BatchProcessLogs OFF;
+*/
 GO
 
 -- =====================================================================

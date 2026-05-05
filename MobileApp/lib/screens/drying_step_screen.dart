@@ -758,7 +758,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
                   _buildPhase3(),
                 if (_currentPhase == ExecutionPhase.execution) _buildPhase4(),
                 if (_currentPhase == ExecutionPhase.completed) _buildPhase5(),
-                const SizedBox(height: 100),
+                const SizedBox(height: 150),
               ],
             ),
           ),
