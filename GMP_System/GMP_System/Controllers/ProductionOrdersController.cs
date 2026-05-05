@@ -209,11 +209,6 @@ namespace GMP_System.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ProductionOrder order)
         {
-            if (string.IsNullOrWhiteSpace(order.OrderCode))
-            {
-                // Auto-generate if missing
-                order.OrderCode = $"PO-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
-            }
 
             if (order.RecipeId == null)
             {
@@ -244,7 +239,7 @@ namespace GMP_System.Controllers
             if (!order.EndDate.HasValue) order.EndDate = order.StartDate!.Value.AddDays(2);
             if (string.IsNullOrWhiteSpace(order.OrderCode))
             {
-                order.OrderCode = BuildUniqueOrderCode();
+                order.OrderCode = await GenerateSequentialOrderCodeAsync();
             }
             else
             {
@@ -292,7 +287,7 @@ namespace GMP_System.Controllers
 
                         for (int i = 0; i < numBatches; i++)
                         {
-                            string batchNumber = $"{order.OrderCode.Replace("PO", "B")}-{(i + 1):D2}";
+                            string batchNumber = $"B{order.OrderCode.Substring(3)}-{(i + 1):D2}";
                             await _unitOfWork.ProductionBatches.AddAsync(new ProductionBatch
                             {
                                 OrderId = order.OrderId,
@@ -335,7 +330,7 @@ namespace GMP_System.Controllers
             var normalized = requestedCode.Trim();
             if (string.IsNullOrWhiteSpace(normalized))
             {
-                return BuildUniqueOrderCode();
+                return await GenerateSequentialOrderCodeAsync();
             }
 
             var exists = await _context.ProductionOrders.AnyAsync(x => x.OrderCode == normalized);
@@ -354,13 +349,30 @@ namespace GMP_System.Controllers
                 }
             }
 
-            return BuildUniqueOrderCode();
+            return await GenerateSequentialOrderCodeAsync();
         }
 
-        private static string BuildUniqueOrderCode()
+        private async Task<string> GenerateSequentialOrderCodeAsync()
         {
-            var now = DateTime.Now;
-            return $"PO-{now:yyyyMMdd-HHmmss}-{now:fff}";
+            var year = DateTime.Now.ToString("yy");
+            var prefix = $"PO-{year}-";
+
+            var lastOrder = await _context.ProductionOrders
+                .Where(o => o.OrderCode.StartsWith(prefix))
+                .OrderByDescending(o => o.OrderCode)
+                .FirstOrDefaultAsync();
+
+            int nextNumber = 1;
+            if (lastOrder != null)
+            {
+                var parts = lastOrder.OrderCode.Split('-');
+                if (parts.Length == 3 && int.TryParse(parts[2], out var lastNumber))
+                {
+                    nextNumber = lastNumber + 1;
+                }
+            }
+
+            return $"{prefix}{nextNumber:D3}";
         }
 
         private static string GetInnermostMessage(Exception ex)
