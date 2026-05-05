@@ -133,7 +133,15 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
         });
       }
       if (batch != null && batch['order'] != null) {
-        _bom = batch['order']?['recipe']?['recipeBoms'] ?? [];
+        final orderBoms = batch['order']['productionOrderBoms'];
+        // Use productionOrderBoms if available (populated by Web Admin)
+        if (orderBoms != null && (orderBoms as List).isNotEmpty) {
+          _bom = orderBoms;
+          debugPrint("GMP: Loaded ${orderBoms.length} specific OrderBOMs");
+        } else {
+          _bom = batch['order']?['recipe']?['recipeBoms'] ?? [];
+          debugPrint("GMP: Falling back to RecipeBOMs template");
+        }
       } else {
         _bom = widget.initialBom ?? [];
       }
@@ -319,17 +327,17 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       _isCalculated = true;
       _dynamicTargets.clear();
 
-      _dynamicTargets['MAT-NLC3'] = A;
-      _dynamicTargets['MAT-TD1'] = (0.00162 * Q);
-      _dynamicTargets['MAT-TD3'] = (0.02970 * Q);
-      _dynamicTargets['MAT-TD4'] = (0.00405 * Q);
-      _dynamicTargets['MAT-TD5'] = (0.00405 * Q);
+      _dynamicTargets['NLC-3'] = A;
+      _dynamicTargets['TD-1'] = (0.00162 * Q);
+      _dynamicTargets['TD-3'] = (0.02970 * Q);
+      _dynamicTargets['TD-4'] = (0.00405 * Q);
+      _dynamicTargets['TD-5'] = (0.00405 * Q);
 
       double yMg = Y * 1000;
       double fixedTDsMg = 1.62 + 29.70 + 4.05 + 4.05;
       double td8Mg = 540 - yMg - fixedTDsMg;
-      _dynamicTargets['MAT-TD8'] = (td8Mg * Q) / 1000;
-      _dynamicTargets['MAT-NLP6'] = Q;
+      _dynamicTargets['TD-8'] = (td8Mg * Q) / 1000;
+      _dynamicTargets['NLP-6'] = Q;
     });
   }
 
@@ -463,13 +471,13 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       final actualStr = _materialsData[name]?['actual'] ?? '0';
       final actualQty = double.tryParse(actualStr) ?? 0.0;
 
-      if (requiredQty > 0) {
+      if (requiredQty > 0.0001) {
         final double diffPercent =
             ((actualQty - requiredQty).abs() / requiredQty) * 100;
         if (diffPercent > 2.0) {
           hasDeviation = true;
           deviationMsg +=
-              '- $name: Y/c ${requiredQty.toStringAsFixed(2)}, Cân $actualQty (Lệch ${diffPercent.toStringAsFixed(1)}%)\n';
+              '- $name: Y/c ${requiredQty.toStringAsFixed(4)}, Cân $actualQty (Lệch ${diffPercent.toStringAsFixed(1)}%)\n';
         }
       }
     }
@@ -822,13 +830,18 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
         final name = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
         final code = mat['materialCode'] ?? 'N/A';
         
-        double target = (item['quantity'] as num?)?.toDouble() ?? 0.0;
+        double target = (item['quantity'] ?? item['Quantity'] ?? 0.0) as double;
         if (_isCalculated && _dynamicTargets.containsKey(code)) {
           target = _dynamicTargets[code]!;
         }
+        
+        final uomId = mat['baseUomId'] ?? mat['uomId'] ?? item['uomId'] ?? item['UomId'] ?? 1;
+        final unitLabel = (uomId == 4) ? 'viên' : 'kg';
+        
         return MaterialCard(
             materialName: '$name ($code)',
-            requiredWeightKg: target.toStringAsFixed(2),
+            requiredWeightKg: target.toStringAsFixed(4),
+            unitLabel: unitLabel,
             initialActualWeight: _materialsData[name]?['actual'] ?? '',
             initialPhieuKN: _materialsData[name]?['phieuKN'] ?? '',
             onWeightChanged: (v) => _updateMaterial(name, 'actual', v),

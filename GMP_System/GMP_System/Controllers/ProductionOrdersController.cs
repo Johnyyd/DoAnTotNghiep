@@ -302,10 +302,9 @@ namespace GMP_System.Controllers
                     {
                         OrderId = order.OrderId,
                         MaterialId = rb.MaterialId,
-                        UomId = 1, // Strictly use kg (UomId=1) for order-specific BOM
+                        UomId = rb.UomId ?? 1, 
                         WastePercentage = rb.WastePercentage,
-                        // Calculate total kg: (mg/unit * total units) / 1,000,000
-                        RequiredQuantity = CalculateRequiredKg(order.PlannedQuantity, rb.Quantity, rb.WastePercentage),
+                        RequiredQuantity = CalculateRequiredQuantity(order.PlannedQuantity, rb.Quantity, rb.UomId ?? 1, rb.WastePercentage),
                         Note = rb.Note
                     };
                     await _unitOfWork.ProductionOrderBoms.AddAsync(orderBom);
@@ -453,7 +452,7 @@ namespace GMP_System.Controllers
             foreach (var bom in bomItems)
             {
                 var materialId = bom.MaterialId!.Value;
-                var requiredKg = CalculateRequiredKg(plannedQuantity, bom.Quantity, bom.WastePercentage);
+                var requiredKg = CalculateRequiredQuantity(plannedQuantity, bom.Quantity, bom.UomId ?? 1, bom.WastePercentage);
                 if (requiredKg <= 0)
                 {
                     continue;
@@ -502,11 +501,20 @@ namespace GMP_System.Controllers
             return shortages;
         }
 
-        private static decimal CalculateRequiredKg(decimal plannedQuantity, decimal mgPerUnit, decimal? wastePercentage)
+        private static decimal CalculateRequiredQuantity(decimal plannedQuantity, decimal recipeQuantity, int uomId, decimal? wastePercentage)
         {
-            var baseKg = (plannedQuantity * mgPerUnit) / 1_000_000m;
+            decimal baseQty;
+            if (uomId == 4) // Count-based (e.g. Viên)
+            {
+                baseQty = plannedQuantity * recipeQuantity;
+            }
+            else // Mass-based (mg/unit to kg)
+            {
+                baseQty = (plannedQuantity * recipeQuantity) / 1_000_000m;
+            }
+
             var wasteFactor = 1m + ((wastePercentage ?? 0m) / 100m);
-            return decimal.Round(baseKg * wasteFactor, 6, MidpointRounding.AwayFromZero);
+            return decimal.Round(baseQty * wasteFactor, 6, MidpointRounding.AwayFromZero);
         }
 
         [HttpPut("{id}")]

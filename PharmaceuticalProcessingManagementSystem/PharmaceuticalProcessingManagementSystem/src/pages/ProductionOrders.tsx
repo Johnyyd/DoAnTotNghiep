@@ -121,9 +121,16 @@ export default function ProductionOrders() {
 
   const requiredMaterials = useMemo(() => {
     return bomItems.map((item) => {
-      const requiredKg = (totalTablets * item.mgPerTablet) / 1_000_000;
+      // Determine if material is count-based (e.g., Capsules) or weight-based
+      const isCountBased = item.materialName.toLowerCase().includes('vỏ nang') || 
+                          item.materialName.toLowerCase().includes('nang');
+      
+      const requiredKg = isCountBased 
+        ? (totalTablets * item.mgPerTablet) 
+        : (totalTablets * item.mgPerTablet) / 1_000_000;
+        
       const available = stockByMaterial.get(item.materialId) ?? 0;
-      return { ...item, requiredKg, available, enough: available >= requiredKg };
+      return { ...item, requiredKg, available, enough: available >= requiredKg, isCountBased };
     });
   }, [bomItems, totalTablets, stockByMaterial]);
 
@@ -301,7 +308,11 @@ export default function ProductionOrders() {
         {insufficientMaterials.length > 0 && (
           <div className="border border-red-300 bg-red-50 rounded-lg p-3 text-red-700 text-sm">
             <p className="font-semibold mb-1">Không đủ nguyên liệu tồn kho:</p>
-            {insufficientMaterials.map((m) => <p key={m.materialId}>- {m.materialName}: cần {m.requiredKg.toFixed(4)} kg, hiện có {m.available.toFixed(4)} kg</p>)}
+            {insufficientMaterials.map((m) => (
+              <p key={m.materialId}>
+                - {m.materialName}: cần {m.requiredKg.toFixed(4)} {m.isCountBased ? 'viên' : 'kg'}, hiện có {m.available.toFixed(4)} {m.isCountBased ? 'viên' : 'kg'}
+              </p>
+            ))}
           </div>
         )}
 
@@ -312,8 +323,15 @@ export default function ProductionOrders() {
               <tbody>
                 {requiredMaterials.map((item, idx) => (
                   <tr key={`${item.materialId}-${idx}`}>
-                    <td>{item.materialName}</td><td>{item.mgPerTablet.toFixed(2)}</td><td>{item.requiredKg.toFixed(4)}</td><td>{item.available.toFixed(4)}</td>
-                    <td><span className={`px-2 py-1 rounded-full text-xs ${item.enough ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{item.enough ? 'Đủ' : 'Thiếu'}</span></td>
+                    <td>{item.materialName}</td>
+                    <td>{item.mgPerTablet.toFixed(2)}</td>
+                    <td>{item.requiredKg.toFixed(4)}</td>
+                    <td>{item.available.toFixed(4)}</td>
+                    <td>
+                      <span className={`px-2 py-1 rounded-full text-xs ${item.enough ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                        {item.enough ? 'Đủ' : 'Thiếu'}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 class MaterialCard extends StatefulWidget {
   final String materialName;
   final String requiredWeightKg;
+  final String unitLabel;
   final Function(String) onWeightChanged;
   final Function(String) onPhieuKNChanged;
   final String initialActualWeight;
@@ -14,6 +15,7 @@ class MaterialCard extends StatefulWidget {
     super.key,
     required this.materialName,
     required this.requiredWeightKg,
+    this.unitLabel = 'kg',
     required this.onWeightChanged,
     required this.onPhieuKNChanged,
     this.initialActualWeight = '',
@@ -54,7 +56,8 @@ class _MaterialCardState extends State<MaterialCard> {
     final cur = double.tryParse(_controller.text) ?? -1;
     final req = double.tryParse(widget.requiredWeightKg) ?? 0;
     setState(() {
-      _isMatched = (cur - req).abs() < 0.001;
+      // Use higher precision for matching: 0.0001 instead of 0.001
+      _isMatched = (cur - req).abs() < 0.0001;
     });
   }
 
@@ -125,9 +128,9 @@ class _MaterialCardState extends State<MaterialCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Yêu cầu (kg):',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+                      Text(
+                        'Yêu cầu (${widget.unitLabel}):',
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
                       ),
                       const SizedBox(height: 8),
                       Container(
@@ -151,9 +154,9 @@ class _MaterialCardState extends State<MaterialCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Thực cân (kg):',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+                      Text(
+                        'Thực cân (${widget.unitLabel}):',
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
                       ),
                       const SizedBox(height: 8),
                       TextField(
