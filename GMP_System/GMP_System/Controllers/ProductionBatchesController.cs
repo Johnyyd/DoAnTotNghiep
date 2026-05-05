@@ -78,23 +78,25 @@ namespace GMP_System.Controllers
                 ? orderRoutings 
                 : await routingsQuery.Where(r => r.RecipeId == recipeId && r.OrderId == null).ToListAsync();
 
-            // Truy vấn trực tiếp từ bảng RecipeBom để đảm bảo không bị mất dữ liệu do nạp lồng
+            // Fetch unique BOM for this order
             var bomsWithQC = new List<object>();
-            if (batch.Order != null && batch.Order.RecipeId != null)
+            if (batch.Order != null)
             {
-                var boms = await _unitOfWork.RecipeBoms.Query()
-                    .Where(bom => bom.RecipeId == batch.Order.RecipeId)
+                var orderBoms = await _unitOfWork.ProductionOrderBoms.Query()
+                    .Where(bom => bom.OrderId == batch.OrderId)
                     .Include(bom => bom.Material)
+                    .Include(bom => bom.Uom)
                     .Select(bom => new {
-                        bom.BomId,
+                        bom.OrderBomId,
                         bom.MaterialId,
-                        bom.Quantity,
+                        bom.RequiredQuantity,
                         bom.UomId,
                         MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
-                        MaterialCode = bom.Material != null ? bom.Material.MaterialCode : "N/A"
+                        MaterialCode = bom.Material != null ? bom.Material.MaterialCode : "N/A",
+                        UomName = bom.Uom != null ? bom.Uom.UomName : "kg"
                     }).ToListAsync();
 
-                foreach (var bom in boms) 
+                foreach (var bom in orderBoms) 
                 {
                     var suggestedQC = await _unitOfWork.InventoryLots.Query()
                         .Where(l => l.MaterialId == bom.MaterialId && l.QuantityCurrent > 0)
@@ -103,14 +105,17 @@ namespace GMP_System.Controllers
                         .FirstOrDefaultAsync();
 
                     bomsWithQC.Add(new {
-                        bom.BomId,
+                        bom.OrderBomId,
                         bom.MaterialId,
-                        bom.Quantity,
+                        Quantity = bom.RequiredQuantity, 
                         bom.UomId,
                         Material = new {
                             MaterialName = bom.MaterialName,
                             MaterialCode = bom.MaterialCode,
-                            SuggestedQCNumber = suggestedQC
+                            SuggestedQCNumber = suggestedQC,
+                            UnitOfMeasure = new {
+                                UomName = bom.UomName
+                            }
                         }
                     });
                 }
@@ -151,6 +156,11 @@ namespace GMP_System.Controllers
                     r.SetTemperature,
                     r.SetPressure,
                     r.SetTimeMinutes,
+                    r.CleanlinessStatus,
+                    r.StandardTemperature,
+                    r.StandardHumidity,
+                    r.StandardPressure,
+                    r.AreaId,
                     DefaultEquipment = r.DefaultEquipment == null ? null : new {
                         r.DefaultEquipment.EquipmentId,
                         r.DefaultEquipment.EquipmentCode,

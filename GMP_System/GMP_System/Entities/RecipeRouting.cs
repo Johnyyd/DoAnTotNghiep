@@ -13,7 +13,7 @@ public partial class RecipeRouting
 
     public int StepNumber { get; set; }
 
-    public string StepName { get; set; } = null!;
+    public string? StepName { get; set; }
 
     public int? NumberOfRouting { get; set; }
 

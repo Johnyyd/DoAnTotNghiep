@@ -26,6 +26,7 @@ GO
 -- 0. DỌN DẸP BẢNG CŨ
 -- -------------------------------------------------------------------------
 PRINT 'Cleaning up existing tables...';
+IF OBJECT_ID('ProductionOrderBom', 'U') IS NOT NULL DROP TABLE ProductionOrderBom;
 IF OBJECT_ID('BatchProcessParameterValue', 'U') IS NOT NULL DROP TABLE BatchProcessParameterValue;
 IF OBJECT_ID('QualityTests', 'U') IS NOT NULL DROP TABLE QualityTests;
 IF OBJECT_ID('SystemAuditLog', 'U') IS NOT NULL DROP TABLE SystemAuditLog;
@@ -187,6 +188,20 @@ CREATE TABLE ProductionOrders (
     PlannedCartons INT,
     CreatedAt DATETIME2 DEFAULT GETDATE(),
     Note NVARCHAR(MAX)
+);
+GO
+
+-- -------------------------------------------------------------------------
+-- 9b. ProductionOrderBom
+-- -------------------------------------------------------------------------
+CREATE TABLE ProductionOrderBom (
+    OrderBomId INT PRIMARY KEY IDENTITY(1,1),
+    OrderId INT REFERENCES ProductionOrders(OrderId),
+    MaterialId INT REFERENCES Materials(MaterialId),
+    RequiredQuantity DECIMAL(18, 4) NOT NULL,
+    UomId INT REFERENCES UnitOfMeasure(UomId),
+    WastePercentage DECIMAL(5, 2) DEFAULT 0,
+    Note NVARCHAR(200)
 );
 GO
 

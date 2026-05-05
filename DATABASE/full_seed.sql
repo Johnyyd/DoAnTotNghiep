@@ -61,6 +61,7 @@ IF OBJECT_ID('BatchProcessParameterValue', 'U') IS NOT NULL DBCC CHECKIDENT ('Ba
 IF OBJECT_ID('ProductionOrders', 'U') IS NOT NULL DBCC CHECKIDENT ('ProductionOrders', RESEED, 0);
 IF OBJECT_ID('ProductionBatches', 'U') IS NOT NULL DBCC CHECKIDENT ('ProductionBatches', RESEED, 0);
 IF OBJECT_ID('InventoryLots', 'U') IS NOT NULL DBCC CHECKIDENT ('InventoryLots', RESEED, 0);
+IF OBJECT_ID('ProductionOrderBom', 'U') IS NOT NULL DBCC CHECKIDENT ('ProductionOrderBom', RESEED, 0);
 GO
 PRINT 'Reset Identity Completed Successfully!';
 
@@ -251,6 +252,39 @@ INSERT INTO ProductionOrders (OrderId, OrderCode, RecipeId, PlannedQuantity, Act
 (4,  'PO-26-004', 2, 200000.00, NULL,      DATEADD(DAY,-2,GETDATE()), DATEADD(DAY,2, GETDATE()), 'InProcess', 4, GETDATE(), N'Para lô 1.'),
 (7,  'PO-26-007', 2, 200000.00, 197800.00, DATEADD(DAY,-10,GETDATE()),DATEADD(DAY,-7,GETDATE()), 'Completed',  4, GETDATE(), N'Lô cũ.');
 SET IDENTITY_INSERT ProductionOrders OFF;
+GO
+
+-- =====================================================================
+-- 11.5. ProductionOrderBom (Dữ liệu BOM cho từng lệnh)
+-- =====================================================================
+INSERT INTO ProductionOrderBom (OrderId, MaterialId, UomId, RequiredQuantity, WastePercentage, Note) VALUES
+-- PO-26-001 (OrderId 1, Recipe 1, 100k viên)
+(1, 1, 1, 25.0500, 0.20, N'Cao khô NLC3'),
+(1, 2, 1, 0.1622, 0.10, N'Aerosil'),
+(1, 3, 1, 2.9760, 0.20, N'SSG'),
+(1, 4, 1, 0.4054, 0.10, N'Talc'),
+(1, 5, 1, 0.4054, 0.10, N'Magnesi stearat'),
+(1, 6, 1, 25.1833, 0.50, N'Tinh bột'),
+-- PO-26-002 (OrderId 2, Recipe 1, 300k viên)
+(2, 1, 1, 75.1500, 0.20, N'Cao khô NLC3'),
+(2, 2, 1, 0.4865, 0.10, N'Aerosil'),
+(2, 3, 1, 8.9280, 0.20, N'SSG'),
+(2, 4, 1, 1.2162, 0.10, N'Talc'),
+(2, 5, 1, 1.2162, 0.10, N'Magnesi stearat'),
+(2, 6, 1, 75.5499, 0.50, N'Tinh bột'),
+-- PO-26-004 (OrderId 4, Recipe 2, 200k viên)
+(4, 9, 1, 50.1500, 0.30, N'Paracetamol'),
+(4, 6, 1, 30.3000, 1.00, N'Tinh bột ngô'),
+(4, 10, 1, 16.0800, 0.50, N'Lactose'),
+(4, 5, 1, 1.0010, 0.10, N'Magie stearat'),
+(4, 8, 1, 2.0040, 0.20, N'PVP K30'),
+-- PO-26-007 (OrderId 7, Recipe 2, 200k viên)
+(7, 9, 1, 50.1500, 0.30, N'Paracetamol'),
+(7, 6, 1, 30.3000, 1.00, N'Tinh bột ngô'),
+(7, 10, 1, 16.0800, 0.50, N'Lactose'),
+(7, 5, 1, 1.0010, 0.10, N'Magie stearat'),
+(7, 8, 1, 2.0040, 0.20, N'PVP K30');
+GO
 
 GO
 

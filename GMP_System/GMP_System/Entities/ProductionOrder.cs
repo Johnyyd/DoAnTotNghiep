@@ -8,7 +8,7 @@ public partial class ProductionOrder
 {
     public int OrderId { get; set; }
 
-    public string OrderCode { get; set; } = null!;
+    public string? OrderCode { get; set; }
 
     public int? RecipeId { get; set; }
 
@@ -31,6 +31,7 @@ public partial class ProductionOrder
 
     public virtual ICollection<ProductionBatch> ProductionBatches { get; set; } = new List<ProductionBatch>();
     public virtual ICollection<RecipeRouting> RecipeRoutings { get; set; } = new List<RecipeRouting>();
+    public virtual ICollection<ProductionOrderBom> ProductionOrderBoms { get; set; } = new List<ProductionOrderBom>();
 
     [JsonIgnore]
     public virtual Recipe? Recipe { get; set; }

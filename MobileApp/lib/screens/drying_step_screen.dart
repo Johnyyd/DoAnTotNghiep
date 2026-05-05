@@ -134,6 +134,9 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
         orElse: () => null,
       );
       if (sp != null) {
+        if (sp['standardValue'] != null) {
+          return "Chuẩn: ${sp['standardValue']}";
+        }
         final min = sp['minValue'];
         final max = sp['maxValue'];
         final unit = sp['unit'] ?? '';
@@ -228,8 +231,36 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
         // Try multiple nested paths for parameters (backward compatibility/robustness)
         final routing = log['routing'] ?? log['step'] ?? {};
         _standardParams = routing['stepParameters'] ?? [];
-        
-        debugPrint("DEBUG: [Drying] Found log. Routing key: ${log.containsKey('routing')}. Step key: ${log.containsKey('step')}");
+
+        // Inject root-level routing standards for UI consistency
+        if (routing['standardTemperature'] != null) {
+          _standardParams.add({
+            'parameterName': 'Nhiệt độ phòng',
+            'unit': '°C',
+            'minValue': null,
+            'maxValue': null,
+            'standardValue': routing['standardTemperature']
+          });
+        }
+        if (routing['standardHumidity'] != null) {
+          _standardParams.add({
+            'parameterName': 'Độ ẩm phòng',
+            'unit': '%',
+            'minValue': null,
+            'maxValue': null,
+            'standardValue': routing['standardHumidity']
+          });
+        }
+        if (routing['standardPressure'] != null) {
+          _standardParams.add({
+            'parameterName': 'Áp lực phòng',
+            'unit': 'Pa',
+            'minValue': null,
+            'maxValue': null,
+            'standardValue': routing['standardPressure']
+          });
+        }
+
         debugPrint("DEBUG: [Drying] _standardParams count: ${_standardParams.length}");
         final rawParams = _currentLog['parametersData'];
 

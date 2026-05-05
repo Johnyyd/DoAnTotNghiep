@@ -38,6 +38,7 @@ public partial class GmpContext : DbContext
     public virtual DbSet<RecipeBom> RecipeBoms { get; set; } = null!;
 
     public virtual DbSet<RecipeRouting> RecipeRoutings { get; set; } = null!;
+    public virtual DbSet<ProductionOrderBom> ProductionOrderBoms { get; set; } = null!;
 
 
     public virtual DbSet<UnitOfMeasure> UnitOfMeasures { get; set; } = null!;
@@ -293,6 +294,19 @@ public partial class GmpContext : DbContext
             entity.HasOne(d => d.Recipe).WithMany(p => p.ProductionOrders)
                 .HasForeignKey(d => d.RecipeId)
                 .HasConstraintName("FK__Productio__Recip__70DDC3D8");
+        });
+
+        modelBuilder.Entity<ProductionOrderBom>(entity =>
+        {
+            entity.HasKey(e => e.OrderBomId);
+            entity.ToTable("ProductionOrderBom");
+            entity.Property(e => e.RequiredQuantity).HasColumnType("decimal(18, 4)");
+            entity.HasOne(d => d.Order).WithMany(p => p.ProductionOrderBoms)
+                .HasForeignKey(d => d.OrderId);
+            entity.HasOne(d => d.Material).WithMany()
+                .HasForeignKey(d => d.MaterialId);
+            entity.HasOne(d => d.Uom).WithMany()
+                .HasForeignKey(d => d.UomId);
         });
 
         modelBuilder.Entity<Recipe>(entity =>

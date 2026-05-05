@@ -141,6 +141,11 @@ namespace GMP_System.Controllers
                     {
                         routingId = r.RoutingId,
                         stepName = r.StepName,
+                        areaId = r.AreaId,
+                        cleanlinessStatus = r.CleanlinessStatus,
+                        standardTemperature = r.StandardTemperature,
+                        standardHumidity = r.StandardHumidity,
+                        standardPressure = r.StandardPressure,
                         stepParameters = (r.StepParameters ?? new List<StepParameter>()).Select(sp => new
                         {
                             sp.ParameterId,

@@ -21,6 +21,7 @@ namespace GMP_System.Interfaces
         IGenericRepository<BatchProcessParameterValue> BatchProcessParameterValues { get; }
         IGenericRepository<RecipeRouting> RecipeRoutings { get; }
         IGenericRepository<RecipeBom> RecipeBoms { get; }
+        IGenericRepository<ProductionOrderBom> ProductionOrderBoms { get; }
         // Hàm lưu thay đổi (Commit)
         Task<int> CompleteAsync();
     }

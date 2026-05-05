@@ -15,6 +15,7 @@ interface UiProductionOrder {
   status: OrderStatus;
   plannedStartDate?: string;
   plannedEndDate?: string;
+  productionOrderBoms?: any[];
 }
 
 function toRows<T>(raw: unknown): T[] {
@@ -38,17 +39,6 @@ function statusClass(status: string) {
 
 type MassUnit = 'kg' | 'g' | 'vien';
 
-function buildPlanOrderCode(now: Date) {
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const dd = String(now.getDate()).padStart(2, '0');
-  const hh = String(now.getHours()).padStart(2, '0');
-  const mi = String(now.getMinutes()).padStart(2, '0');
-  const ss = String(now.getSeconds()).padStart(2, '0');
-  const ms = String(now.getMilliseconds()).padStart(3, '0');
-  const rand = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `PO-${yyyy}${mm}${dd}-${hh}${mi}${ss}-${ms}${rand}`;
-}
 
 export default function ProductionOrders() {
   const queryClient = useQueryClient();
@@ -151,6 +141,7 @@ export default function ProductionOrders() {
       status: (o.status ?? o.Status ?? 'Draft') as OrderStatus,
       plannedStartDate: o.startDate ?? o.StartDate,
       plannedEndDate: o.endDate ?? o.EndDate,
+      productionOrderBoms: o.productionOrderBoms ?? o.ProductionOrderBoms,
     };
   }), [ordersRaw, recipes]);
 
@@ -176,9 +167,7 @@ export default function ProductionOrders() {
       if (insufficientMaterials.length) throw new Error('Không đủ nguyên liệu tồn kho.');
       const now = new Date();
       const end = new Date(now); end.setDate(end.getDate() + 7);
-      const orderCode = buildPlanOrderCode(now);
       await productionOrdersApi.create({
-        orderCode,
         recipeId: planForm.recipeId,
         plannedQuantity: totalTablets,
         startDate: now.toISOString(),
@@ -197,7 +186,6 @@ export default function ProductionOrders() {
 
   const createOrderMutation = useMutation({
     mutationFn: () => productionOrdersApi.create({
-      orderCode: orderForm.orderCode,
       recipeId: orderForm.recipeId,
       plannedQuantity: orderForm.plannedQuantity,
       startDate: orderForm.startDate ? orderForm.startDate : undefined,
@@ -208,6 +196,7 @@ export default function ProductionOrders() {
       await queryClient.invalidateQueries({ queryKey: ['productionOrders'] });
       setShowOrderModal(false);
     },
+    onError: (err: any) => alert(err?.response?.data?.message ?? 'Không thể tạo lệnh sản xuất'),
   });
 
   const updateOrderMutation = useMutation({
@@ -224,6 +213,7 @@ export default function ProductionOrders() {
       setShowOrderModal(false);
       setEditingOrder(null);
     },
+    onError: (err: any) => alert(err?.response?.data?.message ?? 'Không thể cập nhật lệnh sản xuất'),
   });
 
 
@@ -414,8 +404,8 @@ export default function ProductionOrders() {
           <div className="bg-white rounded-2xl w-full max-w-2xl p-6 space-y-4">
             <h2 className="text-xl font-bold">{editingOrder ? 'Cập nhật lệnh sản xuất' : 'Tạo lệnh sản xuất'}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><label className="text-xs text-neutral-500">Mã lệnh</label>
-                <input className="input" placeholder="Mã lệnh" value={orderForm.orderCode} onChange={(e) => setOrderForm({ ...orderForm, orderCode: e.target.value })} />
+              <div><label className="text-xs text-neutral-500">Mã lệnh (Tự động)</label>
+                <input disabled className="input bg-neutral-100 cursor-not-allowed" placeholder="Hệ thống tự sinh" value={orderForm.orderCode} />
               </div>
               <div><label className="text-xs text-neutral-500">Công thức</label>
                 <select className="input" value={orderForm.recipeId} onChange={(e) => setOrderForm({ ...orderForm, recipeId: Number(e.target.value) })}>
@@ -459,6 +449,29 @@ export default function ProductionOrders() {
                 <X className="w-5 h-5 text-neutral-600" />
               </button>
             </div>
+
+            {/* Order BOM Summary in Popup */}
+            {filteredOrders.find(o => o.orderId === batchPopupOrderId)?.productionOrderBoms && (
+              <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4">
+                <h3 className="text-sm font-bold text-neutral-700 mb-3 flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4" />
+                  Định mức nguyên liệu cho toàn lệnh (BOM)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {filteredOrders.find(o => o.orderId === batchPopupOrderId)?.productionOrderBoms?.map((bom: any) => (
+                    <div key={bom.orderBomId} className="bg-white p-2.5 rounded-lg border border-neutral-200 flex justify-between items-center shadow-sm">
+                      <div>
+                        <p className="text-xs font-semibold text-neutral-900">{bom.materialName}</p>
+                        <p className="text-[10px] text-neutral-500">Mã: {bom.materialId}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-bold text-primary-700">{bom.requiredQuantity?.toFixed(4)} {bom.uomName || 'kg'}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="table-container">
               <table className="table">
                 <thead>

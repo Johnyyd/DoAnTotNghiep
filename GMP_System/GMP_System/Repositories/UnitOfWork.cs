@@ -28,6 +28,7 @@ namespace GMP_System.Repositories
             BatchProcessParameterValues = new GenericRepository<BatchProcessParameterValue>(_context);
             RecipeRoutings = new GenericRepository<RecipeRouting>(_context);
             RecipeBoms = new GenericRepository<RecipeBom>(_context);
+            ProductionOrderBoms = new GenericRepository<ProductionOrderBom>(_context);
         }
 
         public IGenericRepository<Material> Materials { get; private set; }
@@ -46,6 +47,7 @@ namespace GMP_System.Repositories
         public IGenericRepository<BatchProcessParameterValue> BatchProcessParameterValues { get; private set; }
         public IGenericRepository<RecipeRouting> RecipeRoutings { get; private set; }
         public IGenericRepository<RecipeBom> RecipeBoms { get; private set; }
+        public IGenericRepository<ProductionOrderBom> ProductionOrderBoms { get; private set; }
 
         public async Task<int> CompleteAsync()
         {

@@ -52,6 +52,14 @@ namespace GMP_System.Controllers
                         b.BatchId,
                         b.BatchNumber,
                         b.Status
+                    }),
+                    ProductionOrderBoms = o.ProductionOrderBoms.Select(bom => new
+                    {
+                        bom.OrderBomId,
+                        bom.MaterialId,
+                        bom.RequiredQuantity,
+                        MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
+                        UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
                     })
                 })
                 .AsNoTracking()
@@ -93,6 +101,14 @@ namespace GMP_System.Controllers
                         b.BatchId,
                         b.BatchNumber,
                         b.Status
+                    }),
+                    ProductionOrderBoms = o.ProductionOrderBoms.Select(bom => new
+                    {
+                        bom.OrderBomId,
+                        bom.MaterialId,
+                        bom.RequiredQuantity,
+                        MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
+                        UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
                     })
                 })
                 .AsNoTracking()
@@ -233,11 +249,16 @@ namespace GMP_System.Controllers
 
             bool isAnyOrderRunning = await _context.ProductionOrders.AnyAsync(o => o.Status == "InProcess" || o.Status == "In-Process");
 
-            order.Status = isAnyOrderRunning ? "Approved" : "In-Process";
+            // If status is not provided or is Approved/In-Process, determine automatically
+            if (string.IsNullOrEmpty(order.Status) || order.Status == "Approved" || order.Status == "In-Process")
+            {
+                order.Status = isAnyOrderRunning ? "Approved" : "In-Process";
+            }
+            // Otherwise (e.g. "Draft"), respect the requested status
             order.CreatedAt = DateTime.Now;
             if (!order.StartDate.HasValue) order.StartDate = DateTime.Now;
             if (!order.EndDate.HasValue) order.EndDate = order.StartDate!.Value.AddDays(2);
-            if (string.IsNullOrWhiteSpace(order.OrderCode))
+            if (string.IsNullOrWhiteSpace(order.OrderCode) || order.OrderCode.Length > 12)
             {
                 order.OrderCode = await GenerateSequentialOrderCodeAsync();
             }
@@ -268,6 +289,27 @@ namespace GMP_System.Controllers
                 }
 
                 await _unitOfWork.ProductionOrders.AddAsync(order);
+                await _unitOfWork.CompleteAsync();
+
+                // [BOM SYNC] Generate unique BOM for this order based on Recipe and PlannedQuantity
+                var recipeBoms = await _unitOfWork.RecipeBoms.Query()
+                    .Where(b => b.RecipeId == order.RecipeId)
+                    .ToListAsync();
+
+                foreach (var rb in recipeBoms)
+                {
+                    var orderBom = new ProductionOrderBom
+                    {
+                        OrderId = order.OrderId,
+                        MaterialId = rb.MaterialId,
+                        UomId = 1, // Strictly use kg (UomId=1) for order-specific BOM
+                        WastePercentage = rb.WastePercentage,
+                        // Calculate total kg: (mg/unit * total units) / 1,000,000
+                        RequiredQuantity = CalculateRequiredKg(order.PlannedQuantity, rb.Quantity, rb.WastePercentage),
+                        Note = rb.Note
+                    };
+                    await _unitOfWork.ProductionOrderBoms.AddAsync(orderBom);
+                }
                 await _unitOfWork.CompleteAsync();
 
                 // Auto-split into batches if not already present
