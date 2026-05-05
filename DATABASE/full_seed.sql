@@ -244,7 +244,6 @@ GO
 
 -- =====================================================================
 -- 11. ProductionOrders
-/*
 SET IDENTITY_INSERT ProductionOrders ON;
 INSERT INTO ProductionOrders (OrderId, OrderCode, RecipeId, PlannedQuantity, ActualQuantity, StartDate, EndDate, Status, CreatedBy, CreatedAt, Note) VALUES
 (1,  'PO-26-001', 1, 100000.00, 100050.00, DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), 'Completed',  4, GETDATE(), N'Lệnh xong.'),
@@ -252,19 +251,18 @@ INSERT INTO ProductionOrders (OrderId, OrderCode, RecipeId, PlannedQuantity, Act
 (4,  'PO-26-004', 2, 200000.00, NULL,      DATEADD(DAY,-2,GETDATE()), DATEADD(DAY,2, GETDATE()), 'InProcess', 4, GETDATE(), N'Para lô 1.'),
 (7,  'PO-26-007', 2, 200000.00, 197800.00, DATEADD(DAY,-10,GETDATE()),DATEADD(DAY,-7,GETDATE()), 'Completed',  4, GETDATE(), N'Lô cũ.');
 SET IDENTITY_INSERT ProductionOrders OFF;
-*/
+
 GO
 
 -- =====================================================================
 -- 12. ProductionBatches
-/*
 SET IDENTITY_INSERT ProductionBatches ON;
 INSERT INTO ProductionBatches (BatchId, OrderId, BatchNumber, Status, ManufactureDate, EndTime, ExpiryDate, CurrentStep, CreatedAt) VALUES
 (1, 1, 'B26-001-01', 'Completed', DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
 (2, 2, 'B26-002-01', 'InProcess', DATEADD(HOUR,-24,GETDATE()),DATEADD(HOUR,-12,GETDATE()),DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
 (4, 2, 'B26-002-02', 'Hold', GETDATE(), NULL, NULL, 2, GETDATE());
 SET IDENTITY_INSERT ProductionBatches OFF;
-*/
+
 GO
 
 -- =====================================================================
@@ -293,24 +291,21 @@ GO
 
 -- =====================================================================
 -- 14. MaterialUsage
-/*
 SET IDENTITY_INSERT MaterialUsage ON;
 INSERT INTO MaterialUsage (UsageId, BatchId, InventoryLotId, ActualAmount, UsedDate, DispensedBy, Note) VALUES
 (1, 1, 1, 1.50, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất NLC3'),
 (2, 1, 6, 1.00, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất Tinh bột');
 SET IDENTITY_INSERT MaterialUsage OFF;
-*/
+
 GO
 
 -- =====================================================================
 -- 15. BatchProcessLogs
-/*
 SET IDENTITY_INSERT BatchProcessLogs ON;
 INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData, Notes, IsDeviation, VerifiedById, VerifiedDate, NumberOfRouting) VALUES
 (1, 1, 1, 2, 3, DATEADD(HOUR,-124,GETDATE()), DATEADD(HOUR,-122,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1),
 (2, 1, 2, 2, 3, DATEADD(HOUR,-122,GETDATE()), DATEADD(HOUR,-120,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1);
 SET IDENTITY_INSERT BatchProcessLogs OFF;
-*/
 GO
 
 -- =====================================================================

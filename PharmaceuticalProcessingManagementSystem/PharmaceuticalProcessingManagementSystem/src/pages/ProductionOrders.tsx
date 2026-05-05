@@ -162,14 +162,13 @@ export default function ProductionOrders() {
 
   const { data: batchesRaw } = useQuery({
     queryKey: ['batchesForOrder', batchPopupOrderId],
-    queryFn: () => productionBatchesApi.getAll(),
+    queryFn: () => productionBatchesApi.getByOrder(batchPopupOrderId!),
     enabled: batchPopupOrderId !== null,
   });
 
   const batchesForPopup = useMemo(() => {
     if (batchPopupOrderId === null) return [];
-    const all = toRows<any>(batchesRaw);
-    return all.filter((b: any) => Number(b.orderId ?? b.OrderId ?? 0) === batchPopupOrderId);
+    return toRows<any>(batchesRaw);
   }, [batchesRaw, batchPopupOrderId]);
 
   const createOrderFromPlanMutation = useMutation({

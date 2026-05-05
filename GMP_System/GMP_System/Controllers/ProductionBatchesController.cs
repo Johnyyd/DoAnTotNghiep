@@ -7,7 +7,6 @@ namespace GMP_System.Controllers
 {
     [Route("api/production-batches")]
     [ApiController]
-[Microsoft.AspNetCore.Authorization.Authorize(Policy="RequireOperator")]
     public class ProductionBatchesController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
