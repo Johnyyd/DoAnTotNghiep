@@ -47,6 +47,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
   final _duPhamCtrl = TextEditingController();
   final _tyTrongCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
+  final _silicagelCtrl = TextEditingController();
 
   // Expanded GMP Parameters
   final _tgGiaiDoan1Ctrl = TextEditingController();
@@ -57,6 +58,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
   String _phongSach = 'Sạch';
   String _mayTron = 'Sạch';
   String _dungCu = 'Sạch';
+  bool _napLieuDungSOP = true;
   String _slDongGoi = '0';
 
   final Map<String, String> _actualMaterials = {};
@@ -125,7 +127,20 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
         _batchInfo = batch;
       }
       if (batch != null && batch['order'] != null) {
-        _bom = batch['order']?['recipe']?['recipeBoms'] ?? [];
+        final orderBoms = batch['order']['productionOrderBoms'];
+        final List<dynamic> sourceBom = (orderBoms != null && (orderBoms as List).isNotEmpty)
+            ? orderBoms
+            : (batch['order']?['recipe']?['recipeBoms'] ?? []);
+            
+        // Filter: Mixing only involves powders. 
+        // Exclude NLP 6 (Capsule Shells) and items with UomId 4 (Viên)
+        _bom = sourceBom.where((item) {
+          final mat = item['material'] ?? {};
+          final code = (mat['materialCode'] ?? '').toString().toUpperCase();
+          final uomId = mat['baseUomId'] ?? mat['uomId'] ?? item['uomId'] ?? 1;
+          return !code.startsWith('NLP') && uomId != 4;
+        }).toList();
+        debugPrint("GMP: Loaded ${_bom.length} powder materials for mixing reconciliation.");
       } else {
         _bom = widget.initialBom ?? [];
       }
@@ -208,6 +223,10 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
           _tgGiaiDoan2Ctrl.text = params['tgGiaiDoan2'] ?? '';
           _tieuChuanRSDCtrl.text = params['tieuChuanRSD'] ?? '';
           _rsdThucTeCtrl.text = params['rsdThucTe'] ?? '';
+          _silicagelCtrl.text = params['slSilicagel'] ?? '';
+          if (params['napLieuDungSOP'] != null) {
+            _napLieuDungSOP = params['napLieuDungSOP'] == true;
+          }
 
           if (params['khoiLuongThucTe'] != null) {
             final Map<String, dynamic> parsedMats =
@@ -305,6 +324,17 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
     }
   }
 
+  double _getTotalInputWeight() {
+    double total = 0.0;
+    for (var item in _bom) {
+      final mat = item['material'] ?? {};
+      final name = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
+      final actualStr = _actualMaterials[name] ?? '0';
+      total += double.tryParse(actualStr) ?? 0.0;
+    }
+    return total;
+  }
+
   @override
   void dispose() {
     _tempCtrl.dispose();
@@ -324,6 +354,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
     _tgGiaiDoan2Ctrl.dispose();
     _tieuChuanRSDCtrl.dispose();
     _rsdThucTeCtrl.dispose();
+    _silicagelCtrl.dispose();
     super.dispose();
   }
 
@@ -480,6 +511,8 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
       "tgGiaiDoan2": _tgGiaiDoan2Ctrl.text,
       "tieuChuanRSD": _tieuChuanRSDCtrl.text,
       "rsdThucTe": _rsdThucTeCtrl.text,
+      "slSilicagel": _silicagelCtrl.text,
+      "napLieuDungSOP": _napLieuDungSOP,
     };
 
     final finalNotes = devNotes != null
@@ -713,7 +746,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
             optionB: 'Không sạch',
             onChanged: (v) => _phongSach = v),
         SegmentedToggle(
-            label: 'Máy trộn lập phương',
+            label: 'Máy trộn lập phương AD-LP-200',
             optionA: 'Sạch',
             optionB: 'Không sạch',
             onChanged: (v) => _mayTron = v),
@@ -764,7 +797,20 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const FormSectionHeader('PHASE 2: THÔNG SỐ VẬN HÀNH & ĐỐI CHIẾU'),
+        const FormSectionHeader('PHASE 2: TRỘN KHÔ & ĐỐI CHIẾU'),
+        const Text(
+          'SOP NẠP LIỆU: Từng lớp NLC 3 xen kẽ với lớp (TD 8 + TD 3), sau đó rắc hỗn hợp (TD 1 + TD 4 + TD 5).',
+          style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.blueGrey),
+        ),
+        const SizedBox(height: 8),
+        SwitchListTile(
+          title: const Text('Đã nạp liệu đúng thứ tự SOP', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+          value: _napLieuDungSOP,
+          onChanged: widget.isViewer ? null : (v) => setState(() => _napLieuDungSOP = v),
+          activeColor: Colors.green,
+          contentPadding: EdgeInsets.zero,
+        ),
+        const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
@@ -848,11 +894,6 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
                     keyboardType: TextInputType.number)),
           ],
         ),
-        StandardInputField(label: 'Dư phẩm lô số', controller: _duPhamCtrl),
-        StandardInputField(
-            label: 'Tỷ trọng gõ',
-            controller: _tyTrongCtrl,
-            keyboardType: TextInputType.number),
       ],
     );
   }
@@ -872,13 +913,86 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
             Icons.play_circle_fill,
             Colors.green,
             'ĐANG THỰC HIỆN TRỘN',
-            'Máy đang quay. Vui lòng nhập số lượng đóng gói và nhấn KẾT THÚC sau khi hoàn thành.'),
+            'Máy đang quay. Vui lòng hoàn tất đóng gói và nhập số liệu cuối.'),
         const SizedBox(height: 24),
         const FormSectionHeader('BÁO CÁO KẾT THÚC CÔNG ĐOẠN'),
+        
+        Row(
+          children: [
+            Expanded(
+              child: StandardInputField(
+                label: 'Mẫu lưu/Dư phẩm (kg)',
+                controller: _duPhamCtrl,
+                keyboardType: TextInputType.number,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: StandardInputField(
+                label: 'Tỷ trọng gõ',
+                controller: _tyTrongCtrl,
+                keyboardType: TextInputType.number,
+              ),
+            ),
+          ],
+        ),
+        
+        StandardInputField(
+          label: 'Số lượng Silicagel đã thêm (viên)',
+          controller: _silicagelCtrl,
+          hint: 'Chuẩn: 5 viên/thùng',
+          keyboardType: TextInputType.number,
+        ),
+
         MixingPackagingField(
-            onResultChanged: (v) => _slDongGoi = v,
+            onResultChanged: (v) {
+              setState(() => _slDongGoi = v);
+            },
             readOnly: widget.isViewer),
+            
         const SizedBox(height: 16),
+        
+        // Dynamic Yield Calculation Display
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.blue.shade200),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Tổng khối lượng nạp (Input):', style: TextStyle(fontSize: 13)),
+                  Text('${_getTotalInputWeight().toStringAsFixed(4)} kg', style: const TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Khối lượng đóng gói (Output):', style: TextStyle(fontSize: 13)),
+                  Text('${double.tryParse(_slDongGoi)?.toStringAsFixed(4) ?? "0.0000"} kg', style: const TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const Divider(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('HIỆU SUẤT (YIELD):', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                  Text(
+                    '${_getTotalInputWeight() > 0 ? (double.parse(_slDongGoi) / _getTotalInputWeight() * 100).toStringAsFixed(2) : "0.00"}%',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blue),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 24),
         TextField(
             controller: _noteCtrl,
             maxLines: 3,
