@@ -68,6 +68,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
   // Map lưu trữ trạng thái hiển thị được kế thừa từ GmpStepMixin
 
   List<dynamic> _standardParams = [];
+  List<dynamic> _bom = [];
   Map<String, dynamic> _currentLog = {};
   Map<String, dynamic>? _batchInfo;
   ExecutionPhase _currentPhase = ExecutionPhase.precheck;
@@ -151,12 +152,56 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
     return null;
   }
 
+  String _normalize(String s) {
+    return s.replaceAll(RegExp(r'[\s\-]'), '').toLowerCase();
+  }
+
+  String _getRequiredDryingInfo() {
+    if (_bom.isEmpty) return 'Chưa có dữ liệu nguyên liệu';
+    final unit = _batchInfo?['order']?['unit'] ?? 'kg';
+    List<String> items = [];
+    final stepNameNorm = _normalize(widget.stepName);
+
+    for (var item in _bom) {
+      final mat = item['material'] ?? {};
+      final name = mat['materialName']?.toString() ?? '';
+      final code = mat['materialCode']?.toString() ?? '';
+      
+      bool isMatch = false;
+      if (name.isNotEmpty && stepNameNorm.contains(_normalize(name))) {
+        isMatch = true;
+      }
+      if (code.isNotEmpty && stepNameNorm.contains(_normalize(code))) {
+        isMatch = true;
+      }
+
+      if (isMatch) {
+        final qtyStr = item['quantity']?.toString() ?? '0';
+        final qty = double.tryParse(qtyStr) ?? 0;
+        if (qty > 0) {
+          final displayName = name.isNotEmpty ? name : code;
+          if (qty > 50) {
+            int numSubBatches = (qty / 50).ceil();
+            double qtyPerSubBatch = qty / numSubBatches;
+            items.add('$displayName: $qtyStr (Chia $numSubBatches mẻ sấy, ~${qtyPerSubBatch.toStringAsFixed(2)} $unit/mẻ)');
+          } else {
+            items.add('$displayName: $qtyStr');
+          }
+        }
+      }
+    }
+    
+    if (items.isEmpty) return 'Tham chiếu BOM để biết khối lượng cần sấy';
+    return 'Cần sấy: ${items.join(' + ')}';
+  }
+
   Future<void> _loadDataFromDB() async {
     try {
       final batch = await ApiService.getBatchById(widget.batchId!);
       if (batch != null && mounted) {
         setState(() {
           _batchInfo = batch;
+          _bom = batch['order']?['recipe']?['recipeBoms'] ?? [];
         });
       }
 
@@ -1004,12 +1049,13 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
           controlAffinity: ListTileControlAffinity.leading,
         ),
         StandardInputField(
-          label: 'KL trước sấy (kg)',
+          label: 'Khối lượng trước sấy (${_batchInfo?['order']?['unit'] ?? 'kg'})',
           controller: _slTruocCtrl,
           keyboardType: TextInputType.number,
           readOnly: _isPhase1Locked,
-          hint: 'Nhập khối lượng TD 8 / NLC 3',
+          hint: 'Nhập khối lượng thực tế',
           status: inputStatuses['slTruocSay'] ?? 'none',
+          standardText: _getRequiredDryingInfo(),
           onChanged: (v) => _validateWeightStatus(),
         ),
       ],
@@ -1180,7 +1226,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
         const Divider(),
         const FormSectionHeader('4.2 KIỂM TRA SẢN LƯỢNG'),
         StandardInputField(
-          label: 'Khối lượng sau khi sấy (kg)',
+          label: 'Khối lượng sau khi sấy (${_batchInfo?['order']?['unit'] ?? 'kg'})',
           controller: _slSauCtrl,
           keyboardType: TextInputType.number,
           readOnly: _isPhase4Locked || _secondsRemaining > 0,

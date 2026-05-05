@@ -172,8 +172,8 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT Recipes ON;
 INSERT INTO Recipes (RecipeId, MaterialId, VersionNumber, BatchSize, Status, ApprovedBy, ApprovedDate, CreatedAt, EffectiveDate, Note) VALUES
-(1, 15, 1, 540.00,  'Approved', 2, DATEADD(DAY,-30,GETDATE()), DATEADD(DAY,-45,GETDATE()), DATEADD(DAY,-25,GETDATE()), N'NLC 3 mẻ 100k viên.'),
-(2, 16, 2, 5000.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Paracetamol 500mg.');
+(1, 15, 1, 50000.00,  'Approved', 2, DATEADD(DAY,-30,GETDATE()), DATEADD(DAY,-45,GETDATE()), DATEADD(DAY,-25,GETDATE()), N'NLC 3 mẻ 50k viên.'),
+(2, 16, 2, 50000.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Paracetamol 500mg.');
 SET IDENTITY_INSERT Recipes OFF;
 GO
 
@@ -256,16 +256,27 @@ GO
 
 -- =====================================================================
 -- 12. ProductionBatches
-/*
 SET IDENTITY_INSERT ProductionBatches ON;
 INSERT INTO ProductionBatches (BatchId, OrderId, BatchNumber, Status, ManufactureDate, EndTime, ExpiryDate, CurrentStep, CreatedAt) VALUES
 (1, 1, 'B26-001-01', 'Completed', DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
+(12, 1, 'B26-001-02', 'Completed', DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
 (2, 2, 'B26-002-01', 'InProcess', DATEADD(HOUR,-24,GETDATE()),DATEADD(HOUR,-12,GETDATE()),DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
-(4, 2, 'B26-002-02', 'Hold', GETDATE(), NULL, NULL, 2, GETDATE());
+(3, 2, 'B26-002-02', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(4, 2, 'B26-002-03', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(5, 2, 'B26-002-04', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(6, 2, 'B26-002-05', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(7, 2, 'B26-002-06', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(8, 4, 'B26-004-01', 'InProcess', DATEADD(DAY,-2,GETDATE()), NULL, NULL, 1, GETDATE()),
+(9, 4, 'B26-004-02', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(10, 4, 'B26-004-03', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(11, 4, 'B26-004-04', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(13, 7, 'B26-007-01', 'Completed', DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-7,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
+(14, 7, 'B26-007-02', 'Completed', DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-7,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
+(15, 7, 'B26-007-03', 'Completed', DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-7,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
+(16, 7, 'B26-007-04', 'Completed', DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-7,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE());
 SET IDENTITY_INSERT ProductionBatches OFF;
 
 GO
-
 -- =====================================================================
 -- 13. InventoryLotsHold
 -- =====================================================================
@@ -292,24 +303,24 @@ GO
 
 -- =====================================================================
 -- 14. MaterialUsage
-/*
 SET IDENTITY_INSERT MaterialUsage ON;
 INSERT INTO MaterialUsage (UsageId, BatchId, InventoryLotId, ActualAmount, UsedDate, DispensedBy, Note) VALUES
 (1, 1, 1, 1.50, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất NLC3'),
 (2, 1, 6, 1.00, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất Tinh bột');
 SET IDENTITY_INSERT MaterialUsage OFF;
-*/
 GO
 
 -- =====================================================================
 -- 15. BatchProcessLogs
-/*
 SET IDENTITY_INSERT BatchProcessLogs ON;
 INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData, Notes, IsDeviation, VerifiedById, VerifiedDate, NumberOfRouting) VALUES
 (1, 1, 1, 2, 3, DATEADD(HOUR,-124,GETDATE()), DATEADD(HOUR,-122,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1),
-(2, 1, 2, 2, 3, DATEADD(HOUR,-122,GETDATE()), DATEADD(HOUR,-120,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1);
+(2, 1, 2, 2, 3, DATEADD(HOUR,-122,GETDATE()), DATEADD(HOUR,-120,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1),
+(3, 2, 1, 12, 3, DATEADD(HOUR,-24,GETDATE()), DATEADD(HOUR,-21,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1),
+(4, 2, 2, 12, 3, DATEADD(HOUR,-21,GETDATE()), DATEADD(HOUR,-18,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1),
+(5, 2, 3, 1, 3, DATEADD(HOUR,-18,GETDATE()), DATEADD(HOUR,-16,GETDATE()), 'Passed', N'{"KhoiLuong":"Đạt"}', NULL, 0, 2, GETDATE(), 1),
+(6, 2, 4, 4, 3, DATEADD(HOUR,-16,GETDATE()), DATEADD(HOUR,-15,GETDATE()), 'Passed', N'{"TocDo":"15"}', NULL, 0, 2, GETDATE(), 1);
 SET IDENTITY_INSERT BatchProcessLogs OFF;
-*/
 GO
 
 -- =====================================================================
