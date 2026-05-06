@@ -70,10 +70,14 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowVercelAndLocal",
         policy =>
         {
-            policy.WithOrigins(
-                    "https://do-an-tot-nghiep-mz49c8gbc-johnyyds-projects.vercel.app", // Link Vercel
-                    "http://localhost:8080", // Frontend Local
-                    "http://localhost:8081"  // Mobile Local
+
+            // policy.WithOrigins(
+            //         "https://do-an-tot-nghiep-mz49c8gbc-johnyyds-projects.vercel.app", // Link Vercel
+            //         "http://localhost:8080", // Frontend Local
+            //         "http://localhost:8081"  // Mobile Local
+            policy.SetIsOriginAllowed(origin => 
+                    new Uri(origin).Host == "localhost" || 
+                    origin.Contains("vercel.app")
                   )
                   .AllowAnyHeader()
                   .AllowAnyMethod()

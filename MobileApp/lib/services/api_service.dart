@@ -18,12 +18,17 @@ class ApiService {
     final envUrl = dotenv.maybeGet('API_BASE_URL');
     if (envUrl != null && envUrl.isNotEmpty) return envUrl;
     if (kIsWeb) {
-      // Trên Web, dùng origin hiện tại (vd http://localhost:8081) + /api
+      // Trên Web, nếu đang chạy ở localhost (dev mode), ưu tiên gọi port 5001 của API
       final origin = Uri.base.origin;
+      if (origin.contains('localhost')) {
+        return 'http://localhost:5001/api';
+      }
       return '$origin/api';
     }
-    // Mặc định fallback cho môi trường dev nội bộ (đổi IP trong .env cho thiết bị thực)
-    return 'http://192.168.100.152:5001/api';
+
+    // Mặc định fallback cho môi trường dev nội bộ
+    // Nếu bạn dùng Android Emulator, có thể đổi thành 10.0.2.2
+    return 'http://192.168.100.160:5001/api';
   }
 
   /// Tiện ích log lỗi cho dev
