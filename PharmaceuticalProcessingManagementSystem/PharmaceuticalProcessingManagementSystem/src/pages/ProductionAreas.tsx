@@ -82,7 +82,7 @@ export default function ProductionAreas() {
 
   const submit = async () => {
     if (!form.areaCode.trim() || !form.areaName.trim()) {
-      alert('Vui long nhap ma khu va ten khu san xuat.');
+      alert('Vui lòng nhập mã khu và tên khu sản xuất.');
       return;
     }
 
@@ -100,16 +100,16 @@ export default function ProductionAreas() {
         await createMutation.mutateAsync(payload);
       }
     } catch (error: any) {
-      alert(error?.response?.data?.message ?? 'Thao tac that bai.');
+      alert(error?.response?.data?.message ?? 'Thao tác thất bại.');
     }
   };
 
   const onDelete = async (row: Area) => {
-    if (!confirm(`Xoa khu san xuat ${row.areaCode}?`)) return;
+    if (!confirm(`Xóa khu sản xuất ${row.areaCode}?`)) return;
     try {
       await deleteMutation.mutateAsync(row.areaId);
     } catch (error: any) {
-      alert(error?.response?.data?.message ?? 'Xoa that bai.');
+      alert(error?.response?.data?.message ?? 'Xóa thất bại.');
     }
   };
 
@@ -117,11 +117,11 @@ export default function ProductionAreas() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Khu san xuat</h1>
-          <p className="text-sm text-neutral-500 mt-1">Danh muc cac khu vuc va phong chuc nang trong nha may</p>
+          <h1 className="text-2xl font-bold text-neutral-900">Khu sản xuất</h1>
+          <p className="text-sm text-neutral-500 mt-1">Danh mục các khu vực và phòng chức năng trong nhà máy</p>
         </div>
         <button className="btn-primary inline-flex items-center gap-2" onClick={openCreate}>
-          <Plus className="w-4 h-4" /> Them khu vuc
+          <Plus className="w-4 h-4" /> Thêm khu vực
         </button>
       </div>
 
@@ -130,7 +130,7 @@ export default function ProductionAreas() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
           <input
             type="text"
-            placeholder="Tim ma hoac ten khu..."
+            placeholder="Tìm mã hoặc tên khu..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input pl-10"
@@ -144,23 +144,23 @@ export default function ProductionAreas() {
             <thead>
               <tr className="bg-neutral-50 border-b border-neutral-200">
                 <th className="py-3 px-4 text-sm font-semibold text-neutral-600 w-16 text-center">STT</th>
-                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Ma khu</th>
-                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Ten khu san xuat</th>
-                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Mo ta chi tiet</th>
-                <th className="py-3 px-4 text-sm font-semibold text-neutral-600 text-right">Thao tac</th>
+                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Mã khu</th>
+                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Tên khu</th>
+                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Mô tả chi tiết</th>
+                <th className="py-3 px-4 text-sm font-semibold text-neutral-600 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
               {isLoading ? (
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-neutral-500">
-                    Dang tai du lieu...
+                    Đang tải dữ liệu...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-neutral-500">
-                    Khong co du lieu khu san xuat
+                    Không có dữ liệu khu sản xuất
                   </td>
                 </tr>
               ) : (
@@ -175,14 +175,14 @@ export default function ProductionAreas() {
                       </div>
                     </td>
                     <td className="py-3 px-4 text-sm text-neutral-600 italic">
-                      {area.description || 'Chua co mo ta'}
+                      {area.description || 'Chưa có mô tả'}
                     </td>
                     <td className="py-3 px-4 text-sm text-right">
                       <div className="inline-flex items-center gap-2">
-                        <button disabled={!area.canEdit} onClick={() => openEdit(area)} className="text-blue-600 disabled:text-neutral-300" title={area.canEdit ? 'Sua' : 'Dang co lenh InProcess'}>
+                        <button disabled={!area.canEdit} onClick={() => openEdit(area)} className="text-blue-600 disabled:text-neutral-300" title={area.canEdit ? 'Sửa' : 'Đang có lệnh InProcess'}>
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button disabled={!area.canDelete} onClick={() => onDelete(area)} className="text-red-600 disabled:text-neutral-300" title={area.canDelete ? 'Xoa' : 'Dang co lenh InProcess'}>
+                        <button disabled={!area.canDelete} onClick={() => onDelete(area)} className="text-red-600 disabled:text-neutral-300" title={area.canDelete ? 'Xóa' : 'Đang có lệnh InProcess'}>
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -199,18 +199,18 @@ export default function ProductionAreas() {
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-xl p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">{editing ? 'Cap nhat khu san xuat' : 'Them khu san xuat moi'}</h2>
+              <h2 className="text-xl font-bold">{editing ? 'Cập nhật khu sản xuất' : 'Thêm khu sản xuất mới'}</h2>
               <button onClick={() => setShowModal(false)}><X className="w-5 h-5" /></button>
             </div>
             <div className="space-y-3">
-              <input className="input" placeholder="Ma khu" value={form.areaCode} onChange={(e) => setForm((f) => ({ ...f, areaCode: e.target.value }))} />
-              <input className="input" placeholder="Ten khu san xuat" value={form.areaName} onChange={(e) => setForm((f) => ({ ...f, areaName: e.target.value }))} />
-              <textarea className="input min-h-[110px]" placeholder="Mo ta" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+              <input className="input" placeholder="Mã khu" value={form.areaCode} onChange={(e) => setForm((f) => ({ ...f, areaCode: e.target.value }))} />
+              <input className="input" placeholder="Tên khu sản xuất" value={form.areaName} onChange={(e) => setForm((f) => ({ ...f, areaName: e.target.value }))} />
+              <textarea className="input min-h-[110px]" placeholder="Mô tả" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
             </div>
             <div className="flex justify-end gap-2">
-              <button className="btn-outline" onClick={() => setShowModal(false)}>Huy</button>
+              <button className="btn-outline" onClick={() => setShowModal(false)}>Hủy</button>
               <button className="btn-primary" onClick={submit} disabled={createMutation.isPending || updateMutation.isPending}>
-                {editing ? 'Luu cap nhat' : 'Them moi'}
+                {editing ? 'Lưu cập nhật' : 'Thêm mới'}
               </button>
             </div>
           </div>

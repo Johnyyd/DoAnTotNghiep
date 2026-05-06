@@ -119,7 +119,7 @@ export default function Equipments() {
 
   const submit = async () => {
     if (!form.equipmentCode.trim() || !form.equipmentName.trim()) {
-      alert('Vui long nhap ma thiet bi va ten thiet bi.');
+      alert('Vui lòng nhập mã thiết bị và tên thiết bị.');
       return;
     }
 
@@ -139,16 +139,16 @@ export default function Equipments() {
         await createMutation.mutateAsync(payload);
       }
     } catch (error: any) {
-      alert(error?.response?.data?.message ?? 'Thao tac that bai.');
+      alert(error?.response?.data?.message ?? 'Thao tác thất bại.');
     }
   };
 
   const onDelete = async (row: UiEquipment) => {
-    if (!confirm(`Xoa thiet bi ${row.equipmentCode}?`)) return;
+    if (!confirm(`Xóa thiết bị ${row.equipmentCode}?`)) return;
     try {
       await deleteMutation.mutateAsync(row.equipmentId);
     } catch (error: any) {
-      alert(error?.response?.data?.message ?? 'Xoa that bai.');
+      alert(error?.response?.data?.message ?? 'Xóa thất bại.');
     }
   };
 
@@ -156,18 +156,18 @@ export default function Equipments() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Quan ly thiet bi</h1>
-          <p className="text-sm text-neutral-500 mt-1">Thong tin theo bieu mau CamScanner trang 2</p>
+          <h1 className="text-2xl font-bold text-neutral-900">Quản lý thiết bị</h1>
+          <p className="text-sm text-neutral-500 mt-1">Thông tin theo biểu mẫu CamScanner trang 2</p>
         </div>
         <button onClick={openCreate} className="btn-primary inline-flex items-center gap-2">
-          <Plus className="w-4 h-4" /> Them thiet bi
+          <Plus className="w-4 h-4" /> Thêm thiết bị
         </button>
       </div>
 
       <div className="card">
         <div className="relative w-full md:w-96">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-          <input type="text" placeholder="Tim ma hoac ten thiet bi..." value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-10" />
+          <input type="text" placeholder="Tìm mã hoặc tên thiết bị..." value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-10" />
         </div>
       </div>
 
@@ -176,19 +176,19 @@ export default function Equipments() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-neutral-50 border-b border-neutral-200">
-                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Ma thiet bi</th>
-                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Ten thiet bi</th>
-                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Dac tinh ky thuat</th>
-                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Cong dung</th>
-                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Khu vuc</th>
-                <th className="py-3 px-4 text-sm font-semibold text-neutral-600 text-right">Thao tac</th>
+                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Mã thiết bị</th>
+                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Tên thiết bị</th>
+                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Đặc tính kỹ thuật</th>
+                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Công dụng</th>
+                <th className="py-3 px-4 text-sm font-semibold text-neutral-600">Khu vực</th>
+                <th className="py-3 px-4 text-sm font-semibold text-neutral-600 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
               {isLoading ? (
-                <tr><td colSpan={6} className="py-8 text-center text-neutral-500">Dang tai du lieu thiet bi...</td></tr>
+                <tr><td colSpan={6} className="py-8 text-center text-neutral-500">Đang tải dữ liệu thiết bị...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={6} className="py-8 text-center text-neutral-500">Khong co thiet bi phu hop</td></tr>
+                <tr><td colSpan={6} className="py-8 text-center text-neutral-500">Không có thiết bị phù hợp</td></tr>
               ) : (
                 filtered.map((equip) => (
                   <tr key={equip.equipmentId} className="hover:bg-neutral-50 transition-colors">
@@ -199,10 +199,10 @@ export default function Equipments() {
                     <td className="py-3 px-4 text-sm text-neutral-700">{equip.areaName}</td>
                     <td className="py-3 px-4 text-sm text-right">
                       <div className="inline-flex items-center gap-2">
-                        <button disabled={!equip.canEdit} onClick={() => openEdit(equip)} className="text-blue-600 disabled:text-neutral-300" title={equip.canEdit ? 'Sua' : 'Khong the sua vi da su dung'}>
+                        <button disabled={!equip.canEdit} onClick={() => openEdit(equip)} className="text-blue-600 disabled:text-neutral-300" title={equip.canEdit ? 'Sửa' : 'Không thể sửa vì đã sử dụng'}>
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button disabled={!equip.canDelete} onClick={() => onDelete(equip)} className="text-red-600 disabled:text-neutral-300" title={equip.canDelete ? 'Xoa' : 'Khong the xoa vi da su dung'}>
+                        <button disabled={!equip.canDelete} onClick={() => onDelete(equip)} className="text-red-600 disabled:text-neutral-300" title={equip.canDelete ? 'Xóa' : 'Không thể xóa vì đã sử dụng'}>
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -219,23 +219,23 @@ export default function Equipments() {
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-2xl p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">{editing ? 'Cap nhat thiet bi' : 'Them thiet bi moi'}</h2>
+              <h2 className="text-xl font-bold">{editing ? 'Cập nhật thiết bị' : 'Thêm thiết bị mới'}</h2>
               <button onClick={() => setShowModal(false)}><X className="w-5 h-5" /></button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input className="input" placeholder="Ma thiet bi" value={form.equipmentCode} onChange={(e) => setForm((f) => ({ ...f, equipmentCode: e.target.value }))} />
-              <input className="input" placeholder="Ten thiet bi" value={form.equipmentName} onChange={(e) => setForm((f) => ({ ...f, equipmentName: e.target.value }))} />
-              <input className="input md:col-span-2" placeholder="Dac tinh ky thuat" value={form.technicalSpecification} onChange={(e) => setForm((f) => ({ ...f, technicalSpecification: e.target.value }))} />
-              <input className="input md:col-span-2" placeholder="Cong dung" value={form.usagePurpose} onChange={(e) => setForm((f) => ({ ...f, usagePurpose: e.target.value }))} />
+              <input className="input" placeholder="Mã thiết bị" value={form.equipmentCode} onChange={(e) => setForm((f) => ({ ...f, equipmentCode: e.target.value }))} />
+              <input className="input" placeholder="Tên thiết bị" value={form.equipmentName} onChange={(e) => setForm((f) => ({ ...f, equipmentName: e.target.value }))} />
+              <input className="input md:col-span-2" placeholder="Đặc tính kỹ thuật" value={form.technicalSpecification} onChange={(e) => setForm((f) => ({ ...f, technicalSpecification: e.target.value }))} />
+              <input className="input md:col-span-2" placeholder="Công dụng" value={form.usagePurpose} onChange={(e) => setForm((f) => ({ ...f, usagePurpose: e.target.value }))} />
               <select className="input md:col-span-2" value={form.areaId} onChange={(e) => setForm((f) => ({ ...f, areaId: e.target.value }))}>
-                <option value="">Chon khu vuc</option>
+                <option value="">Chọn khu vực</option>
                 {areas.map((a) => <option key={a.areaId} value={a.areaId}>{a.areaName}</option>)}
               </select>
             </div>
             <div className="flex justify-end gap-2">
-              <button className="btn-outline" onClick={() => setShowModal(false)}>Huy</button>
+              <button className="btn-outline" onClick={() => setShowModal(false)}>Hủy</button>
               <button className="btn-primary" onClick={submit} disabled={createMutation.isPending || updateMutation.isPending}>
-                {editing ? 'Luu cap nhat' : 'Them moi'}
+                {editing ? 'Lưu cập nhật' : 'Thêm mới'}
               </button>
             </div>
           </div>

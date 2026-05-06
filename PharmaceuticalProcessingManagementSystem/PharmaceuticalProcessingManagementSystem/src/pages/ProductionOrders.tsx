@@ -290,7 +290,7 @@ export default function ProductionOrders() {
 
       {/* Planning Panel */}
       <div className="rounded-xl border border-primary-200 bg-primary-50/40 p-4 space-y-4">
-        <div className="flex items-center gap-2"><Calculator className="w-5 h-5 text-primary-700" /><h3 className="text-lg font-semibold text-primary-900">Lập lệnh sản xuất N viên thuốc</h3></div>
+        <div className="flex items-center gap-2"><Calculator className="w-5 h-5 text-primary-700" /><h3 className="text-lg font-semibold text-primary-900">Lập lệnh sản xuất</h3></div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
@@ -540,21 +540,21 @@ export default function ProductionOrders() {
                         <td>{b.manufactureDate ? new Date(b.manufactureDate).toLocaleDateString('vi-VN') : '-'}</td>
                         <td>{b.endTime ? new Date(b.endTime).toLocaleDateString('vi-VN') : '-'}</td>
                         <td>
-                          <div className="flex items-center gap-2">
-                            <a href={certificatesApi.getBatchCertificateUrl(batchNum)} target="_blank" rel="noreferrer" className="text-primary-600 hover:underline inline-flex items-center text-xs">
-                              <FileCheck2 className="w-3.5 h-3.5 mr-1" />Xem
-                            </a>
-                            {isCompleted && (
-                              <>
-                                <button
-                                  className="text-xs text-primary-600 hover:underline inline-flex items-center"
-                                  onClick={() => { setUploadingForBatch(batchNum); uploadInputRef.current?.click(); }}
-                                >
-                                  <Upload className="w-3.5 h-3.5 mr-1" />Tải lên
-                                </button>
-                              </>
-                            )}
-                          </div>
+                          {isCompleted ? (
+                            <div className="flex items-center gap-2">
+                              <a href={certificatesApi.getBatchCertificateUrl(batchNum)} target="_blank" rel="noreferrer" className="text-primary-600 hover:underline inline-flex items-center text-xs">
+                                <FileCheck2 className="w-3.5 h-3.5 mr-1" />Xem
+                              </a>
+                              <button
+                                className="text-xs text-primary-600 hover:underline inline-flex items-center"
+                                onClick={() => { setUploadingForBatch(batchNum); uploadInputRef.current?.click(); }}
+                              >
+                                <Upload className="w-3.5 h-3.5 mr-1" />T?i l?n
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-neutral-400">-</span>
+                          )}
                         </td>
                       </tr>
                     );

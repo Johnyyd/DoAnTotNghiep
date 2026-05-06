@@ -265,7 +265,7 @@ export default function ManagerOperations() {
 
 
   if (orders.length === 0) {
-    return <div className="space-y-6"><div className="card text-neutral-500">Ch?a c? l?nh s?n xu?t trong c? s? d? li?u.</div></div>;
+    return <div className="space-y-6"><div className="card text-neutral-500">Chưa có lệnh sản xuất trong cơ sở dữ liệu</div></div>;
   }
 
   return (
@@ -442,7 +442,7 @@ export default function ManagerOperations() {
             {orderBatches.map((batch) => {
               const pointer = Math.min(getStepPointer(batch), totalSteps);
               if (orders.length === 0) {
-    return <div className="space-y-6"><div className="card text-neutral-500">Ch?a c? l?nh s?n xu?t trong c? s? d? li?u.</div></div>;
+    return <div className="space-y-6"><div className="card text-neutral-500">Chưa có lệnh sản xuất trong cơ sở dữ liệu</div></div>;
   }
 
   return (
@@ -518,7 +518,7 @@ export default function ManagerOperations() {
                           ? 'bg-red-100 text-red-700'
                           : 'bg-neutral-100 text-neutral-700';
                     if (orders.length === 0) {
-    return <div className="space-y-6"><div className="card text-neutral-500">Ch?a c? l?nh s?n xu?t trong c? s? d? li?u.</div></div>;
+    return <div className="space-y-6"><div className="card text-neutral-500">Chưa có lệnh sản xuất trong cơ sở dữ liệu</div></div>;
   }
 
   return (

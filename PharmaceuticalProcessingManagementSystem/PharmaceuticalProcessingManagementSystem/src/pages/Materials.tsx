@@ -399,12 +399,12 @@ export default function Materials() {
         </div>
         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
           <div className="flex items-center gap-3">
-            <span className="text-neutral-600">Hi?n th? kh?i l??ng:</span>
+            <span className="text-neutral-600">Hiển thị khối lượng:</span>
             <label className="inline-flex items-center gap-1"><input type="radio" checked={massDisplayUnit === 'kg'} onChange={() => setMassDisplayUnit('kg')} /> kg</label>
             <label className="inline-flex items-center gap-1"><input type="radio" checked={massDisplayUnit === 'g'} onChange={() => setMassDisplayUnit('g')} /> g</label>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-neutral-600">Hi?n th? th? t?ch:</span>
+            <span className="text-neutral-600">Hiển thị thể tích:</span>
             <label className="inline-flex items-center gap-1"><input type="radio" checked={volumeDisplayUnit === 'L'} onChange={() => setVolumeDisplayUnit('L')} /> L</label>
             <label className="inline-flex items-center gap-1"><input type="radio" checked={volumeDisplayUnit === 'ml'} onChange={() => setVolumeDisplayUnit('ml')} /> ml</label>
           </div>

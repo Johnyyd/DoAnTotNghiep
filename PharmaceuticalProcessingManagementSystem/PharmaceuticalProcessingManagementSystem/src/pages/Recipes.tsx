@@ -310,7 +310,7 @@ export default function Recipes() {
       await queryClient.invalidateQueries({ queryKey: ['recipes'] });
       setSelectedRecipeId(null);
     },
-    onError: (err: any) => alert(err?.response?.data?.message ?? err?.message ?? 'Xa cng thc tht bi'),
+    onError: (err: any) => alert(err?.response?.data?.message ?? err?.message ?? 'Xoá công thức thất bại'),
   });
 
   const addBomMutation = useMutation({
@@ -382,7 +382,7 @@ export default function Recipes() {
       setEditingRouting(null);
     },
     onError: (error: any) => {
-      alert(error?.response?.data?.message || error?.message || 'C li xy ra khi lu cng on. Vui lng kim tra li thng tin.');
+      alert(error?.response?.data?.message || error?.message || 'Cập nhật công thức thất bại. Vui lòng kiểm tra lại.');
     }
   });
 
@@ -410,7 +410,7 @@ export default function Recipes() {
       setEditingRouting(null);
     },
     onError: (error: any) => {
-      alert(error?.response?.data?.message || error?.message || 'C li xy ra khi lu cng on. Vui lng kim tra li thng tin.');
+      alert(error?.response?.data?.message || error?.message || 'Cập nhật công thức thất bại. Vui lòng kiểm tra lại.');
     }
   });
 
@@ -545,7 +545,7 @@ export default function Recipes() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">Quản lý công thức sản xuất viên nang</h1>
-        <p className="text-neutral-500 mt-1">Lập định mức nguyên liệu và quy trình công đoạn theo tiêu chuẩn GMP</p>
+        <p className="text-neutral-500 mt-1">Lập định mức nguyên liệu và quy trình công đoạn</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -560,7 +560,7 @@ export default function Recipes() {
             </select>
           </div>
           <div>
-            <label className="text-xs text-neutral-500">Kh?i l??ng 1 vi?n</label>
+            <label className="text-xs text-neutral-500">Khối lượng 1 viên</label>
             <div className="mt-1 grid grid-cols-[1fr_120px] gap-2">
               <input type="number" className="input" value={createForm.batchSize} onChange={(e) => setCreateForm({ ...createForm, batchSize: Number(e.target.value) })} />
               <select className="input" value={createUnit} onChange={(e) => setCreateUnit(e.target.value as RecipeCreateUnit)}>
@@ -584,9 +584,9 @@ export default function Recipes() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm công thức..." className="input pl-9" />
           </div>
-          {isLoading ? <p className="text-sm text-neutral-500 italic animate-pulse">ang ti d liu...</p> : isError ? (
+          {isLoading ? <p className="text-sm text-neutral-500 italic animate-pulse">Đang tải dữ liệu...</p> : isError ? (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-xs">
-              Lỗi khi tải danh sách. Vui lòng kiểm tra Backend.
+              Lỗi khi tải danh sách. Vui lòng kiểm tra cơ sở dữ liệu.
             </div>
           ) : filteredRecipes.length === 0 ? (
             <p className="text-sm text-neutral-400 italic">Không tìm thấy công thức nào.</p>
@@ -604,7 +604,7 @@ export default function Recipes() {
       </div>
 
       <div className="card">
-          {!selectedRecipe ? <p className="text-sm text-neutral-500">Chn mt cng thc  qun l.</p> : (
+          {!selectedRecipe ? <p className="text-sm text-neutral-500">Chọn một công thức để quản lý.</p> : (
             <div className="space-y-6">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -613,7 +613,7 @@ export default function Recipes() {
                 </div>
                 <div className="flex gap-2">
                   {selectedRecipe.status === 'Draft' && <button className="btn-secondary text-sm" onClick={() => approveRecipeMutation.mutate(selectedRecipe.recipeId)}><CheckCircle2 className="w-4 h-4 mr-1" /> Approved</button>}
-                  <button onClick={() => { if (confirm('Xa cng thc ny?')) deleteRecipeMutation.mutate(selectedRecipe.recipeId); }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xa cng thc</button>
+                  <button onClick={() => { if (confirm('Xoá công thức này?')) deleteRecipeMutation.mutate(selectedRecipe.recipeId); }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xoá công thức</button>
                 </div>
               </div>
 
@@ -690,12 +690,12 @@ export default function Recipes() {
                               {editing ? (
                                 <div className="flex justify-end gap-2">
                                   <button className="btn-secondary text-xs" onClick={() => updateBomMutation.mutate(editing)}>Lưu</button>
-                                  <button className="btn-ghost text-xs" onClick={() => cancelEditBom(item.bomId)}>Há»§y</button>
+                                  <button className="btn-ghost text-xs" onClick={() => cancelEditBom(item.bomId)}>Huỷ</button>
                                 </div>
                               ) : (
                                 <div className="flex justify-end gap-2">
-                                  <button className="btn-ghost text-sm" onClick={() => beginEditBom(item)}><Pencil className="w-4 h-4 mr-1" />Sá»­a</button>
-                                  <button onClick={() => { if (confirm('Xa nguyn liu ny?')) deleteBomMutation.mutate(item.bomId); }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xa</button>
+                                  <button className="btn-ghost text-sm" onClick={() => beginEditBom(item)}><Pencil className="w-4 h-4 mr-1" />Sửa</button>
+                                  <button onClick={() => { if (confirm('Xoá nguyên liệu này?')) deleteBomMutation.mutate(item.bomId); }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xóa</button>
                                 </div>
                               )}
                             </td>
@@ -765,9 +765,9 @@ export default function Recipes() {
                           <td>{item.equipmentName || '-'}</td>
                           <td>
                             <div className="flex flex-col text-xs text-neutral-600 gap-0.5">
-                              <span>Nhit : <b>{item.standardTemperature ?? '-'}C</b></span>
-                              <span> m: <b>{item.standardHumidity ?? '-'}%</b></span>
-                              <span>p sut: <b>{item.standardPressure ?? '-'} Pa</b></span>
+                              <span>Nhiệt độ: <b>{item.standardTemperature ?? '-'}C</b></span>
+                              <span>Độ ẩm: <b>{item.standardHumidity ?? '-'}%</b></span>
+                              <span>Áp suất: <b>{item.standardPressure ?? '-'} Pa</b></span>
                             </div>
                           </td>
                           <td className="text-right"><div className="flex justify-end gap-1"><button onClick={() => openEditRouting(item)} className="p-1.5 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 rounded"><Pencil className="w-4 h-4" /></button><button onClick={() => { if (confirm('Xa cng on ny?')) deleteRoutingMutation.mutate(item.routingId); }} className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded"><Trash2 className="w-4 h-4" /></button></div></td>
@@ -930,7 +930,7 @@ export default function Recipes() {
             </div>
 
 
-            <div className="flex justify-end gap-2"><button onClick={() => setShowRoutingModal(false)} className="btn-ghost">Hy</button><button onClick={() => (editingRouting ? updateRoutingMutation.mutate() : addRoutingMutation.mutate())} className="btn-primary">{editingRouting ? 'Lu cp nht' : 'Thm cng on'}</button></div>
+            <div className="flex justify-end gap-2"><button onClick={() => setShowRoutingModal(false)} className="btn-ghost">Huỷ</button><button onClick={() => (editingRouting ? updateRoutingMutation.mutate() : addRoutingMutation.mutate())} className="btn-primary">{editingRouting ? 'Lưu cập nhật' : 'Thêm công đoạn'}</button></div>
           </div>
         </div>
       )}

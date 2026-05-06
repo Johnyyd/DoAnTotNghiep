@@ -132,14 +132,13 @@ INSERT INTO Equipments (EquipmentId, EquipmentCode, EquipmentName, TechnicalSpec
 (3,  'TE-212',        N'Cân điện tử',            N'210 g; 0,01 g',        N'Kiểm tra khối lượng viên',    2),
 (4,  'AD-LP-200',     N'Máy trộn lập phương',    N'200 kg/ mẻ',           N'Trộn đồng nhất',              3),
 (5,  'NJP-1200 D',    N'Máy đóng nang tự động',  N'72.000 viên/ giờ',     N'Cấp thuốc vào nang',          1),
-(6,  'IPJ',           N'Máy lau nang',           N'100.000 viên/ giờ',    N'Làm sạch viên thuốc',         1),
-(7,  'KW-102',        N'Máy đóng chai',          N'500 chai/ giờ',        N'Đếm viên thuốc vào chai',     1),
+(6,  'IPJ',           N'Máy lau nang',           N'100.000 viên/ giờ',    N'Làm sạch viên thuốc',         4),
+(7,  'KW-102',        N'Máy đóng chai',          N'500 chai/ giờ',        N'Đếm viên thuốc vào chai',     4),
 (8,  'CNTB-TSC',      N'Tủ sấy chai',            N'1,5 m³',               N'Sấy khô chai',                1),
-(9,  'VIDEOJET-1220', N'Máy in số lô',           N'250 nhãn/ giờ',        N'In số lô, ngày SX, hạn dùng', 1),
-(10, 'ABL-M',         N'Máy dán nhãn tự động',   N'1.500 nhãn/ giờ',      N'Dán nhãn vào thân chai',      1),
-(11, 'F-262',         N'Máy gấp toa',            N'10.000 toa/ giờ',      N'Bế tờ HDSD',                  1),
+(9,  'VIDEOJET-1220', N'Máy in số lô',           N'250 nhãn/ giờ',        N'In số lô, ngày SX, hạn dùng', 4),
+(10, 'ABL-M',         N'Máy dán nhãn tự động',   N'1.500 nhãn/ giờ',      N'Dán nhãn vào thân chai',      4),
+(11, 'F-262',         N'Máy gấp toa',            N'10.000 toa/ giờ',      N'Bế tờ HDSD',                  4),
 (12, 'KBC-TS-50',     N'Máy sấy tầng sôi',       N'50 kg/ mẻ',            N'Sấy khô dược liệu',           1);
-
 SET IDENTITY_INSERT Equipments OFF;
 GO
 
@@ -153,7 +152,7 @@ INSERT INTO Materials (MaterialId, MaterialCode, MaterialName, Type, BaseUomId, 
 (3,  'TD-3',    N'Sodium starch glycolate',            'RawMaterial',  1, 1, N'USP 30', GETDATE()),
 (4,  'TD-4',    N'Talc',                               'RawMaterial',  2, 1, N'DĐVN V', GETDATE()),
 (5,  'TD-5',    N'Magie Stearat',                      'RawMaterial',  2, 1, N'DĐVN V', GETDATE()),
-(6,  'TD-8',    N'Tinh bột ngô (Filler)',              'RawMaterial',  1, 1, N'DĐVN V', GETDATE()),
+(6,  'TD-8',    N'Tinh bột ngô',                       'RawMaterial',  1, 1, N'DĐVN V', GETDATE()),
 (7,  'NLP-6',   N'Vỏ nang cứng',                       'RawMaterial', 4, 1, N'DĐVN V', GETDATE()),
 (8,  'PVP',     N'PVP K30',                            'RawMaterial',  1, 1, N'USP 30', GETDATE()),
 (9,  'PARA',    N'Bột Paracetamol tinh khiết',         'RawMaterial',  1, 1, N'USP 30', GETDATE()),
@@ -189,12 +188,12 @@ INSERT INTO RecipeBOM (BomId, RecipeId, MaterialId, Quantity, UomId, WastePercen
 (4,  1, 4,   4.05,  2, 0.10, N'Talc'),
 (5,  1, 5,   4.05,  2, 0.10, N'Magnesi stearat'),
 (6,  1, 6,  250.58, 2, 0.50, N'Tinh bột'),
-(7,  1, 7,  1.00, 4, 0.10, N'Vỏ nang'),
+(7,  1, 7,  1.00, 4, 0.10,   N'Vỏ nang'),
 (8,  2, 9,  250.00, 2, 0.30, N'Paracetamol'),
 (9,  2, 6,  150.00, 2, 1.00, N'Tinh bột ngô'),
-(10, 2, 10, 80.00, 2, 0.50, N'Lactose'),
-(11, 2, 5,   5.00, 2, 0.10, N'Magie stearat'),
-(12, 2, 8,  10.00, 2, 0.20, N'PVP K30');
+(10, 2, 10, 80.00, 2, 0.50,  N'Lactose'),
+(11, 2, 5,   5.00, 2, 0.10,  N'Magie stearat'),
+(12, 2, 8,  10.00, 2, 0.20,  N'PVP K30');
 SET IDENTITY_INSERT RecipeBOM OFF;
 GO
 
