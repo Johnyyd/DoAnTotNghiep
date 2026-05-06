@@ -29,13 +29,22 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
       _isLoading = true;
       _error = null;
     });
-    final data = await ApiService.getBatches(orderId: widget.orderId);
+    final results = await ApiService.getBatches(orderId: widget.orderId);
+
+    // Explicit sorting by BatchNumber for GMP sequential logic
+    results.sort((a, b) {
+      final aNo = a['batchNumber']?.toString() ?? '';
+      final bNo = b['batchNumber']?.toString() ?? '';
+      return aNo.compareTo(bNo);
+    });
+
     if (mounted) {
       setState(() {
-        _batches = data;
+        _batches = results;
         _isLoading = false;
-        if (data.isEmpty) _error = 'Không có mẻ sản xuất nào.';
+        if (results.isEmpty) _error = 'Không có mẻ sản xuất nào.';
       });
+      debugPrint('[DEBUG] Loaded ${_batches.length} batches for Order ${widget.orderId}');
     }
   }
 
@@ -140,9 +149,13 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
             // Sequential GMP check: Batch N can only start if Batch N-1 is Completed
             bool isBlocked = false;
             if (i > 0) {
-              final prevStatus = _batches[i - 1]['status'];
+              final prevBatch = _batches[i - 1];
+              final prevStatus = prevBatch['status']?.toString();
+              final prevNo = prevBatch['batchNumber']?.toString() ?? '#${i}';
+              
               if (prevStatus != 'Completed') {
                 isBlocked = true;
+                debugPrint('[DEBUG] Batch $batchNumber is BLOCKED because $prevNo is $prevStatus');
               }
             }
 

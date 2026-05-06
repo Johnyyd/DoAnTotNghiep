@@ -1,0 +1,697 @@
+2026-05-06 05:18:36.831 +00:00 [WRN] No store type was specified for the decimal property 'PlannedQuantity' on entity type 'ProductionBatch'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-06 05:18:36.938 +00:00 [WRN] No store type was specified for the decimal property 'WastePercentage' on entity type 'ProductionOrderBom'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-06 05:18:36.939 +00:00 [WRN] No store type was specified for the decimal property 'SetPressure' on entity type 'RecipeRouting'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-06 05:18:36.941 +00:00 [WRN] No store type was specified for the decimal property 'SetTemperature' on entity type 'RecipeRouting'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-06 05:18:38.212 +00:00 [INF] Executed DbCommand (29ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:18:38.227 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:18:38.267 +00:00 [INF] Executed DbCommand (36ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF EXISTS
+    (SELECT *
+     FROM [sys].[objects] o
+     WHERE [o].[type] = 'U'
+     AND [o].[is_ms_shipped] = 0
+     AND NOT EXISTS (SELECT *
+         FROM [sys].[extended_properties] AS [ep]
+         WHERE [ep].[major_id] = [o].[object_id]
+             AND [ep].[minor_id] = 0
+             AND [ep].[class] = 1
+             AND [ep].[name] = N'microsoft_database_tools_support'
+    )
+)
+SELECT 1 ELSE SELECT 0
+2026-05-06 05:18:38.725 +00:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [AppUsers] AS [a]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-05-06 05:18:38.958 +00:00 [WRN] Storing keys in a directory '/root/.aspnet/DataProtection-Keys' that may not be persisted outside of the container. Protected data will be unavailable when container is destroyed. For more information go to https://aka.ms/aspnet/dataprotectionwarning
+2026-05-06 05:18:38.960 +00:00 [INF] User profile is available. Using '/root/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-05-06 05:18:38.996 +00:00 [WRN] Overriding HTTP_PORTS '8080' and HTTPS_PORTS ''. Binding to values defined by URLS instead 'http://0.0.0.0:5000'.
+2026-05-06 05:18:39.120 +00:00 [INF] Now listening on: http://0.0.0.0:5000
+2026-05-06 05:18:39.124 +00:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-05-06 05:18:39.124 +00:00 [INF] Hosting environment: Development
+2026-05-06 05:18:39.125 +00:00 [INF] Content root path: /src
+2026-05-06 05:18:45.580 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:18:45.644 +00:00 [WRN] Failed to determine the https port for redirect.
+2026-05-06 05:18:45.707 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:18:45.767 +00:00 [INF] Executed DbCommand (23ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:18:45.790 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:18:45.803 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:18:45.824 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 245.3466ms
+2026-05-06 05:19:19.218 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:19:19.225 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:19:19.315 +00:00 [INF] Executed DbCommand (7ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:19:19.319 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:19:19.320 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:19:19.323 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 105.4721ms
+2026-05-06 05:19:52.624 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:19:52.628 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:19:52.632 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:19:52.632 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:19:52.633 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:19:52.633 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 9.0945ms
+2026-05-06 05:20:25.980 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:20:25.981 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:20:25.985 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:20:25.985 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:20:25.986 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:20:25.987 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 6.6894ms
+2026-05-06 05:20:48.200 +00:00 [INF] Request starting HTTP/1.1 GET http://localhost/api/production-orders - application/json null
+2026-05-06 05:20:48.308 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-05-06 05:20:48.344 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-05-06 05:20:48.706 +00:00 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-05-06 05:20:48.754 +00:00 [INF] Executed DbCommand (16ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[OrderID], [p].[OrderCode], [p].[RecipeID], [p].[PlannedQuantity], [p].[ActualQuantity], [p].[Status], [p].[StartDate], [p].[EndDate], [p].[CreatedAt], [p].[CreatedBy], [a].[FullName], CASE
+    WHEN [r].[RecipeID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [r].[RecipeID], [r].[BatchSize], CASE
+    WHEN [m].[MaterialID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [m].[MaterialName], CASE
+    WHEN [u].[UomID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [u].[UomName], [a].[UserID], [m].[MaterialID], [u].[UomID], [p0].[BatchID], [p0].[BatchNumber], [p0].[Status], [t].[OrderBomId], [t].[MaterialId], [t].[RequiredQuantity], [t].[MaterialName], [t].[UomName], [t].[MaterialID0], [t].[UomID]
+FROM [ProductionOrders] AS [p]
+LEFT JOIN [AppUsers] AS [a] ON [p].[CreatedBy] = [a].[UserID]
+LEFT JOIN [Recipes] AS [r] ON [p].[RecipeID] = [r].[RecipeID]
+LEFT JOIN [Materials] AS [m] ON [r].[MaterialID] = [m].[MaterialID]
+LEFT JOIN [UnitOfMeasure] AS [u] ON [m].[BaseUomID] = [u].[UomID]
+LEFT JOIN [ProductionBatches] AS [p0] ON [p].[OrderID] = [p0].[OrderID]
+LEFT JOIN (
+    SELECT [p1].[OrderBomId], [p1].[MaterialId], [p1].[RequiredQuantity], CASE
+        WHEN [m0].[MaterialID] IS NOT NULL THEN [m0].[MaterialName]
+        ELSE N'Unknown'
+    END AS [MaterialName], CASE
+        WHEN [u0].[UomID] IS NOT NULL THEN [u0].[UomName]
+        ELSE N'N/A'
+    END AS [UomName], [m0].[MaterialID] AS [MaterialID0], [u0].[UomID], [p1].[OrderId]
+    FROM [ProductionOrderBom] AS [p1]
+    LEFT JOIN [Materials] AS [m0] ON [p1].[MaterialId] = [m0].[MaterialID]
+    LEFT JOIN [UnitOfMeasure] AS [u0] ON [p1].[UomId] = [u0].[UomID]
+) AS [t] ON [p].[OrderID] = [t].[OrderId]
+ORDER BY [p].[OrderID], [a].[UserID], [r].[RecipeID], [m].[MaterialID], [u].[UomID], [p0].[BatchID], [t].[OrderBomId], [t].[MaterialID0]
+2026-05-06 05:20:48.801 +00:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType45`4[[System.Collections.Generic.List`1[[<>f__AnonymousType41`14[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType42`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType34`2[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType30`1[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Collections.Generic.IEnumerable`1[[<>f__AnonymousType43`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.IEnumerable`1[[<>f__AnonymousType44`5[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-05-06 05:20:48.873 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System) in 519.8336ms
+2026-05-06 05:20:48.874 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-05-06 05:20:48.875 +00:00 [INF] Request finished HTTP/1.1 GET http://localhost/api/production-orders - 200 null application/json; charset=utf-8 674.5302ms
+2026-05-06 05:20:52.025 +00:00 [INF] Request starting HTTP/1.1 GET http://localhost/api/production-orders/2/batches - application/json null
+2026-05-06 05:20:52.032 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetBatchesByOrder (GMP_System)'
+2026-05-06 05:20:52.050 +00:00 [INF] Route matched with {action = "GetBatchesByOrder", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetBatchesByOrder(Int32) on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-05-06 05:20:52.231 +00:00 [INF] Executed DbCommand (110ms) [Parameters=[@__orderId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[BatchID], [p].[OrderID], [p].[BatchNumber], [p].[Status], [p].[ManufactureDate], [p].[EndTime], [p].[ExpiryDate], [p].[CurrentStep], CASE
+    WHEN [p0].[OrderID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [p0].[OrderID], [p0].[OrderCode], CASE
+    WHEN [r].[RecipeID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [r].[RecipeID], CASE
+    WHEN [m].[MaterialID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [m].[MaterialName]
+FROM [ProductionBatches] AS [p]
+LEFT JOIN [ProductionOrders] AS [p0] ON [p].[OrderID] = [p0].[OrderID]
+LEFT JOIN [Recipes] AS [r] ON [p0].[RecipeID] = [r].[RecipeID]
+LEFT JOIN [Materials] AS [m] ON [r].[MaterialID] = [m].[MaterialID]
+WHERE [p].[OrderID] = @__orderId_0
+ORDER BY [p].[BatchNumber]
+2026-05-06 05:20:52.233 +00:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType0`3[[System.Collections.Generic.List`1[[<>f__AnonymousType23`9[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType24`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType25`2[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType26`1[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-05-06 05:20:52.247 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetBatchesByOrder (GMP_System) in 196.4007ms
+2026-05-06 05:20:52.247 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetBatchesByOrder (GMP_System)'
+2026-05-06 05:20:52.249 +00:00 [INF] Request finished HTTP/1.1 GET http://localhost/api/production-orders/2/batches - 200 null application/json; charset=utf-8 223.9207ms
+2026-05-06 05:20:52.253 +00:00 [INF] Request starting HTTP/1.1 GET http://localhost/api/production-orders/2/batches - application/json null
+2026-05-06 05:20:52.256 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetBatchesByOrder (GMP_System)'
+2026-05-06 05:20:52.256 +00:00 [INF] Route matched with {action = "GetBatchesByOrder", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetBatchesByOrder(Int32) on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-05-06 05:20:52.280 +00:00 [INF] Executed DbCommand (6ms) [Parameters=[@__orderId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[BatchID], [p].[OrderID], [p].[BatchNumber], [p].[Status], [p].[ManufactureDate], [p].[EndTime], [p].[ExpiryDate], [p].[CurrentStep], CASE
+    WHEN [p0].[OrderID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [p0].[OrderID], [p0].[OrderCode], CASE
+    WHEN [r].[RecipeID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [r].[RecipeID], CASE
+    WHEN [m].[MaterialID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [m].[MaterialName]
+FROM [ProductionBatches] AS [p]
+LEFT JOIN [ProductionOrders] AS [p0] ON [p].[OrderID] = [p0].[OrderID]
+LEFT JOIN [Recipes] AS [r] ON [p0].[RecipeID] = [r].[RecipeID]
+LEFT JOIN [Materials] AS [m] ON [r].[MaterialID] = [m].[MaterialID]
+WHERE [p].[OrderID] = @__orderId_0
+ORDER BY [p].[BatchNumber]
+2026-05-06 05:20:52.282 +00:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType0`3[[System.Collections.Generic.List`1[[<>f__AnonymousType23`9[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType24`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType25`2[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType26`1[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-05-06 05:20:52.285 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetBatchesByOrder (GMP_System) in 28.024ms
+2026-05-06 05:20:52.289 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetBatchesByOrder (GMP_System)'
+2026-05-06 05:20:52.291 +00:00 [INF] Request finished HTTP/1.1 GET http://localhost/api/production-orders/2/batches - 200 null application/json; charset=utf-8 38.2481ms
+2026-05-06 05:20:53.303 +00:00 [INF] Request starting HTTP/1.1 GET http://localhost/api/production-batches/2 - application/json null
+2026-05-06 05:20:53.303 +00:00 [INF] Request starting HTTP/1.1 GET http://localhost/api/batch-process-logs/batch/2?t=1778044852471 - application/json null
+2026-05-06 05:20:53.304 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionBatchesController.GetById (GMP_System)'
+2026-05-06 05:20:53.304 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.BatchProcessLogsController.GetLogsByBatch (GMP_System)'
+2026-05-06 05:20:53.309 +00:00 [INF] Route matched with {action = "GetById", controller = "ProductionBatches"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetById(Int32) on controller GMP_System.Controllers.ProductionBatchesController (GMP_System).
+2026-05-06 05:20:53.309 +00:00 [INF] Route matched with {action = "GetLogsByBatch", controller = "BatchProcessLogs"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetLogsByBatch(Int32) on controller GMP_System.Controllers.BatchProcessLogsController (GMP_System).
+2026-05-06 05:20:53.400 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [p].[BatchID], [p].[BatchNumber], [p].[CreatedAt], [p].[CurrentStep], [p].[EndTime], [p].[ExpiryDate], [p].[ManufactureDate], [p].[OrderID], [p].[PlannedQuantity], [p].[Status]
+FROM [ProductionBatches] AS [p]
+WHERE [p].[BatchID] = @__p_0
+2026-05-06 05:20:53.477 +00:00 [INF] Executed DbCommand (3ms) [Parameters=[@__id_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [t].[BatchID], [t].[BatchNumber], [t].[CreatedAt], [t].[CurrentStep], [t].[EndTime], [t].[ExpiryDate], [t].[ManufactureDate], [t].[OrderID], [t].[PlannedQuantity], [t].[Status], [t].[OrderID0], [t].[ActualQuantity], [t].[CreatedAt0], [t].[CreatedBy], [t].[EndDate], [t].[Note], [t].[OrderCode], [t].[PlannedCartons], [t].[PlannedQuantity0], [t].[RecipeID], [t].[StartDate], [t].[Status0], [t].[RecipeID0], [t].[ApprovedBy], [t].[ApprovedDate], [t].[BatchSize], [t].[CreatedAt1], [t].[EffectiveDate], [t].[MaterialID], [t].[Note0], [t].[Status1], [t].[VersionNumber], [t].[MaterialID0], [t].[BaseUomID], [t].[CreatedAt2], [t].[IsActive], [t].[MaterialCode], [t].[MaterialName], [t].[TechnicalSpecification], [t].[Type], [t].[UpdatedAt], [t].[UomID], [t].[Description], [t].[UomName], [t0].[BomID], [t0].[MaterialID], [t0].[Note], [t0].[Quantity], [t0].[RecipeID], [t0].[UomID], [t0].[WastePercentage], [t0].[MaterialID0], [t0].[BaseUomID], [t0].[CreatedAt], [t0].[IsActive], [t0].[MaterialCode], [t0].[MaterialName], [t0].[TechnicalSpecification], [t0].[Type], [t0].[UpdatedAt]
+FROM (
+    SELECT TOP(1) [p].[BatchID], [p].[BatchNumber], [p].[CreatedAt], [p].[CurrentStep], [p].[EndTime], [p].[ExpiryDate], [p].[ManufactureDate], [p].[OrderID], [p].[PlannedQuantity], [p].[Status], [p0].[OrderID] AS [OrderID0], [p0].[ActualQuantity], [p0].[CreatedAt] AS [CreatedAt0], [p0].[CreatedBy], [p0].[EndDate], [p0].[Note], [p0].[OrderCode], [p0].[PlannedCartons], [p0].[PlannedQuantity] AS [PlannedQuantity0], [p0].[RecipeID], [p0].[StartDate], [p0].[Status] AS [Status0], [r].[RecipeID] AS [RecipeID0], [r].[ApprovedBy], [r].[ApprovedDate], [r].[BatchSize], [r].[CreatedAt] AS [CreatedAt1], [r].[EffectiveDate], [r].[MaterialID], [r].[Note] AS [Note0], [r].[Status] AS [Status1], [r].[VersionNumber], [m].[MaterialID] AS [MaterialID0], [m].[BaseUomID], [m].[CreatedAt] AS [CreatedAt2], [m].[IsActive], [m].[MaterialCode], [m].[MaterialName], [m].[TechnicalSpecification], [m].[Type], [m].[UpdatedAt], [u].[UomID], [u].[Description], [u].[UomName]
+    FROM [ProductionBatches] AS [p]
+    LEFT JOIN [ProductionOrders] AS [p0] ON [p].[OrderID] = [p0].[OrderID]
+    LEFT JOIN [Recipes] AS [r] ON [p0].[RecipeID] = [r].[RecipeID]
+    LEFT JOIN [Materials] AS [m] ON [r].[MaterialID] = [m].[MaterialID]
+    LEFT JOIN [UnitOfMeasure] AS [u] ON [m].[BaseUomID] = [u].[UomID]
+    WHERE [p].[BatchID] = @__id_0
+) AS [t]
+LEFT JOIN (
+    SELECT [r0].[BomID], [r0].[MaterialID], [r0].[Note], [r0].[Quantity], [r0].[RecipeID], [r0].[UomID], [r0].[WastePercentage], [m0].[MaterialID] AS [MaterialID0], [m0].[BaseUomID], [m0].[CreatedAt], [m0].[IsActive], [m0].[MaterialCode], [m0].[MaterialName], [m0].[TechnicalSpecification], [m0].[Type], [m0].[UpdatedAt]
+    FROM [RecipeBOM] AS [r0]
+    LEFT JOIN [Materials] AS [m0] ON [r0].[MaterialID] = [m0].[MaterialID]
+) AS [t0] ON [t].[RecipeID0] = [t0].[RecipeID]
+ORDER BY [t].[BatchID], [t].[OrderID0], [t].[RecipeID0], [t].[MaterialID0], [t].[UomID], [t0].[BomID]
+2026-05-06 05:20:53.560 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__batch_OrderId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [p].[OrderID], [p].[ActualQuantity], [p].[CreatedAt], [p].[CreatedBy], [p].[EndDate], [p].[Note], [p].[OrderCode], [p].[PlannedCartons], [p].[PlannedQuantity], [p].[RecipeID], [p].[StartDate], [p].[Status], [r].[RecipeID], [r].[ApprovedBy], [r].[ApprovedDate], [r].[BatchSize], [r].[CreatedAt], [r].[EffectiveDate], [r].[MaterialID], [r].[Note], [r].[Status], [r].[VersionNumber]
+FROM [ProductionOrders] AS [p]
+LEFT JOIN [Recipes] AS [r] ON [p].[RecipeID] = [r].[RecipeID]
+WHERE [p].[OrderID] = @__batch_OrderId_0
+2026-05-06 05:20:53.727 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__batch_OrderId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [r].[RoutingID], [r].[AreaId], [r].[CleanlinessStatus], [r].[DefaultEquipmentID], [r].[Description], [r].[EstimatedTimeMinutes], [r].[MaterialId], [r].[NumberOfRouting], [r].[OrderID], [r].[RecipeID], [r].[SetPressure], [r].[SetTemperature], [r].[SetTimeMinutes], [r].[StabilityStatus], [r].[StandardHumidity], [r].[StandardPressure], [r].[StandardTemperature], [r].[StepName], [r].[StepNumber], [s].[ParameterId], [s].[IsCritical], [s].[MaxValue], [s].[MinValue], [s].[Note], [s].[ParameterName], [s].[RoutingId], [s].[Unit]
+FROM [RecipeRouting] AS [r]
+LEFT JOIN [StepParameters] AS [s] ON [r].[RoutingID] = [s].[RoutingId]
+WHERE [r].[OrderID] = @__batch_OrderId_0
+ORDER BY [r].[StepNumber], [r].[RoutingID]
+2026-05-06 05:20:53.776 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__order_RecipeId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [r].[RoutingID], [r].[AreaId], [r].[CleanlinessStatus], [r].[DefaultEquipmentID], [r].[Description], [r].[EstimatedTimeMinutes], [r].[MaterialId], [r].[NumberOfRouting], [r].[OrderID], [r].[RecipeID], [r].[SetPressure], [r].[SetTemperature], [r].[SetTimeMinutes], [r].[StabilityStatus], [r].[StandardHumidity], [r].[StandardPressure], [r].[StandardTemperature], [r].[StepName], [r].[StepNumber], [s].[ParameterId], [s].[IsCritical], [s].[MaxValue], [s].[MinValue], [s].[Note], [s].[ParameterName], [s].[RoutingId], [s].[Unit]
+FROM [RecipeRouting] AS [r]
+LEFT JOIN [StepParameters] AS [s] ON [r].[RoutingID] = [s].[RoutingId]
+WHERE [r].[RecipeID] = @__order_RecipeId_0 AND ([r].[OrderID] IS NULL OR [r].[OrderID] = 0)
+ORDER BY [r].[StepNumber], [r].[RoutingID]
+2026-05-06 05:20:53.849 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__batch_OrderId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [r].[RoutingID], [r].[AreaId], [r].[CleanlinessStatus], [r].[DefaultEquipmentID], [r].[Description], [r].[EstimatedTimeMinutes], [r].[MaterialId], [r].[NumberOfRouting], [r].[OrderID], [r].[RecipeID], [r].[SetPressure], [r].[SetTemperature], [r].[SetTimeMinutes], [r].[StabilityStatus], [r].[StandardHumidity], [r].[StandardPressure], [r].[StandardTemperature], [r].[StepName], [r].[StepNumber], [e].[EquipmentID], [e].[AreaId], [e].[EquipmentCode], [e].[EquipmentName], [e].[TechnicalSpecification], [e].[UsagePurpose], [s].[ParameterId], [s].[IsCritical], [s].[MaxValue], [s].[MinValue], [s].[Note], [s].[ParameterName], [s].[RoutingId], [s].[Unit]
+FROM [RecipeRouting] AS [r]
+LEFT JOIN [Equipments] AS [e] ON [r].[DefaultEquipmentID] = [e].[EquipmentID]
+LEFT JOIN [StepParameters] AS [s] ON [r].[RoutingID] = [s].[RoutingId]
+WHERE [r].[OrderID] = @__batch_OrderId_0
+ORDER BY [r].[RoutingID], [e].[EquipmentID]
+2026-05-06 05:20:53.885 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__recipeId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [r].[RoutingID], [r].[AreaId], [r].[CleanlinessStatus], [r].[DefaultEquipmentID], [r].[Description], [r].[EstimatedTimeMinutes], [r].[MaterialId], [r].[NumberOfRouting], [r].[OrderID], [r].[RecipeID], [r].[SetPressure], [r].[SetTemperature], [r].[SetTimeMinutes], [r].[StabilityStatus], [r].[StandardHumidity], [r].[StandardPressure], [r].[StandardTemperature], [r].[StepName], [r].[StepNumber], [e].[EquipmentID], [e].[AreaId], [e].[EquipmentCode], [e].[EquipmentName], [e].[TechnicalSpecification], [e].[UsagePurpose], [s].[ParameterId], [s].[IsCritical], [s].[MaxValue], [s].[MinValue], [s].[Note], [s].[ParameterName], [s].[RoutingId], [s].[Unit]
+FROM [RecipeRouting] AS [r]
+LEFT JOIN [Equipments] AS [e] ON [r].[DefaultEquipmentID] = [e].[EquipmentID]
+LEFT JOIN [StepParameters] AS [s] ON [r].[RoutingID] = [s].[RoutingId]
+WHERE [r].[RecipeID] = @__recipeId_0 AND [r].[OrderID] IS NULL
+ORDER BY [r].[RoutingID], [e].[EquipmentID]
+2026-05-06 05:20:53.926 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__batchId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [b].[LogID], [b].[BatchID], [b].[EndTime], [b].[EquipmentID], [b].[IsDeviation], [b].[Notes], [b].[NumberOfRouting], [b].[OperatorID], [b].[ParametersData], [b].[ResultStatus], [b].[RoutingID], [b].[StartTime], [b].[VerifiedById], [b].[VerifiedDate], [r].[RoutingID], [r].[AreaId], [r].[CleanlinessStatus], [r].[DefaultEquipmentID], [r].[Description], [r].[EstimatedTimeMinutes], [r].[MaterialId], [r].[NumberOfRouting], [r].[OrderID], [r].[RecipeID], [r].[SetPressure], [r].[SetTemperature], [r].[SetTimeMinutes], [r].[StabilityStatus], [r].[StandardHumidity], [r].[StandardPressure], [r].[StandardTemperature], [r].[StepName], [r].[StepNumber], [s].[ParameterId], [s].[IsCritical], [s].[MaxValue], [s].[MinValue], [s].[Note], [s].[ParameterName], [s].[RoutingId], [s].[Unit]
+FROM [BatchProcessLogs] AS [b]
+LEFT JOIN [RecipeRouting] AS [r] ON [b].[RoutingID] = [r].[RoutingID]
+LEFT JOIN [StepParameters] AS [s] ON [r].[RoutingID] = [s].[RoutingId]
+WHERE [b].[BatchID] = @__batchId_0
+ORDER BY [b].[LogID], [r].[RoutingID]
+2026-05-06 05:20:53.926 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__batch_OrderId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[OrderBomId], [p].[MaterialId], [p].[RequiredQuantity], [p].[UomId], CASE
+    WHEN [m].[MaterialID] IS NOT NULL THEN [m].[MaterialName]
+    ELSE N'Unknown'
+END AS [MaterialName], CASE
+    WHEN [m].[MaterialID] IS NOT NULL THEN [m].[MaterialCode]
+    ELSE 'N/A'
+END AS [MaterialCode], CASE
+    WHEN [u].[UomID] IS NOT NULL THEN [u].[UomName]
+    ELSE N'kg'
+END AS [UomName]
+FROM [ProductionOrderBom] AS [p]
+LEFT JOIN [Materials] AS [m] ON [p].[MaterialId] = [m].[MaterialID]
+LEFT JOIN [UnitOfMeasure] AS [u] ON [p].[UomId] = [u].[UomID]
+WHERE [p].[OrderId] = @__batch_OrderId_0
+2026-05-06 05:20:53.939 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__bom_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [i].[LotNumber]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__bom_MaterialId_0 AND [i].[QuantityCurrent] > 0.0
+ORDER BY [i].[LotId] DESC
+2026-05-06 05:20:53.944 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__bom_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [i].[LotNumber]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__bom_MaterialId_0 AND [i].[QuantityCurrent] > 0.0
+ORDER BY [i].[LotId] DESC
+2026-05-06 05:20:53.947 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__bom_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [i].[LotNumber]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__bom_MaterialId_0 AND [i].[QuantityCurrent] > 0.0
+ORDER BY [i].[LotId] DESC
+2026-05-06 05:20:53.950 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__bom_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [i].[LotNumber]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__bom_MaterialId_0 AND [i].[QuantityCurrent] > 0.0
+ORDER BY [i].[LotId] DESC
+2026-05-06 05:20:53.954 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__bom_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [i].[LotNumber]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__bom_MaterialId_0 AND [i].[QuantityCurrent] > 0.0
+ORDER BY [i].[LotId] DESC
+2026-05-06 05:20:53.956 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__bom_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [i].[LotNumber]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__bom_MaterialId_0 AND [i].[QuantityCurrent] > 0.0
+ORDER BY [i].[LotId] DESC
+2026-05-06 05:20:53.967 +00:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType0`3[[<>f__AnonymousType31`11[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType32`4[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType33`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType34`2[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType30`1[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Collections.Generic.List`1[[System.Object, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Collections.Generic.List`1[[<>f__AnonymousType35`16[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType36`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Collections.Generic.List`1[[<>f__AnonymousType37`5[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-05-06 05:20:54.005 +00:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType15`3[[System.Collections.Generic.IEnumerable`1[[<>f__AnonymousType11`13[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int64, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType12`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[<>f__AnonymousType10`7[[System.Int64, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType10`7[[System.Int64, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[<>f__AnonymousType13`8[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[<>f__AnonymousType14`6[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-05-06 05:20:54.009 +00:00 [INF] Executed action GMP_System.Controllers.ProductionBatchesController.GetById (GMP_System) in 699.0168ms
+2026-05-06 05:20:54.009 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionBatchesController.GetById (GMP_System)'
+2026-05-06 05:20:54.010 +00:00 [INF] Request finished HTTP/1.1 GET http://localhost/api/production-batches/2 - 200 null application/json; charset=utf-8 706.8461ms
+2026-05-06 05:20:54.045 +00:00 [INF] Executed action GMP_System.Controllers.BatchProcessLogsController.GetLogsByBatch (GMP_System) in 734.5901ms
+2026-05-06 05:20:54.045 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.BatchProcessLogsController.GetLogsByBatch (GMP_System)'
+2026-05-06 05:20:54.046 +00:00 [INF] Request finished HTTP/1.1 GET http://localhost/api/batch-process-logs/batch/2?t=1778044852471 - 200 null application/json; charset=utf-8 742.5965ms
+2026-05-06 05:20:57.745 +00:00 [INF] Request starting HTTP/1.1 GET http://localhost/api/production-batches/3 - application/json null
+2026-05-06 05:20:57.745 +00:00 [INF] Request starting HTTP/1.1 GET http://localhost/api/batch-process-logs/batch/3?t=1778044857407 - application/json null
+2026-05-06 05:20:57.747 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionBatchesController.GetById (GMP_System)'
+2026-05-06 05:20:57.748 +00:00 [INF] Route matched with {action = "GetById", controller = "ProductionBatches"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetById(Int32) on controller GMP_System.Controllers.ProductionBatchesController (GMP_System).
+2026-05-06 05:20:57.748 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.BatchProcessLogsController.GetLogsByBatch (GMP_System)'
+2026-05-06 05:20:57.749 +00:00 [INF] Route matched with {action = "GetLogsByBatch", controller = "BatchProcessLogs"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetLogsByBatch(Int32) on controller GMP_System.Controllers.BatchProcessLogsController (GMP_System).
+2026-05-06 05:20:57.754 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__id_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [t].[BatchID], [t].[BatchNumber], [t].[CreatedAt], [t].[CurrentStep], [t].[EndTime], [t].[ExpiryDate], [t].[ManufactureDate], [t].[OrderID], [t].[PlannedQuantity], [t].[Status], [t].[OrderID0], [t].[ActualQuantity], [t].[CreatedAt0], [t].[CreatedBy], [t].[EndDate], [t].[Note], [t].[OrderCode], [t].[PlannedCartons], [t].[PlannedQuantity0], [t].[RecipeID], [t].[StartDate], [t].[Status0], [t].[RecipeID0], [t].[ApprovedBy], [t].[ApprovedDate], [t].[BatchSize], [t].[CreatedAt1], [t].[EffectiveDate], [t].[MaterialID], [t].[Note0], [t].[Status1], [t].[VersionNumber], [t].[MaterialID0], [t].[BaseUomID], [t].[CreatedAt2], [t].[IsActive], [t].[MaterialCode], [t].[MaterialName], [t].[TechnicalSpecification], [t].[Type], [t].[UpdatedAt], [t].[UomID], [t].[Description], [t].[UomName], [t0].[BomID], [t0].[MaterialID], [t0].[Note], [t0].[Quantity], [t0].[RecipeID], [t0].[UomID], [t0].[WastePercentage], [t0].[MaterialID0], [t0].[BaseUomID], [t0].[CreatedAt], [t0].[IsActive], [t0].[MaterialCode], [t0].[MaterialName], [t0].[TechnicalSpecification], [t0].[Type], [t0].[UpdatedAt]
+FROM (
+    SELECT TOP(1) [p].[BatchID], [p].[BatchNumber], [p].[CreatedAt], [p].[CurrentStep], [p].[EndTime], [p].[ExpiryDate], [p].[ManufactureDate], [p].[OrderID], [p].[PlannedQuantity], [p].[Status], [p0].[OrderID] AS [OrderID0], [p0].[ActualQuantity], [p0].[CreatedAt] AS [CreatedAt0], [p0].[CreatedBy], [p0].[EndDate], [p0].[Note], [p0].[OrderCode], [p0].[PlannedCartons], [p0].[PlannedQuantity] AS [PlannedQuantity0], [p0].[RecipeID], [p0].[StartDate], [p0].[Status] AS [Status0], [r].[RecipeID] AS [RecipeID0], [r].[ApprovedBy], [r].[ApprovedDate], [r].[BatchSize], [r].[CreatedAt] AS [CreatedAt1], [r].[EffectiveDate], [r].[MaterialID], [r].[Note] AS [Note0], [r].[Status] AS [Status1], [r].[VersionNumber], [m].[MaterialID] AS [MaterialID0], [m].[BaseUomID], [m].[CreatedAt] AS [CreatedAt2], [m].[IsActive], [m].[MaterialCode], [m].[MaterialName], [m].[TechnicalSpecification], [m].[Type], [m].[UpdatedAt], [u].[UomID], [u].[Description], [u].[UomName]
+    FROM [ProductionBatches] AS [p]
+    LEFT JOIN [ProductionOrders] AS [p0] ON [p].[OrderID] = [p0].[OrderID]
+    LEFT JOIN [Recipes] AS [r] ON [p0].[RecipeID] = [r].[RecipeID]
+    LEFT JOIN [Materials] AS [m] ON [r].[MaterialID] = [m].[MaterialID]
+    LEFT JOIN [UnitOfMeasure] AS [u] ON [m].[BaseUomID] = [u].[UomID]
+    WHERE [p].[BatchID] = @__id_0
+) AS [t]
+LEFT JOIN (
+    SELECT [r0].[BomID], [r0].[MaterialID], [r0].[Note], [r0].[Quantity], [r0].[RecipeID], [r0].[UomID], [r0].[WastePercentage], [m0].[MaterialID] AS [MaterialID0], [m0].[BaseUomID], [m0].[CreatedAt], [m0].[IsActive], [m0].[MaterialCode], [m0].[MaterialName], [m0].[TechnicalSpecification], [m0].[Type], [m0].[UpdatedAt]
+    FROM [RecipeBOM] AS [r0]
+    LEFT JOIN [Materials] AS [m0] ON [r0].[MaterialID] = [m0].[MaterialID]
+) AS [t0] ON [t].[RecipeID0] = [t0].[RecipeID]
+ORDER BY [t].[BatchID], [t].[OrderID0], [t].[RecipeID0], [t].[MaterialID0], [t].[UomID], [t0].[BomID]
+2026-05-06 05:20:57.754 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [p].[BatchID], [p].[BatchNumber], [p].[CreatedAt], [p].[CurrentStep], [p].[EndTime], [p].[ExpiryDate], [p].[ManufactureDate], [p].[OrderID], [p].[PlannedQuantity], [p].[Status]
+FROM [ProductionBatches] AS [p]
+WHERE [p].[BatchID] = @__p_0
+2026-05-06 05:20:57.757 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__batch_OrderId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [p].[OrderID], [p].[ActualQuantity], [p].[CreatedAt], [p].[CreatedBy], [p].[EndDate], [p].[Note], [p].[OrderCode], [p].[PlannedCartons], [p].[PlannedQuantity], [p].[RecipeID], [p].[StartDate], [p].[Status], [r].[RecipeID], [r].[ApprovedBy], [r].[ApprovedDate], [r].[BatchSize], [r].[CreatedAt], [r].[EffectiveDate], [r].[MaterialID], [r].[Note], [r].[Status], [r].[VersionNumber]
+FROM [ProductionOrders] AS [p]
+LEFT JOIN [Recipes] AS [r] ON [p].[RecipeID] = [r].[RecipeID]
+WHERE [p].[OrderID] = @__batch_OrderId_0
+2026-05-06 05:20:57.759 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__batch_OrderId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [r].[RoutingID], [r].[AreaId], [r].[CleanlinessStatus], [r].[DefaultEquipmentID], [r].[Description], [r].[EstimatedTimeMinutes], [r].[MaterialId], [r].[NumberOfRouting], [r].[OrderID], [r].[RecipeID], [r].[SetPressure], [r].[SetTemperature], [r].[SetTimeMinutes], [r].[StabilityStatus], [r].[StandardHumidity], [r].[StandardPressure], [r].[StandardTemperature], [r].[StepName], [r].[StepNumber], [e].[EquipmentID], [e].[AreaId], [e].[EquipmentCode], [e].[EquipmentName], [e].[TechnicalSpecification], [e].[UsagePurpose], [s].[ParameterId], [s].[IsCritical], [s].[MaxValue], [s].[MinValue], [s].[Note], [s].[ParameterName], [s].[RoutingId], [s].[Unit]
+FROM [RecipeRouting] AS [r]
+LEFT JOIN [Equipments] AS [e] ON [r].[DefaultEquipmentID] = [e].[EquipmentID]
+LEFT JOIN [StepParameters] AS [s] ON [r].[RoutingID] = [s].[RoutingId]
+WHERE [r].[OrderID] = @__batch_OrderId_0
+ORDER BY [r].[RoutingID], [e].[EquipmentID]
+2026-05-06 05:20:57.760 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__batch_OrderId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [r].[RoutingID], [r].[AreaId], [r].[CleanlinessStatus], [r].[DefaultEquipmentID], [r].[Description], [r].[EstimatedTimeMinutes], [r].[MaterialId], [r].[NumberOfRouting], [r].[OrderID], [r].[RecipeID], [r].[SetPressure], [r].[SetTemperature], [r].[SetTimeMinutes], [r].[StabilityStatus], [r].[StandardHumidity], [r].[StandardPressure], [r].[StandardTemperature], [r].[StepName], [r].[StepNumber], [s].[ParameterId], [s].[IsCritical], [s].[MaxValue], [s].[MinValue], [s].[Note], [s].[ParameterName], [s].[RoutingId], [s].[Unit]
+FROM [RecipeRouting] AS [r]
+LEFT JOIN [StepParameters] AS [s] ON [r].[RoutingID] = [s].[RoutingId]
+WHERE [r].[OrderID] = @__batch_OrderId_0
+ORDER BY [r].[StepNumber], [r].[RoutingID]
+2026-05-06 05:20:57.761 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__recipeId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [r].[RoutingID], [r].[AreaId], [r].[CleanlinessStatus], [r].[DefaultEquipmentID], [r].[Description], [r].[EstimatedTimeMinutes], [r].[MaterialId], [r].[NumberOfRouting], [r].[OrderID], [r].[RecipeID], [r].[SetPressure], [r].[SetTemperature], [r].[SetTimeMinutes], [r].[StabilityStatus], [r].[StandardHumidity], [r].[StandardPressure], [r].[StandardTemperature], [r].[StepName], [r].[StepNumber], [e].[EquipmentID], [e].[AreaId], [e].[EquipmentCode], [e].[EquipmentName], [e].[TechnicalSpecification], [e].[UsagePurpose], [s].[ParameterId], [s].[IsCritical], [s].[MaxValue], [s].[MinValue], [s].[Note], [s].[ParameterName], [s].[RoutingId], [s].[Unit]
+FROM [RecipeRouting] AS [r]
+LEFT JOIN [Equipments] AS [e] ON [r].[DefaultEquipmentID] = [e].[EquipmentID]
+LEFT JOIN [StepParameters] AS [s] ON [r].[RoutingID] = [s].[RoutingId]
+WHERE [r].[RecipeID] = @__recipeId_0 AND [r].[OrderID] IS NULL
+ORDER BY [r].[RoutingID], [e].[EquipmentID]
+2026-05-06 05:20:57.762 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__order_RecipeId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [r].[RoutingID], [r].[AreaId], [r].[CleanlinessStatus], [r].[DefaultEquipmentID], [r].[Description], [r].[EstimatedTimeMinutes], [r].[MaterialId], [r].[NumberOfRouting], [r].[OrderID], [r].[RecipeID], [r].[SetPressure], [r].[SetTemperature], [r].[SetTimeMinutes], [r].[StabilityStatus], [r].[StandardHumidity], [r].[StandardPressure], [r].[StandardTemperature], [r].[StepName], [r].[StepNumber], [s].[ParameterId], [s].[IsCritical], [s].[MaxValue], [s].[MinValue], [s].[Note], [s].[ParameterName], [s].[RoutingId], [s].[Unit]
+FROM [RecipeRouting] AS [r]
+LEFT JOIN [StepParameters] AS [s] ON [r].[RoutingID] = [s].[RoutingId]
+WHERE [r].[RecipeID] = @__order_RecipeId_0 AND ([r].[OrderID] IS NULL OR [r].[OrderID] = 0)
+ORDER BY [r].[StepNumber], [r].[RoutingID]
+2026-05-06 05:20:57.767 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__batchId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [b].[LogID], [b].[BatchID], [b].[EndTime], [b].[EquipmentID], [b].[IsDeviation], [b].[Notes], [b].[NumberOfRouting], [b].[OperatorID], [b].[ParametersData], [b].[ResultStatus], [b].[RoutingID], [b].[StartTime], [b].[VerifiedById], [b].[VerifiedDate], [r].[RoutingID], [r].[AreaId], [r].[CleanlinessStatus], [r].[DefaultEquipmentID], [r].[Description], [r].[EstimatedTimeMinutes], [r].[MaterialId], [r].[NumberOfRouting], [r].[OrderID], [r].[RecipeID], [r].[SetPressure], [r].[SetTemperature], [r].[SetTimeMinutes], [r].[StabilityStatus], [r].[StandardHumidity], [r].[StandardPressure], [r].[StandardTemperature], [r].[StepName], [r].[StepNumber], [s].[ParameterId], [s].[IsCritical], [s].[MaxValue], [s].[MinValue], [s].[Note], [s].[ParameterName], [s].[RoutingId], [s].[Unit]
+FROM [BatchProcessLogs] AS [b]
+LEFT JOIN [RecipeRouting] AS [r] ON [b].[RoutingID] = [r].[RoutingID]
+LEFT JOIN [StepParameters] AS [s] ON [r].[RoutingID] = [s].[RoutingId]
+WHERE [b].[BatchID] = @__batchId_0
+ORDER BY [b].[LogID], [r].[RoutingID]
+2026-05-06 05:20:57.768 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__batch_OrderId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[OrderBomId], [p].[MaterialId], [p].[RequiredQuantity], [p].[UomId], CASE
+    WHEN [m].[MaterialID] IS NOT NULL THEN [m].[MaterialName]
+    ELSE N'Unknown'
+END AS [MaterialName], CASE
+    WHEN [m].[MaterialID] IS NOT NULL THEN [m].[MaterialCode]
+    ELSE 'N/A'
+END AS [MaterialCode], CASE
+    WHEN [u].[UomID] IS NOT NULL THEN [u].[UomName]
+    ELSE N'kg'
+END AS [UomName]
+FROM [ProductionOrderBom] AS [p]
+LEFT JOIN [Materials] AS [m] ON [p].[MaterialId] = [m].[MaterialID]
+LEFT JOIN [UnitOfMeasure] AS [u] ON [p].[UomId] = [u].[UomID]
+WHERE [p].[OrderId] = @__batch_OrderId_0
+2026-05-06 05:20:57.768 +00:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType15`3[[System.Collections.Generic.IEnumerable`1[[<>f__AnonymousType11`13[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int64, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType12`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[<>f__AnonymousType10`7[[System.Int64, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType10`7[[System.Int64, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[<>f__AnonymousType13`8[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[<>f__AnonymousType14`6[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-05-06 05:20:57.770 +00:00 [INF] Executed action GMP_System.Controllers.BatchProcessLogsController.GetLogsByBatch (GMP_System) in 21.0782ms
+2026-05-06 05:20:57.771 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.BatchProcessLogsController.GetLogsByBatch (GMP_System)'
+2026-05-06 05:20:57.771 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__bom_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [i].[LotNumber]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__bom_MaterialId_0 AND [i].[QuantityCurrent] > 0.0
+ORDER BY [i].[LotId] DESC
+2026-05-06 05:20:57.772 +00:00 [INF] Request finished HTTP/1.1 GET http://localhost/api/batch-process-logs/batch/3?t=1778044857407 - 200 null application/json; charset=utf-8 26.8415ms
+2026-05-06 05:20:57.775 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__bom_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [i].[LotNumber]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__bom_MaterialId_0 AND [i].[QuantityCurrent] > 0.0
+ORDER BY [i].[LotId] DESC
+2026-05-06 05:20:57.780 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[@__bom_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [i].[LotNumber]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__bom_MaterialId_0 AND [i].[QuantityCurrent] > 0.0
+ORDER BY [i].[LotId] DESC
+2026-05-06 05:20:57.783 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__bom_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [i].[LotNumber]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__bom_MaterialId_0 AND [i].[QuantityCurrent] > 0.0
+ORDER BY [i].[LotId] DESC
+2026-05-06 05:20:57.787 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__bom_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [i].[LotNumber]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__bom_MaterialId_0 AND [i].[QuantityCurrent] > 0.0
+ORDER BY [i].[LotId] DESC
+2026-05-06 05:20:57.791 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[@__bom_MaterialId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [i].[LotNumber]
+FROM [InventoryLots] AS [i]
+WHERE [i].[MaterialId] = @__bom_MaterialId_0 AND [i].[QuantityCurrent] > 0.0
+ORDER BY [i].[LotId] DESC
+2026-05-06 05:20:57.792 +00:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType0`3[[<>f__AnonymousType31`11[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType32`4[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType33`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType34`2[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType30`1[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Collections.Generic.List`1[[System.Object, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Collections.Generic.List`1[[<>f__AnonymousType35`16[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType36`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Collections.Generic.List`1[[<>f__AnonymousType37`5[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-05-06 05:20:57.797 +00:00 [INF] Executed action GMP_System.Controllers.ProductionBatchesController.GetById (GMP_System) in 48.4919ms
+2026-05-06 05:20:57.797 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionBatchesController.GetById (GMP_System)'
+2026-05-06 05:20:57.799 +00:00 [INF] Request finished HTTP/1.1 GET http://localhost/api/production-batches/3 - 200 null application/json; charset=utf-8 53.7925ms
+2026-05-06 05:20:59.296 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:20:59.296 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:20:59.299 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:20:59.300 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:20:59.301 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:20:59.302 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 6.2541ms
+2026-05-06 05:21:01.341 +00:00 [INF] Request starting HTTP/1.1 GET http://localhost/api/production-orders - application/json null
+2026-05-06 05:21:01.342 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-05-06 05:21:01.343 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-05-06 05:21:01.348 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[OrderID], [p].[OrderCode], [p].[RecipeID], [p].[PlannedQuantity], [p].[ActualQuantity], [p].[Status], [p].[StartDate], [p].[EndDate], [p].[CreatedAt], [p].[CreatedBy], [a].[FullName], CASE
+    WHEN [r].[RecipeID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [r].[RecipeID], [r].[BatchSize], CASE
+    WHEN [m].[MaterialID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [m].[MaterialName], CASE
+    WHEN [u].[UomID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [u].[UomName], [a].[UserID], [m].[MaterialID], [u].[UomID], [p0].[BatchID], [p0].[BatchNumber], [p0].[Status], [t].[OrderBomId], [t].[MaterialId], [t].[RequiredQuantity], [t].[MaterialName], [t].[UomName], [t].[MaterialID0], [t].[UomID]
+FROM [ProductionOrders] AS [p]
+LEFT JOIN [AppUsers] AS [a] ON [p].[CreatedBy] = [a].[UserID]
+LEFT JOIN [Recipes] AS [r] ON [p].[RecipeID] = [r].[RecipeID]
+LEFT JOIN [Materials] AS [m] ON [r].[MaterialID] = [m].[MaterialID]
+LEFT JOIN [UnitOfMeasure] AS [u] ON [m].[BaseUomID] = [u].[UomID]
+LEFT JOIN [ProductionBatches] AS [p0] ON [p].[OrderID] = [p0].[OrderID]
+LEFT JOIN (
+    SELECT [p1].[OrderBomId], [p1].[MaterialId], [p1].[RequiredQuantity], CASE
+        WHEN [m0].[MaterialID] IS NOT NULL THEN [m0].[MaterialName]
+        ELSE N'Unknown'
+    END AS [MaterialName], CASE
+        WHEN [u0].[UomID] IS NOT NULL THEN [u0].[UomName]
+        ELSE N'N/A'
+    END AS [UomName], [m0].[MaterialID] AS [MaterialID0], [u0].[UomID], [p1].[OrderId]
+    FROM [ProductionOrderBom] AS [p1]
+    LEFT JOIN [Materials] AS [m0] ON [p1].[MaterialId] = [m0].[MaterialID]
+    LEFT JOIN [UnitOfMeasure] AS [u0] ON [p1].[UomId] = [u0].[UomID]
+) AS [t] ON [p].[OrderID] = [t].[OrderId]
+ORDER BY [p].[OrderID], [a].[UserID], [r].[RecipeID], [m].[MaterialID], [u].[UomID], [p0].[BatchID], [t].[OrderBomId], [t].[MaterialID0]
+2026-05-06 05:21:01.349 +00:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType45`4[[System.Collections.Generic.List`1[[<>f__AnonymousType41`14[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType42`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType34`2[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType30`1[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Collections.Generic.IEnumerable`1[[<>f__AnonymousType43`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.IEnumerable`1[[<>f__AnonymousType44`5[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-05-06 05:21:01.351 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System) in 7.4142ms
+2026-05-06 05:21:01.351 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-05-06 05:21:01.352 +00:00 [INF] Request finished HTTP/1.1 GET http://localhost/api/production-orders - 200 null application/json; charset=utf-8 10.3992ms
+2026-05-06 05:21:32.755 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:21:32.757 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:21:32.762 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:21:32.763 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:21:32.764 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:21:32.768 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 13.3237ms
+2026-05-06 05:22:06.149 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:22:06.153 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:22:06.162 +00:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:22:06.163 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:22:06.164 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:22:06.165 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 16.1597ms
+2026-05-06 05:22:39.509 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:22:39.512 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:22:39.516 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:22:39.517 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:22:39.517 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:22:39.518 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 8.3099ms
+2026-05-06 05:23:12.792 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:23:12.793 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:23:12.796 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:23:12.796 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:23:12.796 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:23:12.797 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.2884ms
+2026-05-06 05:23:46.191 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:23:46.192 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:23:46.195 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:23:46.199 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:23:46.200 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:23:46.201 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 9.3123ms
+2026-05-06 05:24:19.540 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:24:19.541 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:24:19.544 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:24:19.545 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:24:19.546 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:24:19.547 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 7.0189ms
+2026-05-06 05:28:02.088 +00:00 [WRN] No store type was specified for the decimal property 'PlannedQuantity' on entity type 'ProductionBatch'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-06 05:28:02.195 +00:00 [WRN] No store type was specified for the decimal property 'WastePercentage' on entity type 'ProductionOrderBom'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-06 05:28:02.196 +00:00 [WRN] No store type was specified for the decimal property 'SetPressure' on entity type 'RecipeRouting'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-06 05:28:02.197 +00:00 [WRN] No store type was specified for the decimal property 'SetTemperature' on entity type 'RecipeRouting'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-06 05:28:04.306 +00:00 [INF] Executed DbCommand (25ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:28:04.320 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:28:04.381 +00:00 [INF] Executed DbCommand (56ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF EXISTS
+    (SELECT *
+     FROM [sys].[objects] o
+     WHERE [o].[type] = 'U'
+     AND [o].[is_ms_shipped] = 0
+     AND NOT EXISTS (SELECT *
+         FROM [sys].[extended_properties] AS [ep]
+         WHERE [ep].[major_id] = [o].[object_id]
+             AND [ep].[minor_id] = 0
+             AND [ep].[class] = 1
+             AND [ep].[name] = N'microsoft_database_tools_support'
+    )
+)
+SELECT 1 ELSE SELECT 0
+2026-05-06 05:28:04.951 +00:00 [INF] Executed DbCommand (8ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [AppUsers] AS [a]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-05-06 05:28:05.307 +00:00 [WRN] Storing keys in a directory '/root/.aspnet/DataProtection-Keys' that may not be persisted outside of the container. Protected data will be unavailable when container is destroyed. For more information go to https://aka.ms/aspnet/dataprotectionwarning
+2026-05-06 05:28:05.307 +00:00 [INF] User profile is available. Using '/root/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-05-06 05:28:05.335 +00:00 [INF] Creating key {d5c2aa8e-39fe-4b12-9f1d-529023b04e91} with creation date 2026-05-06 05:28:05Z, activation date 2026-05-06 05:28:05Z, and expiration date 2026-08-04 05:28:05Z.
+2026-05-06 05:28:05.357 +00:00 [WRN] No XML encryptor configured. Key {d5c2aa8e-39fe-4b12-9f1d-529023b04e91} may be persisted to storage in unencrypted form.
+2026-05-06 05:28:05.479 +00:00 [INF] Writing data to file '/root/.aspnet/DataProtection-Keys/key-d5c2aa8e-39fe-4b12-9f1d-529023b04e91.xml'.
+2026-05-06 05:28:05.667 +00:00 [WRN] Overriding HTTP_PORTS '8080' and HTTPS_PORTS ''. Binding to values defined by URLS instead 'http://0.0.0.0:5000'.
+2026-05-06 05:28:06.014 +00:00 [INF] Now listening on: http://0.0.0.0:5000
+2026-05-06 05:28:06.015 +00:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-05-06 05:28:06.015 +00:00 [INF] Hosting environment: Development
+2026-05-06 05:28:06.016 +00:00 [INF] Content root path: /src
+2026-05-06 05:28:09.632 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:28:09.721 +00:00 [WRN] Failed to determine the https port for redirect.
+2026-05-06 05:28:09.826 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:28:09.891 +00:00 [INF] Executed DbCommand (21ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:28:09.912 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:28:09.924 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:28:09.958 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 328.825ms
+2026-05-06 05:28:14.073 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-orders - null null
+2026-05-06 05:28:14.078 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/recipes - null null
+2026-05-06 05:28:14.182 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-05-06 05:28:14.182 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.RecipesController.GetAll (GMP_System)'
+2026-05-06 05:28:14.214 +00:00 [INF] Route matched with {action = "GetAll", controller = "Recipes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.RecipesController (GMP_System).
+2026-05-06 05:28:14.214 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-05-06 05:28:14.372 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - null null
+2026-05-06 05:28:14.376 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.InventoryLotsController.GetLots (GMP_System)'
+2026-05-06 05:28:14.394 +00:00 [INF] Route matched with {action = "GetLots", controller = "InventoryLots"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetLots(System.Nullable`1[System.Int32], System.String) on controller GMP_System.Controllers.InventoryLotsController (GMP_System).
+2026-05-06 05:28:14.566 +00:00 [INF] Executed DbCommand (45ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [r].[RecipeID], [r].[MaterialID], [r].[VersionNumber], [r].[BatchSize], [r].[Status], [r].[ApprovedBy], [r].[ApprovedDate], [r].[CreatedAt], [r].[EffectiveDate], [r].[Note], CASE
+    WHEN [m].[MaterialID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [m].[MaterialID], [m].[MaterialName], [m].[MaterialCode]
+FROM [Recipes] AS [r]
+LEFT JOIN [Materials] AS [m] ON [r].[MaterialID] = [m].[MaterialID]
+ORDER BY [r].[RecipeID]
+2026-05-06 05:28:14.580 +00:00 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-05-06 05:28:14.597 +00:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType0`3[[System.Collections.Generic.List`1[[<>f__AnonymousType51`11[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType52`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-05-06 05:28:14.611 +00:00 [INF] Executed DbCommand (12ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[LotId], [i].[CreatedAt], [i].[ExpiryDate], [i].[LotNumber], [i].[ManufactureDate], [i].[MaterialId], [i].[QuantityCurrent], [i].[SupplierName], [m].[MaterialID], [m].[BaseUomID], [m].[CreatedAt], [m].[IsActive], [m].[MaterialCode], [m].[MaterialName], [m].[TechnicalSpecification], [m].[Type], [m].[UpdatedAt], [u].[UomID], [u].[Description], [u].[UomName]
+FROM [InventoryLots] AS [i]
+LEFT JOIN [Materials] AS [m] ON [i].[MaterialId] = [m].[MaterialID]
+LEFT JOIN [UnitOfMeasure] AS [u] ON [m].[BaseUomID] = [u].[UomID]
+2026-05-06 05:28:14.643 +00:00 [INF] Executed DbCommand (43ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[OrderID], [p].[OrderCode], [p].[RecipeID], [p].[PlannedQuantity], [p].[ActualQuantity], [p].[Status], [p].[StartDate], [p].[EndDate], [p].[CreatedAt], [p].[CreatedBy], [a].[FullName], CASE
+    WHEN [r].[RecipeID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [r].[RecipeID], [r].[BatchSize], CASE
+    WHEN [m].[MaterialID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [m].[MaterialName], CASE
+    WHEN [u].[UomID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [u].[UomName], [a].[UserID], [m].[MaterialID], [u].[UomID], [p0].[BatchID], [p0].[BatchNumber], [p0].[Status], [t].[OrderBomId], [t].[MaterialId], [t].[RequiredQuantity], [t].[MaterialName], [t].[UomName], [t].[MaterialID0], [t].[UomID]
+FROM [ProductionOrders] AS [p]
+LEFT JOIN [AppUsers] AS [a] ON [p].[CreatedBy] = [a].[UserID]
+LEFT JOIN [Recipes] AS [r] ON [p].[RecipeID] = [r].[RecipeID]
+LEFT JOIN [Materials] AS [m] ON [r].[MaterialID] = [m].[MaterialID]
+LEFT JOIN [UnitOfMeasure] AS [u] ON [m].[BaseUomID] = [u].[UomID]
+LEFT JOIN [ProductionBatches] AS [p0] ON [p].[OrderID] = [p0].[OrderID]
+LEFT JOIN (
+    SELECT [p1].[OrderBomId], [p1].[MaterialId], [p1].[RequiredQuantity], CASE
+        WHEN [m0].[MaterialID] IS NOT NULL THEN [m0].[MaterialName]
+        ELSE N'Unknown'
+    END AS [MaterialName], CASE
+        WHEN [u0].[UomID] IS NOT NULL THEN [u0].[UomName]
+        ELSE N'N/A'
+    END AS [UomName], [m0].[MaterialID] AS [MaterialID0], [u0].[UomID], [p1].[OrderId]
+    FROM [ProductionOrderBom] AS [p1]
+    LEFT JOIN [Materials] AS [m0] ON [p1].[MaterialId] = [m0].[MaterialID]
+    LEFT JOIN [UnitOfMeasure] AS [u0] ON [p1].[UomId] = [u0].[UomID]
+) AS [t] ON [p].[OrderID] = [t].[OrderId]
+ORDER BY [p].[OrderID], [a].[UserID], [r].[RecipeID], [m].[MaterialID], [u].[UomID], [p0].[BatchID], [t].[OrderBomId], [t].[MaterialID0]
+2026-05-06 05:28:14.707 +00:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType45`4[[System.Collections.Generic.List`1[[<>f__AnonymousType41`14[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType42`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType34`2[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType30`1[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Collections.Generic.IEnumerable`1[[<>f__AnonymousType43`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.IEnumerable`1[[<>f__AnonymousType44`5[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Decimal, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-05-06 05:28:14.744 +00:00 [INF] Executed action GMP_System.Controllers.RecipesController.GetAll (GMP_System) in 496.4501ms
+2026-05-06 05:28:14.745 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.RecipesController.GetAll (GMP_System)'
+2026-05-06 05:28:14.774 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/recipes - 200 null application/json; charset=utf-8 695.9418ms
+2026-05-06 05:28:14.802 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System) in 586.6611ms
+2026-05-06 05:28:14.803 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-05-06 05:28:14.805 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-orders - 200 null application/json; charset=utf-8 732.2338ms
+2026-05-06 05:28:15.155 +00:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType8`2[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[GMP_System.Entities.InventoryLot, GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-05-06 05:28:15.261 +00:00 [INF] Executed action GMP_System.Controllers.InventoryLotsController.GetLots (GMP_System) in 865.9057ms
+2026-05-06 05:28:15.261 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.InventoryLotsController.GetLots (GMP_System)'
+2026-05-06 05:28:15.262 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - 200 null application/json; charset=utf-8 890.2786ms
+2026-05-06 05:28:20.276 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-orders/1/batches - null null
+2026-05-06 05:28:20.277 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetBatchesByOrder (GMP_System)'
+2026-05-06 05:28:20.283 +00:00 [INF] Route matched with {action = "GetBatchesByOrder", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetBatchesByOrder(Int32) on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-05-06 05:28:20.353 +00:00 [INF] Executed DbCommand (37ms) [Parameters=[@__orderId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[BatchID], [p].[OrderID], [p].[BatchNumber], [p].[Status], [p].[ManufactureDate], [p].[EndTime], [p].[ExpiryDate], [p].[CurrentStep], CASE
+    WHEN [p0].[OrderID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [p0].[OrderID], [p0].[OrderCode], CASE
+    WHEN [r].[RecipeID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [r].[RecipeID], CASE
+    WHEN [m].[MaterialID] IS NULL THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [m].[MaterialName]
+FROM [ProductionBatches] AS [p]
+LEFT JOIN [ProductionOrders] AS [p0] ON [p].[OrderID] = [p0].[OrderID]
+LEFT JOIN [Recipes] AS [r] ON [p0].[RecipeID] = [r].[RecipeID]
+LEFT JOIN [Materials] AS [m] ON [r].[MaterialID] = [m].[MaterialID]
+WHERE [p].[OrderID] = @__orderId_0
+ORDER BY [p].[BatchNumber]
+2026-05-06 05:28:20.357 +00:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType0`3[[System.Collections.Generic.List`1[[<>f__AnonymousType23`9[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType24`3[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType25`2[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType26`1[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], GMP_System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-05-06 05:28:20.371 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetBatchesByOrder (GMP_System) in 87.5474ms
+2026-05-06 05:28:20.373 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetBatchesByOrder (GMP_System)'
+2026-05-06 05:28:20.374 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-orders/1/batches - 200 null application/json; charset=utf-8 98.4662ms
+2026-05-06 05:28:43.298 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:28:43.303 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:28:43.338 +00:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:28:43.343 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:28:43.344 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:28:43.348 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 49.6701ms
+2026-05-06 05:29:16.693 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:29:16.695 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:29:16.707 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:29:16.708 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:29:16.708 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:29:16.709 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 15.4915ms
+2026-05-06 05:29:49.960 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:29:49.962 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:29:49.968 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:29:49.969 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:29:49.970 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:29:49.971 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 10.5906ms
+2026-05-06 05:30:23.404 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:30:23.406 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:30:23.409 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:30:23.410 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:30:23.411 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:30:23.412 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 7.4764ms
+2026-05-06 05:30:56.822 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:30:56.825 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:30:56.831 +00:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:30:56.832 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:30:56.833 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:30:56.834 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 12.0435ms
+2026-05-06 05:31:30.214 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:31:30.217 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:31:30.221 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:31:30.222 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:31:30.223 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:31:30.224 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 10.4472ms
+2026-05-06 05:32:03.486 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:32:03.488 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:32:03.492 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:32:03.493 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:32:03.494 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:32:03.495 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 9.249ms
+2026-05-06 05:32:37.015 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:32:37.017 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:32:37.021 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:32:37.022 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:32:37.023 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:32:37.024 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 8.689ms
+2026-05-06 05:33:10.485 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:33:10.489 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:33:10.594 +00:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:33:10.596 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:33:10.597 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:33:10.598 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 112.8951ms
+2026-05-06 05:33:43.957 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:33:43.958 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:33:43.961 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:33:43.962 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:33:43.962 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:33:43.963 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 6.0364ms
+2026-05-06 05:34:17.217 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:34:17.218 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:34:17.220 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:34:17.221 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:34:17.222 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:34:17.222 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.702ms
+2026-05-06 05:34:50.671 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-06 05:34:50.671 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:34:50.674 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-06 05:34:50.675 +00:00 [INF] Writing value of type '<>f__AnonymousType85`2' as Json.
+2026-05-06 05:34:50.675 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-06 05:34:50.676 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 5.2895ms

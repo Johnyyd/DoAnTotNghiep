@@ -180,7 +180,7 @@ namespace GMP_System.Controllers
             if (currentBatch != null && currentBatch.OrderId.HasValue)
             {
                 var hasUnfinishedPreviousBatch = await _unitOfWork.ProductionBatches.Query()
-                    .Where(b => b.OrderId == currentBatch.OrderId && b.BatchId < currentBatch.BatchId && b.Status != "Completed")
+                    .Where(b => b.OrderId == currentBatch.OrderId && b.BatchNumber.CompareTo(currentBatch.BatchNumber) < 0 && b.Status != "Completed")
                     .AnyAsync();
 
                 if (hasUnfinishedPreviousBatch)
