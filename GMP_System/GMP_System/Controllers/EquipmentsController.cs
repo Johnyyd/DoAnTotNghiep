@@ -95,7 +95,7 @@ namespace GMP_System.Controllers
                 return Conflict(new
                 {
                     success = false,
-                    message = "Thiet bi da duoc su dung trong qua trinh san xuat, khong the chinh sua."
+                    message = "Thiết bị đã được sử dụng trong quá trình sản xuất, không thể chỉnh sửa."
                 });
             }
 
