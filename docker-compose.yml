@@ -27,9 +27,9 @@ services:
     ports:
       - "5001:5000"
     volumes:
-      - ./DATABASE/materials:/app/certificates/materials
-      - ./DATABASE/finished_goods:/app/certificates/finished_goods
-      - ./DATABASE/batches:/app/certificates/batches
+      - ./DATABASE/materials:/app/materials
+      - ./DATABASE/finished_goods:/app/finished_goods
+      - ./DATABASE/batches:/app/batches
     restart: unless-stopped
     # entrypoint will be set inside Dockerfile to run migrations then start the app
 

@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { areasApi, equipmentsApi, materialsApi, recipesApi } from '@/services/api';
-import { CheckCircle2, ListTree, Pencil, Plus, Route, Search, Trash2 } from 'lucide-react';
+import { CheckCircle2, ClipboardList, GripVertical, ListTree, Pencil, Plus, Route, Search, Trash2 } from 'lucide-react';
 
 type MaterialOption = { materialId: number; materialCode: string; materialName: string; type: string };
 type AreaOption = { areaId: number; areaCode: string; areaName: string };
@@ -29,9 +29,11 @@ type UiRouting = {
   setPressure?: number;
   setTimeMinutes?: number;
   description?: string;
+  materialIds?: string;
 };
 
 type RecipeCreateForm = { materialId: number; batchSize: number };
+type RecipeCreateUnit = 'mg' | 'g' | 'kg' | 'ml' | 'l';
 type BomDraftRow = { materialId: number; technicalStandard: string; ratioPercent: number; quantity: number; uomId: number };
 type BomEditRow = { bomId: number; materialId: number; technicalStandard: string; ratioPercent: number; quantity: number; uomId: number };
 type RoutingForm = {
@@ -53,7 +55,10 @@ type RoutingForm = {
   setPressure: number;
   setTimeMinutes: number;
   description: string;
+  materialIds: number[];
 };
+
+type UiTechSpec = { specId: number; recipeId: number; parentId: number | null; sortOrder: number; content: string; isChecked: boolean };
 
 function toRows<T>(raw: unknown): T[] {
   if (Array.isArray(raw)) return raw as T[];
@@ -80,7 +85,7 @@ function normalizeBom(item: any): UiBom {
   return {
     bomId: Number(item.bomId ?? item.BomId ?? 0),
     materialId: Number(item.materialId ?? item.MaterialId ?? 0),
-    materialName: item.material?.materialName ?? item.Material?.MaterialName ?? 'Nguyên liệu',
+    materialName: item.material?.materialName ?? item.Material?.MaterialName ?? 'Nguyn liu',
     quantity: Number(item.quantity ?? item.Quantity ?? 0),
     technicalStandard: item.technicalStandard ?? item.TechnicalStandard ?? '',
     uomId: Number(item.uomId ?? item.UomId ?? 0) || undefined,
@@ -118,6 +123,7 @@ function normalizeRouting(item: any): UiRouting {
     setPressure: (item.setPressure !== undefined && item.setPressure !== null) ? Number(item.setPressure) : (item.SetPressure !== undefined ? Number(item.SetPressure) : undefined),
     setTimeMinutes: (item.setTimeMinutes !== undefined && item.setTimeMinutes !== null) ? Number(item.setTimeMinutes) : (item.SetTimeMinutes !== undefined ? Number(item.SetTimeMinutes) : undefined),
     description: item.description ?? item.Description ?? '',
+    materialIds: item.materialIds ?? item.MaterialIds ?? '',
   };
 }
 
@@ -129,6 +135,7 @@ export default function Recipes() {
   const [editingRouting, setEditingRouting] = useState<UiRouting | null>(null);
 
   const [createForm, setCreateForm] = useState<RecipeCreateForm>({ materialId: 0, batchSize: 0 });
+  const [createUnit, setCreateUnit] = useState<RecipeCreateUnit>('mg');
   const [bomDraftRows, setBomDraftRows] = useState<BomDraftRow[]>([{ materialId: 0, technicalStandard: '', ratioPercent: 0, quantity: 0, uomId: 2 }]);
   const [editingBomRows, setEditingBomRows] = useState<Record<number, BomEditRow>>({});
   const [routingForm, setRoutingForm] = useState<RoutingForm>({
@@ -150,6 +157,7 @@ export default function Recipes() {
     setPressure: 0,
     setTimeMinutes: 0,
     description: '',
+    materialIds: [],
   });
 
   const { data: recipesRaw, isLoading, isError, error } = useQuery({ 
@@ -212,12 +220,72 @@ export default function Recipes() {
   const bomItems = useMemo(() => toRows<any>(bomRaw).map(normalizeBom), [bomRaw]);
   const routingSteps = useMemo(() => toRows<any>(routingRaw).map(normalizeRouting).sort((a, b) => a.stepNumber - b.stepNumber), [routingRaw]);
   const materialById = useMemo(() => new Map(inputMaterials.map((m) => [m.materialId, m])), [inputMaterials]);
+  const allMaterialById = useMemo(() => new Map(materials.map((m) => [m.materialId, m])), [materials]);
   const selectedMaterialIds = useMemo(() => new Set<number>(bomItems.map((i) => i.materialId)), [bomItems]);
+  const routingSelectableMaterials = useMemo(
+    () => inputMaterials.filter((m) => selectedMaterialIds.has(m.materialId)),
+    [inputMaterials, selectedMaterialIds]
+  );
 
   const totalPerTabletMg = useMemo(() => bomItems.reduce((sum, item) => sum + item.quantity, 0), [bomItems]);
 
+  // Tech specs
+  const { data: techSpecsRaw } = useQuery({ queryKey: ['techSpecs', selectedRecipeId], queryFn: () => recipesApi.getTechSpecs(selectedRecipeId as number), enabled: !!selectedRecipeId });
+  const techSpecs = useMemo<UiTechSpec[]>(() => toRows<any>(techSpecsRaw).map((s: any) => ({
+    specId: s.specId ?? s.SpecId ?? 0, recipeId: s.recipeId ?? s.RecipeId ?? 0,
+    parentId: s.parentId ?? s.ParentId ?? null, sortOrder: s.sortOrder ?? s.SortOrder ?? 0,
+    content: s.content ?? s.Content ?? '', isChecked: !!(s.isChecked ?? s.IsChecked),
+  })), [techSpecsRaw]);
+  const [newSpecContent, setNewSpecContent] = useState('');
+  const [newSubSpecParent, setNewSubSpecParent] = useState<number | null>(null);
+  const [newSubSpecContent, setNewSubSpecContent] = useState('');
+
+  // Drag state
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+
+  const reorderMutation = useMutation({
+    mutationFn: (items: { routingId: number; stepNumber: number }[]) => recipesApi.reorderRouting(selectedRecipeId as number, items),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['recipeRouting', selectedRecipeId] }),
+  });
+
+  const addSpecMutation = useMutation({
+    mutationFn: (data: any) => recipesApi.addTechSpec(selectedRecipeId as number, data),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['techSpecs', selectedRecipeId] }); setNewSpecContent(''); setNewSubSpecContent(''); },
+  });
+  const updateSpecMutation = useMutation({
+    mutationFn: ({ specId, data }: { specId: number; data: any }) => recipesApi.updateTechSpec(selectedRecipeId as number, specId, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['techSpecs', selectedRecipeId] }),
+  });
+  const deleteSpecMutation = useMutation({
+    mutationFn: (specId: number) => recipesApi.deleteTechSpec(selectedRecipeId as number, specId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['techSpecs', selectedRecipeId] }),
+  });
+
+  // Drag & drop handlers
+  const handleDragStart = useCallback((idx: number) => setDragIdx(idx), []);
+  const handleDragOver = useCallback((e: React.DragEvent) => e.preventDefault(), []);
+  const handleDrop = useCallback((dropIdx: number) => {
+    if (dragIdx === null || dragIdx === dropIdx) { setDragIdx(null); return; }
+    const reordered = [...routingSteps];
+    const [moved] = reordered.splice(dragIdx, 1);
+    reordered.splice(dropIdx, 0, moved);
+    const updates = reordered.map((s, i) => ({ routingId: s.routingId, stepNumber: i + 1 }));
+    reorderMutation.mutate(updates);
+    setDragIdx(null);
+  }, [dragIdx, routingSteps, reorderMutation]);
+
   const createRecipeMutation = useMutation({
-    mutationFn: () => recipesApi.create({ materialId: createForm.materialId, batchSize: createForm.batchSize, status: 'Draft', versionNumber: 1 }),
+    mutationFn: () => {
+      const toMg = (value: number, unit: RecipeCreateUnit): number => {
+        if (unit === 'mg') return value;
+        if (unit === 'g') return value * 1000;
+        if (unit === 'kg') return value * 1000000;
+        if (unit === 'ml') return value * 1000;
+        if (unit === 'l') return value * 1000000;
+        return value;
+      };
+      return recipesApi.create({ materialId: createForm.materialId, batchSize: toMg(createForm.batchSize, createUnit), status: 'Draft', versionNumber: 1 });
+    },
     onSuccess: async (response: any) => {
       await queryClient.invalidateQueries({ queryKey: ['recipes'] });
       
@@ -227,6 +295,7 @@ export default function Recipes() {
       }
       
       setCreateForm({ materialId: 0, batchSize: 0 });
+      setCreateUnit('mg');
     },
   });
 
@@ -241,7 +310,7 @@ export default function Recipes() {
       await queryClient.invalidateQueries({ queryKey: ['recipes'] });
       setSelectedRecipeId(null);
     },
-    onError: (err: any) => alert(err?.response?.data?.message ?? err?.message ?? 'Xóa công thức thất bại'),
+    onError: (err: any) => alert(err?.response?.data?.message ?? err?.message ?? 'Xa cng thc tht bi'),
   });
 
   const addBomMutation = useMutation({
@@ -290,7 +359,10 @@ export default function Recipes() {
   });
 
   const addRoutingMutation = useMutation({
-    mutationFn: () => recipesApi.addRoutingStep(selectedRecipeId as number, {
+    mutationFn: () => {
+      const allowedIds = new Set(routingSelectableMaterials.map((m) => m.materialId));
+      const materialIds = routingForm.materialIds.filter((id) => allowedIds.has(id));
+      return recipesApi.addRoutingStep(selectedRecipeId as number, {
       ...routingForm,
       materialId: routingForm.materialId > 0 ? routingForm.materialId : null,
       areaId: routingForm.areaId > 0 ? routingForm.areaId : null,
@@ -301,19 +373,24 @@ export default function Recipes() {
       setTemperature: routingForm.setTemperature,
       setPressure: routingForm.setPressure,
       estimatedTimeMinutes: routingForm.setTimeMinutes,
-    } as any),
+      materialIds: materialIds.length ? materialIds.join(',') : null,
+    } as any);
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recipeRouting', selectedRecipeId] });
       setShowRoutingModal(false);
       setEditingRouting(null);
     },
     onError: (error: any) => {
-      alert(error?.response?.data?.message || error?.message || 'Có lỗi xảy ra khi lưu công đoạn. Vui lòng kiểm tra lại thông tin.');
+      alert(error?.response?.data?.message || error?.message || 'C li xy ra khi lu cng on. Vui lng kim tra li thng tin.');
     }
   });
 
   const updateRoutingMutation = useMutation({
-    mutationFn: () => recipesApi.updateRoutingStep(selectedRecipeId as number, editingRouting!.routingId, {
+    mutationFn: () => {
+      const allowedIds = new Set(routingSelectableMaterials.map((m) => m.materialId));
+      const materialIds = routingForm.materialIds.filter((id) => allowedIds.has(id));
+      return recipesApi.updateRoutingStep(selectedRecipeId as number, editingRouting!.routingId, {
       ...routingForm,
       materialId: routingForm.materialId > 0 ? routingForm.materialId : null,
       areaId: routingForm.areaId > 0 ? routingForm.areaId : null,
@@ -324,14 +401,16 @@ export default function Recipes() {
       setTemperature: routingForm.setTemperature,
       setPressure: routingForm.setPressure,
       estimatedTimeMinutes: routingForm.setTimeMinutes,
-    } as any),
+      materialIds: materialIds.length ? materialIds.join(',') : null,
+    } as any);
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recipeRouting', selectedRecipeId] });
       setShowRoutingModal(false);
       setEditingRouting(null);
     },
     onError: (error: any) => {
-      alert(error?.response?.data?.message || error?.message || 'Có lỗi xảy ra khi lưu công đoạn. Vui lòng kiểm tra lại thông tin.');
+      alert(error?.response?.data?.message || error?.message || 'C li xy ra khi lu cng on. Vui lng kim tra li thng tin.');
     }
   });
 
@@ -415,7 +494,7 @@ export default function Recipes() {
       materialId: 0,
       areaId: 0,
       estimatedTimeMinutes: 0,
-      cleanlinessStatus: 'Sáº¡ch',
+      cleanlinessStatus: 'Sạch',
       standardTemperatureMin: '',
       standardTemperatureMax: '',
       standardHumidityMin: '',
@@ -427,12 +506,17 @@ export default function Recipes() {
       setPressure: 0,
       setTimeMinutes: 0,
       description: '',
+      materialIds: [],
     });
     setShowRoutingModal(true);
   };
 
   const openEditRouting = (item: UiRouting) => {
     setEditingRouting(item);
+    const allowedIds = new Set(routingSelectableMaterials.map((m) => m.materialId));
+    const filteredIds = item.materialIds
+      ? item.materialIds.split(',').map(Number).filter((id) => Number.isFinite(id) && allowedIds.has(id))
+      : [];
     setRoutingForm({
       stepNumber: item.stepNumber,
       stepName: item.stepName,
@@ -440,18 +524,19 @@ export default function Recipes() {
       materialId: item.materialId ?? 0,
       areaId: item.areaId ?? 0,
       estimatedTimeMinutes: item.estimatedTimeMinutes,
-      cleanlinessStatus: item.cleanlinessStatus ?? 'Sáº¡ch',
+      cleanlinessStatus: item.cleanlinessStatus ?? 'Sch',
       standardTemperatureMin: item.standardTemperature ? item.standardTemperature.split('-')[0]?.trim() ?? '' : '',
       standardTemperatureMax: item.standardTemperature ? item.standardTemperature.split('-')[1]?.trim() ?? '' : '',
       standardHumidityMin: item.standardHumidity ? item.standardHumidity.split('-')[0]?.trim() ?? '' : '',
       standardHumidityMax: item.standardHumidity ? item.standardHumidity.split('-')[1]?.trim() ?? '' : '',
       standardPressureMin: item.standardPressure ? item.standardPressure.split('-')[0]?.trim() ?? '' : '',
       standardPressureMax: item.standardPressure ? item.standardPressure.split('-')[1]?.trim() ?? '' : '',
-      stabilityStatus: item.stabilityStatus ?? 'ổn định',
+      stabilityStatus: item.stabilityStatus ?? 'n nh',
       setTemperature: item.setTemperature ?? 0,
       setPressure: item.setPressure ?? 0,
       setTimeMinutes: item.setTimeMinutes ?? item.estimatedTimeMinutes ?? 0,
       description: item.description ?? '',
+      materialIds: filteredIds,
     });
     setShowRoutingModal(true);
   };
@@ -475,8 +560,17 @@ export default function Recipes() {
             </select>
           </div>
           <div>
-            <label className="text-xs text-neutral-500">Khối lượng 1 viên (mg)</label>
-            <input type="number" className="input mt-1" value={createForm.batchSize} onChange={(e) => setCreateForm({ ...createForm, batchSize: Number(e.target.value) })} />
+            <label className="text-xs text-neutral-500">Kh?i l??ng 1 vi?n</label>
+            <div className="mt-1 grid grid-cols-[1fr_120px] gap-2">
+              <input type="number" className="input" value={createForm.batchSize} onChange={(e) => setCreateForm({ ...createForm, batchSize: Number(e.target.value) })} />
+              <select className="input" value={createUnit} onChange={(e) => setCreateUnit(e.target.value as RecipeCreateUnit)}>
+                <option value="mg">mg</option>
+                <option value="g">g</option>
+                <option value="kg">kg</option>
+                <option value="ml">ml</option>
+                <option value="l">L</option>
+              </select>
+            </div>
           </div>
           <button className="btn-primary w-full" onClick={() => createRecipeMutation.mutate()} disabled={createForm.materialId <= 0 || createForm.batchSize <= 0}>
             <Plus className="w-4 h-4 mr-2" />Tạo công thức
@@ -490,7 +584,7 @@ export default function Recipes() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm công thức..." className="input pl-9" />
           </div>
-          {isLoading ? <p className="text-sm text-neutral-500 italic animate-pulse">Đang tải dữ liệu...</p> : isError ? (
+          {isLoading ? <p className="text-sm text-neutral-500 italic animate-pulse">ang ti d liu...</p> : isError ? (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-xs">
               Lỗi khi tải danh sách. Vui lòng kiểm tra Backend.
             </div>
@@ -510,17 +604,16 @@ export default function Recipes() {
       </div>
 
       <div className="card">
-          {!selectedRecipe ? <p className="text-sm text-neutral-500">Chọn một công thức để quản lý.</p> : (
+          {!selectedRecipe ? <p className="text-sm text-neutral-500">Chn mt cng thc  qun l.</p> : (
             <div className="space-y-6">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-bold text-neutral-900">Công thức #{selectedRecipe.recipeId} - {selectedRecipe.materialName}</h2>
-                  <p className="text-sm text-neutral-600 mt-1">Version v{selectedRecipe.versionNumber} | Trạng thái: {selectedRecipe.status}</p>
                   <p className="text-sm text-neutral-600">Khối lượng 1 viên: <strong>{selectedRecipe.batchSize.toLocaleString()} mg</strong></p>
                 </div>
                 <div className="flex gap-2">
                   {selectedRecipe.status === 'Draft' && <button className="btn-secondary text-sm" onClick={() => approveRecipeMutation.mutate(selectedRecipe.recipeId)}><CheckCircle2 className="w-4 h-4 mr-1" /> Approved</button>}
-                  <button onClick={() => { if (confirm('Xóa công thức này?')) deleteRecipeMutation.mutate(selectedRecipe.recipeId); }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xóa công thức</button>
+                  <button onClick={() => { if (confirm('Xa cng thc ny?')) deleteRecipeMutation.mutate(selectedRecipe.recipeId); }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xa cng thc</button>
                 </div>
               </div>
 
@@ -597,12 +690,12 @@ export default function Recipes() {
                               {editing ? (
                                 <div className="flex justify-end gap-2">
                                   <button className="btn-secondary text-xs" onClick={() => updateBomMutation.mutate(editing)}>Lưu</button>
-                                  <button className="btn-ghost text-xs" onClick={() => cancelEditBom(item.bomId)}>Hủy</button>
+                                  <button className="btn-ghost text-xs" onClick={() => cancelEditBom(item.bomId)}>Há»§y</button>
                                 </div>
                               ) : (
                                 <div className="flex justify-end gap-2">
-                                  <button className="btn-ghost text-sm" onClick={() => beginEditBom(item)}><Pencil className="w-4 h-4 mr-1" />Sửa</button>
-                                  <button onClick={() => { if (confirm('Xóa nguyên liệu này?')) deleteBomMutation.mutate(item.bomId); }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xóa</button>
+                                  <button className="btn-ghost text-sm" onClick={() => beginEditBom(item)}><Pencil className="w-4 h-4 mr-1" />Sá»­a</button>
+                                  <button onClick={() => { if (confirm('Xa nguyn liu ny?')) deleteBomMutation.mutate(item.bomId); }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xa</button>
                                 </div>
                               )}
                             </td>
@@ -624,7 +717,7 @@ export default function Recipes() {
                               {inputMaterials.filter((m) => !selectedMaterialIds.has(m.materialId) && !bomDraftRows.some((r, rIndex) => rIndex !== idx && r.materialId === m.materialId)).map((m) => <option key={m.materialId} value={m.materialId}>{m.materialCode} - {m.materialName}</option>)}
                             </select>
                           </td>
-                          <td><input className="input" value={row.technicalStandard} onChange={(e) => setBomDraftRows((prev) => prev.map((x, i) => i === idx ? { ...x, technicalStandard: e.target.value } : x))} placeholder="Ví dụ: USP 30" /></td>
+                          <td><input className="input" value={row.technicalStandard} onChange={(e) => setBomDraftRows((prev) => prev.map((x, i) => i === idx ? { ...x, technicalStandard: e.target.value } : x))} placeholder="V d: USP 30" /></td>
                           <td><input type="number" className="input" disabled={isPackagingMaterial(materialById.get(row.materialId))} value={row.ratioPercent} onChange={(e) => {
                             const ratioPercent = Number(e.target.value);
                             const quantity = recalcMgFromRatio(ratioPercent);
@@ -650,27 +743,81 @@ export default function Recipes() {
                 <div className="flex items-center justify-between"><div className="flex items-center gap-2"><Route className="w-5 h-5 text-primary-600" /><h3 className="text-lg font-semibold text-neutral-900">Quy trình công đoạn</h3></div><button onClick={openCreateRouting} className="btn-secondary text-sm"><Plus className="w-4 h-4 mr-1" />Thêm công đoạn</button></div>
                 <div className="table-container">
                   <table className="table">
-                    <thead><tr><th className="w-12 text-center">Bước</th><th>Tên công đoạn</th><th>Nguyên liệu</th><th>Phòng sản xuất</th><th>Thiết bị</th><th>Điều kiện</th><th className="text-right w-24">Thao tác</th></tr></thead>
+                    <thead><tr><th className="w-8"></th><th className="w-12 text-center">Bước</th><th>Tên công đoạn</th><th>Nguyên liệu</th><th>Phòng sản xuất</th><th>Thiết bị</th><th>Điều kiện</th><th className="text-right w-24">Thao tác</th></tr></thead>
                     <tbody>
-                      {routingSteps.length === 0 ? <tr><td colSpan={7} className="text-center text-neutral-500 py-4">Chưa có công đoạn.</td></tr> : routingSteps.map((item) => (
-                        <tr key={item.routingId}>
-                          <td className="text-center">{item.stepNumber}</td>
+                      {routingSteps.length === 0 ? <tr><td colSpan={8} className="text-center text-neutral-500 py-4">Cha c cng on.</td></tr> : routingSteps.map((item, idx) => {
+                        // Resolve multi-material names
+                        const matNames: string[] = [];
+                        if (item.materialIds) {
+                          item.materialIds.split(',').forEach((idStr) => {
+                            const mid = Number(idStr.trim());
+                            if (mid) { const m = allMaterialById.get(mid); if (m) matNames.push(m.materialName); }
+                          });
+                        }
+                        if (!matNames.length && item.materialName) matNames.push(item.materialName);
+                        return (
+                        <tr key={item.routingId} draggable onDragStart={() => handleDragStart(idx)} onDragOver={handleDragOver} onDrop={() => handleDrop(idx)} className={`cursor-grab ${dragIdx === idx ? 'opacity-40' : ''}`}>
+                          <td className="text-center"><GripVertical className="w-4 h-4 text-neutral-300 inline-block" /></td>
+                          <td className="text-center font-mono text-sm">{item.stepNumber}</td>
                           <td>{item.stepName}</td>
-                          <td>{item.materialName || '-'}</td>
+                          <td>{matNames.length ? matNames.join(', ') : '-'}</td>
                           <td>{item.areaName || '-'}</td>
                           <td>{item.equipmentName || '-'}</td>
                           <td>
                             <div className="flex flex-col text-xs text-neutral-600 gap-0.5">
-                              <span>Nhiệt độ: <b>{item.standardTemperature ?? '-'}°C</b></span>
-                              <span>Độ ẩm: <b>{item.standardHumidity ?? '-'}%</b></span>
-                              <span>Áp suất: <b>{item.standardPressure ?? '-'} Pa</b></span>
+                              <span>Nhit : <b>{item.standardTemperature ?? '-'}C</b></span>
+                              <span> m: <b>{item.standardHumidity ?? '-'}%</b></span>
+                              <span>p sut: <b>{item.standardPressure ?? '-'} Pa</b></span>
                             </div>
                           </td>
-                          <td className="text-right"><div className="flex justify-end gap-1"><button onClick={() => openEditRouting(item)} className="p-1.5 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 rounded"><Pencil className="w-4 h-4" /></button><button onClick={() => { if (confirm('Xóa công đoạn này?')) deleteRoutingMutation.mutate(item.routingId); }} className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded"><Trash2 className="w-4 h-4" /></button></div></td>
+                          <td className="text-right"><div className="flex justify-end gap-1"><button onClick={() => openEditRouting(item)} className="p-1.5 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 rounded"><Pencil className="w-4 h-4" /></button><button onClick={() => { if (confirm('Xa cng on ny?')) deleteRoutingMutation.mutate(item.routingId); }} className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded"><Trash2 className="w-4 h-4" /></button></div></td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
+                </div>
+              </div>
+
+              {/* Tech Specs */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2"><ClipboardList className="w-5 h-5 text-primary-600" /><h3 className="text-lg font-semibold text-neutral-900">Tiêu chuẩn kỹ thuật</h3></div>
+                <div className="space-y-1">
+                  {techSpecs.length === 0 && (
+                    <div className="text-sm text-neutral-500 px-2 py-2 border border-dashed border-neutral-300 rounded-lg">
+                      Chưa có tiêu chuẩn kỹ thuật. Bạn có thể thêm mới ngay bên dưới.
+                    </div>
+                  )}
+                  {techSpecs.filter(s => !s.parentId).map((spec) => (
+                    <div key={spec.specId}>
+                      <div className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-neutral-50 group">
+                        <input type="checkbox" checked={spec.isChecked} onChange={(e) => updateSpecMutation.mutate({ specId: spec.specId, data: { ...spec, isChecked: e.target.checked } })} className="w-4 h-4 accent-primary-600" />
+                        <span className="flex-1 text-sm text-neutral-800">{spec.content}</span>
+                        <button onClick={() => setNewSubSpecParent(newSubSpecParent === spec.specId ? null : spec.specId)} className="opacity-0 group-hover:opacity-100 text-xs text-primary-600 hover:underline">+ Thm</button>
+                        <button onClick={() => { if (confirm('Xa tiu chun ny?')) deleteSpecMutation.mutate(spec.specId); }} className="opacity-0 group-hover:opacity-100 p-1 text-neutral-400 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                      {/* Sub-specs */}
+                      {techSpecs.filter(sub => sub.parentId === spec.specId).map((sub) => (
+                        <div key={sub.specId} className="flex items-center gap-2 py-1 px-2 ml-8 rounded hover:bg-neutral-50 group">
+                          <input type="checkbox" checked={sub.isChecked} onChange={(e) => updateSpecMutation.mutate({ specId: sub.specId, data: { ...sub, isChecked: e.target.checked } })} className="w-4 h-4 accent-primary-600" />
+                          <span className="flex-1 text-sm text-neutral-700">{sub.content}</span>
+                          <button onClick={() => { if (confirm('Xa?')) deleteSpecMutation.mutate(sub.specId); }} className="opacity-0 group-hover:opacity-100 p-1 text-neutral-400 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                        </div>
+                      ))}
+                      {/* Add sub-spec input */}
+                      {newSubSpecParent === spec.specId && (
+                        <div className="flex items-center gap-2 ml-8 mt-1">
+                          <input className="input flex-1 text-sm" value={newSubSpecContent} onChange={(e) => setNewSubSpecContent(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && newSubSpecContent.trim()) { addSpecMutation.mutate({ parentId: spec.specId, sortOrder: techSpecs.filter(s => s.parentId === spec.specId).length, content: newSubSpecContent.trim(), isChecked: false }); setNewSubSpecContent(''); }}} />
+                          <button className="btn-secondary text-xs" onClick={() => { if (newSubSpecContent.trim()) { addSpecMutation.mutate({ parentId: spec.specId, sortOrder: techSpecs.filter(s => s.parentId === spec.specId).length, content: newSubSpecContent.trim(), isChecked: false }); setNewSubSpecContent(''); }}}>Thêm</button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {/* Add top-level spec */}
+                <div className="flex items-center gap-2">
+                  <input className="input flex-1" placeholder="Nhập tiêu chuẩn kỹ thuật mới..." value={newSpecContent} onChange={(e) => setNewSpecContent(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && newSpecContent.trim()) { addSpecMutation.mutate({ parentId: null, sortOrder: techSpecs.filter(s => !s.parentId).length, content: newSpecContent.trim(), isChecked: false }); }}} />
+                  <button className="btn-primary text-sm" disabled={!newSpecContent.trim()} onClick={() => { if (newSpecContent.trim()) addSpecMutation.mutate({ parentId: null, sortOrder: techSpecs.filter(s => !s.parentId).length, content: newSpecContent.trim(), isChecked: false }); }}><Plus className="w-4 h-4 mr-1" />Thêm</button>
                 </div>
               </div>
             </div>
@@ -678,19 +825,57 @@ export default function Recipes() {
         </div>
 
       {showRoutingModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-3xl p-6 space-y-4">
-            <h3 className="text-xl font-bold">{editingRouting ? 'Cập nhật công đoạn' : 'Thêm công đoạn'}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowRoutingModal(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-5xl p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold">{editingRouting ? 'Cp nht cng on' : 'Thm cng on'}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
               <div><label className="text-xs text-neutral-500">Số bước</label><input type="number" className="input" value={routingForm.stepNumber} onChange={(e) => setRoutingForm({ ...routingForm, stepNumber: Number(e.target.value) })} /></div>
-              <div><label className="text-xs text-neutral-500">Tên công đoạn</label><input className="input" value={routingForm.stepName} onChange={(e) => setRoutingForm({ ...routingForm, stepName: e.target.value })} /></div>
-              <div><label className="text-xs text-neutral-500">Chọn nguyên liệu</label><select className="input" value={routingForm.materialId} onChange={(e) => setRoutingForm({ ...routingForm, materialId: Number(e.target.value) })}><option value={0}>Chọn nguyên liệu</option>{inputMaterials.map((m) => <option key={m.materialId} value={m.materialId}>{m.materialCode} - {m.materialName}</option>)}</select></div>
+              <div className="lg:col-span-2"><label className="text-xs text-neutral-500">Tên công đoạn</label><input className="input" value={routingForm.stepName} onChange={(e) => setRoutingForm({ ...routingForm, stepName: e.target.value })} /></div>
+              <div className="lg:col-span-3">
+                <label className="text-xs text-neutral-500">Chọn nguyên liệu ({routingForm.materialIds.length} đã chọn)</label>
+                <div className="flex items-center gap-2 mt-1 mb-2">
+                  <button
+                    type="button"
+                    className="btn-ghost text-xs px-2 py-1"
+                    onClick={() =>
+                      setRoutingForm({
+                        ...routingForm,
+                        materialIds: routingSelectableMaterials.map((m) => m.materialId),
+                        materialId: routingSelectableMaterials[0]?.materialId ?? 0,
+                      })
+                    }
+                  >
+                    Chọn tất cả
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-ghost text-xs px-2 py-1"
+                    onClick={() => setRoutingForm({ ...routingForm, materialIds: [], materialId: 0 })}
+                  >
+                    Bỏ chọn
+                  </button>
+                </div>
+                <div className="border border-neutral-200 rounded-lg max-h-[150px] overflow-y-auto p-2 space-y-1">
+                  {routingSelectableMaterials.map((m) => (
+                    <label key={m.materialId} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-neutral-50 px-1 py-0.5 rounded">
+                      <input type="checkbox" checked={routingForm.materialIds.includes(m.materialId)} onChange={(e) => {
+                        const ids = e.target.checked ? [...routingForm.materialIds, m.materialId] : routingForm.materialIds.filter(id => id !== m.materialId);
+                        setRoutingForm({ ...routingForm, materialIds: ids, materialId: ids[0] ?? 0 });
+                      }} className="w-3.5 h-3.5 accent-primary-600" />
+                      <span>{m.materialCode} - {m.materialName}</span>
+                    </label>
+                  ))}
+                  {routingSelectableMaterials.length === 0 && (
+                    <p className="text-xs text-neutral-500 px-1 py-1">Chưa có nguyên liệu trong phần định mức bên trên.</p>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div><label className="text-xs text-neutral-500">Phòng sản xuất</label><select className="input" value={routingForm.areaId} onChange={(e) => {
                 setRoutingForm({ ...routingForm, areaId: Number(e.target.value), defaultEquipmentId: 0 });
               }}><option value={0}>Chọn khu vực</option>{areas.map((a) => <option key={a.areaId} value={a.areaId}>{a.areaName}</option>)}</select></div>
-              <div><label className="text-xs text-neutral-500">Thiết bị</label><select className="input disabled:opacity-50" value={routingForm.defaultEquipmentId} disabled={routingForm.areaId === 0} onChange={(e) => setRoutingForm({ ...routingForm, defaultEquipmentId: Number(e.target.value) })}><option value={0}>{routingForm.areaId === 0 ? 'Vui lòng chọn phòng trước' : 'Chọn thiết bị'}</option>{equipments.filter(e => e.areaId === routingForm.areaId).map((eq) => <option key={eq.equipmentId} value={eq.equipmentId}>{eq.equipmentCode} - {eq.equipmentName}</option>)}</select></div>
+              <div><label className="text-xs text-neutral-500">Thit b</label><select className="input disabled:opacity-50" value={routingForm.defaultEquipmentId} disabled={routingForm.areaId === 0} onChange={(e) => setRoutingForm({ ...routingForm, defaultEquipmentId: Number(e.target.value) })}><option value={0}>{routingForm.areaId === 0 ? 'Vui lng chn phng trc' : 'Chn thit b'}</option>{equipments.filter(e => e.areaId === routingForm.areaId).map((eq) => <option key={eq.equipmentId} value={eq.equipmentId}>{eq.equipmentCode} - {eq.equipmentName}</option>)}</select></div>
             </div>
 
             {(() => {
@@ -745,7 +930,7 @@ export default function Recipes() {
             </div>
 
 
-            <div className="flex justify-end gap-2"><button onClick={() => setShowRoutingModal(false)} className="btn-ghost">Hủy</button><button onClick={() => (editingRouting ? updateRoutingMutation.mutate() : addRoutingMutation.mutate())} className="btn-primary">{editingRouting ? 'Lưu cập nhật' : 'Thêm công đoạn'}</button></div>
+            <div className="flex justify-end gap-2"><button onClick={() => setShowRoutingModal(false)} className="btn-ghost">Hy</button><button onClick={() => (editingRouting ? updateRoutingMutation.mutate() : addRoutingMutation.mutate())} className="btn-primary">{editingRouting ? 'Lu cp nht' : 'Thm cng on'}</button></div>
           </div>
         </div>
       )}

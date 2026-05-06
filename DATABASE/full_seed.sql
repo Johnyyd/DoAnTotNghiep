@@ -32,6 +32,7 @@ IF OBJECT_ID('ProductionBatches', 'U') IS NOT NULL DELETE FROM ProductionBatches
 IF OBJECT_ID('ProductionOrders', 'U') IS NOT NULL DELETE FROM ProductionOrders;
 IF OBJECT_ID('InventoryLots', 'U') IS NOT NULL DELETE FROM InventoryLots;
 IF OBJECT_ID('RecipeBom', 'U') IS NOT NULL DELETE FROM RecipeBom;
+IF OBJECT_ID('RecipeTechSpecs', 'U') IS NOT NULL DELETE FROM RecipeTechSpecs;
 IF OBJECT_ID('RecipeRouting', 'U') IS NOT NULL DELETE FROM RecipeRouting;
 IF OBJECT_ID('Recipes', 'U') IS NOT NULL DELETE FROM Recipes;
 IF OBJECT_ID('Materials', 'U') IS NOT NULL DELETE FROM Materials;
@@ -388,5 +389,35 @@ IF @MatPvcId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM InventoryLots WHERE Mater
     INSERT INTO InventoryLots (MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, SupplierName, CreatedAt)
     VALUES (@MatPvcId, 'L-PVC-01', 20.00, DATEADD(DAY, -15, GETDATE()), DATEADD(YEAR, 3, GETDATE()), N'Nhà cung cấp I', GETDATE());
 
-PRINT 'GMP Database Initialization & Full Seeding Completed Successfully!';
+-- =====================================================================
+-- SEED: RecipeTechSpecs (Tiêu chuẩn kỹ thuật - mẫu Viên nang Crila)
+-- =====================================================================
+PRINT 'Seeding RecipeTechSpecs...';
 
+DECLARE @CrilaRecipeId INT = (SELECT TOP 1 RecipeId FROM Recipes WHERE MaterialId IN (SELECT MaterialId FROM Materials WHERE MaterialCode = 'TP-VNC'));
+
+IF @CrilaRecipeId IS NOT NULL
+BEGIN
+    SET IDENTITY_INSERT RecipeTechSpecs ON;
+
+    INSERT INTO RecipeTechSpecs (SpecId, RecipeId, ParentId, SortOrder, Content, IsChecked) VALUES
+    (1, @CrilaRecipeId, NULL, 0, N'Viên nang số "0", bột thuốc trong nang màu vàng nhạt đến nâu đậm, có mùi thơm đặc trưng, vị đặc biệt', 0),
+    (2, @CrilaRecipeId, NULL, 1, N'Mất khối lượng do làm khô không quá 9,0 %', 0),
+    (3, @CrilaRecipeId, NULL, 2, N'Độ tan rã không quá 30 phút', 0),
+    (4, @CrilaRecipeId, NULL, 3, N'Độ đồng đều khối lượng: Khối lượng trung bình bột thuốc trong nang ± 7,5 %', 0),
+    (5, @CrilaRecipeId, NULL, 4, N'Định tính: Phải thể hiện phép định tính của cao khô Trinh nữ Crila', 0),
+    (6, @CrilaRecipeId, NULL, 5, N'Định lượng: Hàm lượng alcaloid toàn phần tính theo lycorin phải từ 1,125 - 1,375 mg/viên', 0),
+    (7, @CrilaRecipeId, NULL, 6, N'Độ nhiễm khuẩn', 0),
+    (8, @CrilaRecipeId, 7, 0, N'Tổng số vi khuẩn hiếu khí ≤ 10⁴ Khuẩn lạc/g', 0),
+    (9, @CrilaRecipeId, 7, 1, N'Tổng số bào tử nấm men – mốc ≤ 10² Khuẩn lạc/g', 0),
+    (10, @CrilaRecipeId, 7, 2, N'Tổng số vi khuẩn Gram âm dung nạp mật ≤ 10² Khuẩn lạc/g', 0),
+    (11, @CrilaRecipeId, 7, 3, N'Salmonella: Không được có (10g)', 0),
+    (12, @CrilaRecipeId, 7, 4, N'E.Coli, Pseudomonas aeruginosa, Staphylococcus aureus: Không được có (1g)', 0);
+
+    SET IDENTITY_INSERT RecipeTechSpecs OFF;
+    PRINT 'RecipeTechSpecs seeded successfully.';
+END
+ELSE
+    PRINT 'Warning: Crila recipe not found. Skipping tech specs seed.';
+
+PRINT 'GMP Database Initialization & Full Seeding Completed Successfully!';

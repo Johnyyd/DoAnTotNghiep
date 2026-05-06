@@ -204,6 +204,7 @@ CREATE TABLE RecipeRouting (
     Description NVARCHAR(500),
     NumberOfRouting INT DEFAULT 1,
     MaterialId INT,
+    MaterialIds NVARCHAR(500) NULL,
     AreaId INT,
     CleanlinessStatus NVARCHAR(50),
     StandardTemperature NVARCHAR(50),
@@ -230,6 +231,22 @@ CREATE TABLE StepParameters (
     IsCritical BIT DEFAULT 1,
     Note NVARCHAR(200)
 );
+GO
+
+-- -------------------------------------------------------------------------
+-- 11b. RecipeTechSpecs
+-- -------------------------------------------------------------------------
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'RecipeTechSpecs')
+BEGIN
+    CREATE TABLE RecipeTechSpecs (
+        SpecId INT PRIMARY KEY IDENTITY(1,1),
+        RecipeId INT NOT NULL REFERENCES Recipes(RecipeId) ON DELETE CASCADE,
+        ParentId INT NULL,
+        SortOrder INT NOT NULL DEFAULT 0,
+        Content NVARCHAR(500) NOT NULL,
+        IsChecked BIT NOT NULL DEFAULT 0
+    );
+END
 GO
 
 -- -------------------------------------------------------------------------

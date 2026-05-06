@@ -516,24 +516,19 @@ namespace GMP_System.Controllers
         }
 
         [HttpPost("{id}/hold")]
-        public async Task<IActionResult> Hold(int id, [FromBody] HoldRequest request)
+        public async Task<IActionResult> Hold(int id)
         {
             var existing = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
             if (existing == null)
-            {
-                return NotFound(new { success = false, message = "Không tìm th?y l?nh s?n xu?t." });
-            }
+                return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
 
-            if (string.IsNullOrWhiteSpace(request.Reason))
-            {
-                return BadRequest(new { success = false, message = "Vui lòng nh?p lý do t?m ngung." });
-            }
+            if (existing.Status != "Approved")
+                return BadRequest(new { success = false, message = "Chỉ có thể tạm dừng lệnh đang ở trạng thái Approved." });
 
             existing.Status = "Hold";
             _unitOfWork.ProductionOrders.Update(existing);
             await _unitOfWork.CompleteAsync();
-
-            return Ok(new { success = true, message = "Ðã t?m ngung l?nh s?n xu?t." });
+            return Ok(new { success = true, message = "Đã tạm dừng lệnh sản xuất." });
         }
 
         [HttpPost("{id}/resume")]
@@ -541,15 +536,15 @@ namespace GMP_System.Controllers
         {
             var existing = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
             if (existing == null)
-            {
-                return NotFound(new { success = false, message = "Không tìm th?y l?nh s?n xu?t." });
-            }
+                return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
 
-            existing.Status = "InProcess";
+            if (existing.Status != "Hold")
+                return BadRequest(new { success = false, message = "Chỉ có thể tiếp tục lệnh đang ở trạng thái Hold." });
+
+            existing.Status = "Approved";
             _unitOfWork.ProductionOrders.Update(existing);
             await _unitOfWork.CompleteAsync();
-
-            return Ok(new { success = true, message = "Ðã m? l?i l?nh s?n xu?t." });
+            return Ok(new { success = true, message = "Đã chuyển lệnh về trạng thái Approved." });
         }
 
         [HttpPost("{id}/complete")]
@@ -586,6 +581,7 @@ namespace GMP_System.Controllers
             await _unitOfWork.CompleteAsync();
             return Ok(new { success = true, message = "Ðã xóa l?nh s?n xu?t." });
         }
+
     }
 
     public class SignatureRequest

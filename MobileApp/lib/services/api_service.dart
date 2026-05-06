@@ -23,7 +23,7 @@ class ApiService {
       return '$origin/api';
     }
     // Mặc định fallback cho môi trường dev nội bộ (đổi IP trong .env cho thiết bị thực)
-    return 'http://192.168.100.152:5001/api';
+    return 'http://172.17.5.25:5001/api';
   }
 
   /// Tiện ích log lỗi cho dev

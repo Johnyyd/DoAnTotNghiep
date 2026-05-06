@@ -27,8 +27,8 @@ const navigation = [
   { name: 'Truy Xuất', href: '/traceability', icon: Search, roles: ['Admin', 'Manager', 'QualityControl'] },
   { name: 'Thiết Bị', href: '/equipments', icon: Settings, roles: ['Admin', 'Manager'] },
   { name: 'Theo Dõi Tiến Độ', href: '/manager-operations', icon: FileText, roles: ['Admin', 'Manager'] },
-  { name: 'Phòng Sản Xuất', href: '/production-areas', icon: Factory, roles: ['Admin', 'Manager'] },
-  { name: 'Thống Kê Thành Phẩm', href: '/finished-goods-stats', icon: BarChart3, roles: ['Admin', 'Manager'] },
+  { name: 'Khu Sản Xuất', href: '/production-areas', icon: Factory, roles: ['Admin', 'Manager'] },
+  { name: 'Thống Kê', href: '/finished-goods-stats', icon: BarChart3, roles: ['Admin', 'Manager'] },
   { name: 'Tài Khoản', href: '/users', icon: Users, roles: ['Admin'] },
 ];
 
@@ -59,7 +59,7 @@ export default function Layout() {
       )}
 
       <aside
-        className={`print:hidden fixed inset-y-0 left-0 z-50 w-[258px] bg-surface border-r border-neutral-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col ${
+        className={`print:hidden fixed inset-y-0 left-0 z-50 w-[236px] bg-surface border-r border-neutral-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -125,7 +125,7 @@ export default function Layout() {
         </div>
       </aside>
 
-      <div className="flex-1 lg:ml-[258px] print:m-0 print:w-full">
+      <div className="flex-1 lg:ml-[236px] print:m-0 print:w-full">
         <header className="print:hidden bg-surface border-b border-neutral-200 h-16 flex items-center px-6 sticky top-0 z-30">
           <button
             className="lg:hidden p-2 rounded-lg hover:bg-neutral-100 mr-4"
@@ -137,8 +137,6 @@ export default function Layout() {
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-neutral-900">Theo dõi tiến độ</h2>
           </div>
-
-
         </header>
 
         <main className="p-6 lg:p-8">

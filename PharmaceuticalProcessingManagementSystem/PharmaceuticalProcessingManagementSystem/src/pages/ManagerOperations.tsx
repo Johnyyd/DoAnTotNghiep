@@ -53,22 +53,6 @@ type NormalizedBatch = {
 };
 
 
-const fallbackBom: NormalizedBom[] = [
-  { bomId: 1, materialName: 'NLC 3 - Cao khô Trinh nữ Crila', technicalStandard: 'TCCS', quantity: 250, ratioPercent: 46.6, uomName: 'mg' },
-  { bomId: 2, materialName: 'TD 1 - Aerosil', technicalStandard: 'USP 30', quantity: 1.62, ratioPercent: 0.3, uomName: 'mg' },
-  { bomId: 3, materialName: 'TD 3 - Sodium starch glycolate', technicalStandard: 'USP 30', quantity: 29.7, ratioPercent: 5.5, uomName: 'mg' },
-  { bomId: 4, materialName: 'TD 4 - Talc', technicalStandard: 'ĐĐVN V', quantity: 4.05, ratioPercent: 0.75, uomName: 'mg' },
-  { bomId: 5, materialName: 'TD 5 - Magnesi stearat', technicalStandard: 'ĐĐVN V', quantity: 4.05, ratioPercent: 0.75, uomName: 'mg' },
-  { bomId: 6, materialName: 'TD 8 - Tinh bột', technicalStandard: 'ĐĐVN V', quantity: 250.58, ratioPercent: 46.7, uomName: 'mg' },
-];
-
-const fallbackRouting: NormalizedRouting[] = [
-  { routingId: 1, stepNumber: 1, stepName: 'Cân nguyên liệu', equipmentName: 'IW2-60 / PMA-5000', areaName: 'Phòng cân', estimatedTimeMinutes: 50 },
-  { routingId: 2, stepNumber: 2, stepName: 'Trộn khô', equipmentName: 'AD-LP-200', areaName: 'Phòng trộn khô', estimatedTimeMinutes: 45 },
-  { routingId: 3, stepNumber: 3, stepName: 'Sấy', equipmentName: 'KBC-TS-50', areaName: 'Phòng sấy', estimatedTimeMinutes: 180 },
-  { routingId: 4, stepNumber: 4, stepName: 'Đóng nang', equipmentName: 'NJP-1200D', areaName: 'Phòng đóng nang', estimatedTimeMinutes: 120 },
-];
-
 
 function normalizeStatus(raw?: string): string {
   if (!raw) return 'Draft';
@@ -95,13 +79,19 @@ export default function ManagerOperations() {
   const { data: recipesRaw } = useQuery({
     queryKey: ['recipes'],
     queryFn: () => recipesApi.getAll(),
+    refetchInterval: 5000,
   });
 
-  const { data: ordersRaw } = useQuery({ queryKey: ['progressOrders'], queryFn: () => productionOrdersApi.getAll() });
+  const { data: ordersRaw } = useQuery({
+    queryKey: ['progressOrders'],
+    queryFn: () => productionOrdersApi.getAll(),
+    refetchInterval: 3000,
+  });
 
   const { data: batchesRaw } = useQuery({
     queryKey: ['productionBatches'],
     queryFn: () => productionBatchesApi.getAll(),
+    refetchInterval: 3000,
   });
 
 
@@ -200,7 +190,7 @@ export default function ManagerOperations() {
     // compute ratio from total
     const total = normalized.reduce((s, b) => s + b.quantity, 0);
     normalized.forEach((b) => { b.ratioPercent = total > 0 ? (b.quantity / total) * 100 : 0; });
-    return normalized.length ? normalized : fallbackBom;
+    return normalized;
   }, [bomRaw]);
 
   const routingSteps = useMemo<NormalizedRouting[]>(() => {
@@ -219,7 +209,7 @@ export default function ManagerOperations() {
       estimatedTimeMinutes: Number(item.estimatedTimeMinutes ?? item.EstimatedTimeMinutes ?? 0),
       description: item.description ?? item.Description,
     }));
-    return normalized.length ? normalized : fallbackRouting;
+    return normalized;
   }, [routingRaw]);
 
   const orderBatches = useMemo(() => {
@@ -227,13 +217,7 @@ export default function ManagerOperations() {
       .filter((batch) => batch.orderId === selectedOrderId)
       .sort((a, b) => a.batchNumber.localeCompare(b.batchNumber));
 
-    if (selected.length) return selected;
-
-    return [
-      { batchId: 1, orderId: selectedOrderId ?? 0, batchNumber: 'ME-01', status: 'InProcess', currentStep: 2 },
-      { batchId: 2, orderId: selectedOrderId ?? 0, batchNumber: 'ME-02', status: 'InProcess', currentStep: 1 },
-      { batchId: 3, orderId: selectedOrderId ?? 0, batchNumber: 'ME-03', status: 'Draft', currentStep: 1 },
-    ] as NormalizedBatch[];
+    return selected;
   }, [batches, selectedOrderId]);
 
   const totalSteps = Math.max(1, routingSteps.length);
@@ -280,6 +264,10 @@ export default function ManagerOperations() {
 
 
 
+  if (orders.length === 0) {
+    return <div className="space-y-6"><div className="card text-neutral-500">Ch?a c? l?nh s?n xu?t trong c? s? d? li?u.</div></div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="gmp-sheet">
@@ -303,6 +291,7 @@ export default function ManagerOperations() {
               onChange={(event) => setSelectedOrderId(Number(event.target.value))}
               className="input mt-1"
             >
+              {orders.length === 0 && <option value="">Chưa có lệnh sản xuất</option>}
               {orders.map((order) => (
                 <option key={order.orderId} value={order.orderId}>
                   {order.orderCode} - {order.status} - {order.plannedQuantity.toLocaleString()} đơn vị
@@ -325,6 +314,11 @@ export default function ManagerOperations() {
             </tr>
           </thead>
           <tbody>
+            {bomItems.length === 0 && (
+              <tr>
+                <td colSpan={6} className="text-center py-4 text-neutral-500">Chưa có dữ liệu BOM từ cơ sở dữ liệu.</td>
+              </tr>
+            )}
             {bomItems.map((item, index) => (
               <tr key={item.bomId || index}>
                 <td>{index + 1}</td>
@@ -366,12 +360,17 @@ export default function ManagerOperations() {
               <th>Bước</th>
               <th>Công đoạn</th>
               <th>Thiết bị được sử dụng</th>
-              <th>Khu vực</th>
+              <th>Khu vá»±c</th>
               <th>Thời gian cài đặt</th>
               <th>Mô tả</th>
             </tr>
           </thead>
           <tbody>
+            {routingSteps.length === 0 && (
+              <tr>
+                <td colSpan={6} className="text-center py-4 text-neutral-500">Chưa có dữ liệu quy trình công đoạn.</td>
+              </tr>
+            )}
             {routingSteps.map((step) => (
               <tr key={step.routingId}>
                 <td>{step.stepNumber}</td>
@@ -435,9 +434,18 @@ export default function ManagerOperations() {
             </tr>
           </thead>
           <tbody>
+            {orderBatches.length === 0 && (
+              <tr>
+                <td colSpan={4} className="text-center py-4 text-neutral-500">Chưa có dữ liệu mẻ sản xuất cho lệnh này.</td>
+              </tr>
+            )}
             {orderBatches.map((batch) => {
               const pointer = Math.min(getStepPointer(batch), totalSteps);
-              return (
+              if (orders.length === 0) {
+    return <div className="space-y-6"><div className="card text-neutral-500">Ch?a c? l?nh s?n xu?t trong c? s? d? li?u.</div></div>;
+  }
+
+  return (
                 <tr key={batch.batchId}>
                   <td>{batch.batchNumber}</td>
                   <td>
@@ -485,6 +493,11 @@ export default function ManagerOperations() {
               </tr>
             </thead>
             <tbody>
+              {orderBatches.length === 0 && (
+                <tr>
+                  <td colSpan={Math.max(2, routingSteps.length + 1)} className="text-center py-4 text-neutral-500">Chưa có dữ liệu pipeline.</td>
+                </tr>
+              )}
               {orderBatches.map((batch, batchIndex) => (
                 <tr key={batch.batchId}>
                   <td className="font-semibold">{batch.batchNumber}</td>
@@ -504,7 +517,11 @@ export default function ManagerOperations() {
                         : state === 'blocked'
                           ? 'bg-red-100 text-red-700'
                           : 'bg-neutral-100 text-neutral-700';
-                    return (
+                    if (orders.length === 0) {
+    return <div className="space-y-6"><div className="card text-neutral-500">Ch?a c? l?nh s?n xu?t trong c? s? d? li?u.</div></div>;
+  }
+
+  return (
                       <td key={`${batch.batchId}-${step.routingId}`}>
                         <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${classes}`}>
                           {label}
@@ -546,3 +563,4 @@ export default function ManagerOperations() {
     </div>
   );
 }
+

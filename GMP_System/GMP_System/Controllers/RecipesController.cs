@@ -330,6 +330,7 @@ namespace GMP_System.Controllers
                     r.SetTemperature,
                     r.SetPressure,
                     r.SetTimeMinutes,
+                    r.MaterialIds,
                     Material = r.Material == null ? null : new { r.Material.MaterialName },
                     Area = r.Area == null ? null : new { r.Area.AreaName },
                     DefaultEquipment = r.DefaultEquipment == null ? null : new
@@ -381,7 +382,8 @@ namespace GMP_System.Controllers
                 StabilityStatus = request.StabilityStatus,
                 SetTemperature = request.SetTemperature,
                 SetPressure = request.SetPressure,
-                SetTimeMinutes = request.SetTimeMinutes
+                SetTimeMinutes = request.SetTimeMinutes,
+                MaterialIds = request.MaterialIds
             };
 
             _context.RecipeRoutings.Add(step);
@@ -418,6 +420,7 @@ namespace GMP_System.Controllers
             step.SetTemperature = request.SetTemperature;
             step.SetPressure = request.SetPressure;
             step.SetTimeMinutes = request.SetTimeMinutes;
+            step.MaterialIds = request.MaterialIds;
 
             await _context.SaveChangesAsync();
             return Ok(new { success = true, data = step, message = "Ðã c?p nh?t công do?n." });
@@ -429,12 +432,98 @@ namespace GMP_System.Controllers
             var step = await _context.RecipeRoutings.FirstOrDefaultAsync(r => r.RoutingId == routingId && r.RecipeId == id);
             if (step == null)
             {
-                return NotFound(new { success = false, message = "Không tìm th?y công do?n." });
+                return NotFound(new { success = false, message = "Không tìm thấy công đoạn." });
             }
 
             _context.RecipeRoutings.Remove(step);
             await _context.SaveChangesAsync();
-            return Ok(new { success = true, message = "Ðã xóa công do?n." });
+            return Ok(new { success = true, message = "Đã xóa công đoạn." });
         }
+
+        // PUT: api/recipes/{id}/routing/reorder
+        [HttpPut("{id}/routing/reorder")]
+        public async Task<IActionResult> ReorderRoutingSteps(int id, [FromBody] List<ReorderItem> items)
+        {
+            if (items == null || items.Count == 0)
+                return BadRequest(new { success = false, message = "Danh sách rỗng." });
+
+            var steps = await _context.RecipeRoutings.Where(r => r.RecipeId == id).ToListAsync();
+            foreach (var item in items)
+            {
+                var step = steps.FirstOrDefault(s => s.RoutingId == item.RoutingId);
+                if (step != null)
+                {
+                    step.StepNumber = item.StepNumber;
+                }
+            }
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, message = "Đã cập nhật thứ tự." });
+        }
+
+        // ===== TECH SPECS =====
+
+        [HttpGet("{id}/tech-specs")]
+        public async Task<IActionResult> GetTechSpecs(int id)
+        {
+            var specs = await _context.RecipeTechSpecs
+                .Where(s => s.RecipeId == id)
+                .OrderBy(s => s.SortOrder)
+                .Select(s => new { s.SpecId, s.RecipeId, s.ParentId, s.SortOrder, s.Content, s.IsChecked })
+                .ToListAsync();
+            return Ok(new { success = true, data = specs });
+        }
+
+        [HttpPost("{id}/tech-specs")]
+        public async Task<IActionResult> AddTechSpec(int id, [FromBody] RecipeTechSpec request)
+        {
+            var recipe = await _context.Recipes.FindAsync(id);
+            if (recipe == null) return NotFound(new { success = false, message = "Không tìm thấy công thức." });
+
+            var spec = new RecipeTechSpec
+            {
+                RecipeId = id,
+                ParentId = request.ParentId,
+                SortOrder = request.SortOrder,
+                Content = request.Content?.Trim() ?? "",
+                IsChecked = request.IsChecked
+            };
+            _context.RecipeTechSpecs.Add(spec);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, data = new { spec.SpecId, spec.RecipeId, spec.ParentId, spec.SortOrder, spec.Content, spec.IsChecked } });
+        }
+
+        [HttpPut("{id}/tech-specs/{specId}")]
+        public async Task<IActionResult> UpdateTechSpec(int id, int specId, [FromBody] RecipeTechSpec request)
+        {
+            var spec = await _context.RecipeTechSpecs.FirstOrDefaultAsync(s => s.SpecId == specId && s.RecipeId == id);
+            if (spec == null) return NotFound(new { success = false, message = "Không tìm thấy tiêu chuẩn." });
+
+            spec.Content = request.Content?.Trim() ?? spec.Content;
+            spec.IsChecked = request.IsChecked;
+            spec.SortOrder = request.SortOrder;
+            spec.ParentId = request.ParentId;
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, data = new { spec.SpecId, spec.RecipeId, spec.ParentId, spec.SortOrder, spec.Content, spec.IsChecked } });
+        }
+
+        [HttpDelete("{id}/tech-specs/{specId}")]
+        public async Task<IActionResult> DeleteTechSpec(int id, int specId)
+        {
+            var spec = await _context.RecipeTechSpecs.FirstOrDefaultAsync(s => s.SpecId == specId && s.RecipeId == id);
+            if (spec == null) return NotFound(new { success = false, message = "Không tìm thấy tiêu chuẩn." });
+
+            // Also delete child specs
+            var children = await _context.RecipeTechSpecs.Where(s => s.ParentId == specId).ToListAsync();
+            _context.RecipeTechSpecs.RemoveRange(children);
+            _context.RecipeTechSpecs.Remove(spec);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, message = "Đã xóa tiêu chuẩn." });
+        }
+    }
+
+    public class ReorderItem
+    {
+        public int RoutingId { get; set; }
+        public int StepNumber { get; set; }
     }
 }

@@ -25,6 +25,8 @@ public partial class RecipeRouting
 
     public int? MaterialId { get; set; }
 
+    public string? MaterialIds { get; set; }
+
     public int? AreaId { get; set; }
 
     public string? CleanlinessStatus { get; set; }

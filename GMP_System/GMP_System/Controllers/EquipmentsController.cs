@@ -23,7 +23,35 @@ namespace GMP_System.Controllers
                 .Include(e => e.Area)
                 .OrderBy(e => e.EquipmentCode)
                 .ToListAsync();
-            return Ok(new { data = equipments, success = true, message = "Success" });
+
+            var ids = equipments.Select(e => e.EquipmentId).ToList();
+            var routingUsageIds = await _unitOfWork.RecipeRoutings.Query()
+                .Where(r => r.DefaultEquipmentId.HasValue && ids.Contains(r.DefaultEquipmentId.Value) && r.OrderId != null)
+                .Select(r => r.DefaultEquipmentId!.Value)
+                .Distinct()
+                .ToListAsync();
+            var logUsageIds = await _unitOfWork.BatchProcessLogs.Query()
+                .Where(l => l.EquipmentId.HasValue && ids.Contains(l.EquipmentId.Value))
+                .Select(l => l.EquipmentId!.Value)
+                .Distinct()
+                .ToListAsync();
+
+            var usedIds = new HashSet<int>(routingUsageIds.Concat(logUsageIds));
+            var data = equipments.Select(e => new
+            {
+                e.EquipmentId,
+                e.EquipmentCode,
+                e.EquipmentName,
+                e.TechnicalSpecification,
+                e.UsagePurpose,
+                e.AreaId,
+                Area = e.Area,
+                IsUsedInProduction = usedIds.Contains(e.EquipmentId),
+                CanEdit = !usedIds.Contains(e.EquipmentId),
+                CanDelete = !usedIds.Contains(e.EquipmentId)
+            });
+
+            return Ok(new { data, success = true, message = "Success" });
         }
 
         [HttpGet("{id}")]
@@ -35,7 +63,7 @@ namespace GMP_System.Controllers
 
             if (equipment == null)
             {
-                return NotFound(new { success = false, message = $"Không tìm thấy thiết bị có ID = {id}" });
+                return NotFound(new { success = false, message = $"Khong tim thay thiet bi co ID = {id}" });
             }
             return Ok(new { success = true, data = equipment });
         }
@@ -55,10 +83,21 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> Update(int id, Equipment equipment)
         {
             if (id != equipment.EquipmentId)
-                return BadRequest(new { success = false, message = "ID trên URL và trong Body không khớp nhau." });
+                return BadRequest(new { success = false, message = "ID tren URL va trong body khong khop nhau." });
 
             var existingEquipment = await _unitOfWork.Equipments.GetByIdAsync(id);
-            if (existingEquipment == null) return NotFound(new { success = false, message = "Không tìm thấy thiết bị này." });
+            if (existingEquipment == null) return NotFound(new { success = false, message = "Khong tim thay thiet bi." });
+
+            var isUsed = await _unitOfWork.BatchProcessLogs.Query().AnyAsync(x => x.EquipmentId == id)
+                || await _unitOfWork.RecipeRoutings.Query().AnyAsync(x => x.DefaultEquipmentId == id && x.OrderId != null);
+            if (isUsed)
+            {
+                return Conflict(new
+                {
+                    success = false,
+                    message = "Thiet bi da duoc su dung trong qua trinh san xuat, khong the chinh sua."
+                });
+            }
 
             existingEquipment.EquipmentCode = equipment.EquipmentCode;
             existingEquipment.EquipmentName = equipment.EquipmentName;
@@ -66,23 +105,33 @@ namespace GMP_System.Controllers
             existingEquipment.UsagePurpose = equipment.UsagePurpose;
             existingEquipment.AreaId = equipment.AreaId;
 
-
             _unitOfWork.Equipments.Update(existingEquipment);
             await _unitOfWork.CompleteAsync();
 
-            return Ok(new { success = true, message = "Cập nhật thành công!", equipmentId = id });
+            return Ok(new { success = true, message = "Cap nhat thanh cong!", equipmentId = id });
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var existingEquipment = await _unitOfWork.Equipments.GetByIdAsync(id);
-            if (existingEquipment == null) return NotFound(new { success = false, message = "Không tìm thấy thiết bị này." });
+            if (existingEquipment == null) return NotFound(new { success = false, message = "Khong tim thay thiet bi." });
+
+            var isUsed = await _unitOfWork.BatchProcessLogs.Query().AnyAsync(x => x.EquipmentId == id)
+                || await _unitOfWork.RecipeRoutings.Query().AnyAsync(x => x.DefaultEquipmentId == id && x.OrderId != null);
+            if (isUsed)
+            {
+                return Conflict(new
+                {
+                    success = false,
+                    message = "Thiet bi da duoc su dung trong qua trinh san xuat, khong the xoa."
+                });
+            }
 
             _unitOfWork.Equipments.Remove(existingEquipment);
             await _unitOfWork.CompleteAsync();
 
-            return Ok(new { success = true, message = "Xóa thành công!", equipmentId = id });
+            return Ok(new { success = true, message = "Xoa thanh cong!", equipmentId = id });
         }
     }
 }

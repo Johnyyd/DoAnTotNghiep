@@ -21,12 +21,15 @@ interface EditLotForm {
 }
 
 function normalizeMaterial(raw: any) {
+  const baseUomId = Number(raw.baseUomId ?? raw.BaseUomId ?? 0);
+  const fallbackById: Record<number, string> = { 1: 'kg', 2: 'g', 3: 'L', 4: 'Viên', 8: 'Cái' };
   return {
     materialId: Number(raw.materialId ?? raw.MaterialId ?? 0),
     materialCode: raw.materialCode ?? raw.MaterialCode ?? '-',
     materialName: raw.materialName ?? raw.MaterialName ?? '-',
     type: raw.type ?? raw.Type ?? 'RawMaterial',
-    baseUomName: raw.baseUomName ?? raw.BaseUomName ?? raw.baseUom?.uomName ?? raw.BaseUom?.UomName ?? '-',
+    baseUomId,
+    baseUomName: raw.baseUomName ?? raw.BaseUomName ?? raw.baseUom?.uomName ?? raw.BaseUom?.UomName ?? fallbackById[baseUomId] ?? '',
   };
 }
 
@@ -106,10 +109,13 @@ export default function Materials() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [importMaterialId, setImportMaterialId] = useState(0);
   const [importForm, setImportForm] = useState({ quantityCurrent: 0, manufactureDate: new Date().toISOString().slice(0, 10), expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString().slice(0, 10) });
+  const [importUnit, setImportUnit] = useState('');  // unit selected by user when importing
   const [importCertFile, setImportCertFile] = useState<File | null>(null);
   const [detailMaterial, setDetailMaterial] = useState<any | null>(null);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [editingLot, setEditingLot] = useState<EditLotForm | null>(null);
+  const [massDisplayUnit, setMassDisplayUnit] = useState<'kg' | 'g'>('kg');
+  const [volumeDisplayUnit, setVolumeDisplayUnit] = useState<'L' | 'ml'>('L');
 
   const [form, setForm] = useState<CreateMaterialLotForm>({
     materialCode: '',
@@ -140,6 +146,19 @@ export default function Materials() {
     return (rows as any[]).map(normalizeLot);
   }, [lotsRaw]);
 
+  const materialUnitById = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const m of materials as any[]) {
+      if (m.baseUomName) map.set(m.materialId, m.baseUomName);
+    }
+    for (const lot of (Array.isArray(lotsRaw) ? lotsRaw : (lotsRaw as any)?.data ?? []) as any[]) {
+      const mid = Number(lot.materialId ?? lot.MaterialId ?? 0);
+      const uom = lot.material?.baseUom?.uomName ?? lot.Material?.BaseUom?.UomName ?? lot.material?.baseUomName ?? lot.Material?.BaseUomName;
+      if (mid > 0 && uom && !map.get(mid)) map.set(mid, uom);
+    }
+    return map;
+  }, [materials, lotsRaw]);
+
   const filtered = useMemo(() => {
     const keyword = search.trim().toLowerCase();
     if (!keyword) return materials;
@@ -153,18 +172,47 @@ export default function Materials() {
     ]);
   };
 
+  // Convert quantity to the material's base unit
+  function convertToBaseUnit(value: number, fromUnit: string, baseUomName: string): number {
+    const from = fromUnit.toLowerCase();
+    const base = baseUomName.toLowerCase();
+    if (from === base) return value;
+    // kg <-> g conversions
+    if (base === 'kg' && from === 'g') return value / 1000;
+    if (base === 'g' && from === 'kg') return value * 1000;
+    // l <-> ml conversions
+    if (base === 'l' && from === 'ml') return value / 1000;
+    if (base === 'ml' && from === 'l') return value * 1000;
+    return value; // no conversion possible
+  }
+
+  // Get available unit options for a given base UOM
+  function getUnitOptions(baseUomName: string): { value: string; label: string }[] {
+    const base = baseUomName.toLowerCase();
+    if (base === 'kg') return [{ value: 'kg', label: 'kg' }, { value: 'g', label: 'g' }];
+    if (base === 'g') return [{ value: 'g', label: 'g' }, { value: 'kg', label: 'kg' }];
+    if (base === 'l') return [{ value: 'L', label: 'Lít' }, { value: 'ml', label: 'ml' }];
+    return [{ value: baseUomName, label: baseUomName }];
+  }
+
+  // Selected material for import
+  const selectedImportMaterial = useMemo(() => materials.find((m) => m.materialId === importMaterialId) ?? null, [materials, importMaterialId]);
+
   const importMutation = useMutation({
     mutationFn: async () => {
-      const mat = materials.find((m) => m.materialId === importMaterialId);
+      const mat = selectedImportMaterial;
       if (!mat) throw new Error('Vui lòng chọn nguyên liệu.');
       if (importForm.quantityCurrent <= 0) throw new Error('Số lượng phải lớn hơn 0.');
       const dateError = validateLotDates(importForm.manufactureDate, importForm.expiryDate);
       if (dateError) throw new Error(dateError);
 
+      const selectedUnit = importUnit || mat.baseUomName;
+      const convertedQty = convertToBaseUnit(importForm.quantityCurrent, selectedUnit, mat.baseUomName);
+
       await inventoryApi.receive({
         materialId: importMaterialId,
         lotNumber: buildAutoLotNumber(mat.materialCode),
-        quantityCurrent: importForm.quantityCurrent,
+        quantityCurrent: convertedQty,
         manufactureDate: importForm.manufactureDate,
         expiryDate: importForm.expiryDate,
       } as any);
@@ -177,6 +225,7 @@ export default function Materials() {
       await refreshLists();
       setShowImportModal(false);
       setImportCertFile(null);
+      setImportUnit('');
       setImportForm({ quantityCurrent: 0, manufactureDate: new Date().toISOString().slice(0, 10), expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString().slice(0, 10) });
       alert('Đã nhập nguyên liệu thành công.');
     },
@@ -312,6 +361,23 @@ export default function Materials() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowInput = tomorrow.toISOString().slice(0, 10);
 
+  // Vietnamese number format: dot for thousands, comma for decimal
+  const fmtVN = (n: number) => n.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
+  const convertDisplayQty = (value: number, unitRaw: string) => {
+    const unit = (unitRaw || '').toLowerCase();
+    if (unit === 'kg' || unit === 'g') {
+      return massDisplayUnit === 'kg'
+        ? { value: unit === 'kg' ? value : value / 1000, unit: 'kg' }
+        : { value: unit === 'g' ? value : value * 1000, unit: 'g' };
+    }
+    if (unit === 'l' || unit === 'ml') {
+      return volumeDisplayUnit === 'L'
+        ? { value: unit === 'l' ? value : value / 1000, unit: 'L' }
+        : { value: unit === 'ml' ? value : value * 1000, unit: 'ml' };
+    }
+    return { value, unit: unitRaw };
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -331,6 +397,18 @@ export default function Materials() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
           <input value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-9" placeholder="Tìm mã hoặc tên nguyên liệu..." />
         </div>
+        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+          <div className="flex items-center gap-3">
+            <span className="text-neutral-600">Hi?n th? kh?i l??ng:</span>
+            <label className="inline-flex items-center gap-1"><input type="radio" checked={massDisplayUnit === 'kg'} onChange={() => setMassDisplayUnit('kg')} /> kg</label>
+            <label className="inline-flex items-center gap-1"><input type="radio" checked={massDisplayUnit === 'g'} onChange={() => setMassDisplayUnit('g')} /> g</label>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-neutral-600">Hi?n th? th? t?ch:</span>
+            <label className="inline-flex items-center gap-1"><input type="radio" checked={volumeDisplayUnit === 'L'} onChange={() => setVolumeDisplayUnit('L')} /> L</label>
+            <label className="inline-flex items-center gap-1"><input type="radio" checked={volumeDisplayUnit === 'ml'} onChange={() => setVolumeDisplayUnit('ml')} /> ml</label>
+          </div>
+        </div>
       </div>
 
       <div className="card p-0 overflow-hidden">
@@ -343,7 +421,7 @@ export default function Materials() {
                 <tr>
                   <th>Mã</th>
                   <th className="w-1/2">Tên nguyên liệu</th>
-                  <th>Tổng tồn hiện tại</th>
+                  <th>Tồn kho</th>
                   <th className="text-right w-24">Thao tác</th>
                 </tr>
               </thead>
@@ -355,7 +433,12 @@ export default function Materials() {
                       <td><code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">{m.materialCode}</code></td>
                       <td className="font-medium text-neutral-900">{m.materialName}</td>
                       <td>
-                        {materialLots.reduce((sum: number, lot: any) => sum + (lot.quantityCurrent ?? 0), 0).toLocaleString()} {m.baseUomName || ''}
+                        {(() => {
+                          const total = materialLots.reduce((sum: number, lot: any) => sum + (lot.quantityCurrent ?? 0), 0);
+                          const unit = materialUnitById.get(m.materialId) ?? m.baseUomName ?? '';
+                          const converted = convertDisplayQty(total, unit);
+                          return `${fmtVN(converted.value)} ${converted.unit}`;
+                        })()}
                       </td>
 
                       <td className="text-right">
@@ -385,8 +468,8 @@ export default function Materials() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl p-6 space-y-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-2xl p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-2xl font-bold text-neutral-900">Thêm nguyên liệu mới</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input className="input" required placeholder="Mã nguyên liệu" value={form.materialCode} onChange={(e) => setForm({ ...form, materialCode: e.target.value })} />
@@ -400,8 +483,9 @@ export default function Materials() {
                 <select className="input" value={form.baseUomId} onChange={(e) => setForm({ ...form, baseUomId: Number(e.target.value) })}>
                   <option value={2}>g</option>
                   <option value={1}>kg</option>
-                  <option value={3}>viên</option>
-                  <option value={4}>lít</option>
+                  <option value={4}>Viên</option>
+                  <option value={3}>Lít</option>
+                  <option value={8}>Cái</option>
                 </select>
               </div>
               <div>
@@ -438,14 +522,24 @@ export default function Materials() {
             <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="text-xs text-neutral-500">Chọn nguyên liệu</label>
-                <select className="input" value={importMaterialId} onChange={(e) => setImportMaterialId(Number(e.target.value))}>
+                <select className="input" value={importMaterialId} onChange={(e) => { setImportMaterialId(Number(e.target.value)); setImportUnit(''); }}>
                   <option value={0}>Chọn nguyên liệu</option>
                   {materials.map((m) => <option key={m.materialId} value={m.materialId}>{m.materialCode} - {m.materialName}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-xs text-neutral-500">Số lượng nhập</label>
-                <input type="number" min={0.0001} className="input" value={importForm.quantityCurrent} onChange={(e) => setImportForm({ ...importForm, quantityCurrent: Number(e.target.value) })} />
+                <div className="flex gap-2">
+                  <input type="number" min={0.0001} step="any" className="input flex-1" value={importForm.quantityCurrent} onChange={(e) => setImportForm({ ...importForm, quantityCurrent: Number(e.target.value) })} />
+                  <select className="input w-24" value={importUnit || selectedImportMaterial?.baseUomName || ''} onChange={(e) => setImportUnit(e.target.value)}>
+                    {selectedImportMaterial ? getUnitOptions(selectedImportMaterial.baseUomName).map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    )) : <option value="">--</option>}
+                  </select>
+                </div>
+                {importUnit && selectedImportMaterial && importUnit.toLowerCase() !== selectedImportMaterial.baseUomName.toLowerCase() && importForm.quantityCurrent > 0 && (
+                  <p className="text-xs text-neutral-400 mt-1">≈ {convertToBaseUnit(importForm.quantityCurrent, importUnit, selectedImportMaterial.baseUomName).toFixed(4)} {selectedImportMaterial.baseUomName} (đơn vị gốc)</p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -504,7 +598,10 @@ export default function Materials() {
                       getMaterialLots(detailMaterial.materialId).map((lot) => (
                         <tr key={lot.lotId}>
                           <td>{lot.lotNumber}</td>
-                          <td>{lot.quantityCurrent.toLocaleString()} {detailMaterial.baseUomName || ''}</td>
+                          <td>{(() => {
+                            const converted = convertDisplayQty(lot.quantityCurrent, detailMaterial.baseUomName || '');
+                            return `${fmtVN(converted.value)} ${converted.unit}`;
+                          })()}</td>
                           <td>{formatDateDDMMYYYY(lot.manufactureDate)}</td>
                           <td>{formatDateDDMMYYYY(lot.expiryDate)}</td>
                           <td>{formatDateDDMMYYYY(lot.createdAt)}</td>

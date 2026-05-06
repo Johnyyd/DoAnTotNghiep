@@ -48,6 +48,8 @@ public partial class GmpContext : DbContext
 
     public virtual DbSet<BatchProcessParameterValue> BatchProcessParameterValues { get; set; } = null!;
 
+    public virtual DbSet<RecipeTechSpec> RecipeTechSpecs { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AppUser>(entity =>
@@ -425,6 +427,18 @@ public partial class GmpContext : DbContext
             entity.HasOne(d => d.ToUom).WithMany(p => p.UomConversionToUoms)
                 .HasForeignKey(d => d.ToUomId)
                 .HasConstraintName("FK__UomConver__ToUom__5EBF139D");
+        });
+
+        modelBuilder.Entity<RecipeTechSpec>(entity =>
+        {
+            entity.HasKey(e => e.SpecId);
+            entity.ToTable("RecipeTechSpecs");
+            entity.Property(e => e.Content).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.SortOrder).HasDefaultValue(0);
+            entity.Property(e => e.IsChecked).HasDefaultValue(false);
+            entity.HasOne(e => e.Recipe).WithMany()
+                .HasForeignKey(e => e.RecipeId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         OnModelCreatingPartial(modelBuilder);

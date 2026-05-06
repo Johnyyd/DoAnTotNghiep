@@ -162,14 +162,14 @@ export default function ProductionOrders() {
 
   const { data: batchesRaw } = useQuery({
     queryKey: ['batchesForOrder', batchPopupOrderId],
-    queryFn: () => productionBatchesApi.getAll(),
+    queryFn: () => productionBatchesApi.getByOrder(batchPopupOrderId!),
     enabled: batchPopupOrderId !== null,
+    refetchInterval: batchPopupOrderId !== null ? 3000 : false,
   });
 
   const batchesForPopup = useMemo(() => {
     if (batchPopupOrderId === null) return [];
-    const all = toRows<any>(batchesRaw);
-    return all.filter((b: any) => Number(b.orderId ?? b.OrderId ?? 0) === batchPopupOrderId);
+    return toRows<any>(batchesRaw);
   }, [batchesRaw, batchPopupOrderId]);
 
   const createOrderFromPlanMutation = useMutation({
@@ -238,6 +238,18 @@ export default function ProductionOrders() {
       certificatesApi.uploadBatchCertificate(batchNumber, file),
     onSuccess: () => { setUploadingForBatch(null); alert('Đã tải giấy kiểm nghiệm mẻ thành công.'); },
     onError: (err: any) => alert(err?.response?.data?.message ?? 'Không thể tải lên giấy kiểm nghiệm.'),
+  });
+
+  const holdOrderMutation = useMutation({
+    mutationFn: (id: number) => productionOrdersApi.hold(id),
+    onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ['productionOrders'] }); alert('Đã tạm dừng lệnh sản xuất.'); },
+    onError: (err: any) => alert(err?.response?.data?.message ?? err?.message ?? 'Không thể tạm dừng lệnh.'),
+  });
+
+  const resumeOrderMutation = useMutation({
+    mutationFn: (id: number) => productionOrdersApi.resume(id),
+    onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ['productionOrders'] }); alert('Đã chuyển lệnh về trạng thái Approved.'); },
+    onError: (err: any) => alert(err?.response?.data?.message ?? err?.message ?? 'Không thể tiếp tục lệnh.'),
   });
 
   const openCreateOrder = () => {
@@ -389,6 +401,12 @@ export default function ProductionOrders() {
                     <td>{order.plannedStartDate ? new Date(order.plannedStartDate).toLocaleDateString('vi-VN') : '-'}</td>
                     <td className="text-right">
                       <div className="flex justify-end gap-2">
+                        {order.status === 'Approved' && (
+                          <button onClick={() => holdOrderMutation.mutate(order.orderId)} className="btn-ghost text-sm text-orange-600">Tạm dừng</button>
+                        )}
+                        {order.status === 'Hold' && (
+                          <button onClick={() => resumeOrderMutation.mutate(order.orderId)} className="btn-ghost text-sm text-blue-600">Tiếp tục</button>
+                        )}
                         {(order.status === 'Draft' || order.status === 'Hold') && (
                           <button onClick={() => openEditOrder(order)} className="btn-ghost text-sm"><Pencil className="w-4 h-4 mr-1" />Sửa</button>
                         )}
@@ -411,8 +429,8 @@ export default function ProductionOrders() {
 
       {/* Order create/edit modal */}
       {showOrderModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl p-6 space-y-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => { setShowOrderModal(false); setEditingOrder(null); }}>
+          <div className="bg-white rounded-2xl w-full max-w-2xl p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-xl font-bold">{editingOrder ? 'Cập nhật lệnh sản xuất' : 'Tạo lệnh sản xuất'}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div><label className="text-xs text-neutral-500">Mã lệnh</label>
@@ -439,6 +457,41 @@ export default function ProductionOrders() {
                 <input type="date" className="input" min={orderForm.startDate ? orderForm.startDate.split('T')[0] : new Date().toISOString().split('T')[0]} value={orderForm.endDate ? orderForm.endDate.split('T')[0] : ''} onChange={(e) => setOrderForm({ ...orderForm, endDate: e.target.value })} />
               </div>
             </div>
+
+            {/* Hold order: packaging edit fields */}
+            {editingOrder && editingOrder.status === 'Hold' && (
+              <div className="border border-orange-200 bg-orange-50 rounded-xl p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-orange-700">Chỉnh sửa chi tiết đóng gói (lệnh đang Hold)</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <div><label className="text-xs text-neutral-500">Đơn vị hiển thị KL thành phẩm</label>
+                    <select className="input" value={planForm.massUnit} onChange={(e) => setPlanForm({ ...planForm, massUnit: e.target.value as MassUnit })}>
+                      <option value="kg">kg</option>
+                      <option value="g">g</option>
+                      <option value="vien">viên</option>
+                    </select>
+                  </div>
+                  <div><label className="text-xs text-neutral-500">Số thùng</label>
+                    <input type="number" min={0} className="input" value={planForm.cartons} onChange={(e) => setPlanForm({ ...planForm, cartons: Number(e.target.value) })} />
+                  </div>
+                  <div><label className="text-xs text-neutral-500">Số chai/thùng</label>
+                    <input type="number" min={0} className="input" value={planForm.bottlesPerCarton} onChange={(e) => setPlanForm({ ...planForm, bottlesPerCarton: Number(e.target.value) })} />
+                  </div>
+                  <div><label className="text-xs text-neutral-500">Số viên/chai</label>
+                    <input type="number" min={0} className="input" value={planForm.tabletsPerBottle} onChange={(e) => setPlanForm({ ...planForm, tabletsPerBottle: Number(e.target.value) })} />
+                  </div>
+                  <div><label className="text-xs text-neutral-500">Viên lẻ</label>
+                    <input type="number" min={0} className="input" value={planForm.looseTablets} onChange={(e) => setPlanForm({ ...planForm, looseTablets: Number(e.target.value) })} />
+                  </div>
+                  <div><label className="text-xs text-neutral-500">Tổng viên tính được</label>
+                    <input type="number" className="input bg-neutral-100" readOnly value={Math.max(planForm.cartons,0) * Math.max(planForm.bottlesPerCarton,0) * Math.max(planForm.tabletsPerBottle,0) + Math.max(planForm.looseTablets,0)} />
+                  </div>
+                </div>
+                <button className="btn-secondary text-sm" onClick={() => {
+                  const total = Math.max(planForm.cartons,0) * Math.max(planForm.bottlesPerCarton,0) * Math.max(planForm.tabletsPerBottle,0) + Math.max(planForm.looseTablets,0);
+                  setOrderForm({ ...orderForm, plannedQuantity: total });
+                }}>Áp dụng số lượng vào lệnh</button>
+              </div>
+            )}
             <div className="flex justify-end gap-2">
               <button onClick={() => { setShowOrderModal(false); setEditingOrder(null); }} className="btn-ghost">Hủy</button>
               <button onClick={() => (editingOrder ? updateOrderMutation.mutate() : createOrderMutation.mutate())} className="btn-primary">{editingOrder ? 'Lưu cập nhật' : 'Tạo mới'}</button>
@@ -449,8 +502,8 @@ export default function ProductionOrders() {
 
       {/* Batch popup */}
       {batchPopupOrderId !== null && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-5xl p-6 space-y-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => { setBatchPopupOrderId(null); setUploadingForBatch(null); }}>
+          <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold">Danh sách mẻ sản xuất</h2>
@@ -474,7 +527,7 @@ export default function ProductionOrders() {
                 </thead>
                 <tbody>
                   {batchesForPopup.length === 0 ? (
-                    <tr><td colSpan={6} className="text-center text-neutral-500 py-6">Chưa có mẻ nào cho lệnh này.</td></tr>
+                    <tr><td colSpan={5} className="text-center text-neutral-500 py-6">Chưa có mẻ nào cho lệnh này.</td></tr>
                   ) : batchesForPopup.map((b: any) => {
                     const s = b.status ?? b.Status ?? '';
                     const batchNum = b.batchNumber ?? b.BatchNumber ?? '';
