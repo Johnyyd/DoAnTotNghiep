@@ -63,7 +63,7 @@ namespace GMP_System.Controllers
 
             if (equipment == null)
             {
-                return NotFound(new { success = false, message = $"Khong tim thay thiet bi co ID = {id}" });
+                return NotFound(new { success = false, message = $"Không tìm thấy thiết bị có ID = {id}" });
             }
             return Ok(new { success = true, data = equipment });
         }
@@ -83,10 +83,10 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> Update(int id, Equipment equipment)
         {
             if (id != equipment.EquipmentId)
-                return BadRequest(new { success = false, message = "ID tren URL va trong body khong khop nhau." });
+                return BadRequest(new { success = false, message = "ID trên URL và trong Body không khớp nhau." });
 
             var existingEquipment = await _unitOfWork.Equipments.GetByIdAsync(id);
-            if (existingEquipment == null) return NotFound(new { success = false, message = "Khong tim thay thiet bi." });
+            if (existingEquipment == null) return NotFound(new { success = false, message = "Không tìm thấy thiết bị." });
 
             var isUsed = await _unitOfWork.BatchProcessLogs.Query().AnyAsync(x => x.EquipmentId == id)
                 || await _unitOfWork.RecipeRoutings.Query().AnyAsync(x => x.DefaultEquipmentId == id && x.OrderId != null);
@@ -108,14 +108,14 @@ namespace GMP_System.Controllers
             _unitOfWork.Equipments.Update(existingEquipment);
             await _unitOfWork.CompleteAsync();
 
-            return Ok(new { success = true, message = "Cap nhat thanh cong!", equipmentId = id });
+            return Ok(new { success = true, message = "Cập nhật thành công!", equipmentId = id });
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var existingEquipment = await _unitOfWork.Equipments.GetByIdAsync(id);
-            if (existingEquipment == null) return NotFound(new { success = false, message = "Khong tim thay thiet bi." });
+            if (existingEquipment == null) return NotFound(new { success = false, message = "Không tìm thấy thiết bị này." });
 
             var isUsed = await _unitOfWork.BatchProcessLogs.Query().AnyAsync(x => x.EquipmentId == id)
                 || await _unitOfWork.RecipeRoutings.Query().AnyAsync(x => x.DefaultEquipmentId == id && x.OrderId != null);
@@ -124,14 +124,14 @@ namespace GMP_System.Controllers
                 return Conflict(new
                 {
                     success = false,
-                    message = "Thiet bi da duoc su dung trong qua trinh san xuat, khong the xoa."
+                    message = "Thiết bị đã được sử dụng trong quá trình sản xuất, không thể xóa."
                 });
             }
 
             _unitOfWork.Equipments.Remove(existingEquipment);
             await _unitOfWork.CompleteAsync();
 
-            return Ok(new { success = true, message = "Xoa thanh cong!", equipmentId = id });
+            return Ok(new { success = true, message = "Xóa thành công!", equipmentId = id });
         }
     }
 }

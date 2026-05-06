@@ -66,7 +66,7 @@ namespace GMP_System.Controllers
                 .Where(b => b.BatchId == id)
                 .FirstOrDefaultAsync();
 
-            if (batch == null) return NotFound(new { success = false, message = "KhÃ´ng tÃ¬m tháº¥y máº» sáº£n xuáº¥t." });
+            if (batch == null) return NotFound(new { success = false, message = "Không tìm thấy mã sản xuất." });
 
             // Fetch Routings separately with StepParameters included
             var routingsQuery = _unitOfWork.RecipeRoutings.Query()
@@ -250,7 +250,7 @@ namespace GMP_System.Controllers
                     return BadRequest(new
                     {
                         success = false,
-                        message = "⚠ Vi phạm quy trình GMP: Không thể kết thúc mẻ vì vẫn còn công đoạn chưa hoàn thành hoặc chưa được QC duyệt.",
+                        message = "Không thể kết thúc mẻ vì vẫn còn công đoạn chưa hoàn thành hoặc chưa được QC duyệt.",
                         details = $"Công đoạn chưa xong: {string.Join(", ", missingStepNames)}"
                     });
                 }

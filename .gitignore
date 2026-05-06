@@ -30,6 +30,7 @@ TestResults.xml
 *.userosscache
 *.sln.docstates
 .gitnexus
+.github/
 .claude/
 .agent/
 *.zip

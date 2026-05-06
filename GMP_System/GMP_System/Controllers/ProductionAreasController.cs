@@ -64,10 +64,10 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> Update(int id, ProductionArea area)
         {
             if (id != area.AreaId)
-                return BadRequest(new { success = false, message = "ID tren URL va trong body khong khop nhau." });
+                return BadRequest(new { success = false, message = "ID trên URL và trong Body không khớp nhau." });
 
             var existing = await _unitOfWork.ProductionAreas.GetByIdAsync(id);
-            if (existing == null) return NotFound(new { success = false, message = "Khong tim thay khu san xuat." });
+            if (existing == null) return NotFound(new { success = false, message = "Không tìm thấy khu sản xuất." });
 
             var isInProcess = await (
                 from rr in _unitOfWork.RecipeRoutings.Query()
@@ -81,7 +81,7 @@ namespace GMP_System.Controllers
                 return Conflict(new
                 {
                     success = false,
-                    message = "Khu san xuat dang duoc su dung boi lenh san xuat InProcess, khong the chinh sua."
+                    message = "Khu sản xuất đang được sử dụng bởi lệnh sản xuất, không thể chỉnh sửa."
                 });
             }
 
@@ -92,14 +92,14 @@ namespace GMP_System.Controllers
             _unitOfWork.ProductionAreas.Update(existing);
             await _unitOfWork.CompleteAsync();
 
-            return Ok(new { success = true, message = "Cap nhat thanh cong!", areaId = id });
+            return Ok(new { success = true, message = "Cập nhật thành công!", areaId = id });
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var existing = await _unitOfWork.ProductionAreas.GetByIdAsync(id);
-            if (existing == null) return NotFound(new { success = false, message = "Khong tim thay khu san xuat." });
+            if (existing == null) return NotFound(new { success = false, message = "Không tìm thấy khu sản xuất." });
 
             var isInProcess = await (
                 from rr in _unitOfWork.RecipeRoutings.Query()
@@ -113,14 +113,14 @@ namespace GMP_System.Controllers
                 return Conflict(new
                 {
                     success = false,
-                    message = "Khu san xuat dang duoc su dung boi lenh san xuat InProcess, khong the xoa."
+                    message = "Khu sản xuất đang được sử dụng bởi lệnh sản xuất, không thể xóa."
                 });
             }
 
             _unitOfWork.ProductionAreas.Remove(existing);
             await _unitOfWork.CompleteAsync();
 
-            return Ok(new { success = true, message = "Xoa thanh cong!", areaId = id });
+            return Ok(new { success = true, message = "Xóa thành công!", areaId = id });
         }
     }
 }
