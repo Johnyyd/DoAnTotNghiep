@@ -50,16 +50,12 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
   final _noteCtrl = TextEditingController();
   final _silicagelCtrl = TextEditingController();
 
-  // Expanded GMP Parameters
-  final _tgGiaiDoan1Ctrl = TextEditingController();
-  final _tgGiaiDoan2Ctrl = TextEditingController();
-  final _tieuChuanRSDCtrl = TextEditingController();
-  final _rsdThucTeCtrl = TextEditingController();
-
   String _phongSach = 'Sạch';
   String _mayTron = 'Sạch';
   String _dungCu = 'Sạch';
   bool _napLieuDungSOP = true;
+  bool _tuiPE2Lop = true;
+  bool _thungInox = true;
   String _slDongGoi = '0';
 
   final Map<String, String> _actualMaterials = {};
@@ -79,6 +75,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
       if (!widget.isViewer) {
         startTimeUpdates([_timeCtrl, _timeStartCtrl]);
         _timeStartCtrl.addListener(_autoCalcTimeEnd);
+        _tgThucTeCtrl.addListener(_autoCalcTimeEnd);
       }
     });
   }
@@ -220,13 +217,15 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
           _tyTrongCtrl.text = params['tyTrongGo'] ?? '';
           _slDongGoi = params['slDongGoiKg'] ?? '0';
 
-          _tgGiaiDoan1Ctrl.text = params['tgGiaiDoan1'] ?? '';
-          _tgGiaiDoan2Ctrl.text = params['tgGiaiDoan2'] ?? '';
-          _tieuChuanRSDCtrl.text = params['tieuChuanRSD'] ?? '';
-          _rsdThucTeCtrl.text = params['rsdThucTe'] ?? '';
           _silicagelCtrl.text = params['slSilicagel'] ?? '';
           if (params['napLieuDungSOP'] != null) {
             _napLieuDungSOP = params['napLieuDungSOP'] == true;
+          }
+          if (params['tuiPE2Lop'] != null) {
+            _tuiPE2Lop = params['tuiPE2Lop'] == true;
+          }
+          if (params['thungInox'] != null) {
+            _thungInox = params['thungInox'] == true;
           }
 
           if (params['khoiLuongThucTe'] != null) {
@@ -307,14 +306,14 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
   }
 
   void _autoCalcTimeEnd() {
-    if (_timeStartCtrl.text.isNotEmpty && _tgCaiDatCtrl.text.isNotEmpty) {
+    if (_timeStartCtrl.text.isNotEmpty && _tgThucTeCtrl.text.isNotEmpty) {
       try {
         final parts = _timeStartCtrl.text.split(':');
         if (parts.length == 2) {
           final h = int.parse(parts[0]);
           final m = int.parse(parts[1]);
-          final minutesToAdd = int.tryParse(_tgCaiDatCtrl.text) ?? 0;
-          if (minutesToAdd > 0) {
+          final minutesToAdd = int.tryParse(_tgThucTeCtrl.text) ?? 0;
+          if (minutesToAdd >= 0) {
             final timeStart = DateTime(2026, 1, 1, h, m);
             final timeEnd = timeStart.add(Duration(minutes: minutesToAdd));
             _timeEndCtrl.text =
@@ -351,10 +350,6 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
     _duPhamCtrl.dispose();
     _tyTrongCtrl.dispose();
     _noteCtrl.dispose();
-    _tgGiaiDoan1Ctrl.dispose();
-    _tgGiaiDoan2Ctrl.dispose();
-    _tieuChuanRSDCtrl.dispose();
-    _rsdThucTeCtrl.dispose();
     _silicagelCtrl.dispose();
     super.dispose();
   }
@@ -525,12 +520,10 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
       "duPhamLoSo": _duPhamCtrl.text,
       "tyTrongGo": _tyTrongCtrl.text,
       "slDongGoiKg": _slDongGoi,
-      "tgGiaiDoan1": _tgGiaiDoan1Ctrl.text,
-      "tgGiaiDoan2": _tgGiaiDoan2Ctrl.text,
-      "tieuChuanRSD": _tieuChuanRSDCtrl.text,
-      "rsdThucTe": _rsdThucTeCtrl.text,
       "slSilicagel": _silicagelCtrl.text,
       "napLieuDungSOP": _napLieuDungSOP,
+      "tuiPE2Lop": _tuiPE2Lop,
+      "thungInox": _thungInox,
     };
 
     final finalNotes = devNotes != null
@@ -844,13 +837,10 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
             const SizedBox(width: 16),
             Expanded(
                 child: StandardInputField(
-                    label: 'Giờ kết thúc',
+                    label: 'Giờ kết thúc (Tự động)',
                     controller: _timeEndCtrl,
-                    suffixIcon: IconButton(
-                        icon: const Icon(Icons.access_time),
-                        onPressed: widget.isViewer
-                            ? null
-                            : () => _setCurrentTime(_timeEndCtrl)))),
+                    readOnly: true,
+                    suffixIcon: const Icon(Icons.lock_clock, size: 20, color: Colors.grey))),
           ],
         ),
         Row(
@@ -884,40 +874,6 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
             final requiredQty = item['quantity']?.toString() ?? '0.00';
             return _buildComparisonRow(materialName, materialName, requiredQty);
           }),
-        const FormSectionHeader('THÔNG SỐ TRỘN CHI TIẾT'),
-        Row(
-          children: [
-            Expanded(
-                child: StandardInputField(
-                    label: 'TG Gđ 1 (phút)',
-                    controller: _tgGiaiDoan1Ctrl,
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
-                    keyboardType: TextInputType.number)),
-            const SizedBox(width: 16),
-            Expanded(
-                child: StandardInputField(
-                    label: 'TG Gđ 2 (phút)',
-                    controller: _tgGiaiDoan2Ctrl,
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
-                    keyboardType: TextInputType.number)),
-          ],
-        ),
-        Row(
-          children: [
-            Expanded(
-                child: StandardInputField(
-                    label: 'Tiêu chuẩn RSD (%)',
-                    controller: _tieuChuanRSDCtrl,
-                    hint: '<5%')),
-            const SizedBox(width: 16),
-            Expanded(
-                child: StandardInputField(
-                    label: 'RSD thực tế (%)',
-                    controller: _rsdThucTeCtrl,
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
-                    keyboardType: TextInputType.number)),
-          ],
-        ),
       ],
     );
   }
@@ -963,6 +919,22 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
           ],
         ),
         
+        const FormSectionHeader('QUY CÁCH ĐÓNG GÓI & BẢO QUẢN (SOP)'),
+        SwitchListTile(
+          title: const Text('Chứa trong túi PE 2 lớp', style: TextStyle(fontSize: 13)),
+          value: _tuiPE2Lop,
+          onChanged: widget.isViewer ? null : (v) => setState(() => _tuiPE2Lop = v),
+          activeColor: Colors.blue,
+          contentPadding: EdgeInsets.zero,
+        ),
+        SwitchListTile(
+          title: const Text('Xếp trong thùng inox', style: TextStyle(fontSize: 13)),
+          value: _thungInox,
+          onChanged: widget.isViewer ? null : (v) => setState(() => _thungInox = v),
+          activeColor: Colors.blue,
+          contentPadding: EdgeInsets.zero,
+        ),
+        const SizedBox(height: 8),
         StandardInputField(
           label: 'Số lượng Silicagel đã thêm (viên)',
           controller: _silicagelCtrl,
