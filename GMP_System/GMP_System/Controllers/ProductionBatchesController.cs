@@ -104,10 +104,16 @@ namespace GMP_System.Controllers
                         .Select(l => l.LotNumber) 
                         .FirstOrDefaultAsync();
 
+                    decimal scaledQuantity = bom.RequiredQuantity;
+                    if (batch.Order.PlannedQuantity > 0 && batch.PlannedQuantity.HasValue)
+                    {
+                        scaledQuantity = (bom.RequiredQuantity * batch.PlannedQuantity.Value) / batch.Order.PlannedQuantity;
+                    }
+
                     bomsWithQC.Add(new {
                         bom.OrderBomId,
                         bom.MaterialId,
-                        Quantity = bom.RequiredQuantity, 
+                        Quantity = scaledQuantity, 
                         bom.UomId,
                         Material = new {
                             MaterialName = bom.MaterialName,
@@ -144,7 +150,8 @@ namespace GMP_System.Controllers
                             }
                         },
                         RecipeBoms = bomsWithQC
-                    }
+                    },
+                    ProductionOrderBoms = bomsWithQC
                 },
                 Routings = finalRoutings.OrderBy(r => r.StepNumber).Select(r => new {
                     r.RoutingId,

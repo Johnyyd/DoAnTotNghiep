@@ -323,16 +323,29 @@ namespace GMP_System.Controllers
                         int numBatches = 1;
                         if (batchSize > 0)
                         {
-                            numBatches = (int)Math.Ceiling(order.PlannedQuantity / batchSize);
+                            // BatchSize is interpreted as mg/unit. 
+                            // Max capacity per batch is 50kg (50,000,000 mg).
+                            decimal totalWeightMg = order.PlannedQuantity * batchSize;
+                            decimal maxBatchWeightMg = 50000000m; // 50kg
+                            numBatches = (int)Math.Ceiling(totalWeightMg / maxBatchWeightMg);
+                            if (numBatches < 1) numBatches = 1;
                         }
+
+                        decimal remainingUnits = order.PlannedQuantity;
+                        decimal maxUnitsPerBatch = batchSize > 0 ? Math.Floor(50000000m / batchSize) : order.PlannedQuantity;
+                        if (maxUnitsPerBatch < 1) maxUnitsPerBatch = 1;
 
                         for (int i = 0; i < numBatches; i++)
                         {
+                            decimal currentBatchUnits = Math.Min(remainingUnits, maxUnitsPerBatch);
+                            remainingUnits -= currentBatchUnits;
+
                             string batchNumber = $"B{order.OrderCode.Substring(3)}-{(i + 1):D2}";
                             await _unitOfWork.ProductionBatches.AddAsync(new ProductionBatch
                             {
                                 OrderId = order.OrderId,
                                 BatchNumber = batchNumber,
+                                PlannedQuantity = currentBatchUnits,
                                 Status = (i == 0 && order.Status == "In-Process") ? "In-Process" : "Scheduled",
                                 CurrentStep = 0,
                                 ManufactureDate = DateTime.Now
