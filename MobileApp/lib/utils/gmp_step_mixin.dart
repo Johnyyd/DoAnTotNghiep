@@ -73,42 +73,110 @@ mixin GmpStepMixin<T extends StatefulWidget> on State<T> {
 
   /// Cập nhật trạng thái ô nhập liệu dựa trên Min-Max từ DB
   void validateInput(String fieldKey, String value, List<dynamic> standardParams, {String? matchName}) {
-    if (standardParams.isEmpty) {
-      debugPrint("Validation: standardParams is empty for $fieldKey");
-      return;
-    }
-
+    final lookupName = (matchName ?? fieldKey).toLowerCase();
     final val = double.tryParse(value.replaceAll(',', '.')); // Handle comma as decimal separator
+    
     if (val == null) {
       if (mounted) setState(() => inputStatuses[fieldKey] = 'none');
       return;
     }
 
-    final lookupName = (matchName ?? fieldKey).toLowerCase();
-    
-    // Tìm parameter khớp nhất
-    final sp = standardParams.firstWhere(
+    // 1. Tìm parameter khớp nhất trong DB
+    final sp = (standardParams.isNotEmpty) ? standardParams.firstWhere(
       (p) {
         final pName = (p['parameterName'] as String? ?? '').toLowerCase();
         return pName.contains(lookupName) || lookupName.contains(pName);
       },
       orElse: () => null,
-    );
+    ) : null;
+
+    String status = 'none';
 
     if (sp != null) {
       final min = sp['minValue'] != null ? (sp['minValue'] as num).toDouble() : null;
       final max = sp['maxValue'] != null ? (sp['maxValue'] as num).toDouble() : null;
 
-      String status = 'none';
       if (min != null && val < min) status = 'error';
       if (max != null && val > max) status = 'error';
-      
-      debugPrint("Validation [$fieldKey]: val=$val, min=$min, max=$max => status=$status");
-
-      if (mounted) setState(() => inputStatuses[fieldKey] = status);
     } else {
-      debugPrint("Validation: Could not find parameter matching '$lookupName'");
+      // 2. Logic dự phòng: Nếu không có tham số trong DB, áp dụng quy tắc mặc định (Giống Sấy TD 8)
+      // Chỉ áp dụng cho thông số PHÒNG/MÔI TRƯỜNG, không áp dụng cho NGUYÊN LIỆU (sau sấy, thực tế...)
+      final isRoom = lookupName.contains('phòng') || lookupName.contains('room') || lookupName.contains('môi trường');
+      final isMaterial = lookupName.contains('sau sấy') || lookupName.contains('thực tế') || lookupName.contains('nguyên liệu') || lookupName.contains('thành phẩm');
+
+      if (isRoom && !isMaterial) {
+        if (lookupName.contains('áp lực') || lookupName.contains('pressure')) {
+          if (val < 10) status = 'error';
+          else status = 'valid';
+        } else if (lookupName.contains('nhiệt độ') || lookupName.contains('temperature')) {
+          if (val < 21 || val > 25) status = 'error';
+          else status = 'valid';
+        } else if (lookupName.contains('độ ẩm') || lookupName.contains('humidity')) {
+          if (val < 45 || val > 70) status = 'error';
+          else status = 'valid';
+        }
+      } else if (lookupName.contains('áp lực') || lookupName.contains('pressure')) {
+        // Áp lực phòng đọc (kể cả không ghi chữ phòng) vẫn mặc định >= 10 Pa
+        if (val < 10) status = 'error';
+        else status = 'valid';
+      }
     }
+    
+    debugPrint("Validation [$fieldKey]: val=$val, status=$status (Matched: ${sp?['parameterName'] ?? 'Default'})");
+    if (mounted) setState(() => inputStatuses[fieldKey] = status);
+  }
+
+  /// Lấy chuỗi hiển thị tiêu chuẩn (VD: "Chuẩn: 21 - 25 °C")
+  /// Tự động áp dụng giá trị mặc định cho Nhiệt độ, Độ ẩm, Áp suất nếu không có trong DB.
+  String? getStandardText(String paramName, List<dynamic> standardParams) {
+    final lookupName = paramName.toLowerCase();
+    
+    // 1. Tìm trong DB trước
+    final sp = (standardParams.isNotEmpty) ? standardParams.firstWhere(
+      (p) {
+        final pName = (p['parameterName'] as String? ?? '').toLowerCase();
+        return pName.contains(lookupName) || lookupName.contains(pName);
+      },
+      orElse: () => null,
+    ) : null;
+
+    if (sp != null) {
+      if (sp['standardValue'] != null) return "Chuẩn: ${sp['standardValue']}";
+      
+      final min = sp['minValue'];
+      final max = sp['maxValue'];
+      final unit = sp['unit'] ?? '';
+      
+      if (min != null && max != null) {
+        if (min == max) return "Chuẩn: ${min.toString().replaceAll('.0', '')} $unit";
+        return "Chuẩn: ${min.toString().replaceAll('.0', '')} - ${max.toString().replaceAll('.0', '')} $unit";
+      } else if (min != null) {
+        return "Chuẩn: >= ${min.toString().replaceAll('.0', '')} $unit";
+      } else if (max != null) {
+        return "Chuẩn: <= ${max.toString().replaceAll('.0', '')} $unit";
+      }
+    }
+
+    // 2. Nếu không có trong DB, áp dụng giá trị mặc định cho thông số PHÒNG
+    final isRoom = lookupName.contains('phòng') || lookupName.contains('room') || lookupName.contains('môi trường');
+    final isMaterial = lookupName.contains('sau sấy') || lookupName.contains('thực tế') || lookupName.contains('nguyên liệu') || lookupName.contains('thành phẩm');
+
+    if (isRoom && !isMaterial) {
+      if (lookupName.contains('nhiệt độ') || lookupName.contains('temperature')) {
+        return "Chuẩn: 21 - 25 °C";
+      }
+      if (lookupName.contains('độ ẩm') || lookupName.contains('humidity')) {
+        return "Chuẩn: 45 - 70 %";
+      }
+      if (lookupName.contains('áp lực') || lookupName.contains('pressure')) {
+        return "Chuẩn: >= 10 Pa";
+      }
+    } else if (lookupName.contains('áp lực') || lookupName.contains('pressure')) {
+      // Áp lực phòng (mặc định cho mọi bước)
+      return "Chuẩn: >= 10 Pa";
+    }
+
+    return null;
   }
 
 

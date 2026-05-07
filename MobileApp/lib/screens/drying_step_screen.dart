@@ -125,36 +125,6 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
     }
   }
 
-  String? _getStandardText(String paramName) {
-    if (_standardParams.isEmpty) return null;
-    try {
-      final sp = _standardParams.firstWhere(
-        (p) => (p['parameterName'] as String)
-            .toLowerCase()
-            .contains(paramName.toLowerCase()),
-        orElse: () => null,
-      );
-      if (sp != null) {
-        if (sp['standardValue'] != null) {
-          return "Chuẩn: ${sp['standardValue']}";
-        }
-        final min = sp['minValue'];
-        final max = sp['maxValue'];
-        final unit = sp['unit'] ?? '';
-        if (min != null && max != null) {
-          if (min == max) {
-            return "Chuẩn: ${min.toString().replaceAll('.0', '')} $unit";
-          }
-          return "Chuẩn: ${min.toString().replaceAll('.0', '')} - ${max.toString().replaceAll('.0', '')} $unit";
-        } else if (min != null) {
-          return "Chuẩn: >= ${min.toString().replaceAll('.0', '')} $unit";
-        } else if (max != null) {
-          return "Chuẩn: <= ${max.toString().replaceAll('.0', '')} $unit";
-        }
-      }
-    } catch (_) {}
-    return null;
-  }
 
   String _normalize(String s) {
     return s.replaceAll(RegExp(r'[\s\-]'), '').toLowerCase();
@@ -468,11 +438,20 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
     } else {
       final truocVal = double.tryParse(truocStr) ?? 0;
       final sauVal = double.tryParse(sauStr) ?? 0;
-
       if (sauVal <= 0) {
         if (mounted) setState(() => inputStatuses['slSauSay'] = 'invalid');
-      } else if (truocVal > 0 && sauVal > truocVal) {
-        if (mounted) setState(() => inputStatuses['slSauSay'] = 'invalid');
+      } else if (truocVal > 0) {
+        if (sauVal > truocVal) {
+          if (mounted) setState(() => inputStatuses['slSauSay'] = 'invalid');
+        } else {
+          // Tính hao hụt (%)
+          final lossPercent = ((truocVal - sauVal) / truocVal) * 100;
+          if (lossPercent > 9.0) {
+            if (mounted) setState(() => inputStatuses['slSauSay'] = 'warning');
+          } else {
+            if (mounted) setState(() => inputStatuses['slSauSay'] = 'valid');
+          }
+        }
       } else {
         if (mounted) setState(() => inputStatuses['slSauSay'] = 'valid');
       }
@@ -578,6 +557,14 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
 
 
   Future<void> _nextPhase() async {
+    // Standard GMP validation for all phases
+    if (inputStatuses.values.contains('error')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Vui lòng điều chỉnh các thông số đang báo đỏ (ngoài khoảng cho phép) trước khi tiếp tục!'), backgroundColor: Colors.red)
+      );
+      return;
+    }
+
     if (_currentPhase == ExecutionPhase.precheck) {
       // Logic kiểm tra độ ẩm cho NLC 3
       if (widget.stepName.contains('NLC 3')) {
@@ -697,6 +684,30 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
         setState(() => isSaving = false);
         return false;
       }
+
+      // Kiểm tra hao hụt 9%
+      final lossPercent = ((truocVal - sauVal) / truocVal) * 100;
+      if (lossPercent > 9.0) {
+        final proceed = await showDialog<bool>(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: const Text('CẢNH BÁO HAO HỤT (>9%)', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            content: Text('Phát hiện hao hụt sau sấy là ${lossPercent.toStringAsFixed(2)}%, vượt quá giới hạn SOP (9%).\nBạn có chắc chắn muốn tiếp tục?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Hủy & Kiểm tra lại')),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(c, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Tiếp tục', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          )
+        );
+        if (proceed != true) {
+          setState(() => isSaving = false);
+          return false;
+        }
+      }
     }
 
     // Gói dữ liệu vào 'rawInputs' để màn hình QC đọc được
@@ -723,6 +734,8 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
         'slTruocSay': _slTruocCtrl.text,
         'slSauSay': _slSauCtrl.text,
         'mauKiemTra': _mauKiemTra,
+        'netWeight': (double.tryParse(_slSauCtrl.text) ?? 0) - ((double.tryParse(_mauKiemTra) ?? 0) / 1000.0),
+        'yieldLoss': _slTruocCtrl.text.isNotEmpty ? (((double.tryParse(_slTruocCtrl.text) ?? 0) - (double.tryParse(_slSauCtrl.text) ?? 0)) / (double.tryParse(_slTruocCtrl.text) ?? 1) * 100) : 0,
         'viTriCuaGio': _cuaGioCtrl.text,
         'doAmDauVao': _inputMoistureCtrl.text,
         'doAmSauSay': _humidAfterCtrl.text,
@@ -983,7 +996,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
             inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
             readOnly: _isPhase1Locked,
             hint: 'Tiêu chuẩn: > 5%',
-            standardText: _getStandardText('Độ ẩm NLC 3 (Input)'),
+            standardText: getStandardText('Độ ẩm NLC 3 (Input)', _standardParams),
           ),
           const Divider(),
         ],
@@ -1042,7 +1055,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
               readOnly: _isPhase1Locked,
               status: inputStatuses['nhietDo'] ?? 'none',
-              standardText: _getStandardText('Nhiệt độ phòng'),
+              standardText: getStandardText('Nhiệt độ phòng', _standardParams),
               onChanged: (v) => validateInput('nhietDo', v, _standardParams, matchName: 'Nhiệt độ phòng'),
 
             )),
@@ -1055,7 +1068,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
               readOnly: _isPhase1Locked,
               status: inputStatuses['doAm'] ?? 'none',
-              standardText: _getStandardText('Độ ẩm phòng'),
+              standardText: getStandardText('Độ ẩm phòng', _standardParams),
               onChanged: (v) => validateInput('doAm', v, _standardParams, matchName: 'Độ ẩm phòng'),
 
             )),
@@ -1068,7 +1081,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
           inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
           readOnly: _isPhase1Locked,
           status: inputStatuses['apLuc'] ?? 'none',
-          standardText: _getStandardText('Áp lực phòng'),
+          standardText: getStandardText('Áp lực phòng', _standardParams),
           onChanged: (v) => validateInput('apLuc', v, _standardParams, matchName: 'Áp lực phòng'),
 
         ),
@@ -1167,7 +1180,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
               readOnly: _isPhase2Locked,
               status: inputStatuses['nhietDoKhiVao'] ?? 'none',
-              standardText: _getStandardText('Nhiệt độ sấy'),
+              standardText: getStandardText('Nhiệt độ sấy', _standardParams),
               onChanged: (v) => validateInput('nhietDoKhiVao', v, _standardParams, matchName: 'Nhiệt độ sấy'),
 
             )),
@@ -1184,7 +1197,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
               readOnly: _isPhase2Locked,
               status: inputStatuses['tgSayCaiDat'] ?? 'none',
-              standardText: _getStandardText('Thời gian sấy'),
+              standardText: getStandardText('Thời gian sấy', _standardParams),
               onChanged: (v) {
                 validateInput('tgSayCaiDat', v, _standardParams,
                     matchName: 'Thời gian sấy');
@@ -1198,7 +1211,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
               label: 'Vị trí cửa gió',
               controller: _cuaGioCtrl,
               readOnly: true,
-              standardText: _getStandardText('Vị trí cửa gió'),
+              standardText: getStandardText('Vị trí cửa gió', _standardParams),
             )),
           ],
         ),
@@ -1296,9 +1309,9 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
           inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
           readOnly: _isPhase4Locked || _secondsRemaining > 0,
           status: inputStatuses['doAmSauSay'] ?? 'none',
-          standardText: _getStandardText('Độ ẩm thực tế'),
+          standardText: getStandardText('Độ ẩm sau sấy', _standardParams),
           onChanged: (v) =>
-              validateInput('doAmSauSay', v, _standardParams, matchName: 'Độ ẩm'),
+              validateInput('doAmSauSay', v, _standardParams, matchName: 'Độ ẩm sau sấy'),
         ),
         DryingSampleField(
             onResultChanged: (v) => _mauKiemTra = v,
@@ -1315,6 +1328,44 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
           status: inputStatuses['slSauSay'] ?? 'none',
           onChanged: (v) => _validateWeightStatus(),
         ),
+        if (_slSauCtrl.text.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Khối lượng tịnh (sau trừ mẫu):', style: TextStyle(fontSize: 13)),
+                      Text('${((double.tryParse(_slSauCtrl.text) ?? 0) - ((double.tryParse(_mauKiemTra) ?? 0) / 1000.0)).toStringAsFixed(3)} kg', 
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                    ],
+                  ),
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Hao hụt sau sấy:', style: TextStyle(fontSize: 13)),
+                      Text('${_slTruocCtrl.text.isNotEmpty ? (((double.tryParse(_slTruocCtrl.text) ?? 0) - (double.tryParse(_slSauCtrl.text) ?? 0)) / (double.tryParse(_slTruocCtrl.text) ?? 1) * 100).toStringAsFixed(2) : 0}%', 
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          color: _slTruocCtrl.text.isNotEmpty && (((double.tryParse(_slTruocCtrl.text) ?? 0) - (double.tryParse(_slSauCtrl.text) ?? 0)) / (double.tryParse(_slTruocCtrl.text) ?? 1) * 100) > 9.0 
+                            ? Colors.red 
+                            : Colors.green
+                        )),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         const SizedBox(height: 20),
         if (_secondsRemaining == 0)
           ElevatedButton.icon(
@@ -1323,10 +1374,13 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
               final humidVal = double.tryParse(_humidAfterCtrl.text) ?? 0;
               
               // Lấy tiêu chuẩn từ standardParams (nếu có)
-              double maxAllowed = 5.0; // Mặc định 5%
+              double maxAllowed = 5.0; // Mặc định 5% cho NLC
               try {
                 final sp = _standardParams.firstWhere(
-                  (p) => (p['parameterName'] as String).toLowerCase().contains('độ ẩm'),
+                  (p) {
+                    final name = (p['parameterName'] as String? ?? '').toLowerCase();
+                    return name.contains('độ ẩm') && !name.contains('phòng');
+                  },
                   orElse: () => null
                 );
                 if (sp != null && sp['maxValue'] != null) {

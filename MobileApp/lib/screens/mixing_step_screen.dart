@@ -80,36 +80,6 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
     });
   }
 
-  String? _getStandardText(String paramName) {
-    if (_standardParams.isEmpty) return null;
-    try {
-      final sp = _standardParams.firstWhere(
-        (p) => (p['parameterName'] as String)
-            .toLowerCase()
-            .contains(paramName.toLowerCase()),
-        orElse: () => null,
-      );
-      if (sp != null) {
-        if (sp['standardValue'] != null) {
-          return "Chuẩn: ${sp['standardValue']}";
-        }
-        final min = sp['minValue'];
-        final max = sp['maxValue'];
-        final unit = sp['unit'] ?? '';
-        if (min != null && max != null) {
-          if (min == max) {
-            return "Chuẩn: ${min.toString().replaceAll('.0', '')} $unit";
-          }
-          return "Chuẩn: ${min.toString().replaceAll('.0', '')} - ${max.toString().replaceAll('.0', '')} $unit";
-        } else if (min != null) {
-          return "Chuẩn: >= ${min.toString().replaceAll('.0', '')} $unit";
-        } else if (max != null) {
-          return "Chuẩn: <= ${max.toString().replaceAll('.0', '')} $unit";
-        }
-      }
-    } catch (_) {}
-    return null;
-  }
 
   Future<void> _loadDataFromDB() async {
     if (widget.batchId == null) {
@@ -452,6 +422,14 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
 
 
   Future<void> _nextPhase() async {
+    // Standard GMP validation for all phases
+    if (inputStatuses.values.contains('error')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Vui lòng điều chỉnh các thông số đang báo đỏ (ngoài khoảng cho phép) trước khi tiếp tục!'), backgroundColor: Colors.red)
+      );
+      return;
+    }
+
     if (_currentPhase == ExecutionPhase.precheck) {
       if (_timeStartCtrl.text.isEmpty) {
         final now = DateTime.now();
@@ -773,7 +751,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
               label: 'Nhiệt độ (°C)',
               controller: _tempCtrl,
             status: inputStatuses['nhietDo'] ?? 'none',
-            standardText: _getStandardText('Nhiệt độ phòng'),
+            standardText: getStandardText('Nhiệt độ phòng', _standardParams),
             keyboardType: TextInputType.number,
             onChanged: (v) => validateInput('nhietDo', v, _standardParams, matchName: 'Nhiệt độ phòng'),
 
@@ -784,7 +762,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
               label: 'Độ ẩm (%)',
               controller: _humidCtrl,
             status: inputStatuses['doAm'] ?? 'none',
-            standardText: _getStandardText('Độ ẩm phòng'),
+            standardText: getStandardText('Độ ẩm phòng', _standardParams),
             keyboardType: TextInputType.number,
             onChanged: (v) => validateInput('doAm', v, _standardParams, matchName: 'Độ ẩm phòng'),
 
@@ -795,7 +773,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
           label: 'Áp lực (Pa)',
           controller: _pressCtrl,
         status: inputStatuses['apLuc'] ?? 'none',
-        standardText: _getStandardText('Áp lực phòng'),
+        standardText: getStandardText('Áp lực phòng', _standardParams),
         keyboardType: TextInputType.number,
         inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
         onChanged: (v) => validateInput('apLuc', v, _standardParams, matchName: 'Áp lực phòng'),

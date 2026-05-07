@@ -88,35 +88,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     }
   }
 
-  String? _getStandardText(String paramName) {
-    if (_standardParams.isEmpty) {
-      return null;
-    }
-    try {
-      final sp = _standardParams.firstWhere(
-        (p) => (p['parameterName'] as String)
-            .toLowerCase()
-            .contains(paramName.toLowerCase()),
-        orElse: () => null,
-      );
-      if (sp != null) {
-        final min = sp['minValue'];
-        final max = sp['maxValue'];
-        final unit = sp['unit'] ?? '';
-        if (min != null && max != null) {
-          if (min == max) {
-            return "Chuẩn: ${min.toString().replaceAll('.0', '')} $unit";
-          }
-          return "Chuẩn: ${min.toString().replaceAll('.0', '')} - ${max.toString().replaceAll('.0', '')} $unit";
-        } else if (min != null) {
-          return "Chuẩn: >= ${min.toString().replaceAll('.0', '')} $unit";
-        } else if (max != null) {
-          return "Chuẩn: <= ${max.toString().replaceAll('.0', '')} $unit";
-        }
-      }
-    } catch (_) {}
-    return null;
-  }
 
   Future<void> _loadDataFromDB() async {
     if (widget.batchId == null) {
@@ -195,15 +166,52 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
 
         // Auto-fill materials QC numbers from SUGGESTED values
         for (var bomItem in _bom) {
-          final mName = bomItem['material']?['materialName'];
+          final mName = bomItem['material']?['materialName'] ?? '';
+          final mCode = bomItem['material']?['materialCode'] ?? '';
           final suggestedQC = bomItem['material']?['suggestedQCNumber'];
-          if (mName != null && suggestedQC != null) {
-            if (_materialsData[mName] == null) {
-              _materialsData[mName] = {};
+          
+          if (mName.isEmpty) continue;
+
+          if (_materialsData[mName] == null) {
+            _materialsData[mName] = {};
+          }
+
+          if (suggestedQC != null && (_materialsData[mName]?['phieuKN'] == null || _materialsData[mName]!['phieuKN']!.isEmpty)) {
+            _materialsData[mName]!['phieuKN'] = suggestedQC;
+          }
+
+          // Auto-pull weight from previous Drying steps if it's NLC or TD
+          if (mCode.isNotEmpty) {
+            double totalNetFromDrying = 0;
+            bool hasDryingData = false;
+
+            for (var l in logs) {
+              final stepName = (l['routing']?['stepName'] ?? l['step']?['stepName'] ?? '').toString();
+              if (stepName.toLowerCase().contains('sấy') && stepName.toLowerCase().contains(mCode.toLowerCase())) {
+                final pData = l['parametersData'];
+                Map<String, dynamic> p = {};
+                if (pData is Map) {
+                  p = Map<String, dynamic>.from(pData);
+                } else if (pData is String && pData.isNotEmpty) {
+                  try { p = jsonDecode(pData); } catch(_) {}
+                }
+
+                if (p['rawInputs'] != null) {
+                  final raw = p['rawInputs'] as Map;
+                  if (raw['netWeight'] != null) {
+                    totalNetFromDrying += (double.tryParse(raw['netWeight'].toString()) ?? 0);
+                    hasDryingData = true;
+                  }
+                }
+              }
             }
-            if (_materialsData[mName]?['phieuKN'] == null ||
-                _materialsData[mName]!['phieuKN']!.isEmpty) {
-              _materialsData[mName]!['phieuKN'] = suggestedQC;
+
+            if (hasDryingData && totalNetFromDrying > 0) {
+               // Only pre-fill if not already entered manually
+               if (_materialsData[mName]?['actual'] == null || _materialsData[mName]!['actual']!.isEmpty) {
+                 _materialsData[mName]!['actual'] = totalNetFromDrying.toStringAsFixed(4);
+                 debugPrint("GMP: Auto-pulled weight for $mName ($mCode) from Drying steps: $totalNetFromDrying kg");
+               }
             }
           }
         }
@@ -510,6 +518,14 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
 
 
   Future<void> _nextPhase() async {
+    // Standard GMP validation for all phases
+    if (inputStatuses.values.contains('error')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Vui lòng điều chỉnh các thông số đang báo đỏ (ngoài khoảng cho phép) trước khi tiếp tục!'), backgroundColor: Colors.red)
+      );
+      return;
+    }
+
     if (_currentPhase == ExecutionPhase.precheck) {
       setState(() => _currentPhase = ExecutionPhase.input);
       await _submit('Running', null, isInternal: true);
@@ -743,7 +759,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
             label: 'Nhiệt độ (°C)',
             controller: _tempCtrl,
             status: inputStatuses['temperature'] ?? 'none',
-            standardText: _getStandardText('Nhiệt độ phòng cân'),
+            standardText: getStandardText('Nhiệt độ phòng cân', _standardParams),
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
             onChanged: (v) => validateInput('temperature', v, _standardParams, matchName: 'Nhiệt độ phòng cân'),
@@ -755,7 +771,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
             label: 'Độ ẩm (%)',
             controller: _humidCtrl,
             status: inputStatuses['humidity'] ?? 'none',
-            standardText: _getStandardText('Độ ẩm phòng cân'),
+            standardText: getStandardText('Độ ẩm phòng cân', _standardParams),
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
             onChanged: (v) => validateInput('humidity', v, _standardParams, matchName: 'Độ ẩm phòng cân'),
@@ -767,7 +783,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
         label: 'Áp lực (Pa)',
         controller: _pressCtrl,
         status: inputStatuses['pressure'] ?? 'none',
-        standardText: _getStandardText('Áp lực phòng cân'),
+        standardText: getStandardText('Áp lực phòng cân', _standardParams),
         keyboardType: TextInputType.number,
         inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
         onChanged: (v) => validateInput('pressure', v, _standardParams, matchName: 'Áp lực phòng cân'),
