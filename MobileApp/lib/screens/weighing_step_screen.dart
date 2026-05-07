@@ -321,7 +321,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     setState(() {
       double X = (A * C) / 100;
       double Y = (A * 1.250) / (X * 1000);
-      double Q = A / Y;
+      double qRaw = A / Y;
+      double Q = qRaw.roundToDouble(); // GMP: Must be a whole number of capsules
 
       _targetYieldQ = Q;
       _isCalculated = true;
@@ -333,11 +334,14 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       _dynamicTargets['TD-4'] = (0.00405 * Q);
       _dynamicTargets['TD-5'] = (0.00405 * Q);
 
-      double yMg = Y * 1000;
-      double fixedTDsMg = 1.62 + 29.70 + 4.05 + 4.05;
-      double td8Mg = 540 - yMg - fixedTDsMg;
-      _dynamicTargets['TD-8'] = (td8Mg * Q) / 1000;
-      _dynamicTargets['NLP-6'] = Q;
+      // Recalculate TD-8 (filling excipient) based on rounded Q to ensure 540mg/capsule
+      double totalWeightMg = 540.0 * Q;
+      double nlc3TotalMg = A * 1000.0;
+      double fixedTDsTotalMg = (1.62 + 29.70 + 4.05 + 4.05) * Q;
+      double td8TotalMg = totalWeightMg - nlc3TotalMg - fixedTDsTotalMg;
+      
+      _dynamicTargets['TD-8'] = td8TotalMg / 1000.0;
+      _dynamicTargets['NLP-6'] = Q; // NLP-6 is empty capsule count
     });
   }
 

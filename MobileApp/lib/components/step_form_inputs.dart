@@ -352,10 +352,14 @@ class _MixingPackagingFieldState extends State<MixingPackagingField> {
   String _total = '0';
 
   void _calculate() {
-    final tui = int.tryParse(_tuiController.text) ?? 0;
-    final kgLe = double.tryParse(_kgLeController.text) ?? 0;
+    final tuiStr = _tuiController.text.trim();
+    final kgLeStr = _kgLeController.text.trim();
+    
+    final tui = int.tryParse(tuiStr) ?? 0;
+    final kgLe = double.tryParse(kgLeStr.replaceAll(',', '.')) ?? 0;
+    
     setState(() {
-      _total = ((tui * 10) + kgLe).toStringAsFixed(1).replaceAll('.0', '');
+      _total = ((tui * 10) + kgLe).toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
     });
     if (widget.onResultChanged != null) {
       widget.onResultChanged!(_total);
@@ -367,22 +371,56 @@ class _MixingPackagingFieldState extends State<MixingPackagingField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Số lượng đóng gói', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54)),
-        const SizedBox(height: 4),
+        const Text('DỮ LIỆU ĐÓNG GÓI (Túi 10kg + Lẻ)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+        const SizedBox(height: 8),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text('(', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w300)),
-            Expanded(flex: 2, child: TextField(controller: _tuiController, readOnly: widget.readOnly, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: InputDecoration(hintText: 'số túi', contentPadding: const EdgeInsets.symmetric(horizontal: 8), filled: widget.readOnly, fillColor: widget.readOnly ? Colors.grey.shade100 : null))),
-            const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('x 10kg) +', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
-            Expanded(flex: 2, child: TextField(controller: _kgLeController, readOnly: widget.readOnly, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: InputDecoration(hintText: 'kg lẻ/túi', contentPadding: const EdgeInsets.symmetric(horizontal: 8), filled: widget.readOnly, fillColor: widget.readOnly ? Colors.grey.shade100 : null))),
-            const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('=', style: TextStyle(fontWeight: FontWeight.bold))),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(8)),
-              child: Text('$_total kg', style: const TextStyle(fontWeight: FontWeight.bold)),
+            Expanded(
+              child: TextField(
+                controller: _tuiController,
+                enabled: !widget.readOnly,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Số túi (10kg)',
+                  hintText: 'VD: 5',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.inventory_2_outlined),
+                ),
+                onChanged: (_) => _calculate(),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _kgLeController,
+                enabled: !widget.readOnly,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Khối lượng lẻ (kg)',
+                  hintText: 'VD: 2.5',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.scale_outlined),
+                ),
+                onChanged: (_) => _calculate(),
+              ),
             ),
           ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.blue.shade200),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('TỔNG KHỐI LƯỢNG:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+              Text('$_total kg', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.blue)),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
       ],
