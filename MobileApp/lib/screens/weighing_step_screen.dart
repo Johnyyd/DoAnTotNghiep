@@ -768,6 +768,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
           label: 'Phòng pha chế',
           optionA: 'Sạch',
           optionB: 'Không sạch',
+          value: _phongPhaChe,
           onChanged: (v) => setState(() => _phongPhaChe = v)),
       StandardInputField(
           label: 'Thời gian kiểm tra (Tự động)',
@@ -822,17 +823,20 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
           label: 'Cân IW2-60',
           optionA: 'Tốt',
           optionB: 'Không ổn định',
-          onChanged: (v) => _canIW2 = v),
+          value: _canIW2,
+          onChanged: (v) => setState(() => _canIW2 = v)),
       SegmentedToggle(
           label: 'Cân PMA-5000',
           optionA: 'Tốt',
           optionB: 'Không ổn định',
-          onChanged: (v) => _canPMA = v),
+          value: _canPMA,
+          onChanged: (v) => setState(() => _canPMA = v)),
       SegmentedToggle(
           label: 'Dụng cụ cân',
           optionA: 'Sạch',
           optionB: 'Không sạch',
-          onChanged: (v) => _dungCuCan = v),
+          value: _dungCuCan,
+          onChanged: (v) => setState(() => _dungCuCan = v)),
     ]);
   }
 

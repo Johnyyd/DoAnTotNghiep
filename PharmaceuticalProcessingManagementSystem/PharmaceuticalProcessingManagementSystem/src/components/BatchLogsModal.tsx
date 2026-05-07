@@ -122,14 +122,56 @@ export default function BatchLogsModal({ batchId, batchNumber, onClose }: BatchL
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {Object.entries(params).map(([key, value]) => {
                               // Skip complex objects like arrays of materials (handle separately)
-                              if (Array.isArray(value)) return null;
-                              if (typeof value === 'object' && value !== null) return null;
+                              if (Array.isArray(value) || (typeof value === 'object' && value !== null)) return null;
                               
+                              const keyLabels: Record<string, string> = {
+                                temperature: 'Nhiệt độ (°C)',
+                                humidity: 'Độ ẩm (%)',
+                                pressure: 'Áp lực (Pa)',
+                                phongPhaChe: 'Phòng pha chế',
+                                checkTime: 'TG Kiểm tra',
+                                canIW2: 'Cân IW2-60',
+                                canPMA: 'Cân PMA-5000',
+                                dungCuCan: 'Dụng cụ cân',
+                                veSinhPhong: 'Vệ sinh phòng',
+                                veSinhMay: 'Vệ sinh máy',
+                                veSinhDungCu: 'Vệ sinh dụng cụ',
+                                tgBatDau: 'TG Bắt đầu',
+                                tgKetThuc: 'TG Kết thúc',
+                                duPhamLoSo: 'Dư phẩm lô số',
+                                tyTrongGo: 'Tỷ trọng gõ (hạt khô)',
+                                nhietDo: 'Nhiệt độ phòng',
+                                doAm: 'Độ ẩm phòng',
+                                apLuc: 'Áp lực phòng',
+                                tgCaiDat: 'TG Trộn (cài đặt)',
+                                tocDoCaiDat: 'Tốc độ (cài đặt)',
+                                tgThucTe: 'TG Trộn (thực tế)',
+                                tocDoThucTe: 'Tốc độ (thực tế)',
+                                tyTrong: 'Tỷ trọng hạt',
+                                slDongGoiKg: 'SL Đóng gói (kg)',
+                                slSilicagel: 'SL Silicagel',
+                                checkPhong: 'Kiểm tra phòng',
+                                checkMay: 'Kiểm tra máy',
+                                checkDungCu: 'Kiểm tra dụng cụ',
+                                nhietDoKhiVao: 'Nhiệt độ khí vào',
+                                nhietDoKhiRa: 'Nhiệt độ khí ra',
+                                tgSayCaiDat: 'Thời gian sấy (cài đặt)',
+                                tocDoGio: 'Tốc độ gió',
+                                inputMoisture: 'Độ ẩm đầu vào',
+                                moistureAt: 'Độ ẩm tại',
+                                wetWeight: 'KL trước sấy',
+                                dryWeight: 'KL sau sấy',
+                                netWeight: 'KL tịnh',
+                                lossPercent: 'Hao hụt (%)'
+                              };
+
                               return (
                                 <div key={key} className="flex flex-col border-b border-neutral-50 pb-2">
-                                  <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-tight">{key}</span>
+                                  <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-tight">
+                                    {keyLabels[key] || key}
+                                  </span>
                                   <span className="text-sm text-neutral-800 font-medium">
-                                    {typeof value === 'boolean' ? (value ? 'Có' : 'Không') : String(value || '-')}
+                                    {typeof value === 'boolean' ? (value ? 'Đạt/Sạch' : 'Không đạt') : String(value || '-')}
                                   </span>
                                 </div>
                               );
@@ -140,33 +182,71 @@ export default function BatchLogsModal({ batchId, batchNumber, onClose }: BatchL
                         )}
 
                         {/* Special handling for Materials list in Weighing/Mixing */}
-                        {params?.materials && Array.isArray(params.materials) && (
+                        {params?.materials && (
                           <div className="mt-6 pt-4 border-t border-neutral-100">
                             <h5 className="text-xs font-bold text-neutral-900 mb-3 flex items-center gap-2">
                               <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
-                              Danh sách nguyên liệu đã cân
+                              Danh sách nguyên liệu / thành phần
                             </h5>
                             <div className="bg-neutral-50 rounded-xl overflow-hidden border border-neutral-200">
                               <table className="w-full text-xs text-left">
                                 <thead className="bg-neutral-100 text-neutral-600">
                                   <tr>
                                     <th className="px-3 py-2">Nguyên liệu</th>
-                                    <th className="px-3 py-2">Phiếu KN</th>
+                                    <th className="px-3 py-2">Phiếu KN / Lô</th>
                                     <th className="px-3 py-2 text-right">Khối lượng (kg)</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-neutral-200">
-                                  {params.materials.map((m: any, i: number) => (
+                                  {Array.isArray(params.materials) ? (
+                                    params.materials.map((m: any, i: number) => (
+                                      <tr key={i} className="hover:bg-white transition-colors">
+                                        <td className="px-3 py-2 font-medium">{m.materialName || m.name}</td>
+                                        <td className="px-3 py-2 font-mono text-[10px]">{m.phieuKN || m.lotNumber || '-'}</td>
+                                        <td className="px-3 py-2 text-right font-bold text-primary-700">{m.actual}</td>
+                                      </tr>
+                                    ))
+                                  ) : (
+                                    Object.entries(params.materials).map(([name, data]: [string, any], i: number) => (
+                                      <tr key={i} className="hover:bg-white transition-colors">
+                                        <td className="px-3 py-2 font-medium">{name}</td>
+                                        <td className="px-3 py-2 font-mono text-[10px]">{data.phieuKN || '-'}</td>
+                                        <td className="px-3 py-2 text-right font-bold text-primary-700">{data.actual}</td>
+                                      </tr>
+                                    ))
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Mixing specific actual materials */}
+                        {params?.khoiLuongThucTe && typeof params.khoiLuongThucTe === 'object' && (
+                           <div className="mt-6 pt-4 border-t border-neutral-100">
+                            <h5 className="text-xs font-bold text-neutral-900 mb-3 flex items-center gap-2">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                              Dữ liệu khối lượng thực tế (Trộn)
+                            </h5>
+                            <div className="bg-neutral-50 rounded-xl overflow-hidden border border-neutral-200">
+                              <table className="w-full text-xs text-left">
+                                <thead className="bg-neutral-100 text-neutral-600">
+                                  <tr>
+                                    <th className="px-3 py-2">Mã / Tên</th>
+                                    <th className="px-3 py-2 text-right">Khối lượng thực tế</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-neutral-200">
+                                  {Object.entries(params.khoiLuongThucTe).map(([key, val]: [string, any], i) => (
                                     <tr key={i} className="hover:bg-white transition-colors">
-                                      <td className="px-3 py-2 font-medium">{m.materialName}</td>
-                                      <td className="px-3 py-2 font-mono text-[10px]">{m.phieuKN || '-'}</td>
-                                      <td className="px-3 py-2 text-right font-bold text-primary-700">{m.actual}</td>
+                                      <td className="px-3 py-2 font-medium">{key}</td>
+                                      <td className="px-3 py-2 text-right font-bold text-blue-700">{String(val)}</td>
                                     </tr>
                                   ))}
                                 </tbody>
                               </table>
                             </div>
-                          </div>
+                           </div>
                         )}
                         
                         {log.notes && (

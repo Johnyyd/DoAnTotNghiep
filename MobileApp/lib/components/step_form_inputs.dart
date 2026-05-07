@@ -32,6 +32,7 @@ class SegmentedToggle extends StatefulWidget {
   final String label;
   final String optionA;
   final String optionB;
+  final String? value;
   final ValueChanged<String>? onChanged;
   final bool disabled;
 
@@ -40,6 +41,7 @@ class SegmentedToggle extends StatefulWidget {
     required this.label,
     required this.optionA,
     required this.optionB,
+    this.value,
     this.onChanged,
     this.disabled = false,
   });
@@ -54,7 +56,15 @@ class _SegmentedToggleState extends State<SegmentedToggle> {
   @override
   void initState() {
     super.initState();
-    _selected = widget.optionA;
+    _selected = widget.value ?? widget.optionA;
+  }
+
+  @override
+  void didUpdateWidget(SegmentedToggle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != null && widget.value != _selected) {
+      _selected = widget.value!;
+    }
   }
 
   @override

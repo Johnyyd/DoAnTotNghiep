@@ -32,7 +32,8 @@ class MixingStepScreen extends StatefulWidget {
   State<MixingStepScreen> createState() => _MixingStepScreenState();
 }
 
-class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<MixingStepScreen> {
+class _MixingStepScreenState extends State<MixingStepScreen>
+    with GmpStepMixin<MixingStepScreen> {
   final _tempCtrl = TextEditingController();
   final _humidCtrl = TextEditingController();
   final _timeCtrl = TextEditingController();
@@ -58,6 +59,11 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
   bool _thungInox = true;
   String _slDongGoi = '0';
 
+  // Simulation
+  Timer? _timer;
+  int _secondsRemaining = 20; // 20s for demo (SOP is 15 mins)
+  bool _isMixing = false;
+
   final Map<String, String> _actualMaterials = {};
   bool _isLoading = true;
   List<dynamic> _bom = [];
@@ -80,6 +86,37 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
     });
   }
 
+  void _startMixing() {
+    if (_tgCaiDatCtrl.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Vui lòng nhập thời gian cài đặt ở Bước 2.')));
+      return;
+    }
+
+    setState(() {
+      _isMixing = true;
+      _secondsRemaining = 20; // Simulated duration
+    });
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_secondsRemaining > 0) {
+        setState(() => _secondsRemaining--);
+      } else {
+        _stopMixing();
+      }
+    });
+  }
+
+  void _stopMixing() {
+    _timer?.cancel();
+    setState(() {
+      _isMixing = false;
+      _timeEndCtrl.text = TimeOfDay.now().format(context);
+      // Auto fill actuals for convenience, can be edited
+      _tgThucTeCtrl.text = _tgCaiDatCtrl.text;
+      _tocDoThucTeCtrl.text = _tocDoCaiDatCtrl.text;
+    });
+  }
 
   Future<void> _loadDataFromDB() async {
     if (widget.batchId == null) {
@@ -96,11 +133,12 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
       }
       if (batch != null && batch['order'] != null) {
         final orderBoms = batch['order']['productionOrderBoms'];
-        final List<dynamic> sourceBom = (orderBoms != null && (orderBoms as List).isNotEmpty)
-            ? orderBoms
-            : (batch['order']?['recipe']?['recipeBoms'] ?? []);
-            
-        // Filter: Mixing only involves powders. 
+        final List<dynamic> sourceBom =
+            (orderBoms != null && (orderBoms as List).isNotEmpty)
+                ? orderBoms
+                : (batch['order']?['recipe']?['recipeBoms'] ?? []);
+
+        // Filter: Mixing only involves powders.
         // Exclude NLP 6 (Capsule Shells) and items with UomId 4 (Viên)
         _bom = sourceBom.where((item) {
           final mat = item['material'] ?? {};
@@ -108,14 +146,16 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
           final uomId = mat['baseUomId'] ?? mat['uomId'] ?? item['uomId'] ?? 1;
           return !code.startsWith('NLP') && uomId != 4;
         }).toList();
-        debugPrint("GMP: Loaded ${_bom.length} powder materials for mixing reconciliation.");
+        debugPrint(
+            "GMP: Loaded ${_bom.length} powder materials for mixing reconciliation.");
       } else {
         _bom = widget.initialBom ?? [];
       }
 
       // Load Logs for Phase Sync
       final logs = await ApiService.getProcessLogs(widget.batchId!);
-      debugPrint("DEBUG: [Mixing] widget.stepId=${widget.stepId} (${widget.stepId.runtimeType})");
+      debugPrint(
+          "DEBUG: [Mixing] widget.stepId=${widget.stepId} (${widget.stepId.runtimeType})");
 
       final log = logs.firstWhere(
         (l) => l['stepId']?.toString() == widget.stepId?.toString(),
@@ -126,7 +166,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
         _currentLog = log;
         final routing = log['routing'] ?? log['step'] ?? {};
         _standardParams = routing['stepParameters'] ?? [];
-        
+
         // Inject root-level routing standards for UI consistency
         if (routing['standardTemperature'] != null) {
           _standardParams.add({
@@ -134,7 +174,8 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
             'unit': '°C',
             'minValue': null,
             'maxValue': null,
-            'standardValue': routing['standardTemperature'] // Special field for root-level
+            'standardValue':
+                routing['standardTemperature'] // Special field for root-level
           });
         }
         if (routing['standardHumidity'] != null) {
@@ -156,7 +197,8 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
           });
         }
 
-        debugPrint("DEBUG: [Mixing] _standardParams count: ${_standardParams.length}");
+        debugPrint(
+            "DEBUG: [Mixing] _standardParams count: ${_standardParams.length}");
 
         final rawParams = _currentLog['parametersData'];
 
@@ -225,11 +267,10 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
 
         // --- INHERIT DATA FROM WEIGHING STEP ---
         for (var l in logs) {
-          final sName = (l['step']?['stepName'] ??
-                  l['routing']?['stepName'] ??
-                  '')
-              .toString()
-              .toUpperCase();
+          final sName =
+              (l['step']?['stepName'] ?? l['routing']?['stepName'] ?? '')
+                  .toString()
+                  .toUpperCase();
           if (sName.contains('CÂN')) {
             final wParamsRaw = l['parametersData'];
             Map<String, dynamic> wData = {};
@@ -260,8 +301,6 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
       if (mounted) setState(() => _isLoading = false);
     }
   }
-
-
 
   void _setCurrentTime(TextEditingController ctrl) {
     if (widget.isViewer) return;
@@ -307,6 +346,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
 
   @override
   void dispose() {
+    _timer?.cancel();
     _tempCtrl.dispose();
     _humidCtrl.dispose();
     _timeCtrl.dispose();
@@ -317,23 +357,24 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
     _tocDoCaiDatCtrl.dispose();
     _tgThucTeCtrl.dispose();
     _tocDoThucTeCtrl.dispose();
-    _duPhamCtrl.dispose();
     _tyTrongCtrl.dispose();
     _noteCtrl.dispose();
     _silicagelCtrl.dispose();
     super.dispose();
   }
 
-
-
   void _updateAllInputStatuses() {
-    validateInput('nhietDo', _tempCtrl.text, _standardParams, matchName: 'Nhiệt độ phòng');
-    validateInput('doAm', _humidCtrl.text, _standardParams, matchName: 'Độ ẩm phòng');
-    validateInput('apLuc', _pressCtrl.text, _standardParams, matchName: 'Áp lực phòng');
-    validateInput('tocDoThucTe', _tocDoThucTeCtrl.text, _standardParams, matchName: 'Tốc độ trộn');
-    validateInput('tgThucTe', _tgThucTeCtrl.text, _standardParams, matchName: 'Thời gian trộn');
+    validateInput('nhietDo', _tempCtrl.text, _standardParams,
+        matchName: 'Nhiệt độ phòng');
+    validateInput('doAm', _humidCtrl.text, _standardParams,
+        matchName: 'Độ ẩm phòng');
+    validateInput('apLuc', _pressCtrl.text, _standardParams,
+        matchName: 'Áp lực phòng');
+    validateInput('tocDoThucTe', _tocDoThucTeCtrl.text, _standardParams,
+        matchName: 'Tốc độ trộn');
+    validateInput('tgThucTe', _tgThucTeCtrl.text, _standardParams,
+        matchName: 'Thời gian trộn');
   }
-
 
   Future<void> _approveByQC(String status) async {
     final pin = await showPinDialog();
@@ -359,8 +400,8 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
           await ApiService.updateOrderStatus(widget.orderId!, 'In-Process');
         }
         await _loadDataFromDB();
-        messenger.showSnackBar(
-            SnackBar(content: Text('✔ QC đã xác nhận: $status')));
+        messenger
+            .showSnackBar(SnackBar(content: Text('✔ QC đã xác nhận: $status')));
       }
     }
   }
@@ -419,14 +460,13 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
         hasDeviation ? deviationMsg : null);
   }
 
-
-
   Future<void> _nextPhase() async {
     // Standard GMP validation for all phases
     if (inputStatuses.values.contains('error')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Vui lòng điều chỉnh các thông số đang báo đỏ (ngoài khoảng cho phép) trước khi tiếp tục!'), backgroundColor: Colors.red)
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              '❌ Vui lòng điều chỉnh các thông số đang báo đỏ (ngoài khoảng cho phép) trước khi tiếp tục!'),
+          backgroundColor: Colors.red));
       return;
     }
 
@@ -444,17 +484,17 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
       // GMP Validation: Silicagel and Packaging must be validated BEFORE finishing
       final silicagelCount = int.tryParse(_silicagelCtrl.text);
       if (silicagelCount == null || silicagelCount <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('❌ Số lượng Silicagel phải là số nguyên dương!'), backgroundColor: Colors.red)
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('❌ Số lượng Silicagel phải là số nguyên dương!'),
+            backgroundColor: Colors.red));
         return;
       }
 
       final packagingQty = double.tryParse(_slDongGoi);
       if (packagingQty == null || packagingQty <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('❌ Tổng khối lượng đóng gói phải lớn hơn 0!'), backgroundColor: Colors.red)
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('❌ Tổng khối lượng đóng gói phải lớn hơn 0!'),
+            backgroundColor: Colors.red));
         return;
       }
 
@@ -531,13 +571,13 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
           Navigator.pop(ctx, true);
         }
         if (!isInternal) {
-          messenger.showSnackBar(const SnackBar(
-              content: Text('✔ Cập nhật dữ liệu thành công!')));
+          messenger.showSnackBar(
+              const SnackBar(content: Text('✔ Cập nhật dữ liệu thành công!')));
         }
       } else {
         if (!isInternal) {
-          messenger.showSnackBar(const SnackBar(
-              content: Text('❌ Lỗi khi lưu dữ liệu!')));
+          messenger.showSnackBar(
+              const SnackBar(content: Text('❌ Lỗi khi lưu dữ liệu!')));
         }
       }
     }
@@ -733,51 +773,56 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
             label: 'Phòng trộn khô',
             optionA: 'Sạch',
             optionB: 'Không sạch',
-            onChanged: (v) => _phongSach = v),
+            value: _phongSach,
+            onChanged: (v) => setState(() => _phongSach = v)),
         SegmentedToggle(
             label: 'Máy trộn lập phương AD-LP-200',
             optionA: 'Sạch',
             optionB: 'Không sạch',
-            onChanged: (v) => _mayTron = v),
+            value: _mayTron,
+            onChanged: (v) => setState(() => _mayTron = v)),
         SegmentedToggle(
             label: 'Dụng cụ sản xuất',
             optionA: 'Sạch',
             optionB: 'Không sạch',
-            onChanged: (v) => _dungCu = v),
+            value: _dungCu,
+            onChanged: (v) => setState(() => _dungCu = v)),
         Row(
           children: [
             Expanded(
                 child: StandardInputField(
               label: 'Nhiệt độ (°C)',
               controller: _tempCtrl,
-            status: inputStatuses['nhietDo'] ?? 'none',
-            standardText: getStandardText('Nhiệt độ phòng', _standardParams),
-            keyboardType: TextInputType.number,
-            onChanged: (v) => validateInput('nhietDo', v, _standardParams, matchName: 'Nhiệt độ phòng'),
-
+              status: inputStatuses['nhietDo'] ?? 'none',
+              standardText: getStandardText('Nhiệt độ phòng', _standardParams),
+              keyboardType: TextInputType.number,
+              onChanged: (v) => validateInput('nhietDo', v, _standardParams,
+                  matchName: 'Nhiệt độ phòng'),
             )),
             const SizedBox(width: 16),
             Expanded(
                 child: StandardInputField(
               label: 'Độ ẩm (%)',
               controller: _humidCtrl,
-            status: inputStatuses['doAm'] ?? 'none',
-            standardText: getStandardText('Độ ẩm phòng', _standardParams),
-            keyboardType: TextInputType.number,
-            onChanged: (v) => validateInput('doAm', v, _standardParams, matchName: 'Độ ẩm phòng'),
-
+              status: inputStatuses['doAm'] ?? 'none',
+              standardText: getStandardText('Độ ẩm phòng', _standardParams),
+              keyboardType: TextInputType.number,
+              onChanged: (v) => validateInput('doAm', v, _standardParams,
+                  matchName: 'Độ ẩm phòng'),
             )),
           ],
         ),
         StandardInputField(
           label: 'Áp lực (Pa)',
           controller: _pressCtrl,
-        status: inputStatuses['apLuc'] ?? 'none',
-        standardText: getStandardText('Áp lực phòng', _standardParams),
-        keyboardType: TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
-        onChanged: (v) => validateInput('apLuc', v, _standardParams, matchName: 'Áp lực phòng'),
-
+          status: inputStatuses['apLuc'] ?? 'none',
+          standardText: getStandardText('Áp lực phòng', _standardParams),
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
+          ],
+          onChanged: (v) => validateInput('apLuc', v, _standardParams,
+              matchName: 'Áp lực phòng'),
         ),
       ],
     );
@@ -790,13 +835,19 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
         const FormSectionHeader('PHASE 2: TRỘN KHÔ & ĐỐI CHIẾU'),
         const Text(
           'SOP NẠP LIỆU: Từng lớp NLC 3 xen kẽ với lớp (TD 8 + TD 3), sau đó rắc hỗn hợp (TD 1 + TD 4 + TD 5).',
-          style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.blueGrey),
+          style: TextStyle(
+              fontSize: 11,
+              fontStyle: FontStyle.italic,
+              color: Colors.blueGrey),
         ),
         const SizedBox(height: 8),
         SwitchListTile(
-          title: const Text('Đã nạp liệu đúng thứ tự SOP', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+          title: const Text('Đã nạp liệu đúng thứ tự SOP',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
           value: _napLieuDungSOP,
-          onChanged: widget.isViewer ? null : (v) => setState(() => _napLieuDungSOP = v),
+          onChanged: widget.isViewer
+              ? null
+              : (v) => setState(() => _napLieuDungSOP = v),
           activeColor: Colors.green,
           contentPadding: EdgeInsets.zero,
         ),
@@ -818,23 +869,28 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
                     label: 'Giờ kết thúc (Tự động)',
                     controller: _timeEndCtrl,
                     readOnly: true,
-                    suffixIcon: const Icon(Icons.lock_clock, size: 20, color: Colors.grey))),
+                    suffixIcon: const Icon(Icons.lock_clock,
+                        size: 20, color: Colors.grey))),
           ],
         ),
         Row(
           children: [
             Expanded(
                 child: StandardInputField(
-                    label: 'TG thực tế (phút)',
+                    label: 'Thời gian trộn cài đặt (phút)',
                     controller: _tgThucTeCtrl,
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
+                    ],
                     keyboardType: TextInputType.number)),
             const SizedBox(width: 16),
             Expanded(
                 child: StandardInputField(
-                    label: 'Tốc độ thực tế (v/p)',
+                    label: 'Tốc độ cài đặt (vòng/phút)',
                     controller: _tocDoThucTeCtrl,
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
+                    ],
                     keyboardType: TextInputType.number)),
           ],
         ),
@@ -848,7 +904,8 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
         else
           ..._bom.map((item) {
             final mat = item['material'] ?? {};
-            final materialName = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
+            final materialName =
+                mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
             final requiredQty = item['quantity']?.toString() ?? '0.00';
             return _buildComparisonRow(materialName, materialName, requiredQty);
           }),
@@ -867,48 +924,118 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
   Widget _buildPhase4() {
     return Column(
       children: [
-        _buildCenteredStatus(
-            Icons.play_circle_fill,
-            Colors.green,
-            'ĐANG THỰC HIỆN TRỘN',
-            'Máy đang quay. Vui lòng hoàn tất đóng gói và nhập số liệu cuối.'),
+        if (!_isMixing && _secondsRemaining == 15)
+          ElevatedButton.icon(
+            onPressed: _startMixing,
+            icon: const Icon(Icons.play_arrow),
+            label: const Text('BẮT ĐẦU TRỘN (SIMULATION)'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(double.infinity, 50),
+            ),
+          )
+        else if (_isMixing)
+          Column(
+            children: [
+              const LinearProgressIndicator(),
+              const SizedBox(height: 12),
+              Text('Thời gian còn lại: $_secondsRemaining giây',
+                  style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange)),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: _stopMixing,
+                icon: const Icon(Icons.stop),
+                label: const Text('DỪNG KHẨN CẤP'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 40),
+                ),
+              ),
+            ],
+          )
+        else
+          const Text('✅ Đã hoàn thành thời gian trộn.',
+              style:
+                  TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
         const SizedBox(height: 24),
-        const FormSectionHeader('BÁO CÁO KẾT THÚC CÔNG ĐOẠN'),
-        
+        const FormSectionHeader('XÁC NHẬN THÔNG SỐ THỰC TẾ'),
         Row(
           children: [
             Expanded(
               child: StandardInputField(
-                label: 'Mẫu lưu/Dư phẩm (kg)',
-                controller: _duPhamCtrl,
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
+                label: 'Thời gian thực tế (phút)',
+                controller: _tgThucTeCtrl,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
+                ],
                 keyboardType: TextInputType.number,
+                status: _tgThucTeCtrl.text != _tgCaiDatCtrl.text
+                    ? 'warning'
+                    : 'none',
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: StandardInputField(
-                label: 'Tỷ trọng gõ',
+                label: 'Tốc độ thực tế (v/p)',
+                controller: _tocDoThucTeCtrl,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
+                ],
+                keyboardType: TextInputType.number,
+                status: _tocDoThucTeCtrl.text != _tocDoCaiDatCtrl.text
+                    ? 'warning'
+                    : 'none',
+              ),
+            ),
+          ],
+        ),
+        const FormSectionHeader('BÁO CÁO KẾT THÚC CÔNG ĐOẠN'),
+        Row(
+          children: [
+            Expanded(
+              child: StandardInputField(
+                label: 'Dư phẩm lô số',
+                controller: TextEditingController(
+                    text: _batchInfo?['batchNumber'] ?? ''),
+                readOnly: true,
+                hint: 'Lấy theo tên mẻ',
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: StandardInputField(
+                label: 'Tỷ trọng gõ của hạt khô',
                 controller: _tyTrongCtrl,
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
+                ],
                 keyboardType: TextInputType.number,
               ),
             ),
           ],
         ),
-        
         const FormSectionHeader('QUY CÁCH ĐÓNG GÓI & BẢO QUẢN (SOP)'),
         SwitchListTile(
-          title: const Text('Chứa trong túi PE 2 lớp', style: TextStyle(fontSize: 13)),
+          title: const Text('Chứa trong túi PE 2 lớp',
+              style: TextStyle(fontSize: 13)),
           value: _tuiPE2Lop,
-          onChanged: widget.isViewer ? null : (v) => setState(() => _tuiPE2Lop = v),
+          onChanged:
+              widget.isViewer ? null : (v) => setState(() => _tuiPE2Lop = v),
           activeColor: Colors.blue,
           contentPadding: EdgeInsets.zero,
         ),
         SwitchListTile(
-          title: const Text('Xếp trong thùng inox', style: TextStyle(fontSize: 13)),
+          title: const Text('Xếp trong thùng inox',
+              style: TextStyle(fontSize: 13)),
           value: _thungInox,
-          onChanged: widget.isViewer ? null : (v) => setState(() => _thungInox = v),
+          onChanged:
+              widget.isViewer ? null : (v) => setState(() => _thungInox = v),
           activeColor: Colors.blue,
           contentPadding: EdgeInsets.zero,
         ),
@@ -917,18 +1044,18 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
           label: 'Số lượng Silicagel đã thêm (viên)',
           controller: _silicagelCtrl,
           hint: 'Chuẩn: 5 viên/thùng',
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
+          ],
           keyboardType: TextInputType.number,
         ),
-
         MixingPackagingField(
             onResultChanged: (v) {
               setState(() => _slDongGoi = v);
             },
             readOnly: widget.isViewer),
-            
         const SizedBox(height: 16),
-        
+
         // Dynamic Yield Calculation Display
         Container(
           padding: const EdgeInsets.all(16),
@@ -942,33 +1069,42 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Tổng khối lượng nạp (Input):', style: TextStyle(fontSize: 13)),
-                  Text('${_getTotalInputWeight().toStringAsFixed(4)} kg', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Tổng khối lượng nạp (Input):',
+                      style: TextStyle(fontSize: 13)),
+                  Text('${_getTotalInputWeight().toStringAsFixed(4)} kg',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
               const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Khối lượng đóng gói (Output):', style: TextStyle(fontSize: 13)),
-                  Text('${double.tryParse(_slDongGoi)?.toStringAsFixed(4) ?? "0.0000"} kg', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Khối lượng đóng gói (Output):',
+                      style: TextStyle(fontSize: 13)),
+                  Text(
+                      '${double.tryParse(_slDongGoi)?.toStringAsFixed(4) ?? "0.0000"} kg',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
               const Divider(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('HIỆU SUẤT (YIELD):', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                  const Text('HIỆU SUẤT (YIELD):',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.blue)),
                   Text(
                     '${_getTotalInputWeight() > 0 ? (double.parse(_slDongGoi) / _getTotalInputWeight() * 100).toStringAsFixed(2) : "0.00"}%',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blue),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.blue),
                   ),
                 ],
               ),
             ],
           ),
         ),
-
         const SizedBox(height: 24),
         TextField(
             controller: _noteCtrl,
