@@ -345,8 +345,12 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
 
 
 
-  bool get _isPhase1Locked => widget.isViewer || _currentPhase.index > 0;
-  bool get _isPhase2Locked => widget.isViewer || _currentPhase.index > 1;
+  bool get _isPhase1Locked => _currentPhase.index > ExecutionPhase.precheck.index || widget.isViewer;
+  bool get _isMoistureMet => widget.stepName.contains('NLC 3') && 
+                             (double.tryParse(_inputMoistureCtrl.text) ?? 0) > 0 &&
+                             (double.tryParse(_inputMoistureCtrl.text) ?? 0) <= 5.0;
+
+  bool get _isPhase2Locked => _currentPhase.index > ExecutionPhase.input.index || widget.isViewer;
   bool get _isPhase4Locked =>
       widget.isViewer ||
       (_currentPhase.index > 3) ||
@@ -459,14 +463,23 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
   }
 
   bool _isFormValid() {
+    if (_currentPhase == ExecutionPhase.precheck && _isMoistureMet) {
+      return _inputMoistureCtrl.text.isNotEmpty && _slTruocCtrl.text.isNotEmpty;
+    }
+
     // Check individual status for invalid/error globally
     if (inputStatuses.values.contains('invalid') || inputStatuses.values.contains('error')) return false;
 
     // Check mandatory fields based on current phase
     if (_currentPhase == ExecutionPhase.precheck) {
+      // Trường hợp bình thường: Phải nhập đầy đủ toàn bộ thông số
       if (_tempCtrl.text.isEmpty || _humidCtrl.text.isEmpty || _pressCtrl.text.isEmpty) return false;
       if (_slTruocCtrl.text.isEmpty) return false;
       if (widget.stepName.contains('NLC 3') && _inputMoistureCtrl.text.isEmpty) return false;
+      
+      // Bổ sung các ràng buộc vệ sinh và máy móc để đảm bảo "đầy đủ"
+      if (!_lapRap || !_raiNhe || !_khoaBang || !_dayThung) return false;
+      if (!_phongSach.contains('Sạch') || !_maySay.contains('Sạch') || !_dungCuSay.contains('Sạch')) return false;
     } else if (_currentPhase == ExecutionPhase.input) {
       if (_tempInCtrl.text.isEmpty || _tgSayCaiDatCtrl.text.isEmpty) return false;
     } else if (_currentPhase == ExecutionPhase.execution) {
@@ -504,8 +517,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
           setState(() {
             if (status == 'Approved') {
               // Kiểm tra nếu là trường hợp bỏ qua sấy (NLC 3 và độ ẩm <= 5%)
-              final moisture = double.tryParse(_inputMoistureCtrl.text) ?? 0;
-              if (widget.stepName.contains('NLC 3') && moisture > 0 && moisture <= 5.0) {
+              if (_isMoistureMet) {
                 _currentPhase = ExecutionPhase.completed;
                 // Gửi bản chốt Passed lên server
                 _submit('Passed', 'QC xác nhận đạt chuẩn, bỏ qua sấy.');
@@ -557,7 +569,35 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
 
 
   Future<void> _nextPhase() async {
-    // Standard GMP validation for all phases
+    // Ưu tiên kiểm tra logic Skip nếu độ ẩm NLC 3 đạt chuẩn (<= 5%)
+    if (_currentPhase == ExecutionPhase.precheck && _isMoistureMet) {
+        final shouldSkip = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('ĐỘ ẨM ĐẠT CHUẨN (SKIP)', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+            content: Text('Độ ẩm NLC 3 hiện tại là ${_inputMoistureCtrl.text}%, đạt tiêu chuẩn (<= 5%). Bạn có muốn BỎ QUA công đoạn sấy này không?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('KHÔNG, VẪN SẤY')),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                child: const Text('BỎ QUA & GỬI DUYỆT QC')
+              ),
+            ],
+          )
+        );
+
+        if (shouldSkip == true) {
+          await _submit('PendingQC', 'Yêu cầu bỏ qua sấy do độ ẩm đạt chuẩn (${_inputMoistureCtrl.text}%)');
+          if (mounted) {
+            setState(() => _currentPhase = ExecutionPhase.verification);
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✔ Đã gửi yêu cầu bỏ qua sấy lên QC duyệt.')));
+          }
+          return;
+        }
+    }
+
+    // Standard GMP validation for all other cases
     if (inputStatuses.values.contains('error')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('❌ Vui lòng điều chỉnh các thông số đang báo đỏ (ngoài khoảng cho phép) trước khi tiếp tục!'), backgroundColor: Colors.red)
@@ -566,37 +606,6 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
     }
 
     if (_currentPhase == ExecutionPhase.precheck) {
-      // Logic kiểm tra độ ẩm cho NLC 3
-      if (widget.stepName.contains('NLC 3')) {
-        final moisture = double.tryParse(_inputMoistureCtrl.text) ?? 0;
-        if (moisture > 0 && moisture <= 5.0) {
-          final shouldSkip = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('ĐỘ ẨM ĐẠT CHUẨN'),
-              content: Text('Độ ẩm NLC 3 hiện tại là $moisture%, đạt tiêu chuẩn (<= 5%). Bạn có muốn BỎ QUA công đoạn sấy này không?'),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('KHÔNG, VẪN SẤY')),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  child: const Text('BỎ QUA & HOÀN TẤT')
-                ),
-              ],
-            )
-          );
-
-          if (shouldSkip == true) {
-            await _submit('PendingQC', 'Yêu cầu bỏ qua sấy do độ ẩm đạt chuẩn ($moisture%)');
-            if (mounted) {
-              setState(() => _currentPhase = ExecutionPhase.verification);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✔ Đã gửi yêu cầu bỏ qua sấy lên QC duyệt.')));
-            }
-            return;
-          }
-        }
-      }
-
       final now = DateTime.now();
       if (_timeStartCtrl.text.isEmpty) {
         _timeStartCtrl.text =
@@ -1019,30 +1028,30 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
             label: 'Phòng pha chế',
             optionA: 'Sạch',
             optionB: 'Không sạch',
-            disabled: _isPhase1Locked,
+            disabled: _isPhase1Locked || _isMoistureMet,
             onChanged: (v) => _phongSach = v),
         SegmentedToggle(
             label: 'Máy sấy tầng sôi KBC-TS-50',
             optionA: 'Sạch',
             optionB: 'Không sạch',
-            disabled: _isPhase1Locked,
+            disabled: _isPhase1Locked || _isMoistureMet,
             onChanged: (v) => _maySay = v),
         SegmentedToggle(
             label: 'Dụng cụ sấy',
             optionA: 'Sạch',
             optionB: 'Không sạch',
-            disabled: _isPhase1Locked,
+            disabled: _isPhase1Locked || _isMoistureMet,
             onChanged: (v) => _dungCuSay = v),
         const FormSectionHeader('2.3 ĐIỀU KIỆN MÔI TRƯỜNG'),
         StandardInputField(
           label: 'Thời gian kiểm tra',
           controller: _timeCtrl,
           hint: 'HH:mm',
-          readOnly: _isPhase1Locked,
+          readOnly: _isPhase1Locked || _isMoistureMet,
           suffixIcon: IconButton(
             icon: const Icon(Icons.access_time),
             onPressed:
-                !_isPhase1Locked ? () => _setCurrentTime(_timeCtrl) : null,
+                !(_isPhase1Locked || _isMoistureMet) ? () => _setCurrentTime(_timeCtrl) : null,
           ),
         ),
         Row(
@@ -1053,7 +1062,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
               controller: _tempCtrl,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
-              readOnly: _isPhase1Locked,
+              readOnly: _isPhase1Locked || _isMoistureMet,
               status: inputStatuses['nhietDo'] ?? 'none',
               standardText: getStandardText('Nhiệt độ phòng', _standardParams),
               onChanged: (v) => validateInput('nhietDo', v, _standardParams, matchName: 'Nhiệt độ phòng'),
@@ -1066,7 +1075,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
               controller: _humidCtrl,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
-              readOnly: _isPhase1Locked,
+              readOnly: _isPhase1Locked || _isMoistureMet,
               status: inputStatuses['doAm'] ?? 'none',
               standardText: getStandardText('Độ ẩm phòng', _standardParams),
               onChanged: (v) => validateInput('doAm', v, _standardParams, matchName: 'Độ ẩm phòng'),
@@ -1079,7 +1088,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
           controller: _pressCtrl,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
-          readOnly: _isPhase1Locked,
+          readOnly: _isPhase1Locked || _isMoistureMet,
           status: inputStatuses['apLuc'] ?? 'none',
           standardText: getStandardText('Áp lực phòng', _standardParams),
           onChanged: (v) => validateInput('apLuc', v, _standardParams, matchName: 'Áp lực phòng'),
@@ -1091,7 +1100,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
           title: const Text('Kiểm tra tính nguyên vẹn túi lọc (số 4, 5)'),
           subtitle: const Text('Đảm bảo túi sạch và không rách'),
           value: _tuiLoc,
-          onChanged: !_isPhase1Locked
+          onChanged: (!_isPhase1Locked && !_isMoistureMet)
               ? (v) => setState(() => _tuiLoc = v ?? false)
               : null,
           controlAffinity: ListTileControlAffinity.leading,
@@ -1099,7 +1108,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
         CheckboxListTile(
           title: const Text('Lắp ráp máy theo SOP'),
           value: _lapRap,
-          onChanged: !_isPhase1Locked
+          onChanged: (!_isPhase1Locked && !_isMoistureMet)
               ? (v) => setState(() => _lapRap = v ?? false)
               : null,
           controlAffinity: ListTileControlAffinity.leading,
@@ -1108,7 +1117,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
             label: 'Kiểm tra tình trạng làm việc không tải',
             optionA: 'Ổn định',
             optionB: 'Không ổn định',
-            disabled: _isPhase1Locked,
+            disabled: _isPhase1Locked || _isMoistureMet,
             onChanged: (v) => _mayKhongTai = v),
         const Divider(),
         const FormSectionHeader('3.2 NẠP LIỆU'),

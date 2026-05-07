@@ -33,7 +33,8 @@ class WeighingStepScreen extends StatefulWidget {
   State<WeighingStepScreen> createState() => _WeighingStepScreenState();
 }
 
-class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMixin<WeighingStepScreen> {
+class _WeighingStepScreenState extends State<WeighingStepScreen>
+    with GmpStepMixin<WeighingStepScreen> {
   final _tempCtrl = TextEditingController();
   final _humidCtrl = TextEditingController();
   final _pressCtrl = TextEditingController();
@@ -75,7 +76,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
         if (!widget.isViewer) {
           startTimeUpdates([_checkTimeCtrl]);
         }
-        
+
         if (_currentPhase == ExecutionPhase.verification) {
           startPolling(_loadDataFromDB);
         }
@@ -87,7 +88,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       });
     }
   }
-
 
   Future<void> _loadDataFromDB() async {
     if (widget.batchId == null) {
@@ -119,7 +119,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
 
       // Load Logs for Phase Sync
       final logs = await ApiService.getProcessLogs(widget.batchId!);
-      debugPrint("DEBUG: [Weighing] widget.stepId=${widget.stepId} (${widget.stepId.runtimeType})");
+      debugPrint(
+          "DEBUG: [Weighing] widget.stepId=${widget.stepId} (${widget.stepId.runtimeType})");
 
       final log = logs.firstWhere(
         (l) => l['stepId']?.toString() == widget.stepId?.toString(),
@@ -130,7 +131,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
         _currentLog = log;
         final routing = log['routing'] ?? log['step'] ?? {};
         _standardParams = routing['stepParameters'] ?? [];
-        debugPrint("DEBUG: [Weighing] _standardParams count: ${_standardParams.length}");
+        debugPrint(
+            "DEBUG: [Weighing] _standardParams count: ${_standardParams.length}");
 
         final rawParams = _currentLog['parametersData'];
 
@@ -147,8 +149,10 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
           _tempCtrl.text = params['temperature'] ?? '';
           _humidCtrl.text = params['humidity'] ?? '';
           _pressCtrl.text = params['pressure'] ?? '';
-          if (params['phongPhaChe'] != null) _phongPhaChe = params['phongPhaChe'];
-          if (params['checkTime'] != null) _checkTimeCtrl.text = params['checkTime'];
+          if (params['phongPhaChe'] != null)
+            _phongPhaChe = params['phongPhaChe'];
+          if (params['checkTime'] != null)
+            _checkTimeCtrl.text = params['checkTime'];
           if (params['canIW2'] != null) _canIW2 = params['canIW2'];
           if (params['canPMA'] != null) _canPMA = params['canPMA'];
           if (params['dungCuCan'] != null) _dungCuCan = params['dungCuCan'];
@@ -169,14 +173,16 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
           final mName = bomItem['material']?['materialName'] ?? '';
           final mCode = bomItem['material']?['materialCode'] ?? '';
           final suggestedQC = bomItem['material']?['suggestedQCNumber'];
-          
+
           if (mName.isEmpty) continue;
 
           if (_materialsData[mName] == null) {
             _materialsData[mName] = {};
           }
 
-          if (suggestedQC != null && (_materialsData[mName]?['phieuKN'] == null || _materialsData[mName]!['phieuKN']!.isEmpty)) {
+          if (suggestedQC != null &&
+              (_materialsData[mName]?['phieuKN'] == null ||
+                  _materialsData[mName]!['phieuKN']!.isEmpty)) {
             _materialsData[mName]!['phieuKN'] = suggestedQC;
           }
 
@@ -186,20 +192,26 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
             bool hasDryingData = false;
 
             for (var l in logs) {
-              final stepName = (l['routing']?['stepName'] ?? l['step']?['stepName'] ?? '').toString();
-              if (stepName.toLowerCase().contains('sấy') && stepName.toLowerCase().contains(mCode.toLowerCase())) {
+              final stepName =
+                  (l['routing']?['stepName'] ?? l['step']?['stepName'] ?? '')
+                      .toString();
+              if (stepName.toLowerCase().contains('sấy') &&
+                  stepName.toLowerCase().contains(mCode.toLowerCase())) {
                 final pData = l['parametersData'];
                 Map<String, dynamic> p = {};
                 if (pData is Map) {
                   p = Map<String, dynamic>.from(pData);
                 } else if (pData is String && pData.isNotEmpty) {
-                  try { p = jsonDecode(pData); } catch(_) {}
+                  try {
+                    p = jsonDecode(pData);
+                  } catch (_) {}
                 }
 
                 if (p['rawInputs'] != null) {
                   final raw = p['rawInputs'] as Map;
                   if (raw['netWeight'] != null) {
-                    totalNetFromDrying += (double.tryParse(raw['netWeight'].toString()) ?? 0);
+                    totalNetFromDrying +=
+                        (double.tryParse(raw['netWeight'].toString()) ?? 0);
                     hasDryingData = true;
                   }
                 }
@@ -207,11 +219,14 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
             }
 
             if (hasDryingData && totalNetFromDrying > 0) {
-               // Only pre-fill if not already entered manually
-               if (_materialsData[mName]?['actual'] == null || _materialsData[mName]!['actual']!.isEmpty) {
-                 _materialsData[mName]!['actual'] = totalNetFromDrying.toStringAsFixed(4);
-                 debugPrint("GMP: Auto-pulled weight for $mName ($mCode) from Drying steps: $totalNetFromDrying kg");
-               }
+              // Only pre-fill if not already entered manually
+              if (_materialsData[mName]?['actual'] == null ||
+                  _materialsData[mName]!['actual']!.isEmpty) {
+                _materialsData[mName]!['actual'] =
+                    totalNetFromDrying.toStringAsFixed(4);
+                debugPrint(
+                    "GMP: Auto-pulled weight for $mName ($mCode) from Drying steps: $totalNetFromDrying kg");
+              }
             }
           }
         }
@@ -241,8 +256,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     }
   }
 
-
-
   @override
   void dispose() {
     _tempCtrl.dispose();
@@ -255,14 +268,14 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     super.dispose();
   }
 
-
-
   void _updateAllInputStatuses() {
-    validateInput('temperature', _tempCtrl.text, _standardParams, matchName: 'Nhiệt độ phòng cân');
-    validateInput('humidity', _humidCtrl.text, _standardParams, matchName: 'Độ ẩm phòng cân');
-    validateInput('pressure', _pressCtrl.text, _standardParams, matchName: 'Áp lực phòng cân');
+    validateInput('temperature', _tempCtrl.text, _standardParams,
+        matchName: 'Nhiệt độ phòng cân');
+    validateInput('humidity', _humidCtrl.text, _standardParams,
+        matchName: 'Độ ẩm phòng cân');
+    validateInput('pressure', _pressCtrl.text, _standardParams,
+        matchName: 'Áp lực phòng cân');
   }
-
 
   Future<void> _approveByQC(String status) async {
     final pin = await showPinDialog();
@@ -292,7 +305,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
         if (status != 'Approved') Navigator.pop(context, true);
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('✔ QC đã xác nhận: $status')));
-        
+
         // Refresh data to update UI/Phase
         await _loadDataFromDB();
       }
@@ -310,7 +323,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
 
   void _calculateDynamicBOM() {
     double? A = double.tryParse(_lotWeightACtrl.text); // Lot weight in kg
-    double? C = double.tryParse(_purityCCtrl.text);    // Alkaloid content in %
+    double? C = double.tryParse(_purityCCtrl.text); // Alkaloid content in %
 
     if (A == null || C == null || C < 0.1) {
       return;
@@ -319,12 +332,12 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     setState(() {
       // 1. Calculate Pure Alkaloid Weight (kg)
       double pureAlkaloidKg = (A * C) / 100;
-      
+
       // 2. Calculate Capsule Yield (Q)
       // Standard: 1.25mg Alkaloid per capsule
       // Q = (Pure Alkaloid in mg) / 1.25
       double qRaw = (pureAlkaloidKg * 1000000) / 1.250;
-      double Q = qRaw.roundToDouble(); 
+      double Q = qRaw.roundToDouble();
 
       _targetYieldQ = Q;
       _isCalculated = true;
@@ -342,7 +355,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       double nlc3WeightKg = A;
       double fixedTDsKg = (1.62 + 29.70 + 4.05 + 4.05) * Q / 1000000.0;
       double td8WeightKg = totalWeightKg - nlc3WeightKg - fixedTDsKg;
-      
+
       _dynamicTargets['TD-8'] = td8WeightKg;
       _dynamicTargets['NLP-6'] = Q; // NLP-6 is empty capsule count (units)
     });
@@ -350,7 +363,9 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
 
   bool _isFormValid() {
     // Check mandatory environmental data
-    if (_tempCtrl.text.isEmpty || _humidCtrl.text.isEmpty || _pressCtrl.text.isEmpty) {
+    if (_tempCtrl.text.isEmpty ||
+        _humidCtrl.text.isEmpty ||
+        _pressCtrl.text.isEmpty) {
       debugPrint("GMP Validation: Missing environment data (Phase 1)");
       return false;
     }
@@ -359,7 +374,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     for (var item in _bom) {
       final mat = item['material'] ?? {};
       final name = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
-      
+
       final actual = _materialsData[name]?['actual'];
       final phieuKN = _materialsData[name]?['phieuKN'];
 
@@ -384,8 +399,10 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
 
   void _showValidationError() {
     String errorMsg = 'Vui lòng hoàn thành các thông tin sau:\n';
-    
-    if (_tempCtrl.text.isEmpty || _humidCtrl.text.isEmpty || _pressCtrl.text.isEmpty) {
+
+    if (_tempCtrl.text.isEmpty ||
+        _humidCtrl.text.isEmpty ||
+        _pressCtrl.text.isEmpty) {
       errorMsg += '- Thông số môi trường (Nhiệt độ, Độ ẩm, Áp suất)\n';
     }
 
@@ -394,7 +411,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       final name = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
       final actual = _materialsData[name]?['actual'];
       final phieuKN = _materialsData[name]?['phieuKN'];
-      
+
       if (actual == null || actual.isEmpty || actual == '0') {
         errorMsg += '- Khối lượng thực tế cho $name\n';
       }
@@ -408,15 +425,18 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     }
 
     showDialog(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('THIẾU THÔNG TIN', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-        content: Text(errorMsg),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('ĐÓNG'))
-        ],
-      )
-    );
+        context: context,
+        builder: (c) => AlertDialog(
+              title: const Text('THIẾU THÔNG TIN',
+                  style: TextStyle(
+                      color: Colors.red, fontWeight: FontWeight.bold)),
+              content: Text(errorMsg),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(c),
+                    child: const Text('ĐÓNG'))
+              ],
+            ));
   }
 
   Future<void> _verifyAndSubmit() async {
@@ -427,19 +447,21 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       for (var item in _bom) {
         final mat = item['material'] ?? {};
         final name = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
-        if (_materialsData[name]?['actual'] == null || _materialsData[name]!['actual']!.isEmpty) {
+        if (_materialsData[name]?['actual'] == null ||
+            _materialsData[name]!['actual']!.isEmpty) {
           missing += ' Thiếu KL $name. ';
         }
-        if (_materialsData[name]?['phieuKN'] == null || _materialsData[name]!['phieuKN']!.isEmpty) {
+        if (_materialsData[name]?['phieuKN'] == null ||
+            _materialsData[name]!['phieuKN']!.isEmpty) {
           missing += ' Thiếu QC $name. ';
         }
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ Thiếu thông tin: $missing'), backgroundColor: Colors.red)
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('❌ Thiếu thông tin: $missing'),
+          backgroundColor: Colors.red));
       return;
     }
-    
+
     bool hasDeviation = false;
     String deviationMsg = '';
 
@@ -452,9 +474,11 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     final target = (_batchInfo?['plannedQuantity'] as num?)?.toDouble() ?? 0.0;
     if (target > 0) {
       final diffPercent = ((totalActual - target).abs() / target) * 100;
-      if (diffPercent > 1.0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('❌ Tổng khối lượng ($totalActual) lệch quá 1% so với mẻ ($target)!')));
+      double percent = 5.0;
+      if (diffPercent > percent) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                '❌ Tổng khối lượng ($totalActual) lệch quá ${percent.toStringAsFixed(2)}% so với mẻ ($target)!')));
         return;
       }
     }
@@ -515,14 +539,13 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
         hasDeviation ? deviationMsg : null);
   }
 
-
-
   Future<void> _nextPhase() async {
     // Standard GMP validation for all phases
     if (inputStatuses.values.contains('error')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Vui lòng điều chỉnh các thông số đang báo đỏ (ngoài khoảng cho phép) trước khi tiếp tục!'), backgroundColor: Colors.red)
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              '❌ Vui lòng điều chỉnh các thông số đang báo đỏ (ngoài khoảng cho phép) trước khi tiếp tục!'),
+          backgroundColor: Colors.red));
       return;
     }
 
@@ -615,7 +638,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            if (_currentPhase != ExecutionPhase.precheck && 
+            if (_currentPhase != ExecutionPhase.precheck &&
                 _currentPhase != ExecutionPhase.completed &&
                 _currentPhase != ExecutionPhase.verification) {
               _prevPhase();
@@ -750,7 +773,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
           label: 'Thời gian kiểm tra (Tự động)',
           controller: _checkTimeCtrl,
           readOnly: true,
-          suffixIcon: const Icon(Icons.access_time, size: 20, color: Colors.blue),
+          suffixIcon:
+              const Icon(Icons.access_time, size: 20, color: Colors.blue),
           hint: 'Đang lấy thời gian...'),
       Row(
         children: [
@@ -759,11 +783,14 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
             label: 'Nhiệt độ (°C)',
             controller: _tempCtrl,
             status: inputStatuses['temperature'] ?? 'none',
-            standardText: getStandardText('Nhiệt độ phòng cân', _standardParams),
+            standardText:
+                getStandardText('Nhiệt độ phòng cân', _standardParams),
             keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
-            onChanged: (v) => validateInput('temperature', v, _standardParams, matchName: 'Nhiệt độ phòng cân'),
-
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
+            ],
+            onChanged: (v) => validateInput('temperature', v, _standardParams,
+                matchName: 'Nhiệt độ phòng cân'),
           )),
           const SizedBox(width: 16),
           Expanded(
@@ -773,9 +800,11 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
             status: inputStatuses['humidity'] ?? 'none',
             standardText: getStandardText('Độ ẩm phòng cân', _standardParams),
             keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
-            onChanged: (v) => validateInput('humidity', v, _standardParams, matchName: 'Độ ẩm phòng cân'),
-
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
+            ],
+            onChanged: (v) => validateInput('humidity', v, _standardParams,
+                matchName: 'Độ ẩm phòng cân'),
           )),
         ],
       ),
@@ -786,7 +815,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
         standardText: getStandardText('Áp lực phòng cân', _standardParams),
         keyboardType: TextInputType.number,
         inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
-        onChanged: (v) => validateInput('pressure', v, _standardParams, matchName: 'Áp lực phòng cân'),
+        onChanged: (v) => validateInput('pressure', v, _standardParams,
+            matchName: 'Áp lực phòng cân'),
       ),
       SegmentedToggle(
           label: 'Cân IW2-60',
@@ -823,13 +853,17 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
               label: 'Khối lượng lô NLC 3 (A - kg)',
               controller: _lotWeightACtrl,
               hint: 'Ví dụ: 16',
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
+              ],
               keyboardType: TextInputType.number),
           StandardInputField(
               label: 'Hàm lượng Alkaloid (C - %)',
               controller: _purityCCtrl,
               hint: 'Ví dụ: 0.4',
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
+              ],
               keyboardType: TextInputType.number),
         ],
       ),
@@ -838,15 +872,19 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
         final mat = item['material'] ?? {};
         final name = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
         final code = mat['materialCode'] ?? 'N/A';
-        
+
         double target = (item['quantity'] ?? item['Quantity'] ?? 0.0) as double;
         if (_isCalculated && _dynamicTargets.containsKey(code)) {
           target = _dynamicTargets[code]!;
         }
-        
-        final uomId = mat['baseUomId'] ?? mat['uomId'] ?? item['uomId'] ?? item['UomId'] ?? 1;
+
+        final uomId = mat['baseUomId'] ??
+            mat['uomId'] ??
+            item['uomId'] ??
+            item['UomId'] ??
+            1;
         final unitLabel = (uomId == 4) ? 'viên' : 'kg';
-        
+
         return MaterialCard(
             materialName: '$name ($code)',
             requiredWeightKg: target.toStringAsFixed(4),
@@ -858,7 +896,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       }),
       const FormSectionHeader('GHI CHÚ'),
       TextField(
-        controller: _noteCtrl, 
+        controller: _noteCtrl,
         maxLines: 4,
         decoration: const InputDecoration(
           hintText: 'Nhập ghi chú chi tiết tại đây...',
