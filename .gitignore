@@ -30,7 +30,9 @@ TestResults.xml
 *.userosscache
 *.sln.docstates
 .gitnexus
-.claude
+.github/
+.claude/
+.agent/
 *.zip
 
 # Bổ sung cho .NET / C#
@@ -41,3 +43,6 @@ obj/
 node_modules/
 build/
 dist/c
+
+.dotnet-home/
+.dotnet/

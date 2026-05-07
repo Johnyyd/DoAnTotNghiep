@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { certificatesApi, inventoryApi, materialsApi } from '@/services/api';
 import { FileCheck2, Plus, Search } from 'lucide-react';
+import FinishedGoodsStats from './FinishedGoodsStats';
 
 function normalizeMaterial(raw: any) {
   return {
@@ -105,6 +106,12 @@ export default function FinishedProducts() {
         <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" /><input value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-9" placeholder="Tìm mã hoặc tên thành phẩm..." /></div>
       </div>
 
+      {tab === 'completed' && (
+        <div className="card">
+          <div className="[&>div>div:first-child]:hidden"><FinishedGoodsStats /></div>
+        </div>
+      )}
+
       <div className="card p-0 overflow-hidden">
         {filtered.length === 0 ? <div className="text-center py-12 text-neutral-500">Không có dữ liệu phù hợp</div> : (
           <div className="table-container">
@@ -139,8 +146,8 @@ export default function FinishedProducts() {
       </div>
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-xl font-bold">Thêm thành phẩm mong muốn</h3>
             <div className="space-y-3">
               <div>

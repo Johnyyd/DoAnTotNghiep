@@ -557,45 +557,40 @@ namespace GMP_System.Controllers
             var existing = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
             if (existing == null)
             {
-                return NotFound(new { success = false, message = "Không tìm th?y l?nh s?n xu?t." });
+                return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
             }
 
             if (existing.Status != "Draft")
             {
-                return BadRequest(new { success = false, message = "Ch? có th? duy?t l?nh ? tr?ng thái Draft." });
+                return BadRequest(new { success = false, message = "Không thể duy trì lệnh sản xuất đang ở trạng thái " + existing.Status + "." });
             }
 
             if (string.IsNullOrWhiteSpace(request.Signature))
             {
-                return BadRequest(new { success = false, message = "Thi?u ch? ký di?n t?." });
+                return BadRequest(new { success = false, message = "Thiếu chữ ký điện tử." });
             }
 
             existing.Status = "Approved";
             _unitOfWork.ProductionOrders.Update(existing);
             await _unitOfWork.CompleteAsync();
 
-            return Ok(new { success = true, message = "Duy?t l?nh s?n xu?t thành công." });
+            return Ok(new { success = true, message = "Duyệt lệnh sản xuất thành công." });
         }
 
         [HttpPost("{id}/hold")]
-        public async Task<IActionResult> Hold(int id, [FromBody] HoldRequest request)
+        public async Task<IActionResult> Hold(int id)
         {
             var existing = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
             if (existing == null)
-            {
-                return NotFound(new { success = false, message = "Không tìm th?y l?nh s?n xu?t." });
-            }
+                return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
 
-            if (string.IsNullOrWhiteSpace(request.Reason))
-            {
-                return BadRequest(new { success = false, message = "Vui lòng nh?p lý do t?m ngung." });
-            }
+            if (existing.Status != "Approved")
+                return BadRequest(new { success = false, message = "Không thể tạm dừng lệnh sản xuất " + id + "." });
 
             existing.Status = "Hold";
             _unitOfWork.ProductionOrders.Update(existing);
             await _unitOfWork.CompleteAsync();
-
-            return Ok(new { success = true, message = "Ðã t?m ngung l?nh s?n xu?t." });
+            return Ok(new { success = true, message = "Đã tạm dừng lệnh sản xuất." });
         }
 
         [HttpPost("{id}/resume")]
@@ -603,15 +598,15 @@ namespace GMP_System.Controllers
         {
             var existing = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
             if (existing == null)
-            {
-                return NotFound(new { success = false, message = "Không tìm th?y l?nh s?n xu?t." });
-            }
+                return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
 
-            existing.Status = "InProcess";
+            if (existing.Status != "Hold")
+                return BadRequest(new { success = false, message = "Chỉ có thể tiếp tục lệnh đang ở trạng thái Hold." });
+
+            existing.Status = "Approved";
             _unitOfWork.ProductionOrders.Update(existing);
             await _unitOfWork.CompleteAsync();
-
-            return Ok(new { success = true, message = "Ðã m? l?i l?nh s?n xu?t." });
+            return Ok(new { success = true, message = "Đã chuyển lệnh về trạng thái Approved." });
         }
 
         [HttpPost("{id}/complete")]
@@ -620,19 +615,19 @@ namespace GMP_System.Controllers
             var existing = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
             if (existing == null)
             {
-                return NotFound(new { success = false, message = "Không tìm th?y l?nh s?n xu?t." });
+                return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
             }
 
             if (string.IsNullOrWhiteSpace(request.Signature))
             {
-                return BadRequest(new { success = false, message = "Thi?u ch? ký di?n t? xác nh?n hoàn thành." });
+                return BadRequest(new { success = false, message = "Thiếu chữ ký điện tử xác nhận hoàn thành." });
             }
 
             existing.Status = "Completed";
             _unitOfWork.ProductionOrders.Update(existing);
             await _unitOfWork.CompleteAsync();
 
-            return Ok(new { success = true, message = "Ðã hoàn thành l?nh s?n xu?t." });
+            return Ok(new { success = true, message = "Đã hoàn thành lệnh sản xuất." });
         }
 
         [HttpDelete("{id}")]
@@ -641,13 +636,14 @@ namespace GMP_System.Controllers
             var order = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
             if (order == null)
             {
-                return NotFound(new { success = false, message = "Không tìm th?y l?nh s?n xu?t." });
+                return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
             }
 
             _unitOfWork.ProductionOrders.Remove(order);
             await _unitOfWork.CompleteAsync();
-            return Ok(new { success = true, message = "Ðã xóa l?nh s?n xu?t." });
+            return Ok(new { success = true, message = "Đã xóa lệnh sản xuất." });
         }
+
     }
 
     public class SignatureRequest

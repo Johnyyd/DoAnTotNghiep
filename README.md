@@ -359,10 +359,10 @@ Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
 
 **Câu lệnh khởi động dự án**
 ```
-cd .\MobileApp\
-flutter build web --release
-cd ..
 npm audit fix
+cd .\MobileApp\
+flutter pub get
+cd ..
 docker-compose up -d --build
 
 ```
@@ -370,10 +370,5 @@ docker-compose up -d --build
 **Câu lệnh reset database**
 ```
 docker-compose down -v
-cd .\MobileApp\
-flutter build web --release
-cd ..
-npm audit fix
-docker-compose up -d --build
 
 ```

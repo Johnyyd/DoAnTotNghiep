@@ -99,6 +99,14 @@ export const recipesApi = {
     api.put<ApiResponse<RecipeRouting>>(`/recipes/${recipeId}/routing/${stepId}`, data),
   removeRoutingStep: (recipeId: number, stepId: number) =>
     api.delete<ApiResponse<null>>(`/recipes/${recipeId}/routing/${stepId}`),
+  reorderRouting: (recipeId: number, items: { routingId: number; stepNumber: number }[]) =>
+    api.put<ApiResponse<null>>(`/recipes/${recipeId}/routing/reorder`, items),
+
+  // Tech Specs
+  getTechSpecs: (recipeId: number) => api.get<ApiResponse<any[]>>(`/recipes/${recipeId}/tech-specs`),
+  addTechSpec: (recipeId: number, data: any) => api.post<ApiResponse<any>>(`/recipes/${recipeId}/tech-specs`, data),
+  updateTechSpec: (recipeId: number, specId: number, data: any) => api.put<ApiResponse<any>>(`/recipes/${recipeId}/tech-specs/${specId}`, data),
+  deleteTechSpec: (recipeId: number, specId: number) => api.delete<ApiResponse<null>>(`/recipes/${recipeId}/tech-specs/${specId}`),
 };
 
 // ============== PRODUCTION ORDERS ==============
@@ -115,8 +123,8 @@ export const productionOrdersApi = {
   approve: (id: number, signature: string) =>
     api.post<ApiResponse<ProductionOrder>>(`/production-orders/${id}/approve`, { signature }),
 
-  hold: (id: number, reason: string) =>
-    api.post<ApiResponse<ProductionOrder>>(`/production-orders/${id}/hold`, { reason }),
+  hold: (id: number) =>
+    api.post<ApiResponse<ProductionOrder>>(`/production-orders/${id}/hold`),
 
   resume: (id: number) =>
     api.post<ApiResponse<ProductionOrder>>(`/production-orders/${id}/resume`),
@@ -194,6 +202,9 @@ export const equipmentsApi = {
 
 export const areasApi = {
   getAll: () => api.get<ApiResponse<any[]>>('/areas'),
+  create: (data: any) => api.post<ApiResponse<any>>('/areas', data),
+  update: (id: number, data: any) => api.put<ApiResponse<any>>(`/areas/${id}`, data),
+  delete: (id: number) => api.delete<ApiResponse<any>>(`/areas/${id}`),
 };
 
 export const certificatesApi = {

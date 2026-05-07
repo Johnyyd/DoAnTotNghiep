@@ -33,6 +33,7 @@ IF OBJECT_ID('ProductionBatches', 'U') IS NOT NULL DELETE FROM ProductionBatches
 IF OBJECT_ID('ProductionOrders', 'U') IS NOT NULL DELETE FROM ProductionOrders;
 IF OBJECT_ID('InventoryLots', 'U') IS NOT NULL DELETE FROM InventoryLots;
 IF OBJECT_ID('RecipeBom', 'U') IS NOT NULL DELETE FROM RecipeBom;
+IF OBJECT_ID('RecipeTechSpecs', 'U') IS NOT NULL DELETE FROM RecipeTechSpecs;
 IF OBJECT_ID('RecipeRouting', 'U') IS NOT NULL DELETE FROM RecipeRouting;
 IF OBJECT_ID('Recipes', 'U') IS NOT NULL DELETE FROM Recipes;
 IF OBJECT_ID('Materials', 'U') IS NOT NULL DELETE FROM Materials;
@@ -133,14 +134,13 @@ INSERT INTO Equipments (EquipmentId, EquipmentCode, EquipmentName, TechnicalSpec
 (3,  'TE-212',        N'Cân điện tử',            N'210 g; 0,01 g',        N'Kiểm tra khối lượng viên',    2),
 (4,  'AD-LP-200',     N'Máy trộn lập phương',    N'200 kg/ mẻ',           N'Trộn đồng nhất',              3),
 (5,  'NJP-1200 D',    N'Máy đóng nang tự động',  N'72.000 viên/ giờ',     N'Cấp thuốc vào nang',          1),
-(6,  'IPJ',           N'Máy lau nang',           N'100.000 viên/ giờ',    N'Làm sạch viên thuốc',         1),
-(7,  'KW-102',        N'Máy đóng chai',          N'500 chai/ giờ',        N'Đếm viên thuốc vào chai',     1),
+(6,  'IPJ',           N'Máy lau nang',           N'100.000 viên/ giờ',    N'Làm sạch viên thuốc',         4),
+(7,  'KW-102',        N'Máy đóng chai',          N'500 chai/ giờ',        N'Đếm viên thuốc vào chai',     4),
 (8,  'CNTB-TSC',      N'Tủ sấy chai',            N'1,5 m³',               N'Sấy khô chai',                1),
-(9,  'VIDEOJET-1220', N'Máy in số lô',           N'250 nhãn/ giờ',        N'In số lô, ngày SX, hạn dùng', 1),
-(10, 'ABL-M',         N'Máy dán nhãn tự động',   N'1.500 nhãn/ giờ',      N'Dán nhãn vào thân chai',      1),
-(11, 'F-262',         N'Máy gấp toa',            N'10.000 toa/ giờ',      N'Bế tờ HDSD',                  1),
+(9,  'VIDEOJET-1220', N'Máy in số lô',           N'250 nhãn/ giờ',        N'In số lô, ngày SX, hạn dùng', 4),
+(10, 'ABL-M',         N'Máy dán nhãn tự động',   N'1.500 nhãn/ giờ',      N'Dán nhãn vào thân chai',      4),
+(11, 'F-262',         N'Máy gấp toa',            N'10.000 toa/ giờ',      N'Bế tờ HDSD',                  4),
 (12, 'KBC-TS-50',     N'Máy sấy tầng sôi',       N'50 kg/ mẻ',            N'Sấy khô dược liệu',           1);
-
 SET IDENTITY_INSERT Equipments OFF;
 GO
 
@@ -154,7 +154,7 @@ INSERT INTO Materials (MaterialId, MaterialCode, MaterialName, Type, BaseUomId, 
 (3,  'TD-3',    N'Sodium starch glycolate',            'RawMaterial',  1, 1, N'USP 30', GETDATE()),
 (4,  'TD-4',    N'Talc',                               'RawMaterial',  2, 1, N'DĐVN V', GETDATE()),
 (5,  'TD-5',    N'Magie Stearat',                      'RawMaterial',  2, 1, N'DĐVN V', GETDATE()),
-(6,  'TD-8',    N'Tinh bột ngô (Filler)',              'RawMaterial',  1, 1, N'DĐVN V', GETDATE()),
+(6,  'TD-8',    N'Tinh bột ngô',                       'RawMaterial',  1, 1, N'DĐVN V', GETDATE()),
 (7,  'NLP-6',   N'Vỏ nang cứng',                       'RawMaterial', 4, 1, N'DĐVN V', GETDATE()),
 (8,  'PVP',     N'PVP K30',                            'RawMaterial',  1, 1, N'USP 30', GETDATE()),
 (9,  'PARA',    N'Bột Paracetamol tinh khiết',         'RawMaterial',  1, 1, N'USP 30', GETDATE()),
@@ -190,12 +190,12 @@ INSERT INTO RecipeBOM (BomId, RecipeId, MaterialId, Quantity, UomId, WastePercen
 (4,  1, 4,   4.05,  2, 0.10, N'Talc'),
 (5,  1, 5,   4.05,  2, 0.10, N'Magnesi stearat'),
 (6,  1, 6,  250.58, 2, 0.50, N'Tinh bột'),
-(7,  1, 7,  1.00, 4, 0.10, N'Vỏ nang'),
+(7,  1, 7,  1.00, 4, 0.10,   N'Vỏ nang'),
 (8,  2, 9,  250.00, 2, 0.30, N'Paracetamol'),
 (9,  2, 6,  150.00, 2, 1.00, N'Tinh bột ngô'),
-(10, 2, 10, 80.00, 2, 0.50, N'Lactose'),
-(11, 2, 5,   5.00, 2, 0.10, N'Magie stearat'),
-(12, 2, 8,  10.00, 2, 0.20, N'PVP K30');
+(10, 2, 10, 80.00, 2, 0.50,  N'Lactose'),
+(11, 2, 5,   5.00, 2, 0.10,  N'Magie stearat'),
+(12, 2, 8,  10.00, 2, 0.20,  N'PVP K30');
 SET IDENTITY_INSERT RecipeBOM OFF;
 GO
 
@@ -433,5 +433,35 @@ IF @MatPvcId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM InventoryLots WHERE Mater
     INSERT INTO InventoryLots (MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, SupplierName, CreatedAt)
     VALUES (@MatPvcId, 'L-PVC-01', 20.00, DATEADD(DAY, -15, GETDATE()), DATEADD(YEAR, 3, GETDATE()), N'Nhà cung cấp I', GETDATE());
 
-PRINT 'GMP Database Initialization & Full Seeding Completed Successfully!';
+-- =====================================================================
+-- SEED: RecipeTechSpecs (Tiêu chuẩn kỹ thuật - mẫu Viên nang Crila)
+-- =====================================================================
+PRINT 'Seeding RecipeTechSpecs...';
 
+DECLARE @CrilaRecipeId INT = (SELECT TOP 1 RecipeId FROM Recipes WHERE MaterialId IN (SELECT MaterialId FROM Materials WHERE MaterialCode = 'TP-VNC'));
+
+IF @CrilaRecipeId IS NOT NULL
+BEGIN
+    SET IDENTITY_INSERT RecipeTechSpecs ON;
+
+    INSERT INTO RecipeTechSpecs (SpecId, RecipeId, ParentId, SortOrder, Content, IsChecked) VALUES
+    (1, @CrilaRecipeId, NULL, 0, N'Viên nang số "0", bột thuốc trong nang màu vàng nhạt đến nâu đậm, có mùi thơm đặc trưng, vị đặc biệt', 0),
+    (2, @CrilaRecipeId, NULL, 1, N'Mất khối lượng do làm khô không quá 9,0 %', 0),
+    (3, @CrilaRecipeId, NULL, 2, N'Độ tan rã không quá 30 phút', 0),
+    (4, @CrilaRecipeId, NULL, 3, N'Độ đồng đều khối lượng: Khối lượng trung bình bột thuốc trong nang ± 7,5 %', 0),
+    (5, @CrilaRecipeId, NULL, 4, N'Định tính: Phải thể hiện phép định tính của cao khô Trinh nữ Crila', 0),
+    (6, @CrilaRecipeId, NULL, 5, N'Định lượng: Hàm lượng alcaloid toàn phần tính theo lycorin phải từ 1,125 - 1,375 mg/viên', 0),
+    (7, @CrilaRecipeId, NULL, 6, N'Độ nhiễm khuẩn', 0),
+    (8, @CrilaRecipeId, 7, 0, N'Tổng số vi khuẩn hiếu khí ≤ 10⁴ Khuẩn lạc/g', 0),
+    (9, @CrilaRecipeId, 7, 1, N'Tổng số bào tử nấm men – mốc ≤ 10² Khuẩn lạc/g', 0),
+    (10, @CrilaRecipeId, 7, 2, N'Tổng số vi khuẩn Gram âm dung nạp mật ≤ 10² Khuẩn lạc/g', 0),
+    (11, @CrilaRecipeId, 7, 3, N'Salmonella: Không được có (10g)', 0),
+    (12, @CrilaRecipeId, 7, 4, N'E.Coli, Pseudomonas aeruginosa, Staphylococcus aureus: Không được có (1g)', 0);
+
+    SET IDENTITY_INSERT RecipeTechSpecs OFF;
+    PRINT 'RecipeTechSpecs seeded successfully.';
+END
+ELSE
+    PRINT 'Warning: Crila recipe not found. Skipping tech specs seed.';
+
+PRINT 'GMP Database Initialization & Full Seeding Completed Successfully!';
