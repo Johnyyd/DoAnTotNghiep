@@ -401,24 +401,6 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
   }
 
   Future<void> _verifyAndSubmit() async {
-    // GMP Validation: Silicagel count must be a positive integer
-    final silicagelCount = int.tryParse(_silicagelCtrl.text);
-    if (silicagelCount == null || silicagelCount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Số lượng Silicagel phải là số nguyên dương!'), backgroundColor: Colors.red)
-      );
-      return;
-    }
-
-    // GMP Validation: Packaging quantity must be provided
-    final packagingQty = double.tryParse(_slDongGoi);
-    if (packagingQty == null || packagingQty <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Tổng khối lượng đóng gói phải lớn hơn 0!'), backgroundColor: Colors.red)
-      );
-      return;
-    }
-
     bool hasDeviation = false;
     String deviationMsg = '';
 
@@ -486,6 +468,23 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
     } else if (_currentPhase == ExecutionPhase.input) {
       await _verifyAndSubmit();
     } else if (_currentPhase == ExecutionPhase.execution) {
+      // GMP Validation: Silicagel and Packaging must be validated BEFORE finishing
+      final silicagelCount = int.tryParse(_silicagelCtrl.text);
+      if (silicagelCount == null || silicagelCount <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('❌ Số lượng Silicagel phải là số nguyên dương!'), backgroundColor: Colors.red)
+        );
+        return;
+      }
+
+      final packagingQty = double.tryParse(_slDongGoi);
+      if (packagingQty == null || packagingQty <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('❌ Tổng khối lượng đóng gói phải lớn hơn 0!'), backgroundColor: Colors.red)
+        );
+        return;
+      }
+
       await _submit('Passed', null);
     }
   }
