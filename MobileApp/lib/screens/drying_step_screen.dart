@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../components/step_form_inputs.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
@@ -486,6 +487,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
     if (_currentPhase == ExecutionPhase.precheck) {
       if (_tempCtrl.text.isEmpty || _humidCtrl.text.isEmpty || _pressCtrl.text.isEmpty) return false;
       if (_slTruocCtrl.text.isEmpty) return false;
+      if (widget.stepName.contains('NLC 3') && _inputMoistureCtrl.text.isEmpty) return false;
     } else if (_currentPhase == ExecutionPhase.input) {
       if (_tempInCtrl.text.isEmpty || _tgSayCaiDatCtrl.text.isEmpty) return false;
     } else if (_currentPhase == ExecutionPhase.execution) {
@@ -522,8 +524,16 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
         if (mounted) {
           setState(() {
             if (status == 'Approved') {
-              _currentPhase = ExecutionPhase.execution;
-              _startTimer();
+              // Kiểm tra nếu là trường hợp bỏ qua sấy (NLC 3 và độ ẩm <= 5%)
+              final moisture = double.tryParse(_inputMoistureCtrl.text) ?? 0;
+              if (widget.stepName.contains('NLC 3') && moisture > 0 && moisture <= 5.0) {
+                _currentPhase = ExecutionPhase.completed;
+                // Gửi bản chốt Passed lên server
+                _submit('Passed', 'QC xác nhận đạt chuẩn, bỏ qua sấy.');
+              } else {
+                _currentPhase = ExecutionPhase.execution;
+                _startTimer();
+              }
             }
           });
           if (status != 'Approved') {
@@ -569,6 +579,37 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
 
   Future<void> _nextPhase() async {
     if (_currentPhase == ExecutionPhase.precheck) {
+      // Logic kiểm tra độ ẩm cho NLC 3
+      if (widget.stepName.contains('NLC 3')) {
+        final moisture = double.tryParse(_inputMoistureCtrl.text) ?? 0;
+        if (moisture > 0 && moisture <= 5.0) {
+          final shouldSkip = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('ĐỘ ẨM ĐẠT CHUẨN'),
+              content: Text('Độ ẩm NLC 3 hiện tại là $moisture%, đạt tiêu chuẩn (<= 5%). Bạn có muốn BỎ QUA công đoạn sấy này không?'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('KHÔNG, VẪN SẤY')),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: const Text('BỎ QUA & HOÀN TẤT')
+                ),
+              ],
+            )
+          );
+
+          if (shouldSkip == true) {
+            await _submit('PendingQC', 'Yêu cầu bỏ qua sấy do độ ẩm đạt chuẩn ($moisture%)');
+            if (mounted) {
+              setState(() => _currentPhase = ExecutionPhase.verification);
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✔ Đã gửi yêu cầu bỏ qua sấy lên QC duyệt.')));
+            }
+            return;
+          }
+        }
+      }
+
       final now = DateTime.now();
       if (_timeStartCtrl.text.isEmpty) {
         _timeStartCtrl.text =
@@ -939,6 +980,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
             label: 'Độ ẩm NLC 3 (%)',
             controller: _inputMoistureCtrl,
             keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
             readOnly: _isPhase1Locked,
             hint: 'Tiêu chuẩn: > 5%',
             standardText: _getStandardText('Độ ẩm NLC 3 (Input)'),
@@ -997,6 +1039,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
               label: 'Nhiệt độ (°C)',
               controller: _tempCtrl,
               keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
               readOnly: _isPhase1Locked,
               status: inputStatuses['nhietDo'] ?? 'none',
               standardText: _getStandardText('Nhiệt độ phòng'),
@@ -1009,6 +1052,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
               label: 'Độ ẩm (%)',
               controller: _humidCtrl,
               keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
               readOnly: _isPhase1Locked,
               status: inputStatuses['doAm'] ?? 'none',
               standardText: _getStandardText('Độ ẩm phòng'),
@@ -1021,6 +1065,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
           label: 'Áp lực phòng (Pa)',
           controller: _pressCtrl,
           keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
           readOnly: _isPhase1Locked,
           status: inputStatuses['apLuc'] ?? 'none',
           standardText: _getStandardText('Áp lực phòng'),
@@ -1083,6 +1128,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
           label: 'Khối lượng trước sấy (${_batchInfo?['order']?['unit'] ?? 'kg'})',
           controller: _slTruocCtrl,
           keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
           readOnly: _isPhase1Locked,
           hint: 'Nhập khối lượng thực tế',
           status: inputStatuses['slTruocSay'] ?? 'none',
@@ -1118,6 +1164,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
               label: 'Nhiệt độ khí vào (°C)',
               controller: _tempInCtrl,
               keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
               readOnly: _isPhase2Locked,
               status: inputStatuses['nhietDoKhiVao'] ?? 'none',
               standardText: _getStandardText('Nhiệt độ sấy'),
@@ -1134,6 +1181,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
               label: 'TG sấy cài đặt (phút)',
               controller: _tgSayCaiDatCtrl,
               keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
               readOnly: _isPhase2Locked,
               status: inputStatuses['tgSayCaiDat'] ?? 'none',
               standardText: _getStandardText('Thời gian sấy'),
@@ -1234,6 +1282,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
                     controller: _tempOutCtrl,
                     readOnly: _isPhase4Locked || _secondsRemaining > 0,
                     keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
                     onChanged: (v) => setState(() {}),
                 )),
           ],
@@ -1244,12 +1293,12 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
           label: 'Độ ẩm sau sấy (%)',
           controller: _humidAfterCtrl,
           keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
           readOnly: _isPhase4Locked || _secondsRemaining > 0,
           status: inputStatuses['doAmSauSay'] ?? 'none',
           standardText: _getStandardText('Độ ẩm thực tế'),
           onChanged: (v) =>
               validateInput('doAmSauSay', v, _standardParams, matchName: 'Độ ẩm'),
-
         ),
         DryingSampleField(
             onResultChanged: (v) => _mauKiemTra = v,
@@ -1260,6 +1309,7 @@ class _DryingStepScreenState extends State<DryingStepScreen> with GmpStepMixin<D
           label: 'Khối lượng sau khi sấy (${_batchInfo?['order']?['unit'] ?? 'kg'})',
           controller: _slSauCtrl,
           keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
           readOnly: _isPhase4Locked || _secondsRemaining > 0,
           hint: 'Cân khối lượng thực tế sau sấy',
           status: inputStatuses['slSauSay'] ?? 'none',

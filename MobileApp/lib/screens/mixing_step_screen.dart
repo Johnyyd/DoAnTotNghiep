@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../components/step_form_inputs.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
@@ -804,6 +805,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
         status: inputStatuses['apLuc'] ?? 'none',
         standardText: _getStandardText('Áp lực phòng'),
         keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
         onChanged: (v) => validateInput('apLuc', v, _standardParams, matchName: 'Áp lực phòng'),
 
         ),
@@ -858,12 +860,14 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
                 child: StandardInputField(
                     label: 'TG thực tế (phút)',
                     controller: _tgThucTeCtrl,
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
                     keyboardType: TextInputType.number)),
             const SizedBox(width: 16),
             Expanded(
                 child: StandardInputField(
                     label: 'Tốc độ thực tế (v/p)',
                     controller: _tocDoThucTeCtrl,
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
                     keyboardType: TextInputType.number)),
           ],
         ),
@@ -888,12 +892,14 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
                 child: StandardInputField(
                     label: 'TG Gđ 1 (phút)',
                     controller: _tgGiaiDoan1Ctrl,
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
                     keyboardType: TextInputType.number)),
             const SizedBox(width: 16),
             Expanded(
                 child: StandardInputField(
                     label: 'TG Gđ 2 (phút)',
                     controller: _tgGiaiDoan2Ctrl,
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
                     keyboardType: TextInputType.number)),
           ],
         ),
@@ -909,6 +915,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
                 child: StandardInputField(
                     label: 'RSD thực tế (%)',
                     controller: _rsdThucTeCtrl,
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
                     keyboardType: TextInputType.number)),
           ],
         ),
@@ -941,6 +948,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
               child: StandardInputField(
                 label: 'Mẫu lưu/Dư phẩm (kg)',
                 controller: _duPhamCtrl,
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
                 keyboardType: TextInputType.number,
               ),
             ),
@@ -949,6 +957,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
               child: StandardInputField(
                 label: 'Tỷ trọng gõ',
                 controller: _tyTrongCtrl,
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
                 keyboardType: TextInputType.number,
               ),
             ),
@@ -959,6 +968,7 @@ class _MixingStepScreenState extends State<MixingStepScreen> with GmpStepMixin<M
           label: 'Số lượng Silicagel đã thêm (viên)',
           controller: _silicagelCtrl,
           hint: 'Chuẩn: 5 viên/thùng',
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
           keyboardType: TextInputType.number,
         ),
 

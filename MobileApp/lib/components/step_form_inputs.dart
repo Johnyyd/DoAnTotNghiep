@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Component [FormSectionHeader] hiển thị tiêu đề cho một phần (section) của biểu mẫu.
 /// Tiêu đề được viết hoa, in đậm và dùng màu nhận diện thương hiệu.
@@ -196,6 +197,8 @@ class StandardInputField extends StatelessWidget {
   final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
   final bool readOnly;
+  final List<TextInputFormatter>? inputFormatters;
+  final String status;
 
   const StandardInputField({
     super.key,
@@ -207,10 +210,9 @@ class StandardInputField extends StatelessWidget {
     this.controller,
     this.onChanged,
     this.readOnly = false,
+    this.inputFormatters,
     this.status = 'none', // 'none', 'warning', 'error'
   });
-
-  final String status;
 
   @override
   Widget build(BuildContext context) {
@@ -230,6 +232,7 @@ class StandardInputField extends StatelessWidget {
             keyboardType: keyboardType,
             onChanged: onChanged,
             readOnly: readOnly,
+            inputFormatters: inputFormatters,
             style: TextStyle(
               color: status == 'error' ? Colors.red.shade900 : (status == 'warning' ? Colors.orange.shade900 : Colors.black87),
               fontWeight: status != 'none' ? FontWeight.bold : FontWeight.normal,
@@ -319,9 +322,9 @@ class _DryingSampleFieldState extends State<DryingSampleField> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Expanded(child: TextField(controller: _gController, readOnly: widget.readOnly, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: InputDecoration(hintText: 'g/túi', contentPadding: const EdgeInsets.symmetric(horizontal: 8), filled: widget.readOnly, fillColor: widget.readOnly ? Colors.grey.shade100 : null))),
+            Expanded(child: TextField(controller: _gController, readOnly: widget.readOnly, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))], onChanged: (_) => _calculate(), decoration: InputDecoration(hintText: 'g/túi', contentPadding: const EdgeInsets.symmetric(horizontal: 8), filled: widget.readOnly, fillColor: widget.readOnly ? Colors.grey.shade100 : null))),
             const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('x', style: TextStyle(fontWeight: FontWeight.bold))),
-            Expanded(child: TextField(controller: _tuiController, readOnly: widget.readOnly, keyboardType: TextInputType.number, onChanged: (_) => _calculate(), decoration: InputDecoration(hintText: 'số túi', contentPadding: const EdgeInsets.symmetric(horizontal: 8), filled: widget.readOnly, fillColor: widget.readOnly ? Colors.grey.shade100 : null))),
+            Expanded(child: TextField(controller: _tuiController, readOnly: widget.readOnly, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly], onChanged: (_) => _calculate(), decoration: InputDecoration(hintText: 'số túi', contentPadding: const EdgeInsets.symmetric(horizontal: 8), filled: widget.readOnly, fillColor: widget.readOnly ? Colors.grey.shade100 : null))),
             const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('=', style: TextStyle(fontWeight: FontWeight.bold))),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -386,6 +389,7 @@ class _MixingPackagingFieldState extends State<MixingPackagingField> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.inventory_2_outlined),
                 ),
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 onChanged: (_) => _calculate(),
               ),
             ),
@@ -401,6 +405,7 @@ class _MixingPackagingFieldState extends State<MixingPackagingField> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.scale_outlined),
                 ),
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
                 onChanged: (_) => _calculate(),
               ),
             ),

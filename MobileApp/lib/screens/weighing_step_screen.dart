@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../components/step_form_inputs.dart';
 import '../components/material_card.dart';
 import '../services/api_service.dart';
@@ -311,37 +312,42 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
   }
 
   void _calculateDynamicBOM() {
-    double? A = double.tryParse(_lotWeightACtrl.text);
-    double? C = double.tryParse(_purityCCtrl.text);
+    double? A = double.tryParse(_lotWeightACtrl.text); // Lot weight in kg
+    double? C = double.tryParse(_purityCCtrl.text);    // Alkaloid content in %
 
-    if (A == null || C == null || C < 0.4) {
+    if (A == null || C == null || C < 0.1) {
       return;
     }
 
     setState(() {
-      double X = (A * C) / 100;
-      double Y = (A * 1.250) / (X * 1000);
-      double qRaw = A / Y;
-      double Q = qRaw.roundToDouble(); // GMP: Must be a whole number of capsules
+      // 1. Calculate Pure Alkaloid Weight (kg)
+      double pureAlkaloidKg = (A * C) / 100;
+      
+      // 2. Calculate Capsule Yield (Q)
+      // Standard: 1.25mg Alkaloid per capsule
+      // Q = (Pure Alkaloid in mg) / 1.25
+      double qRaw = (pureAlkaloidKg * 1000000) / 1.250;
+      double Q = qRaw.roundToDouble(); 
 
       _targetYieldQ = Q;
       _isCalculated = true;
       _dynamicTargets.clear();
 
+      // 3. Set Targets in kg
       _dynamicTargets['NLC-3'] = A;
-      _dynamicTargets['TD-1'] = (0.00162 * Q);
-      _dynamicTargets['TD-3'] = (0.02970 * Q);
-      _dynamicTargets['TD-4'] = (0.00405 * Q);
-      _dynamicTargets['TD-5'] = (0.00405 * Q);
+      _dynamicTargets['TD-1'] = (0.00162 * Q) / 1000.0; // 1.62mg/cap -> kg
+      _dynamicTargets['TD-3'] = (0.02970 * Q) / 1000.0; // 29.70mg/cap -> kg
+      _dynamicTargets['TD-4'] = (0.00405 * Q) / 1000.0; // 4.05mg/cap -> kg
+      _dynamicTargets['TD-5'] = (0.00405 * Q) / 1000.0; // 4.05mg/cap -> kg
 
-      // Recalculate TD-8 (filling excipient) based on rounded Q to ensure 540mg/capsule
-      double totalWeightMg = 540.0 * Q;
-      double nlc3TotalMg = A * 1000.0;
-      double fixedTDsTotalMg = (1.62 + 29.70 + 4.05 + 4.05) * Q;
-      double td8TotalMg = totalWeightMg - nlc3TotalMg - fixedTDsTotalMg;
+      // 4. Calculate TD-8 (Filling Excipient) to reach 540mg total weight per capsule
+      double totalWeightKg = (540.0 * Q) / 1000000.0;
+      double nlc3WeightKg = A;
+      double fixedTDsKg = (1.62 + 29.70 + 4.05 + 4.05) * Q / 1000000.0;
+      double td8WeightKg = totalWeightKg - nlc3WeightKg - fixedTDsKg;
       
-      _dynamicTargets['TD-8'] = td8TotalMg / 1000.0;
-      _dynamicTargets['NLP-6'] = Q; // NLP-6 is empty capsule count
+      _dynamicTargets['TD-8'] = td8WeightKg;
+      _dynamicTargets['NLP-6'] = Q; // NLP-6 is empty capsule count (units)
     });
   }
 
@@ -758,6 +764,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
             status: inputStatuses['temperature'] ?? 'none',
             standardText: _getStandardText('Nhiệt độ phòng cân'),
             keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
             onChanged: (v) => validateInput('temperature', v, _standardParams, matchName: 'Nhiệt độ phòng cân'),
 
           )),
@@ -769,6 +776,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
             status: inputStatuses['humidity'] ?? 'none',
             standardText: _getStandardText('Độ ẩm phòng cân'),
             keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
             onChanged: (v) => validateInput('humidity', v, _standardParams, matchName: 'Độ ẩm phòng cân'),
 
           )),
@@ -780,6 +788,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
         status: inputStatuses['pressure'] ?? 'none',
         standardText: _getStandardText('Áp lực phòng cân'),
         keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
         onChanged: (v) => validateInput('pressure', v, _standardParams, matchName: 'Áp lực phòng cân'),
 
       ),
@@ -819,12 +828,16 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
         backgroundColor: Colors.indigo.shade50,
         children: [
           StandardInputField(
-              label: 'Khối lượng lô NLC 3 (A - gam)',
+              label: 'Khối lượng lô NLC 3 (A - kg)',
               controller: _lotWeightACtrl,
+              hint: 'Ví dụ: 16',
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
               keyboardType: TextInputType.number),
           StandardInputField(
               label: 'Hàm lượng Alkaloid (C - %)',
               controller: _purityCCtrl,
+              hint: 'Ví dụ: 0.4',
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
               keyboardType: TextInputType.number),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 
 class MaterialCard extends StatefulWidget {
@@ -163,6 +164,7 @@ class _MaterialCardState extends State<MaterialCard> {
                         controller: _controller,
                         readOnly: widget.readOnly,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
                         onChanged: (v) {
                           _checkMatch();
                           widget.onWeightChanged(v);
