@@ -1,8 +1,9 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { productionBatchesApi, productionOrdersApi } from '@/services/api';
 import { ClipboardList, Search, CheckCircle, Clock, RefreshCw, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import BatchLogsModal from '@/components/BatchLogsModal';
 
 interface OrderOption {
   orderId: number;
@@ -56,6 +57,7 @@ export default function ProductionBatches() {
     expiryDate: '',
     currentStep: 1,
   });
+  const [selectedLogBatch, setSelectedLogBatch] = useState<{ id: number; number: string } | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -215,10 +217,13 @@ export default function ProductionBatches() {
                               Hoàn thành
                             </button>
                           )}
-                          <button className="btn-ghost text-sm flex items-center">
-                            <Clock className="w-4 h-4 mr-1" /> Logs
-                          </button>
-                        </div>
+                            <button 
+                              onClick={() => setSelectedLogBatch({ id: batch.batchId, number: batch.batchNumber })}
+                              className="btn-ghost text-sm flex items-center"
+                            >
+                              <Clock className="w-4 h-4 mr-1" /> Logs
+                            </button>
+                          </div>
                       </td>
                     </tr>
                   );
@@ -285,6 +290,13 @@ export default function ProductionBatches() {
             </div>
           </div>
         </div>
+      )}
+      {selectedLogBatch && (
+        <BatchLogsModal 
+          batchId={selectedLogBatch.id} 
+          batchNumber={selectedLogBatch.number} 
+          onClose={() => setSelectedLogBatch(null)} 
+        />
       )}
     </div>
   );

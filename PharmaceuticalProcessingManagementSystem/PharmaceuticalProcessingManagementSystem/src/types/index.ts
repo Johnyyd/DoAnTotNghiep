@@ -150,6 +150,8 @@ export interface BatchProcessLog {
   notes?: string;
   qcResult?: 'Pass' | 'Fail';
   qcSignature?: string;
+  parametersData?: string;
+  resultStatus?: string;
 }
 
 export interface SystemAuditLog {

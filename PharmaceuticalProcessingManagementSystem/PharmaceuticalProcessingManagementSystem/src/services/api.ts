@@ -156,10 +156,10 @@ export const productionBatchesApi = {
     api.post<ApiResponse<ProductionBatch>>(`/production-batches/${batchId}/finish`),
 
   getProcessLogs: (batchId: number) =>
-    api.get<ApiResponse<BatchProcessLog[]>>(`/batchprocesslogs/batch/${batchId}`),
+    api.get<ApiResponse<BatchProcessLog[]>>(`/batch-process-logs/batch/${batchId}`),
 
   logStep: (data: Partial<BatchProcessLog>) =>
-    api.post<ApiResponse<BatchProcessLog>>('/batchprocesslogs', data),
+    api.post<ApiResponse<BatchProcessLog>>('/batch-process-logs', data),
 };
 
 // ============== INVENTORY & TRACEABILITY ==============
