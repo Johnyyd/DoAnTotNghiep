@@ -1,0 +1,2 @@
+Lỗi không đồng nhất đơn bị dẫn đến sai số nguyên liệu
+Lỗi số viên nang không là số nguyên dương
