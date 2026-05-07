@@ -108,6 +108,8 @@ namespace GMP_System.Controllers
                     if (batch.Order.PlannedQuantity > 0 && batch.PlannedQuantity.HasValue)
                     {
                         scaledQuantity = (bom.RequiredQuantity * batch.PlannedQuantity.Value) / batch.Order.PlannedQuantity;
+                        // Round to 4 decimal places (0.1g precision) for practical weighing
+                        scaledQuantity = Math.Round(scaledQuantity, 4, MidpointRounding.AwayFromZero);
                     }
 
                     bomsWithQC.Add(new {

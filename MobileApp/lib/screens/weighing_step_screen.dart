@@ -38,7 +38,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
   final _humidCtrl = TextEditingController();
   final _pressCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
-  final _hieuChuanCanCtrl = TextEditingController();
   final _checkTimeCtrl = TextEditingController(); // Thời gian kiểm tra
 
   // Dynamic BMR Logic
@@ -182,7 +181,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
           if (params['canIW2'] != null) _canIW2 = params['canIW2'];
           if (params['canPMA'] != null) _canPMA = params['canPMA'];
           if (params['dungCuCan'] != null) _dungCuCan = params['dungCuCan'];
-          _hieuChuanCanCtrl.text = params['hieuChuanCan'] ?? '';
 
           if (params['materials'] != null) {
             final Map<String, dynamic> parsedMats =
@@ -192,14 +190,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
                 _materialsData[k] = Map<String, String>.from(v);
               }
             });
-          }
-        }
-
-        // Auto-fill equipment code if empty
-        if (_hieuChuanCanCtrl.text.isEmpty) {
-          final eqCode = routing['defaultEquipment']?['equipmentCode'];
-          if (eqCode != null) {
-            _hieuChuanCanCtrl.text = eqCode;
           }
         }
 
@@ -251,7 +241,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     _humidCtrl.dispose();
     _pressCtrl.dispose();
     _noteCtrl.dispose();
-    _hieuChuanCanCtrl.dispose();
     _lotWeightACtrl.dispose();
     _purityCCtrl.dispose();
     _checkTimeCtrl.dispose();
@@ -357,10 +346,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       debugPrint("GMP Validation: Missing environment data (Phase 1)");
       return false;
     }
-    if (_hieuChuanCanCtrl.text.isEmpty) {
-      debugPrint("GMP Validation: Missing scale calibration");
-      return false;
-    }
 
     // Check all BOM materials
     for (var item in _bom) {
@@ -394,9 +379,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
     
     if (_tempCtrl.text.isEmpty || _humidCtrl.text.isEmpty || _pressCtrl.text.isEmpty) {
       errorMsg += '- Thông số môi trường (Nhiệt độ, Độ ẩm, Áp suất)\n';
-    }
-    if (_hieuChuanCanCtrl.text.isEmpty) {
-      errorMsg += '- Hiệu chuẩn cân và Mã thiết bị\n';
     }
 
     for (var item in _bom) {
@@ -567,7 +549,6 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
       "canIW2": _canIW2,
       "canPMA": _canPMA,
       "dungCuCan": _dungCuCan,
-      "hieuChuanCan": _hieuChuanCanCtrl.text,
       "materials": _materialsData,
       "dynamicYield": _targetYieldQ,
       "isCalculated": _isCalculated
@@ -790,12 +771,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen> with GmpStepMix
         keyboardType: TextInputType.number,
         inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
         onChanged: (v) => validateInput('pressure', v, _standardParams, matchName: 'Áp lực phòng cân'),
-
       ),
-      StandardInputField(
-          label: 'Mã hiệu chuẩn cân (MT/QC)',
-          controller: _hieuChuanCanCtrl,
-          hint: 'MT-XXXX'),
       SegmentedToggle(
           label: 'Cân IW2-60',
           optionA: 'Tốt',

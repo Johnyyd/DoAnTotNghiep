@@ -331,13 +331,13 @@ namespace GMP_System.Controllers
                             if (numBatches < 1) numBatches = 1;
                         }
 
+                        // Distribute units equally across batches for "cleaner" numbers
+                        decimal unitsPerBatch = Math.Floor(order.PlannedQuantity / numBatches);
                         decimal remainingUnits = order.PlannedQuantity;
-                        decimal maxUnitsPerBatch = batchSize > 0 ? Math.Floor(50000000m / batchSize) : order.PlannedQuantity;
-                        if (maxUnitsPerBatch < 1) maxUnitsPerBatch = 1;
 
                         for (int i = 0; i < numBatches; i++)
                         {
-                            decimal currentBatchUnits = Math.Min(remainingUnits, maxUnitsPerBatch);
+                            decimal currentBatchUnits = (i == numBatches - 1) ? remainingUnits : unitsPerBatch;
                             remainingUnits -= currentBatchUnits;
 
                             string batchNumber = $"B{order.OrderCode.Substring(3)}-{(i + 1):D2}";
