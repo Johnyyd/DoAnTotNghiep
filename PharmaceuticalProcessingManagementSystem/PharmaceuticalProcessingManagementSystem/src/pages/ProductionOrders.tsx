@@ -92,6 +92,7 @@ export default function ProductionOrders() {
     materialId: Number(item.materialId ?? item.MaterialId ?? 0),
     materialName: item.material?.materialName ?? item.Material?.MaterialName ?? 'Nguyên liệu',
     mgPerTablet: Number(item.quantity ?? item.Quantity ?? 0),
+    wastePercentage: Number(item.wastePercentage ?? item.WastePercentage ?? 0),
   })), [bomRaw]);
 
   const stockByMaterial = useMemo(() => {
@@ -125,12 +126,20 @@ export default function ProductionOrders() {
       const isCountBased = item.materialName.toLowerCase().includes('vỏ nang') || 
                           item.materialName.toLowerCase().includes('nang');
       
-      const requiredKg = isCountBased 
-        ? (totalTablets * item.mgPerTablet) 
-        : (totalTablets * item.mgPerTablet) / 1_000_000;
+      const baseRequired = (totalTablets * item.mgPerTablet);
+      
+      let requiredValue: number;
+      if (isCountBased) {
+        // No waste for count-based (UOM 4)
+        requiredValue = baseRequired;
+      } else {
+        // Apply waste and convert mg to kg
+        const wasteFactor = 1 + (item.wastePercentage / 100);
+        requiredValue = (baseRequired * wasteFactor) / 1_000_000;
+      }
         
       const available = stockByMaterial.get(item.materialId) ?? 0;
-      return { ...item, requiredKg, available, enough: available >= requiredKg, isCountBased };
+      return { ...item, requiredKg: requiredValue, available, enough: available >= requiredValue, isCountBased };
     });
   }, [bomItems, totalTablets, stockByMaterial]);
 
@@ -332,14 +341,14 @@ export default function ProductionOrders() {
         {requiredMaterials.length > 0 && (
           <div className="table-container bg-white rounded-lg border border-primary-200">
             <table className="table">
-              <thead><tr><th>Nguyên liệu</th><th>Định mức (mg/viên)</th><th>Khối lượng cần (kg)</th><th>Tồn hiện tại (kg)</th><th>Đủ/Thiếu</th></tr></thead>
+              <thead><tr><th>Nguyên liệu</th><th>Định mức (mg/viên)</th><th>Số lượng cần (kg/viên)</th><th>Tồn hiện tại</th><th>Đủ/Thiếu</th></tr></thead>
               <tbody>
                 {requiredMaterials.map((item, idx) => (
                   <tr key={`${item.materialId}-${idx}`}>
                     <td>{item.materialName}</td>
                     <td>{item.mgPerTablet.toFixed(2)}</td>
-                    <td>{item.requiredKg.toFixed(4)}</td>
-                    <td>{item.available.toFixed(4)}</td>
+                    <td>{item.requiredKg.toFixed(item.isCountBased ? 0 : 4)}</td>
+                    <td>{item.available.toFixed(item.isCountBased ? 0 : 4)}</td>
                     <td>
                       <span className={`px-2 py-1 rounded-full text-xs ${item.enough ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                         {item.enough ? 'Đủ' : 'Thiếu'}

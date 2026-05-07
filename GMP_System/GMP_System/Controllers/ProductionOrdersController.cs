@@ -501,18 +501,17 @@ namespace GMP_System.Controllers
             return shortages;
         }
 
-        private static decimal CalculateRequiredQuantity(decimal plannedQuantity, decimal recipeQuantity, int uomId, decimal? wastePercentage)
+        private decimal CalculateRequiredQuantity(decimal plannedQuantity, decimal recipeQuantity, int uomId, decimal? wastePercentage)
         {
             decimal baseQty;
             if (uomId == 4) // Count-based (e.g. Viên)
             {
                 baseQty = plannedQuantity * recipeQuantity;
+                return decimal.Round(baseQty, 6, MidpointRounding.AwayFromZero);
             }
-            else // Mass-based (mg/unit to kg)
-            {
-                baseQty = (plannedQuantity * recipeQuantity) / 1_000_000m;
-            }
-
+            
+            // Mass-based (mg/unit to kg)
+            baseQty = (plannedQuantity * recipeQuantity) / 1_000_000m;
             var wasteFactor = 1m + ((wastePercentage ?? 0m) / 100m);
             return decimal.Round(baseQty * wasteFactor, 6, MidpointRounding.AwayFromZero);
         }
