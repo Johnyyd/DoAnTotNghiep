@@ -70,18 +70,14 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowVercelAndLocal",
         policy =>
         {
-
-            // policy.WithOrigins(
-            //         "https://do-an-tot-nghiep-mz49c8gbc-johnyyds-projects.vercel.app", // Link Vercel
-            //         "http://localhost:8080", // Frontend Local
-            //         "http://localhost:8081"  // Mobile Local
             policy.SetIsOriginAllowed(origin => 
                     new Uri(origin).Host == "localhost" || 
-                    origin.Contains("vercel.app")
+                    origin.Contains("vercel.app") ||
+                    origin.Contains("railway.app")
                   )
                   .AllowAnyHeader()
                   .AllowAnyMethod()
-                  .AllowCredentials(); // Bắt buộc phải có để gửi token/cookie
+                  .AllowCredentials(); 
         });
 });
 
@@ -108,17 +104,7 @@ builder.Services.AddAuthentication(x =>
 });
 
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowVercel",
-        policy =>
-        {
-            policy.WithOrigins("https://do-an-tot-nghiep-blond.vercel.app") // Vercel
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials(); 
-        });
-});
+// Extra policy removed to avoid confusion; "AllowVercelAndLocal" handles everything.
 
 
 var app = builder.Build();
@@ -237,7 +223,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection(); // Disable redirection behind reverse proxies (Railway/Vercel) to prevent infinite loops or mixed content errors.
 
 app.UseCors("AllowVercelAndLocal");
 
