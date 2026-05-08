@@ -360,7 +360,7 @@ export default function ManagerOperations() {
               <th>Bước</th>
               <th>Công đoạn</th>
               <th>Thiết bị được sử dụng</th>
-              <th>Khu vá»±c</th>
+              <th>Khu vực</th>
               <th>Thời gian cài đặt</th>
               <th>Mô tả</th>
             </tr>
