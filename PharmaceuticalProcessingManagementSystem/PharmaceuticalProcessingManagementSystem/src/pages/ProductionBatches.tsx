@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { productionBatchesApi, productionOrdersApi } from '@/services/api';
-import { ClipboardList, Search, CheckCircle, Clock, RefreshCw, Plus } from 'lucide-react';
+import { ClipboardList, Search, CheckCircle, Clock, RefreshCw} from 'lucide-react';
 import { toast } from 'sonner';
 import BatchLogsModal from '@/components/BatchLogsModal';
+import { formatDate } from '@/utils/format';
 
 interface OrderOption {
   orderId: number;
@@ -30,6 +31,7 @@ interface UiBatch {
   order?: {
     orderCode?: string;
     recipe?: {
+      recipeName?: string;
       material?: {
         materialName?: string;
       };
@@ -78,10 +80,14 @@ export default function ProductionBatches() {
         (ordersRaw as { data?: unknown; items?: unknown })?.items ??
         [];
 
-    return (rows as any[]).map((item) => ({
-      orderId: Number(item.orderId ?? item.OrderId ?? 0),
-      orderCode: item.orderCode ?? item.OrderCode ?? '',
-    }));
+    return (rows as any[]).map((item) => {
+      const rName = item.recipe?.recipeName ?? item.Recipe?.RecipeName ?? '';
+      const mName = item.recipe?.material?.materialName ?? item.Recipe?.Material?.MaterialName ?? item.orderCode ?? '';
+      return {
+        orderId: Number(item.orderId ?? item.OrderId ?? 0),
+        orderCode: rName ? `${rName} - ${mName}` : mName,
+      };
+    });
   }, [ordersRaw]);
 
   const createBatchMutation = useMutation({
@@ -124,12 +130,7 @@ export default function ProductionBatches() {
   };
 
   const fmt = (dateString?: string) => {
-    if (!dateString) return '-';
-    try {
-      return new Date(dateString).toLocaleString('vi-VN');
-    } catch {
-      return '-';
-    }
+    return formatDate(dateString);
   };
 
   return (
@@ -139,10 +140,6 @@ export default function ProductionBatches() {
           <h1 className="text-2xl font-bold text-neutral-900">Quản lý lô thành phẩm</h1>
           <p className="text-neutral-500 mt-1">Theo dõi và cập nhật các mẻ/lô thành phẩm</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="btn-primary">
-          <Plus className="w-4 h-4 mr-2" />
-          Tạo mẻ mới
-        </button>
       </div>
 
       <div className="card">
@@ -193,7 +190,10 @@ export default function ProductionBatches() {
                         <code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">{batch.batchNumber}</code>
                       </td>
                       <td className="text-sm text-neutral-600">{batch.order?.orderCode ?? `#${batch.orderId}`}</td>
-                      <td className="text-sm text-neutral-700">{batch.order?.recipe?.material?.materialName ?? '-'}</td>
+                      <td className="text-sm text-neutral-700">
+                        {batch.order?.recipe?.recipeName ? `${batch.order.recipe.recipeName} - ` : ''}
+                        {batch.order?.recipe?.material?.materialName ?? '-'}
+                      </td>
                       <td>
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusInfo.badgeClass}`}>
                           {statusInfo.label}

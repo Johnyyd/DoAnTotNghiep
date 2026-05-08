@@ -113,7 +113,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowVercel",
         policy =>
         {
-            policy.WithOrigins("https://do-an-tot-nghiep-mz49c8gbc-johnyyds-projects.vercel.app") // Thay bằng đúng link Vercel ở ảnh của bạn
+            policy.WithOrigins("https://do-an-tot-nghiep-blond.vercel.app") // Vercel
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials(); 

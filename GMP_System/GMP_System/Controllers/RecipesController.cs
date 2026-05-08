@@ -24,6 +24,7 @@ namespace GMP_System.Controllers
             var recipes = await _context.Recipes
                 .Select(r => new {
                     r.RecipeId,
+                    r.RecipeName,
                     r.MaterialId,
                     r.VersionNumber,
                     r.BatchSize,
@@ -52,6 +53,7 @@ namespace GMP_System.Controllers
                 .Where(r => r.RecipeId == id)
                 .Select(r => new {
                     r.RecipeId,
+                    r.RecipeName,
                     r.MaterialId,
                     r.VersionNumber,
                     r.BatchSize,
@@ -109,6 +111,7 @@ namespace GMP_System.Controllers
                 return NotFound(new { success = false, message = "Không tìm thấy công thức." });
             }
 
+            existing.RecipeName = recipe.RecipeName;
             existing.MaterialId = recipe.MaterialId;
             existing.BatchSize = recipe.BatchSize;
             existing.Note = recipe.Note;
