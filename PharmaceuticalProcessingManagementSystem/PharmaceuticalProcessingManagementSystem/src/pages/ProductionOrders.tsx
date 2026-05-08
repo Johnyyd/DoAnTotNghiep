@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { certificatesApi, productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
 import { Calculator, ClipboardList, FileCheck2, Layers, Pencil, Plus, Search, Trash2, Upload, X } from 'lucide-react';
+import { formatNumber, formatDate } from '@/utils/format';
 
 type OrderStatus = 'Draft' | 'Approved' | 'InProcess' | 'Hold' | 'Completed';
 
@@ -71,12 +72,16 @@ export default function ProductionOrders() {
   const { data: ordersRaw, isLoading } = useQuery({ queryKey: ['productionOrders'], queryFn: () => productionOrdersApi.getAll() });
   const { data: recipesRaw } = useQuery({ queryKey: ['recipes'], queryFn: () => recipesApi.getAll() });
 
-  const recipes = useMemo(() => toRows<any>(recipesRaw).map((r) => ({
-    recipeId: Number(r.recipeId ?? r.RecipeId ?? 0),
-    recipeName: r.material?.materialName ?? r.Material?.MaterialName ?? `Công thức #${r.recipeId ?? r.RecipeId}`,
-    batchSize: Number(r.batchSize ?? r.BatchSize ?? 0),
-    uomName: r.material?.baseUom?.uomName ?? r.Material?.BaseUom?.UomName ?? 'viên',
-  })), [recipesRaw]);
+  const recipes = useMemo(() => toRows<any>(recipesRaw).map((r) => {
+    const rName = r.recipeName ?? r.RecipeName ?? '';
+    const mName = r.material?.materialName ?? r.Material?.MaterialName ?? `Sản phẩm #${r.materialId ?? r.MaterialId}`;
+    return {
+      recipeId: Number(r.recipeId ?? r.RecipeId ?? 0),
+      recipeName: rName ? `${rName} - ${mName}` : mName,
+      batchSize: Number(r.batchSize ?? r.BatchSize ?? 0),
+      uomName: r.material?.baseUom?.uomName ?? r.Material?.BaseUom?.UomName ?? 'viên',
+    };
+  }), [recipesRaw]);
 
   const selectedPlanRecipe = useMemo(() => recipes.find((r) => r.recipeId === planForm.recipeId) ?? null, [recipes, planForm.recipeId]);
 
@@ -90,6 +95,7 @@ export default function ProductionOrders() {
 
   const bomItems = useMemo(() => toRows<any>(bomRaw).map((item: any) => ({
     materialId: Number(item.materialId ?? item.MaterialId ?? 0),
+    materialCode: item.material?.materialCode ?? item.Material?.MaterialCode ?? '',
     materialName: item.material?.materialName ?? item.Material?.MaterialName ?? 'Nguyên liệu',
     mgPerTablet: Number(item.quantity ?? item.Quantity ?? 0),
     wastePercentage: Number(item.wastePercentage ?? item.WastePercentage ?? 0),
@@ -115,9 +121,9 @@ export default function ProductionOrders() {
   const totalMassKg = totalMassMg / 1_000_000;
 
   const displayFinishedMass = useMemo(() => {
-    if (planForm.massUnit === 'g') return `${(totalMassMg / 1000).toFixed(2)} g`;
-    if (planForm.massUnit === 'vien') return `${totalTablets.toLocaleString()} viên`;
-    return `${totalMassKg.toFixed(3)} kg`;
+    if (planForm.massUnit === 'g') return `${formatNumber(totalMassMg / 1000)} g`;
+    if (planForm.massUnit === 'vien') return `${formatNumber(totalTablets, 0)} viên`;
+    return `${formatNumber(totalMassKg, 3)} kg`;
   }, [planForm.massUnit, totalMassMg, totalTablets, totalMassKg]);
 
   const requiredMaterials = useMemo(() => {
@@ -147,11 +153,14 @@ export default function ProductionOrders() {
 
   const orders = useMemo<UiProductionOrder[]>(() => toRows<any>(ordersRaw).map((o) => {
     const recipe = recipes.find((r) => r.recipeId === Number(o.recipeId ?? o.RecipeId));
+    const rName = o.recipe?.recipeName ?? o.recipe?.RecipeName ?? recipe?.recipeName ?? '';
+    const mName = o.recipe?.material?.materialName ?? o.recipe?.Material?.MaterialName ?? '';
+    
     return {
       orderId: Number(o.orderId ?? o.OrderId ?? 0),
       orderCode: o.orderCode ?? o.OrderCode ?? '',
       recipeId: Number(o.recipeId ?? o.RecipeId ?? 0),
-      recipeName: o.recipe?.material?.materialName ?? o.Recipe?.Material?.MaterialName ?? recipe?.recipeName,
+      recipeName: rName ? `${rName} - ${mName}` : mName,
       uomName: o.recipe?.material?.baseUom?.uomName ?? recipe?.uomName ?? 'viên',
       plannedQuantity: Number(o.plannedQuantity ?? o.PlannedQuantity ?? 0),
       status: (o.status ?? o.Status ?? 'Draft') as OrderStatus,
@@ -322,8 +331,8 @@ export default function ProductionOrders() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-          <div className="p-3 rounded-lg bg-white border border-primary-200"><p className="text-neutral-500">Tổng số viên</p><p className="text-xl font-bold text-neutral-900">{totalTablets.toLocaleString()}</p></div>
-          <div className="p-3 rounded-lg bg-white border border-primary-200"><p className="text-neutral-500">Khối lượng 1 viên</p><p className="text-xl font-bold text-neutral-900">{oneTabletMg.toLocaleString()} mg</p></div>
+          <div className="p-3 rounded-lg bg-white border border-primary-200"><p className="text-neutral-500">Tổng số viên</p><p className="text-xl font-bold text-neutral-900">{formatNumber(totalTablets, 0)}</p></div>
+          <div className="p-3 rounded-lg bg-white border border-primary-200"><p className="text-neutral-500">Khối lượng 1 viên</p><p className="text-xl font-bold text-neutral-900">{formatNumber(oneTabletMg)} mg</p></div>
           <div className="p-3 rounded-lg bg-white border border-primary-200"><p className="text-neutral-500">Khối lượng thành phẩm</p><p className="text-xl font-bold text-neutral-900">{displayFinishedMass}</p></div>
         </div>
 
@@ -332,7 +341,7 @@ export default function ProductionOrders() {
             <p className="font-semibold mb-1">Không đủ nguyên liệu tồn kho:</p>
             {insufficientMaterials.map((m) => (
               <p key={m.materialId}>
-                - {m.materialName}: cần {m.requiredKg.toFixed(4)} {m.isCountBased ? 'viên' : 'kg'}, hiện có {m.available.toFixed(4)} {m.isCountBased ? 'viên' : 'kg'}
+                - {m.materialName}: cần {formatNumber(m.requiredKg, 4)} {m.isCountBased ? 'viên' : 'kg'}, hiện có {formatNumber(m.available, 4)} {m.isCountBased ? 'viên' : 'kg'}
               </p>
             ))}
           </div>
@@ -346,9 +355,9 @@ export default function ProductionOrders() {
                 {requiredMaterials.map((item, idx) => (
                   <tr key={`${item.materialId}-${idx}`}>
                     <td>{item.materialName}</td>
-                    <td>{item.mgPerTablet.toFixed(2)}</td>
-                    <td>{item.requiredKg.toFixed(item.isCountBased ? 0 : 4)}</td>
-                    <td>{item.available.toFixed(item.isCountBased ? 0 : 4)}</td>
+                    <td>{formatNumber(item.mgPerTablet)}</td>
+                    <td>{formatNumber(item.requiredKg, item.isCountBased ? 0 : 4)}</td>
+                    <td>{formatNumber(item.available, item.isCountBased ? 0 : 4)}</td>
                     <td>
                       <span className={`px-2 py-1 rounded-full text-xs ${item.enough ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                         {item.enough ? 'Đủ' : 'Thiếu'}
@@ -408,14 +417,14 @@ export default function ProductionOrders() {
                         <Layers className="w-3.5 h-3.5 opacity-60" />
                       </button>
                     </td>
-                    <td className="font-medium text-neutral-900">{order.recipeName || `Công thức #${order.recipeId}`}</td>
-                    <td>{order.plannedQuantity.toLocaleString()} <span className="text-neutral-500 text-xs">{order.uomName}</span></td>
+                     <td className="font-medium text-neutral-900">{order.recipeName || `Công thức #${order.recipeId}`}</td>
+                    <td>{formatNumber(order.plannedQuantity, 0)} <span className="text-neutral-500 text-xs">{order.uomName}</span></td>
                     <td>
                       <span className={`text-xs font-semibold px-2 py-1 rounded-full ${statusClass(order.status)}`}>
                         {order.status}
                       </span>
                     </td>
-                    <td>{order.plannedStartDate ? new Date(order.plannedStartDate).toLocaleDateString('vi-VN') : '-'}</td>
+                    <td>{formatDate(order.plannedStartDate)}</td>
                     <td className="text-right">
                       <div className="flex justify-end gap-2">
                         {order.status === 'Approved' && (
@@ -543,10 +552,10 @@ export default function ProductionOrders() {
                     <div key={bom.orderBomId} className="bg-white p-2.5 rounded-lg border border-neutral-200 flex justify-between items-center shadow-sm">
                       <div>
                         <p className="text-xs font-semibold text-neutral-900">{bom.materialName}</p>
-                        <p className="text-[10px] text-neutral-500">Mã: {bom.materialId}</p>
+                        <p className="text-[10px] text-neutral-500">Mã: {bom.material?.materialCode ?? bom.Material?.MaterialCode ?? '-'}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs font-bold text-primary-700">{bom.requiredQuantity?.toFixed(4)} {bom.uomName || 'kg'}</p>
+                        <p className="text-xs font-bold text-primary-700">{formatNumber(bom.requiredQuantity, 4)} {bom.uomName || 'kg'}</p>
                       </div>
                     </div>
                   ))}
@@ -577,8 +586,8 @@ export default function ProductionOrders() {
                         <td><code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">{batchNum}</code></td>
                         <td><span className={`text-xs font-semibold px-2 py-1 rounded-full ${statusClass(s)}`}>{s}</span></td>
                         <td>{b.currentStep ?? b.CurrentStep ?? '-'}</td>
-                        <td>{b.manufactureDate ? new Date(b.manufactureDate).toLocaleDateString('vi-VN') : '-'}</td>
-                        <td>{b.endTime ? new Date(b.endTime).toLocaleDateString('vi-VN') : '-'}</td>
+                        <td>{formatDate(b.manufactureDate)}</td>
+                        <td>{formatDate(b.endTime)}</td>
                         <td>
                           {isCompleted ? (
                             <div className="flex items-center gap-2">

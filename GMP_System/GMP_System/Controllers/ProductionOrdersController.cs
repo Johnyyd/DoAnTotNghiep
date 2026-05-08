@@ -40,6 +40,7 @@ namespace GMP_System.Controllers
                     Recipe = o.Recipe == null ? null : new
                     {
                         o.Recipe.RecipeId,
+                        o.Recipe.RecipeName,
                         o.Recipe.BatchSize,
                         Material = o.Recipe.Material == null ? null : new
                         {
@@ -88,6 +89,7 @@ namespace GMP_System.Controllers
                     Recipe = o.Recipe == null ? null : new
                     {
                         o.Recipe.RecipeId,
+                        o.Recipe.RecipeName,
                         o.Recipe.BatchSize,
                         o.Recipe.Note,
                         Material = o.Recipe.Material == null ? null : new
@@ -146,6 +148,7 @@ namespace GMP_System.Controllers
                         Recipe = b.Order.Recipe == null ? null : new
                         {
                             b.Order.Recipe.RecipeId,
+                            b.Order.Recipe.RecipeName,
                             Material = b.Order.Recipe.Material == null ? null : new
                             {
                                 b.Order.Recipe.Material.MaterialName
@@ -645,10 +648,35 @@ namespace GMP_System.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var order = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
+            var order = await _unitOfWork.ProductionOrders.Query()
+                .Include(o => o.ProductionOrderBoms)
+                .Include(o => o.RecipeRoutings)
+                .Include(o => o.ProductionBatches)
+                .FirstOrDefaultAsync(o => o.OrderId == id);
+
             if (order == null)
             {
                 return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
+            }
+
+            // Clean up related data if order is in Draft status
+            if (order.Status == "Draft")
+            {
+                // Remove Boms
+                if (order.ProductionOrderBoms.Any())
+                    _unitOfWork.ProductionOrderBoms.RemoveRange(order.ProductionOrderBoms);
+
+                // Remove Routings (those specific to this order)
+                if (order.RecipeRoutings.Any())
+                    _unitOfWork.RecipeRoutings.RemoveRange(order.RecipeRoutings);
+                
+                // If there are batches (shouldn't be in Draft usually, but safety first)
+                if (order.ProductionBatches.Any())
+                    _unitOfWork.ProductionBatches.RemoveRange(order.ProductionBatches);
+            }
+            else
+            {
+                return BadRequest(new { success = false, message = "Chỉ có thể xóa lệnh sản xuất ở trạng thái Draft." });
             }
 
             _unitOfWork.ProductionOrders.Remove(order);

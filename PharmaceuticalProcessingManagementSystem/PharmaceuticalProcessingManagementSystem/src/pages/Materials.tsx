@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { certificatesApi, inventoryApi, materialsApi } from '@/services/api';
 import { Plus, Search, Eye, FileCheck2, Upload, Pencil, Trash2 } from 'lucide-react';
+import { formatNumber, formatDate } from '@/utils/format';
 
 interface CreateMaterialLotForm {
   materialCode: string;
@@ -56,13 +57,7 @@ function buildAutoLotNumber(materialCode: string) {
 }
 
 function formatDateDDMMYYYY(value?: string) {
-  if (!value) return '-';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '-';
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yyyy = d.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
+  return formatDate(value);
 }
 
 function toInputDate(value?: string) {
@@ -361,8 +356,8 @@ export default function Materials() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowInput = tomorrow.toISOString().slice(0, 10);
 
-  // Vietnamese number format: dot for thousands, comma for decimal
-  const fmtVN = (n: number) => n.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
+  // Vietnamese number format: space for thousands, comma for decimal
+  const fmtVN = (n: number) => formatNumber(n, 4);
   const convertDisplayQty = (value: number, unitRaw: string) => {
     const unit = (unitRaw || '').toLowerCase();
     if (unit === 'kg' || unit === 'g') {

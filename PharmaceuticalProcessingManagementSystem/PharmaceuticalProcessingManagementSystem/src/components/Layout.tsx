@@ -12,7 +12,6 @@ import {
   LogOut,
   Settings,
   FileText,
-  BarChart3,
   Factory,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -29,7 +28,6 @@ const navigation = [
   { name: 'Thiết Bị', href: '/equipments', icon: Settings, roles: ['Admin', 'Manager'] },
   { name: 'Theo Dõi Tiến Độ', href: '/manager-operations', icon: FileText, roles: ['Admin', 'Manager'] },
   { name: 'Khu Sản Xuất', href: '/production-areas', icon: Factory, roles: ['Admin', 'Manager'] },
-  { name: 'Thống Kê', href: '/finished-goods-stats', icon: BarChart3, roles: ['Admin', 'Manager'] },
   { name: 'Tài Khoản', href: '/users', icon: Users, roles: ['Admin'] },
 ];
 
