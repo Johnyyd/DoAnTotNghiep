@@ -66,7 +66,7 @@ export default function Layout() {
           <div className="flex items-center space-x-3">
             <img src="/icon.png" alt="Logo" className="w-10 h-10 object-contain" />
             <div>
-              <h1 className="text-lg font-bold text-primary-700">GMP-WHO</h1>
+              <h1 className="text-lg font-bold text-primary-700">HUIT</h1>
               <p className="text-xs text-neutral-500 -mt-1">Dược phẩm</p>
             </div>
           </div>
@@ -134,7 +134,7 @@ export default function Layout() {
           </button>
 
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-neutral-900">Theo dõi tiến độ</h2>
+            <h2 className="text-lg font-semibold text-neutral-900">Công ty dược phẩm HUIT-Pharma</h2>
           </div>
         </header>
 

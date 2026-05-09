@@ -416,8 +416,11 @@ export default function Recipes() {
   );
 
   const totalPerTabletMg = useMemo(
-    () => bomItems.reduce((sum, item) => sum + item.quantity, 0),
-    [bomItems],
+    () =>
+      bomItems
+        .filter((item) => !isPackagingMaterial(materialById.get(item.materialId)))
+        .reduce((sum, item) => sum + (item.quantity || 0), 0),
+    [bomItems, materialById],
   );
 
   // Tech specs
@@ -464,14 +467,6 @@ export default function Recipes() {
       setNewSpecContent("");
       setNewSubSpecContent("");
     },
-  });
-  const updateSpecMutation = useMutation({
-    mutationFn: ({ specId, data }: { specId: number; data: any }) =>
-      recipesApi.updateTechSpec(selectedRecipeId as number, specId, data),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["techSpecs", selectedRecipeId],
-      }),
   });
   const deleteSpecMutation = useMutation({
     mutationFn: (specId: number) =>
@@ -710,10 +705,24 @@ export default function Recipes() {
   const deleteRoutingMutation = useMutation({
     mutationFn: (routingId: number) =>
       recipesApi.removeRoutingStep(selectedRecipeId as number, routingId),
-    onSuccess: async () =>
-      queryClient.invalidateQueries({
+    onSuccess: async (_, routingId) => {
+      await queryClient.invalidateQueries({
         queryKey: ["recipeRouting", selectedRecipeId],
-      }),
+      });
+      // Re-index steps
+      const remainingSteps = routingSteps
+        .filter((r) => r.routingId !== routingId)
+        .sort((a, b) => a.stepNumber - b.stepNumber);
+
+      const updates = remainingSteps.map((s, i) => ({
+        routingId: s.routingId,
+        stepNumber: i + 1,
+      }));
+
+      if (updates.length > 0) {
+        reorderMutation.mutate(updates);
+      }
+    },
   });
 
   const recalcMgFromRatio = (ratioPercent: number) => {
@@ -1457,17 +1466,17 @@ export default function Recipes() {
                 <table className="table">
                     <thead>
                       <tr>
-                        <th className="w-12 text-center text-[10px] uppercase">
-                          Bước
+                        <th className="w-8 text-center text-[10px] uppercase">
+                          B.
                         </th>
                         <th className="w-px whitespace-nowrap uppercase">
                           Tên công đoạn
                         </th>
-                        <th className="uppercase">
+                        <th className="uppercase min-w-[150px]">
                           Nguyên liệu
                         </th>
                         <th className="w-px whitespace-nowrap uppercase">
-                          Phòng sản xuất
+                          Phòng
                         </th>
                         <th className="w-px whitespace-nowrap uppercase">
                           Thiết bị
@@ -1475,7 +1484,7 @@ export default function Recipes() {
                         <th className="w-px whitespace-nowrap uppercase">
                           Điều kiện
                         </th>
-                        <th className="text-right w-20 uppercase">Thao tác</th>
+                        <th className="text-right w-16 uppercase">Thao tác</th>
                       </tr>
                     </thead>
                   <tbody>
@@ -1512,41 +1521,26 @@ export default function Recipes() {
                             onDrop={() => handleDrop(idx)}
                             className={`group hover:bg-primary-50/30 transition-colors cursor-grab ${dragIdx === idx ? "opacity-40" : ""}`}
                           >
-                            <td className="text-center font-mono text-sm text-neutral-500">
+                            <td className="text-center font-mono text-xs text-neutral-500">
                               {item.stepNumber}
                             </td>
-                            <td className="whitespace-nowrap font-medium text-neutral-900">
+                            <td className="whitespace-nowrap font-medium text-neutral-800 text-sm">
                               {item.stepName}
                             </td>
-                            <td className="text-xs text-neutral-600 leading-relaxed py-2 min-w-[200px]">
+                            <td className="text-[11px] text-neutral-600 leading-tight py-2 max-w-[200px]">
                               {matNames.length ? matNames.join(", ") : "-"}
                             </td>
-                            <td className="whitespace-nowrap">
+                            <td className="whitespace-nowrap text-sm text-neutral-700">
                               {item.areaName || "-"}
                             </td>
-                            <td className="whitespace-nowrap">
+                            <td className="whitespace-nowrap text-sm text-neutral-700">
                               {item.equipmentName || "-"}
                             </td>
                             <td>
-                              <div className="flex flex-col text-[11px] text-neutral-500 gap-0.1 whitespace-nowrap">
-                                <span>
-                                  Nhiệt độ:{" "}
-                                  <b className="text-neutral-700">
-                                    {item.standardTemperature ?? "-"}℃
-                                  </b>
-                                </span>
-                                <span>
-                                  Độ ẩm:{" "}
-                                  <b className="text-neutral-700">
-                                    {item.standardHumidity ?? "-"}%
-                                  </b>
-                                </span>
-                                <span>
-                                  Áp suất:{" "}
-                                  <b className="text-neutral-700">
-                                    {item.standardPressure ?? "-"} Pa
-                                  </b>
-                                </span>
+                              <div className="flex flex-col text-[10px] text-neutral-500 gap-0.5 whitespace-nowrap">
+                                <span>T: <b className="text-neutral-700">{item.standardTemperature ?? "-"}℃</b></span>
+                                <span>H: <b className="text-neutral-700">{item.standardHumidity ?? "-"}%</b></span>
+                                <span>P: <b className="text-neutral-700">{item.standardPressure ?? "-"}Pa</b></span>
                               </div>
                             </td>
                             <td className="text-right">
@@ -1599,17 +1593,7 @@ export default function Recipes() {
                   .map((spec) => (
                     <div key={spec.specId}>
                       <div className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-neutral-50 group">
-                        <input
-                          type="checkbox"
-                          checked={spec.isChecked}
-                          onChange={(e) =>
-                            updateSpecMutation.mutate({
-                              specId: spec.specId,
-                              data: { ...spec, isChecked: e.target.checked },
-                            })
-                          }
-                          className="w-4 h-4 accent-primary-600"
-                        />
+
                         <span className="flex-1 text-sm text-neutral-800">
                           {spec.content}
                         </span>
@@ -1643,17 +1627,7 @@ export default function Recipes() {
                             key={sub.specId}
                             className="flex items-center gap-2 py-1 px-2 ml-8 rounded hover:bg-neutral-50 group"
                           >
-                            <input
-                              type="checkbox"
-                              checked={sub.isChecked}
-                              onChange={(e) =>
-                                updateSpecMutation.mutate({
-                                  specId: sub.specId,
-                                  data: { ...sub, isChecked: e.target.checked },
-                                })
-                              }
-                              className="w-4 h-4 accent-primary-600"
-                            />
+
                             <span className="flex-1 text-sm text-neutral-700">
                               {sub.content}
                             </span>

@@ -94,8 +94,8 @@ export default function FinishedProducts() {
       <div className="card space-y-3">
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
-            <button className={`px-4 py-2 rounded-lg border ${tab === 'completed' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white border-neutral-300'}`} onClick={() => setTab('completed')}>Thành phẩm đã hoàn thành</button>
-            <button className={`px-4 py-2 rounded-lg border ${tab === 'target' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white border-neutral-300'}`} onClick={() => setTab('target')}>Thành phẩm mong muốn</button>
+            <button className={`px-4 py-2 rounded-lg border ${tab === 'completed' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white border-neutral-300'}`} onClick={() => setTab('completed')}>Thống kê</button>
+            <button className={`px-4 py-2 rounded-lg border ${tab === 'target' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white border-neutral-300'}`} onClick={() => setTab('target')}>Thành phẩm đầu ra</button>
           </div>
           {tab === 'target' && (
             <button className="btn-primary flex items-center" onClick={() => setShowAddModal(true)}>
@@ -148,7 +148,7 @@ export default function FinishedProducts() {
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
           <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-xl font-bold">Thêm thành phẩm mong muốn</h3>
+            <h3 className="text-xl font-bold">Thêm thành phẩm đầu ra</h3>
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-neutral-500">Mã thành phẩm</label>

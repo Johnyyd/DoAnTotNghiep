@@ -450,9 +450,15 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.Content).HasMaxLength(500).IsRequired();
             entity.Property(e => e.SortOrder).HasDefaultValue(0);
             entity.Property(e => e.IsChecked).HasDefaultValue(false);
+            entity.Property(e => e.OrderId).HasColumnName("OrderID");
+
             entity.HasOne(e => e.Recipe).WithMany()
                 .HasForeignKey(e => e.RecipeId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Order).WithMany()
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         OnModelCreatingPartial(modelBuilder);

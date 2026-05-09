@@ -522,6 +522,28 @@ namespace GMP_System.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { success = true, message = "Đã xóa tiêu chuẩn." });
         }
+        [HttpGet("order/{orderId}/tech-specs")]
+        public async Task<IActionResult> GetOrderTechSpecs(int orderId)
+        {
+            var specs = await _context.RecipeTechSpecs
+                .Where(s => s.OrderId == orderId)
+                .OrderBy(s => s.SortOrder)
+                .ToListAsync();
+
+            return Ok(new { data = specs, success = true });
+        }
+
+        [HttpPost("tech-specs/{id}/toggle")]
+        public async Task<IActionResult> ToggleTechSpec(int id)
+        {
+            var spec = await _context.RecipeTechSpecs.FindAsync(id);
+            if (spec == null) return NotFound();
+
+            spec.IsChecked = !spec.IsChecked;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, isChecked = spec.IsChecked });
+        }
     }
 
     public class ReorderItem

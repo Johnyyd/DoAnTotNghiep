@@ -107,6 +107,9 @@ export const recipesApi = {
   addTechSpec: (recipeId: number, data: any) => api.post<ApiResponse<any>>(`/recipes/${recipeId}/tech-specs`, data),
   updateTechSpec: (recipeId: number, specId: number, data: any) => api.put<ApiResponse<any>>(`/recipes/${recipeId}/tech-specs/${specId}`, data),
   deleteTechSpec: (recipeId: number, specId: number) => api.delete<ApiResponse<null>>(`/recipes/${recipeId}/tech-specs/${specId}`),
+
+  getOrderTechSpecs: (orderId: number) => api.get<ApiResponse<any[]>>(`/recipes/order/${orderId}/tech-specs`),
+  toggleTechSpec: (specId: number) => api.post<ApiResponse<any>>(`/recipes/tech-specs/${specId}/toggle`),
 };
 
 // ============== PRODUCTION ORDERS ==============
@@ -138,6 +141,7 @@ export const productionOrdersApi = {
     }),
   
   getRoutings: (orderId: number) => api.get<ApiResponse<RecipeRouting[]>>(`/production-orders/${orderId}/routings`),
+  getCustomRoutings: (orderId: number) => api.get<ApiResponse<RecipeRouting[]>>(`/production-orders/${orderId}/routings`),
   saveRoutings: (orderId: number, routings: RecipeRouting[]) => 
     api.post<ApiResponse<null>>(`/production-orders/${orderId}/routings`, routings),
 };

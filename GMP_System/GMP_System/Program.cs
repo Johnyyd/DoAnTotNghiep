@@ -56,7 +56,17 @@ builder.Services.AddSwaggerGen();
 // ============================================================
 // 3. DATABASE: SQL SERVER
 // ============================================================
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+                    ?? builder.Configuration["SQL_CONNECTION_STRING"]
+                    ?? builder.Configuration["DATABASE_URL"];
+
+// Mask connection string for security while logging
+string maskedConn = connectionString != null 
+    ? System.Text.RegularExpressions.Regex.Replace(connectionString, @"Password=[^;]+", "Password=****")
+    : "NULL";
+
+Console.WriteLine($"[BACKEND] Starting with Connection String: {maskedConn}");
+
 builder.Services.AddDbContext<GmpContext>(options =>
     options.UseSqlServer(connectionString));
 
@@ -109,6 +119,9 @@ builder.Services.AddAuthentication(x =>
 
 var app = builder.Build();
 
+// Simple Health Check
+app.MapGet("/health", () => "OK");
+
 // ============================================================
 // 6. DB INITIALIZATION (Cleanup: Data is now in SQL Scripts)
 // ============================================================
@@ -123,9 +136,11 @@ using (var scope = app.Services.CreateScope())
     {
         try {
             Console.WriteLine($"[BACKEND] Connection attempt {i}/{maxConnectRetries}...");
+            
+            // Check if we can even ping the DB
             if (!db.Database.CanConnect())
             {
-                Console.WriteLine("[BACKEND] Database.CanConnect() returned FALSE. SQL Server might not be ready for this DB yet.");
+                Console.WriteLine("[BACKEND] Database.CanConnect() returned FALSE. Host might be unreachable or DB doesn't exist yet.");
             }
             
             Console.WriteLine("[BACKEND] Running EnsureCreated...");

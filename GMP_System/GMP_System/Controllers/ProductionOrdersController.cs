@@ -250,12 +250,12 @@ namespace GMP_System.Controllers
                 return BadRequest(new { success = false, message = "Công thức phải ở trạng thái Draft hoặc Approved để lập lệnh sản xuất." });
             }
 
-            bool isAnyOrderRunning = await _context.ProductionOrders.AnyAsync(o => o.Status == "InProcess" || o.Status == "In-Process");
+            bool isAnyOrderRunning = await _context.ProductionOrders.AnyAsync(o => o.Status == "In-Process" || o.Status == "In-Process" || o.Status == "Hold");
 
             // If status is not provided or is Approved/In-Process, determine automatically
             if (string.IsNullOrEmpty(order.Status) || order.Status == "Approved" || order.Status == "In-Process")
             {
-                order.Status = isAnyOrderRunning ? "Approved" : "In-Process";
+                order.Status = isAnyOrderRunning ? "Scheduled" : "In-Process";
             }
             // Otherwise (e.g. "Draft"), respect the requested status
             order.CreatedAt = DateTime.Now;
@@ -313,6 +313,87 @@ namespace GMP_System.Controllers
                     await _unitOfWork.ProductionOrderBoms.AddAsync(orderBom);
                 }
                 await _unitOfWork.CompleteAsync();
+
+                // [ROUTING SNAPSHOT] Copy master recipe routing to this order
+                var recipeRoutings = await _unitOfWork.RecipeRoutings.Query()
+                    .Where(r => r.RecipeId == order.RecipeId && r.OrderId == null)
+                    .Include(r => r.StepParameters)
+                    .ToListAsync();
+
+                foreach (var rr in recipeRoutings)
+                {
+                    var orderRouting = new RecipeRouting
+                    {
+                        RecipeId = rr.RecipeId,
+                        OrderId = order.OrderId,
+                        StepNumber = rr.StepNumber,
+                        StepName = rr.StepName,
+                        Description = rr.Description,
+                        DefaultEquipmentId = rr.DefaultEquipmentId,
+                        AreaId = rr.AreaId,
+                        EstimatedTimeMinutes = rr.EstimatedTimeMinutes,
+                        CleanlinessStatus = rr.CleanlinessStatus,
+                        StandardTemperature = rr.StandardTemperature,
+                        StandardHumidity = rr.StandardHumidity,
+                        StandardPressure = rr.StandardPressure,
+                        StabilityStatus = rr.StabilityStatus,
+                        SetTemperature = rr.SetTemperature,
+                        SetPressure = rr.SetPressure,
+                        SetTimeMinutes = rr.SetTimeMinutes,
+                        MaterialIds = rr.MaterialIds,
+                        StepParameters = rr.StepParameters.Select(p => new StepParameter
+                        {
+                            ParameterName = p.ParameterName,
+                            MinValue = p.MinValue,
+                            MaxValue = p.MaxValue,
+                            Unit = p.Unit,
+                            IsCritical = p.IsCritical,
+                            Note = p.Note
+                        }).ToList()
+                    };
+                    await _unitOfWork.RecipeRoutings.AddAsync(orderRouting);
+                }
+                await _unitOfWork.CompleteAsync();
+
+                // [TECH SPEC SNAPSHOT] Copy recipe tech specs to this order
+                var recipeSpecs = await _context.RecipeTechSpecs
+                    .Where(s => s.RecipeId == order.RecipeId && s.OrderId == null)
+                    .ToListAsync();
+
+                var specMap = new Dictionary<int, int>();
+                foreach (var rs in recipeSpecs.Where(s => s.ParentId == null))
+                {
+                    var orderSpec = new RecipeTechSpec
+                    {
+                        RecipeId = rs.RecipeId,
+                        OrderId = order.OrderId,
+                        ParentId = null,
+                        Content = rs.Content,
+                        IsChecked = false,
+                        SortOrder = rs.SortOrder
+                    };
+                    _context.RecipeTechSpecs.Add(orderSpec);
+                    await _context.SaveChangesAsync();
+                    specMap[rs.SpecId] = orderSpec.SpecId;
+                }
+
+                foreach (var rs in recipeSpecs.Where(s => s.ParentId != null))
+                {
+                    if (specMap.TryGetValue(rs.ParentId.Value, out int newParentId))
+                    {
+                        var orderSpec = new RecipeTechSpec
+                        {
+                            RecipeId = rs.RecipeId,
+                            OrderId = order.OrderId,
+                            ParentId = newParentId,
+                            Content = rs.Content,
+                            IsChecked = false,
+                            SortOrder = rs.SortOrder
+                        };
+                        _context.RecipeTechSpecs.Add(orderSpec);
+                    }
+                }
+                await _context.SaveChangesAsync();
 
                 // Auto-split into batches if not already present
                 if (order.RecipeId.HasValue && order.PlannedQuantity > 0)

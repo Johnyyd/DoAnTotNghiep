@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/context/AuthContext';
 import { certificatesApi, productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
-import { Calculator, ClipboardList, FileCheck2, Layers, Pencil, Plus, Search, Trash2, Upload, X } from 'lucide-react';
+import { Calculator, ClipboardList, FileCheck2, Layers, Pencil, Search, Trash2, Upload, X } from 'lucide-react';
 import { formatNumber, formatDate } from '@/utils/format';
 
 type OrderStatus = 'Draft' | 'Approved' | 'InProcess' | 'Hold' | 'Completed';
@@ -42,6 +43,7 @@ type MassUnit = 'kg' | 'g' | 'vien';
 
 
 export default function ProductionOrders() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -92,6 +94,20 @@ export default function ProductionOrders() {
   });
 
   const { data: inventoryRaw } = useQuery({ queryKey: ['inventoryLots'], queryFn: () => (import('@/services/api').then(m => m.inventoryApi.getAll())) });
+
+  const { data: orderTechSpecsRaw } = useQuery({
+    queryKey: ['orderTechSpecs', batchPopupOrderId],
+    queryFn: () => recipesApi.getOrderTechSpecs(batchPopupOrderId as number),
+    enabled: !!batchPopupOrderId,
+  });
+
+  const orderTechSpecs = useMemo(() => toRows<any>(orderTechSpecsRaw), [orderTechSpecsRaw]);
+  const allSpecsChecked = orderTechSpecs.length > 0 && orderTechSpecs.every((s: any) => s.isChecked);
+
+  const toggleSpecMutation = useMutation({
+    mutationFn: (specId: number) => recipesApi.toggleTechSpec(specId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orderTechSpecs'] }),
+  });
 
   const bomItems = useMemo(() => toRows<any>(bomRaw).map((item: any) => ({
     materialId: Number(item.materialId ?? item.MaterialId ?? 0),
@@ -267,12 +283,6 @@ export default function ProductionOrders() {
     onError: (err: any) => alert(err?.response?.data?.message ?? err?.message ?? 'Không thể tiếp tục lệnh.'),
   });
 
-  const openCreateOrder = () => {
-    setEditingOrder(null);
-    setOrderForm({ orderCode: '', recipeId: 0, plannedQuantity: 0, startDate: '', endDate: '', status: 'Draft' });
-    setShowOrderModal(true);
-  };
-
   const openEditOrder = (order: UiProductionOrder) => {
     setEditingOrder(order);
     setOrderForm({
@@ -300,7 +310,6 @@ export default function ProductionOrders() {
           <h1 className="text-2xl font-bold text-gray-900">Quản lý lệnh sản xuất</h1>
           <p className="text-neutral-500 mt-1">Lập lệnh sản xuất và kiểm tra tồn kho/ngưỡng thiết bị</p>
         </div>
-        <button onClick={openCreateOrder} className="btn-primary flex items-center"><Plus className="w-5 h-5 mr-2" />Tạo lệnh mới</button>
       </div>
 
       {/* Planning Panel */}
@@ -333,7 +342,7 @@ export default function ProductionOrders() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
           <div className="p-3 rounded-lg bg-white border border-primary-200"><p className="text-neutral-500">Tổng số viên</p><p className="text-xl font-bold text-neutral-900">{formatNumber(totalTablets, 0)}</p></div>
           <div className="p-3 rounded-lg bg-white border border-primary-200"><p className="text-neutral-500">Khối lượng 1 viên</p><p className="text-xl font-bold text-neutral-900">{formatNumber(oneTabletMg)} mg</p></div>
-          <div className="p-3 rounded-lg bg-white border border-primary-200"><p className="text-neutral-500">Khối lượng thành phẩm</p><p className="text-xl font-bold text-neutral-900">{displayFinishedMass}</p></div>
+          <div className="p-3 rounded-lg bg-white border border-primary-200"><p className="text-neutral-500">Khối lượng thành phẩm lý thuyết</p><p className="text-xl font-bold text-neutral-900">{displayFinishedMass}</p></div>
         </div>
 
         {insufficientMaterials.length > 0 && (
@@ -465,7 +474,11 @@ export default function ProductionOrders() {
               <div><label className="text-xs text-neutral-500">Công thức</label>
                 <select className="input" value={orderForm.recipeId} onChange={(e) => setOrderForm({ ...orderForm, recipeId: Number(e.target.value) })}>
                   <option value={0}>Chọn công thức</option>
-                  {recipes.map((recipe) => <option key={recipe.recipeId} value={recipe.recipeId}>#{recipe.recipeId} - {recipe.recipeName}</option>)}
+                  {recipes.map((recipe) => (
+                    <option key={recipe.recipeId} value={recipe.recipeId}>
+                      #{recipe.recipeId} {recipe.recipeName}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div><label className="text-xs text-neutral-500">Số lượng kế hoạch</label>
@@ -562,6 +575,34 @@ export default function ProductionOrders() {
                 </div>
               </div>
             )}
+            {/* QC Tech Specs Verification */}
+            {batchPopupOrderId !== null && orderTechSpecs.length > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <h3 className="text-sm font-bold text-amber-800 mb-3 flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4" />
+                  Kiểm tra tiêu chuẩn kỹ thuật (QC Verification)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                  {orderTechSpecs.map((spec: any) => (
+                    <label key={spec.specId} className="flex items-start gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        className="mt-1 rounded border-amber-300 text-amber-600 focus:ring-amber-500 disabled:opacity-50"
+                        checked={spec.isChecked}
+                        disabled={(user?.role !== 'QualityControl' && user?.role !== 'Admin' && user?.role !== 'Manager') || toggleSpecMutation.isPending}
+                        onChange={() => toggleSpecMutation.mutate(spec.specId)}
+                      />
+                      <span className={`text-xs ${spec.parentId ? 'ml-4' : 'font-semibold'} text-amber-900 group-hover:text-amber-700 transition-colors`}>
+                        {spec.content}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                {!allSpecsChecked && (
+                  <p className="text-[10px] text-amber-600 mt-2 italic font-medium">* Bạn phải tích chọn tất cả các tiêu chuẩn kỹ thuật để có thể tải lên giấy kiểm nghiệm.</p>
+                )}
+              </div>
+            )}
             <div className="table-container">
               <table className="table">
                 <thead>
@@ -576,7 +617,7 @@ export default function ProductionOrders() {
                 </thead>
                 <tbody>
                   {batchesForPopup.length === 0 ? (
-                    <tr><td colSpan={5} className="text-center text-neutral-500 py-6">Chưa có mẻ nào cho lệnh này.</td></tr>
+                    <tr><td colSpan={6} className="text-center text-neutral-500 py-6">Chưa có mẻ nào cho lệnh này.</td></tr>
                   ) : batchesForPopup.map((b: any) => {
                     const s = b.status ?? b.Status ?? '';
                     const batchNum = b.batchNumber ?? b.BatchNumber ?? '';
@@ -594,12 +635,16 @@ export default function ProductionOrders() {
                               <a href={certificatesApi.getBatchCertificateUrl(batchNum)} target="_blank" rel="noreferrer" className="text-primary-600 hover:underline inline-flex items-center text-xs">
                                 <FileCheck2 className="w-3.5 h-3.5 mr-1" />Xem
                               </a>
-                              <button
-                                className="text-xs text-primary-600 hover:underline inline-flex items-center"
-                                onClick={() => { setUploadingForBatch(batchNum); uploadInputRef.current?.click(); }}
-                              >
-                                <Upload className="w-3.5 h-3.5 mr-1" />T?i l?n
-                              </button>
+                              {allSpecsChecked ? (
+                                <button
+                                  className="text-xs text-primary-600 hover:underline inline-flex items-center"
+                                  onClick={() => { setUploadingForBatch(batchNum); uploadInputRef.current?.click(); }}
+                                >
+                                  <Upload className="w-3.5 h-3.5 mr-1" />Tải lên
+                                </button>
+                              ) : (
+                                <span className="text-[10px] text-neutral-400 italic" title="Vui lòng kiểm tra tiêu chuẩn kỹ thuật">Khóa tải</span>
+                              )}
                             </div>
                           ) : (
                             <span className="text-xs text-neutral-400">-</span>
