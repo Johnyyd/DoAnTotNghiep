@@ -17,9 +17,9 @@ fi
 # Start the API
 if [ -f "/app/GMP_System.dll" ]; then
   cd /app
-  exec dotnet GMP_System.dll
+  exec dotnet GMP_System.dll --urls "http://0.0.0.0:${PORT:-5000}"
 elif [ -f "GMP_System.dll" ]; then
-  exec dotnet GMP_System.dll
+  exec dotnet GMP_System.dll --urls "http://0.0.0.0:${PORT:-5000}"
 else
   echo "Error: GMP_System.dll not found."
   exit 1
