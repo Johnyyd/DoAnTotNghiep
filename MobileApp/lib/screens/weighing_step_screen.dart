@@ -911,17 +911,21 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
     ]);
   }
 
-  Widget _buildPhase3() => const Center(
-          child: Column(children: [
-        SizedBox(height: 40),
-        Icon(Icons.hourglass_empty, size: 80, color: Colors.orange),
-        SizedBox(height: 24),
-        Text('ĐANG ĐỢI QC XÁC NHẬN',
+  Widget _buildPhase3() => Column(children: [
+        _buildPhase1(),
+        const SizedBox(height: 24),
+        _buildPhase2(),
+        const SizedBox(height: 40),
+        const Icon(Icons.hourglass_empty, size: 80, color: Colors.orange),
+        const SizedBox(height: 24),
+        const Text('ĐANG ĐỢI QC XÁC NHẬN',
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.orange))
-      ]));
+                color: Colors.orange)),
+        if (AuthService.currentUser?['role'] != 'QA_QC')
+          const CircularProgressIndicator(color: Colors.orange)
+      ]);
   Widget _buildPhase4() => const Column(children: [
         SizedBox(height: 20),
         Icon(Icons.play_circle_fill, size: 80, color: Colors.green),

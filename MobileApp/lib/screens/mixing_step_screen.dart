@@ -918,11 +918,20 @@ class _MixingStepScreenState extends State<MixingStepScreen>
   }
 
   Widget _buildPhase3() {
-    return _buildCenteredStatus(
-        Icons.hourglass_empty,
-        Colors.orange,
-        'ĐANG ĐỢI QC XÁC NHẬN',
-        'Dữ liệu đã được khóa. Vui lòng báo QC ký xác nhận.');
+    return Column(
+      children: [
+        _buildPhase1(),
+        const SizedBox(height: 24),
+        _buildPhase2(),
+        const SizedBox(height: 40),
+        _buildCenteredStatus(
+          Icons.hourglass_empty,
+          Colors.orange,
+          'ĐANG ĐỢI QC XÁC NHẬN',
+          'Dữ liệu đã được khóa. Vui lòng báo QC ký xác nhận.'
+        ),
+      ],
+    );
   }
 
   Widget _buildPhase4() {

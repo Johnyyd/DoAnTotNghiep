@@ -16,6 +16,8 @@ class OrderVerificationScreen extends StatefulWidget {
 class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
   bool _isLoading = false;
   Map<String, dynamic>? _workerData;
+  String? _currentBatchName;
+  String? _currentStepName;
 
   @override
   void initState() {
@@ -50,6 +52,8 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
         
         if (log.isNotEmpty) {
           foundLog = log;
+          _currentBatchName = b['batchNumber'] ?? b['name'] ?? 'Mẻ $bId';
+          _currentStepName = log['step']?['stepName'] ?? 'Công đoạn ${log['stepId'] ?? ''}';
           break; // Tìm thấy rồi thì thôi
         }
       }
@@ -195,6 +199,11 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
                 Text('Sản phẩm: ${widget.orderData['productName']}', style: const TextStyle(fontSize: 16)),
                 const SizedBox(height: 4),
                 Text('Cỡ lô chỉ định: ${widget.orderData['batchSize']}'),
+                if (_currentBatchName != null) ...[
+                  const Divider(color: Colors.blueAccent),
+                  Text('Đang duyệt cho Mẻ: $_currentBatchName', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                  Text('Công đoạn: ${_currentStepName ?? "Không xác định"}', style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.blueGrey)),
+                ],
               ],
             ),
           ),

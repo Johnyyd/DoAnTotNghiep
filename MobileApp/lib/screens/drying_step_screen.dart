@@ -1293,18 +1293,21 @@ class _DryingStepScreenState extends State<DryingStepScreen>
   }
 
   Widget _buildPhase3() {
-    return const Column(
+    return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SizedBox(height: 60),
-        Icon(Icons.hourglass_bottom, size: 80, color: Colors.orange),
-        SizedBox(height: 24),
-        Text(
+        _buildPhase1(),
+        const SizedBox(height: 24),
+        _buildPhase2(),
+        const SizedBox(height: 60),
+        const Icon(Icons.hourglass_bottom, size: 80, color: Colors.orange),
+        const SizedBox(height: 24),
+        const Text(
           'ĐANG ĐỢI QC XÁC NHẬN',
           style: TextStyle(
               fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange),
         ),
-        Padding(
+        const Padding(
           padding: EdgeInsets.all(16.0),
           child: Text(
             'Lô hàng đã được gửi duyệt. Vui lòng chờ QC kiểm tra hồ sơ và ký xác nhận điện tử trước khi bắt đầu sấy.',
@@ -1312,8 +1315,9 @@ class _DryingStepScreenState extends State<DryingStepScreen>
             style: TextStyle(color: Colors.black54),
           ),
         ),
-        SizedBox(height: 40),
-        CircularProgressIndicator(color: Colors.orange),
+        const SizedBox(height: 40),
+        if (AuthService.currentUser?['role'] != 'QA_QC')
+          const CircularProgressIndicator(color: Colors.orange),
       ],
     );
   }
