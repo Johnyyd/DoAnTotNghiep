@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace GMP_System.Controllers
 {
@@ -10,11 +11,13 @@ namespace GMP_System.Controllers
     {
         private readonly IWebHostEnvironment _env;
         private readonly IConfiguration _configuration;
+        private readonly Entities.GmpContext _context;
 
-        public CertificatesController(IWebHostEnvironment env, IConfiguration configuration)
+        public CertificatesController(IWebHostEnvironment env, IConfiguration configuration, Entities.GmpContext context)
         {
             _env = env;
             _configuration = configuration;
+            _context = context;
         }
 
         private string GetMaterialStorageDirectory()
@@ -145,6 +148,24 @@ namespace GMP_System.Controllers
 
             if (file == null || file.Length == 0)
                 return BadRequest(new { success = false, message = "Thiếu tệp giấy kiểm nghiệm." });
+
+            // 1. Find Order via BatchNumber
+            var batch = await _context.ProductionBatches
+                .FirstOrDefaultAsync(b => b.BatchNumber == batchNumber);
+            
+            if (batch == null)
+                return BadRequest(new { success = false, message = "Không tìm thấy thông tin mẻ sản xuất." });
+
+            // 2. Check if all Tech Specs are checked for this ORDER
+            var anyUnchecked = await _context.RecipeTechSpecs
+                .AnyAsync(s => s.OrderId == batch.OrderId && s.IsChecked == false);
+            
+            var hasSpecs = await _context.RecipeTechSpecs.AnyAsync(s => s.OrderId == batch.OrderId);
+
+            if (hasSpecs && anyUnchecked)
+            {
+                return BadRequest(new { success = false, message = "Không thể tải giấy kiểm nghiệm: Cần đạt tất cả các tiêu chuẩn kĩ thuật trước." });
+            }
 
             var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
             var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp", ".pdf" };

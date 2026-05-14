@@ -1,8 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/context/AuthContext';
 import { certificatesApi, productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
-import { Calculator, ClipboardList, FileCheck2, Layers, Pencil, Search, Trash2, Upload, X } from 'lucide-react';
+import { Calculator, CheckCircle2, ClipboardList, FileCheck2, Layers, Pencil, Search, Trash2, Upload, X } from 'lucide-react';
 import { formatNumber, formatDate } from '@/utils/format';
 
 type OrderStatus = 'Draft' | 'Approved' | 'InProcess' | 'Hold' | 'Completed';
@@ -43,7 +42,6 @@ type MassUnit = 'kg' | 'g' | 'vien';
 
 
 export default function ProductionOrders() {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -95,20 +93,6 @@ export default function ProductionOrders() {
 
   const { data: inventoryRaw } = useQuery({ queryKey: ['inventoryLots'], queryFn: () => (import('@/services/api').then(m => m.inventoryApi.getAll())) });
 
-  const { data: orderTechSpecsRaw } = useQuery({
-    queryKey: ['orderTechSpecs', batchPopupOrderId],
-    queryFn: () => recipesApi.getOrderTechSpecs(batchPopupOrderId as number),
-    enabled: !!batchPopupOrderId,
-  });
-
-  const orderTechSpecs = useMemo(() => toRows<any>(orderTechSpecsRaw), [orderTechSpecsRaw]);
-  const allSpecsChecked = orderTechSpecs.length > 0 && orderTechSpecs.every((s: any) => s.isChecked);
-
-  const toggleSpecMutation = useMutation({
-    mutationFn: (specId: number) => recipesApi.toggleTechSpec(specId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orderTechSpecs'] }),
-  });
-
   const bomItems = useMemo(() => toRows<any>(bomRaw).map((item: any) => ({
     materialId: Number(item.materialId ?? item.MaterialId ?? 0),
     materialCode: item.material?.materialCode ?? item.Material?.MaterialCode ?? '',
@@ -133,26 +117,23 @@ export default function ProductionOrders() {
   }, [planForm]);
 
   const oneTabletMg = selectedPlanRecipe?.batchSize ?? 0;
-  const totalMassMg = totalTablets * oneTabletMg;
-  const totalMassKg = totalMassMg / 1_000_000;
 
-  const displayFinishedMass = useMemo(() => {
-    if (planForm.massUnit === 'g') return `${formatNumber(totalMassMg / 1000)} g`;
-    if (planForm.massUnit === 'vien') return `${formatNumber(totalTablets, 0)} viên`;
-    return `${formatNumber(totalMassKg, 3)} kg`;
-  }, [planForm.massUnit, totalMassMg, totalTablets, totalMassKg]);
 
   const requiredMaterials = useMemo(() => {
     return bomItems.map((item) => {
-      // Determine if material is count-based (e.g., Capsules) or weight-based
-      const isCountBased = item.materialName.toLowerCase().includes('vỏ nang') || 
-                          item.materialName.toLowerCase().includes('nang');
+      // Robust packaging detection
+      const nameLower = item.materialName.toLowerCase();
+      const isPackaging = nameLower.includes('vỏ nang') || 
+                          nameLower.includes('vỏ') || 
+                          nameLower.includes('ống') || 
+                          nameLower.includes('màng') || 
+                          nameLower.includes('pvc');
       
       const baseRequired = (totalTablets * item.mgPerTablet);
       
       let requiredValue: number;
-      if (isCountBased) {
-        // No waste for count-based (UOM 4)
+      if (isPackaging) {
+        // No waste for packaging (UOM 4 - pieces)
         requiredValue = baseRequired;
       } else {
         // Apply waste and convert mg to kg
@@ -161,11 +142,23 @@ export default function ProductionOrders() {
       }
         
       const available = stockByMaterial.get(item.materialId) ?? 0;
-      return { ...item, requiredKg: requiredValue, available, enough: available >= requiredValue, isCountBased };
+      return { ...item, requiredKg: requiredValue, available, enough: available >= requiredValue, isPackaging };
     });
   }, [bomItems, totalTablets, stockByMaterial]);
 
   const insufficientMaterials = useMemo(() => requiredMaterials.filter((m) => !m.enough), [requiredMaterials]);
+
+  const totalMassMgExclPackaging = useMemo(() => {
+    return requiredMaterials
+      .filter(m => !m.isPackaging)
+      .reduce((acc, m) => acc + (totalTablets * m.mgPerTablet), 0);
+  }, [requiredMaterials, totalTablets]);
+
+  const displayFinishedMass = useMemo(() => {
+    if (planForm.massUnit === 'g') return `${formatNumber(totalMassMgExclPackaging / 1000)} g`;
+    if (planForm.massUnit === 'vien') return `${formatNumber(totalTablets, 0)} viên`;
+    return `${formatNumber(totalMassMgExclPackaging / 1_000_000, 3)} kg`;
+  }, [planForm.massUnit, totalMassMgExclPackaging, totalTablets]);
 
   const orders = useMemo<UiProductionOrder[]>(() => toRows<any>(ordersRaw).map((o) => {
     const recipe = recipes.find((r) => r.recipeId === Number(o.recipeId ?? o.RecipeId));
@@ -198,6 +191,25 @@ export default function ProductionOrders() {
     enabled: batchPopupOrderId !== null,
     refetchInterval: batchPopupOrderId !== null ? 3000 : false,
   });
+
+  const { data: techSpecsRaw } = useQuery({
+    queryKey: ['orderTechSpecs', batchPopupOrderId],
+    queryFn: () => recipesApi.getTechSpecsByOrder(batchPopupOrderId!),
+    enabled: batchPopupOrderId !== null,
+  });
+
+  const orderTechSpecs = useMemo(() => toRows<any>(techSpecsRaw), [techSpecsRaw]);
+
+  const updateSpecMutation = useMutation({
+    mutationFn: ({ specId, isChecked }: { specId: number; isChecked: boolean }) =>
+      recipesApi.updateOrderTechSpec(specId, { isChecked }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orderTechSpecs', batchPopupOrderId] }),
+  });
+
+  const allSpecsChecked = useMemo(() => {
+    if (orderTechSpecs.length === 0) return true;
+    return orderTechSpecs.every(s => s.isChecked);
+  }, [orderTechSpecs]);
 
   const batchesForPopup = useMemo(() => {
     if (batchPopupOrderId === null) return [];
@@ -283,6 +295,8 @@ export default function ProductionOrders() {
     onError: (err: any) => alert(err?.response?.data?.message ?? err?.message ?? 'Không thể tiếp tục lệnh.'),
   });
 
+
+
   const openEditOrder = (order: UiProductionOrder) => {
     setEditingOrder(order);
     setOrderForm({
@@ -350,7 +364,7 @@ export default function ProductionOrders() {
             <p className="font-semibold mb-1">Không đủ nguyên liệu tồn kho:</p>
             {insufficientMaterials.map((m) => (
               <p key={m.materialId}>
-                - {m.materialName}: cần {formatNumber(m.requiredKg, 4)} {m.isCountBased ? 'viên' : 'kg'}, hiện có {formatNumber(m.available, 4)} {m.isCountBased ? 'viên' : 'kg'}
+                - {m.materialName}: cần {formatNumber(m.requiredKg, 4)} {m.isPackaging ? 'viên' : 'kg'}, hiện có {formatNumber(m.available, 4)} {m.isPackaging ? 'viên' : 'kg'}
               </p>
             ))}
           </div>
@@ -363,10 +377,10 @@ export default function ProductionOrders() {
               <tbody>
                 {requiredMaterials.map((item, idx) => (
                   <tr key={`${item.materialId}-${idx}`}>
-                    <td>{item.materialName}</td>
-                    <td>{formatNumber(item.mgPerTablet)}</td>
-                    <td>{formatNumber(item.requiredKg, item.isCountBased ? 0 : 4)}</td>
-                    <td>{formatNumber(item.available, item.isCountBased ? 0 : 4)}</td>
+                    <td>{item.materialName} {item.isPackaging && <span className="text-[10px] bg-neutral-100 px-1 rounded text-neutral-500">Packaging</span>}</td>
+                    <td>{item.isPackaging ? "-" : formatNumber(item.mgPerTablet)}</td>
+                    <td>{formatNumber(item.requiredKg, item.isPackaging ? 0 : 4)}</td>
+                    <td>{formatNumber(item.available, item.isPackaging ? 0 : 4)}</td>
                     <td>
                       <span className={`px-2 py-1 rounded-full text-xs ${item.enough ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                         {item.enough ? 'Đủ' : 'Thiếu'}
@@ -474,11 +488,7 @@ export default function ProductionOrders() {
               <div><label className="text-xs text-neutral-500">Công thức</label>
                 <select className="input" value={orderForm.recipeId} onChange={(e) => setOrderForm({ ...orderForm, recipeId: Number(e.target.value) })}>
                   <option value={0}>Chọn công thức</option>
-                  {recipes.map((recipe) => (
-                    <option key={recipe.recipeId} value={recipe.recipeId}>
-                      #{recipe.recipeId} {recipe.recipeName}
-                    </option>
-                  ))}
+                  {recipes.map((recipe) => <option key={recipe.recipeId} value={recipe.recipeId}>#{recipe.recipeId} - {recipe.recipeName}</option>)}
                 </select>
               </div>
               <div><label className="text-xs text-neutral-500">Số lượng kế hoạch</label>
@@ -575,34 +585,6 @@ export default function ProductionOrders() {
                 </div>
               </div>
             )}
-            {/* QC Tech Specs Verification */}
-            {batchPopupOrderId !== null && orderTechSpecs.length > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                <h3 className="text-sm font-bold text-amber-800 mb-3 flex items-center gap-2">
-                  <ClipboardList className="w-4 h-4" />
-                  Kiểm tra tiêu chuẩn kỹ thuật (QC Verification)
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-                  {orderTechSpecs.map((spec: any) => (
-                    <label key={spec.specId} className="flex items-start gap-2 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        className="mt-1 rounded border-amber-300 text-amber-600 focus:ring-amber-500 disabled:opacity-50"
-                        checked={spec.isChecked}
-                        disabled={(user?.role !== 'QualityControl' && user?.role !== 'Admin' && user?.role !== 'Manager') || toggleSpecMutation.isPending}
-                        onChange={() => toggleSpecMutation.mutate(spec.specId)}
-                      />
-                      <span className={`text-xs ${spec.parentId ? 'ml-4' : 'font-semibold'} text-amber-900 group-hover:text-amber-700 transition-colors`}>
-                        {spec.content}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                {!allSpecsChecked && (
-                  <p className="text-[10px] text-amber-600 mt-2 italic font-medium">* Bạn phải tích chọn tất cả các tiêu chuẩn kỹ thuật để có thể tải lên giấy kiểm nghiệm.</p>
-                )}
-              </div>
-            )}
             <div className="table-container">
               <table className="table">
                 <thead>
@@ -617,7 +599,7 @@ export default function ProductionOrders() {
                 </thead>
                 <tbody>
                   {batchesForPopup.length === 0 ? (
-                    <tr><td colSpan={6} className="text-center text-neutral-500 py-6">Chưa có mẻ nào cho lệnh này.</td></tr>
+                    <tr><td colSpan={5} className="text-center text-neutral-500 py-6">Chưa có mẻ nào cho lệnh này.</td></tr>
                   ) : batchesForPopup.map((b: any) => {
                     const s = b.status ?? b.Status ?? '';
                     const batchNum = b.batchNumber ?? b.BatchNumber ?? '';
@@ -635,16 +617,14 @@ export default function ProductionOrders() {
                               <a href={certificatesApi.getBatchCertificateUrl(batchNum)} target="_blank" rel="noreferrer" className="text-primary-600 hover:underline inline-flex items-center text-xs">
                                 <FileCheck2 className="w-3.5 h-3.5 mr-1" />Xem
                               </a>
-                              {allSpecsChecked ? (
-                                <button
-                                  className="text-xs text-primary-600 hover:underline inline-flex items-center"
-                                  onClick={() => { setUploadingForBatch(batchNum); uploadInputRef.current?.click(); }}
-                                >
-                                  <Upload className="w-3.5 h-3.5 mr-1" />Tải lên
-                                </button>
-                              ) : (
-                                <span className="text-[10px] text-neutral-400 italic" title="Vui lòng kiểm tra tiêu chuẩn kỹ thuật">Khóa tải</span>
-                              )}
+                              <button
+                                className={`text-xs inline-flex items-center ${allSpecsChecked ? 'text-primary-600 hover:underline' : 'text-neutral-400 cursor-not-allowed'}`}
+                                disabled={!allSpecsChecked}
+                                title={!allSpecsChecked ? "Cần đạt tất cả các tiêu chuẩn kĩ thuật trước" : ""}
+                                onClick={() => { setUploadingForBatch(batchNum); uploadInputRef.current?.click(); }}
+                              >
+                                <Upload className="w-3.5 h-3.5 mr-1" />Tải lên
+                              </button>
                             </div>
                           ) : (
                             <span className="text-xs text-neutral-400">-</span>
@@ -656,6 +636,45 @@ export default function ProductionOrders() {
                 </tbody>
               </table>
             </div>
+
+            {/* Tech Specs Verification Section */}
+            {orderTechSpecs.length > 0 && (
+              <div className="bg-primary-50/50 border border-primary-200 rounded-xl p-4">
+                <h3 className="text-sm font-bold text-primary-800 mb-3 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Xác nhận tiêu chuẩn kỹ thuật (QC)
+                </h3>
+                <div className="space-y-2">
+                  {orderTechSpecs.filter(s => !s.parentId).map(spec => (
+                    <div key={spec.specId} className="space-y-1">
+                      <label className="flex items-center gap-2 text-sm text-neutral-800 cursor-pointer hover:bg-white/50 p-1 rounded transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={spec.isChecked}
+                          onChange={(e) => updateSpecMutation.mutate({ specId: spec.specId, isChecked: e.target.checked })}
+                          className="w-4 h-4 accent-primary-600"
+                        />
+                        <span className="font-medium">{spec.content}</span>
+                      </label>
+                      {orderTechSpecs.filter(sub => sub.parentId === spec.specId).map(sub => (
+                        <label key={sub.specId} className="flex items-center gap-2 text-xs text-neutral-700 ml-6 cursor-pointer hover:bg-white/50 p-1 rounded transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={sub.isChecked}
+                            onChange={(e) => updateSpecMutation.mutate({ specId: sub.specId, isChecked: e.target.checked })}
+                            className="w-3.5 h-3.5 accent-primary-600"
+                          />
+                          <span>{sub.content}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+                {!allSpecsChecked && (
+                  <p className="text-[10px] text-primary-600 mt-2 italic font-medium">* Cần xác nhận tất cả tiêu chuẩn để cho phép tải lên giấy kiểm nghiệm.</p>
+                )}
+              </div>
+            )}
             {/* Hidden file input for batch cert upload */}
             <input
               ref={uploadInputRef}

@@ -14,7 +14,4 @@ public class RecipeTechSpec
 
     [JsonIgnore]
     public virtual Recipe? Recipe { get; set; }
-
-    [JsonIgnore]
-    public virtual ProductionOrder? Order { get; set; }
 }

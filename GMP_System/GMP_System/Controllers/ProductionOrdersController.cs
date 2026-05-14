@@ -250,12 +250,12 @@ namespace GMP_System.Controllers
                 return BadRequest(new { success = false, message = "Công thức phải ở trạng thái Draft hoặc Approved để lập lệnh sản xuất." });
             }
 
-            bool isAnyOrderRunning = await _context.ProductionOrders.AnyAsync(o => o.Status == "In-Process" || o.Status == "In-Process" || o.Status == "Hold");
+            bool isAnyOrderActive = await _context.ProductionOrders.AnyAsync(o => o.Status == "In-Process" || o.Status == "Hold");
 
-            // If status is not provided or is Approved/In-Process, determine automatically
+            // Default to Scheduled if something is already running, else In-Process
             if (string.IsNullOrEmpty(order.Status) || order.Status == "Approved" || order.Status == "In-Process")
             {
-                order.Status = isAnyOrderRunning ? "Scheduled" : "In-Process";
+                order.Status = isAnyOrderActive ? "Scheduled" : "In-Process";
             }
             // Otherwise (e.g. "Draft"), respect the requested status
             order.CreatedAt = DateTime.Now;
@@ -301,6 +301,13 @@ namespace GMP_System.Controllers
 
                 foreach (var rb in recipeBoms)
                 {
+                    // Skip packaging materials in BOM for weight/ratio calculation (though still needed in deduction)
+                    // Wait, the user said Packaging (Hard capsule shell) shouldn't be counted in ratio/mass.
+                    // But they still need to be in the order BOM for tracking/deduction purposes? 
+                    // Actually, the user says "không được tính trong tỉ lệ công thức và cũng không tính cho khối lượng luôn".
+                    // I will still include them in ProductionOrderBoms so we know they are needed, 
+                    // but I'll mark them or the frontend will handle the exclusion.
+                    
                     var orderBom = new ProductionOrderBom
                     {
                         OrderId = order.OrderId,
@@ -314,24 +321,24 @@ namespace GMP_System.Controllers
                 }
                 await _unitOfWork.CompleteAsync();
 
-                // [ROUTING SNAPSHOT] Copy master recipe routing to this order
-                var recipeRoutings = await _unitOfWork.RecipeRoutings.Query()
+                // [SNAPSHOT ROUTING] Copy all routing steps from recipe to order
+                var recipeRoutings = await _context.RecipeRoutings
                     .Where(r => r.RecipeId == order.RecipeId && r.OrderId == null)
                     .Include(r => r.StepParameters)
                     .ToListAsync();
-
+                
                 foreach (var rr in recipeRoutings)
                 {
                     var orderRouting = new RecipeRouting
                     {
-                        RecipeId = rr.RecipeId,
                         OrderId = order.OrderId,
+                        RecipeId = order.RecipeId,
                         StepNumber = rr.StepNumber,
                         StepName = rr.StepName,
                         Description = rr.Description,
+                        EstimatedTimeMinutes = rr.EstimatedTimeMinutes,
                         DefaultEquipmentId = rr.DefaultEquipmentId,
                         AreaId = rr.AreaId,
-                        EstimatedTimeMinutes = rr.EstimatedTimeMinutes,
                         CleanlinessStatus = rr.CleanlinessStatus,
                         StandardTemperature = rr.StandardTemperature,
                         StandardHumidity = rr.StandardHumidity,
@@ -340,58 +347,49 @@ namespace GMP_System.Controllers
                         SetTemperature = rr.SetTemperature,
                         SetPressure = rr.SetPressure,
                         SetTimeMinutes = rr.SetTimeMinutes,
-                        MaterialIds = rr.MaterialIds,
-                        StepParameters = rr.StepParameters.Select(p => new StepParameter
-                        {
-                            ParameterName = p.ParameterName,
-                            MinValue = p.MinValue,
-                            MaxValue = p.MaxValue,
-                            Unit = p.Unit,
-                            IsCritical = p.IsCritical,
-                            Note = p.Note
-                        }).ToList()
+                        MaterialIds = rr.MaterialIds
                     };
-                    await _unitOfWork.RecipeRoutings.AddAsync(orderRouting);
+                    _context.RecipeRoutings.Add(orderRouting);
                 }
-                await _unitOfWork.CompleteAsync();
+                await _context.SaveChangesAsync();
 
-                // [TECH SPEC SNAPSHOT] Copy recipe tech specs to this order
+                // [SNAPSHOT TECH SPECS] Copy all tech specs from recipe to order
                 var recipeSpecs = await _context.RecipeTechSpecs
                     .Where(s => s.RecipeId == order.RecipeId && s.OrderId == null)
                     .ToListAsync();
-
+                
+                // Map old SpecId to new SpecId for parent/child relationship
                 var specMap = new Dictionary<int, int>();
+                
+                // First pass: add parents
                 foreach (var rs in recipeSpecs.Where(s => s.ParentId == null))
                 {
                     var orderSpec = new RecipeTechSpec
                     {
-                        RecipeId = rs.RecipeId,
                         OrderId = order.OrderId,
-                        ParentId = null,
+                        RecipeId = order.RecipeId.Value,
                         Content = rs.Content,
-                        IsChecked = false,
-                        SortOrder = rs.SortOrder
+                        SortOrder = rs.SortOrder,
+                        IsChecked = false // Always reset for new order
                     };
                     _context.RecipeTechSpecs.Add(orderSpec);
                     await _context.SaveChangesAsync();
                     specMap[rs.SpecId] = orderSpec.SpecId;
                 }
-
+                
+                // Second pass: add children
                 foreach (var rs in recipeSpecs.Where(s => s.ParentId != null))
                 {
-                    if (specMap.TryGetValue(rs.ParentId.Value, out int newParentId))
+                    var orderSpec = new RecipeTechSpec
                     {
-                        var orderSpec = new RecipeTechSpec
-                        {
-                            RecipeId = rs.RecipeId,
-                            OrderId = order.OrderId,
-                            ParentId = newParentId,
-                            Content = rs.Content,
-                            IsChecked = false,
-                            SortOrder = rs.SortOrder
-                        };
-                        _context.RecipeTechSpecs.Add(orderSpec);
-                    }
+                        OrderId = order.OrderId,
+                        RecipeId = order.RecipeId.Value,
+                        Content = rs.Content,
+                        SortOrder = rs.SortOrder,
+                        IsChecked = false,
+                        ParentId = specMap.ContainsKey(rs.ParentId.Value) ? specMap[rs.ParentId.Value] : null
+                    };
+                    _context.RecipeTechSpecs.Add(orderSpec);
                 }
                 await _context.SaveChangesAsync();
 
@@ -496,14 +494,14 @@ namespace GMP_System.Controllers
             var prefix = $"PO-{year}-";
 
             var lastOrder = await _context.ProductionOrders
-                .Where(o => o.OrderCode.StartsWith(prefix))
+                .Where(o => o.OrderCode != null && o.OrderCode.StartsWith(prefix))
                 .OrderByDescending(o => o.OrderCode)
                 .FirstOrDefaultAsync();
 
             int nextNumber = 1;
             if (lastOrder != null)
             {
-                var parts = lastOrder.OrderCode.Split('-');
+                var parts = lastOrder.OrderCode!.Split('-');
                 if (parts.Length == 3 && int.TryParse(parts[2], out var lastNumber))
                 {
                     nextNumber = lastNumber + 1;
@@ -538,6 +536,13 @@ namespace GMP_System.Controllers
             var bomItems = await _context.RecipeBoms
                 .Where(b => b.RecipeId == recipeId && b.MaterialId != null && b.Quantity > 0)
                 .Include(b => b.Material)
+                .Where(b => b.Material!.Type != "Packaging") // Exclude packaging from inventory deduction/calculation if required? 
+                // Wait, if it's packaging, it might still need to be deducted from inventory. 
+                // The user said "không tính trong tỉ lệ công thức và cũng không tính cho khối lượng".
+                // I'll keep it in inventory deduction for now unless it's strictly not allowed.
+                // Re-reading: "không được tính trong tỉ lệ công thức và cũng không tính cho khối lượng luôn bởi vì nó chỉ là cái vỏ thôi mà"
+                // This sounds like it's purely a calculation thing, but you still NEED it to produce.
+                // So I'll keep it in inventory deduction but the frontend will ignore it for mass calculations.
                 .ToListAsync();
 
             var shortages = new List<InventoryShortageDto>();

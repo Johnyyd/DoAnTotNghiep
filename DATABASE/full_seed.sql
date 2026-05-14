@@ -183,17 +183,17 @@ GO
 SET IDENTITY_INSERT RecipeBOM ON;
 INSERT INTO RecipeBOM (BomId, RecipeId, MaterialId, Quantity, UomId, WastePercentage, Note) VALUES
 (1,  1, 1,  250.00, 2, 0.20, N'NLC 3'),
-(2,  1, 2,   1.62,  2, 0.10, N'Aerosil'),
-(3,  1, 3,  29.70,  2, 0.20, N'SSG'),
-(4,  1, 4,   4.05,  2, 0.10, N'Talc'),
-(5,  1, 5,   4.05,  2, 0.10, N'Magnesi stearat'),
+(2,  1, 2,    1.62,  2, 0.10, N'Aerosil'),
+(3,  1, 3,   29.70,  2, 0.20, N'SSG'),
+(4,  1, 4,    4.05,  2, 0.10, N'Talc'),
+(5,  1, 5,    4.05,  2, 0.10, N'Magnesi stearat'),
 (6,  1, 6,  250.58, 2, 0.50, N'Tinh bột'),
-(7,  1, 7,  1.00, 4, 0.10,   N'Vỏ nang'),
+(7,  1, 7,    1.00, 4, 0.00,   N'Vỏ nang'),
 (8,  2, 9,  250.00, 2, 0.30, N'Paracetamol'),
 (9,  2, 6,  150.00, 2, 1.00, N'Tinh bột ngô'),
-(10, 2, 10, 80.00, 2, 0.50,  N'Lactose'),
-(11, 2, 5,   5.00, 2, 0.10,  N'Magie stearat'),
-(12, 2, 8,  10.00, 2, 0.20,  N'PVP K30');
+(10, 2, 10,  80.00, 2, 0.50,  N'Lactose'),
+(11, 2, 5,    5.00, 2, 0.10,  N'Magie stearat'),
+(12, 2, 8,   10.00, 2, 0.20,  N'PVP K30');
 SET IDENTITY_INSERT RecipeBOM OFF;
 GO
 
@@ -201,15 +201,15 @@ GO
 -- 9. RecipeRouting
 -- =====================================================================
 SET IDENTITY_INSERT RecipeRouting ON;
-INSERT INTO RecipeRouting (RoutingId, RecipeId, OrderId, StepNumber, StepName, DefaultEquipmentId, EstimatedTimeMinutes, Description, NumberOfRouting, MaterialId, AreaId, CleanlinessStatus, StandardTemperature, StandardHumidity, StandardPressure, StabilityStatus, SetTemperature, SetPressure, SetTimeMinutes) VALUES
--- Recipe 1: Viên nang NLC 3 (Existing)
-(1, 1, NULL, 1, N'Sấy Tá Dược 8 (TD 8)', 12, 180, N'Sấy tinh bột TD 8 tại 75°C, 180p. Độ ẩm < 5%.', 1, 6, 1, N'Sạch', N'21 - 25', N'45 - 70', N'10 - 999', N'ổn định', 75.00, 10.00, 180),
-(2, 1, NULL, 2, N'Sấy Cao Khô NLC 3', 12, 180, N'Sấy cao khô Trinh nữ tại 75°C, 180p. Độ ẩm < 3%.', 1, 1, 1, N'Sạch', N'21 - 25', N'45 - 70', N'10 - 999', N'ổn định', 75.00, 10.00, 180),
-(3, 1, NULL, 3, N'Cân Nguyên Liệu', 1, NULL, N'Cân chính xác 6 loại theo BOM động (Section 4 BMR). Đối chiếu nhãn phụ.', 1, NULL, 2, N'Sạch', N' - ', N' - ', N' - ', N'ổn định', 0.00, 0.00, 90),
-(4, 1, NULL, 4, N'Trộn Khô', 4, 15, N'Trộn premix bột tá dược trước. Trộn chính 15 phút, 15 vòng/phút.', 1, NULL, 3, N'Sạch', N'21 - 25', N'45 - 70', N'10 - 999', N'ổn định', 0.00, 10.00, 15),
-(7, 1, NULL, 5, N'Đóng Nang', 6, 120, N'Đóng nang số 0, khối lượng đích 540mg/viên.', 1, NULL, 4, N'Sạch', N' - ', N' - ', N' - ', N'ổn định', 0.00, 0.00, 120),
+INSERT INTO RecipeRouting (RoutingId, RecipeId, OrderId, StepNumber, StepName, DefaultEquipmentId, EstimatedTimeMinutes, Description, NumberOfRouting, AreaId, CleanlinessStatus, StandardTemperature, StandardHumidity, StandardPressure, StabilityStatus, SetTemperature, SetPressure, SetTimeMinutes, MaterialIds) VALUES
+-- Recipe 1: Viên nang Crila (Existing)
+(1, 1, NULL, 1, N'Sấy Tá Dược 8 (TD 8)', 12, 180, N'Sấy tinh bột TD 8 tại 75°C, 180p. Độ ẩm < 5%.', 1, 1, N'Sạch', N'21 - 25', N'45 - 70', N'10 - 999', N'ổn định', 75.00, 10.00, 180, '6'),
+(2, 1, NULL, 2, N'Sấy Cao Khô NLC 3', 12, 180, N'Sấy cao khô Trinh nữ tại 75°C, 180p. Độ ẩm < 3%.', 1, 1, N'Sạch', N'21 - 25', N'45 - 70', N'10 - 999', N'ổn định', 75.00, 10.00, 180, '1'),
+(3, 1, NULL, 3, N'Cân Nguyên Liệu', 1, 90, N'Cân chính xác 6 loại theo BOM động (Section 4 BMR). Đối chiếu nhãn phụ.', 1, 2, N'Sạch', N' - ', N' - ', N' - ', N'ổn định', 0.00, 0.00, 90, '1,2,3,4,5,6'),
+(4, 1, NULL, 4, N'Trộn Khô', 4, 15, N'Trộn premix bột tá dược trước. Trộn chính 15 phút, 15 vòng/phút.', 1, 3, N'Sạch', N'21 - 25', N'45 - 70', N'10 - 999', N'ổn định', 0.00, 10.00, 15, '1,2,3,4,5,6'),
+(7, 1, NULL, 5, N'Đóng Nang', 6, 120, N'Đóng nang số 0, khối lượng đích 540mg/viên.', 1, 4, N'Sạch', N' - ', N' - ', N' - ', N'ổn định', 0.00, 0.00, 120, '7'),
 -- Recipe 2: Paracetamol (Existing)
-(5, 2, NULL, 1, N'Cân Paracetamol', 1, 90, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(5, 2, NULL, 1, N'Cân Paracetamol', 1, 90, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '9'),
 (6, 2, NULL, 2, N'Dập Viên', 4, 180, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 -- Recipe 4: Thuốc ống Dipyridamole (New)
 (10, 4, NULL, 1, N'Pha chế dung dịch', 8, 60, N'Trộn hoạt chất Dipyridamole vào nước cất vô trùng.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
@@ -261,6 +261,7 @@ BEGIN
     CREATE TABLE RecipeTechSpecs (
         SpecId INT PRIMARY KEY IDENTITY(1,1),
         RecipeId INT NOT NULL REFERENCES Recipes(RecipeId) ON DELETE CASCADE,
+        OrderId INT NULL REFERENCES ProductionOrders(OrderId),
         ParentId INT NULL,
         SortOrder INT NOT NULL DEFAULT 0,
         Content NVARCHAR(500) NOT NULL,
@@ -304,7 +305,7 @@ INSERT INTO InventoryLots (LotId, MaterialId, LotNumber, QuantityCurrent, Manufa
 (4, 4, 'L-TALC-01', 5.00, DATEADD(DAY,-45,GETDATE()), DATEADD(YEAR,3,GETDATE()), N'Nhà cung cấp C', GETDATE()),
 (5, 5, 'L-MAGIE-01', 3.00, DATEADD(DAY,-40,GETDATE()), DATEADD(YEAR,3,GETDATE()), N'Nhà cung cấp D', GETDATE()),
 (6, 6, 'L-STR-01', 2.00, DATEADD(DAY,-45,GETDATE()), DATEADD(YEAR,2,GETDATE()), N'Đồng Nai', GETDATE()),
-(7, 7, 'L-NANG-01', 50.00, DATEADD(DAY,-35,GETDATE()), DATEADD(YEAR,3,GETDATE()), N'Nhà cung cấp E', GETDATE()),
+(7, 7, 'L-NANG-01', 6000.00, DATEADD(DAY,-35,GETDATE()), DATEADD(YEAR,3,GETDATE()), N'Nhà cung cấp E', GETDATE()),
 (8, 8, 'L-PVP-01', 10.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,3,GETDATE()), N'Nhà cung cấp F', GETDATE()),
 (9, 9, 'L-PARA-01', 3.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,2,GETDATE()), N'Ấn Độ', GETDATE()),
 (10, 10, 'L-LAC-01', 15.00, DATEADD(DAY,-25,GETDATE()), DATEADD(YEAR,3,GETDATE()), N'Nhà cung cấp G', GETDATE()),
@@ -425,19 +426,19 @@ IF @CrilaRecipeId IS NOT NULL
 BEGIN
     SET IDENTITY_INSERT RecipeTechSpecs ON;
 
-    INSERT INTO RecipeTechSpecs (SpecId, RecipeId, ParentId, SortOrder, Content, IsChecked) VALUES
-    (1, @CrilaRecipeId, NULL, 0, N'Viên nang số "0", bột thuốc trong nang màu vàng nhạt đến nâu đậm, có mùi thơm đặc trưng, vị đặc biệt', 0),
-    (2, @CrilaRecipeId, NULL, 1, N'Mất khối lượng do làm khô không quá 9,0 %', 0),
-    (3, @CrilaRecipeId, NULL, 2, N'Độ tan rã không quá 30 phút', 0),
-    (4, @CrilaRecipeId, NULL, 3, N'Độ đồng đều khối lượng: Khối lượng trung bình bột thuốc trong nang ± 7,5 %', 0),
-    (5, @CrilaRecipeId, NULL, 4, N'Định tính: Phải thể hiện phép định tính của cao khô Trinh nữ Crila', 0),
-    (6, @CrilaRecipeId, NULL, 5, N'Định lượng: Hàm lượng alcaloid toàn phần tính theo lycorin phải từ 1,125 - 1,375 mg/viên', 0),
-    (7, @CrilaRecipeId, NULL, 6, N'Độ nhiễm khuẩn', 0),
-    (8, @CrilaRecipeId, 7, 0, N'Tổng số vi khuẩn hiếu khí ≤ 10⁴ Khuẩn lạc/g', 0),
-    (9, @CrilaRecipeId, 7, 1, N'Tổng số bào tử nấm men – mốc ≤ 10² Khuẩn lạc/g', 0),
-    (10, @CrilaRecipeId, 7, 2, N'Tổng số vi khuẩn Gram âm dung nạp mật ≤ 10² Khuẩn lạc/g', 0),
-    (11, @CrilaRecipeId, 7, 3, N'Salmonella: Không được có (10g)', 0),
-    (12, @CrilaRecipeId, 7, 4, N'E.Coli, Pseudomonas aeruginosa, Staphylococcus aureus: Không được có (1g)', 0);
+    INSERT INTO RecipeTechSpecs (SpecId, RecipeId, OrderId, ParentId, SortOrder, Content, IsChecked) VALUES
+    (1, @CrilaRecipeId, NULL, NULL, 0, N'Viên nang số "0", bột thuốc trong nang màu vàng nhạt đến nâu đậm, có mùi thơm đặc trưng, vị đặc biệt', 0),
+    (2, @CrilaRecipeId, NULL, NULL, 1, N'Mất khối lượng do làm khô không quá 9,0 %', 0),
+    (3, @CrilaRecipeId, NULL, NULL, 2, N'Độ tan rã không quá 30 phút', 0),
+    (4, @CrilaRecipeId, NULL, NULL, 3, N'Độ đồng đều khối lượng: Khối lượng trung bình bột thuốc trong nang ± 7,5 %', 0),
+    (5, @CrilaRecipeId, NULL, NULL, 4, N'Định tính: Phải thể hiện phép định tính của cao khô Trinh nữ Crila', 0),
+    (6, @CrilaRecipeId, NULL, NULL, 5, N'Định lượng: Hàm lượng alcaloid toàn phần tính theo lycorin phải từ 1,125 - 1,375 mg/viên', 0),
+    (7, @CrilaRecipeId, NULL, NULL, 6, N'Độ nhiễm khuẩn', 0),
+    (8, @CrilaRecipeId, NULL, 7, 0, N'Tổng số vi khuẩn hiếu khí ≤ 10⁴ Khuẩn lạc/g', 0),
+    (9, @CrilaRecipeId, NULL, 7, 1, N'Tổng số bào tử nấm men – mốc ≤ 10² Khuẩn lạc/g', 0),
+    (10, @CrilaRecipeId, NULL, 7, 2, N'Tổng số vi khuẩn Gram âm dung nạp mật ≤ 10² Khuẩn lạc/g', 0),
+    (11, @CrilaRecipeId, NULL, 7, 3, N'Salmonella: Không được có (10g)', 0),
+    (12, @CrilaRecipeId, NULL, 7, 4, N'E.Coli, Pseudomonas aeruginosa, Staphylococcus aureus: Không được có (1g)', 0);
 
     SET IDENTITY_INSERT RecipeTechSpecs OFF;
     PRINT 'RecipeTechSpecs seeded successfully.';

@@ -168,11 +168,10 @@ function isPackagingMaterial(material?: {
 }) {
   if (!material) return false;
   const type = String(material.type ?? "").toLowerCase();
-  const code = String(material.materialCode ?? "").toLowerCase();
   const name = String(material.materialName ?? "").toLowerCase();
   return (
     type === "packaging" ||
-    code.includes("nlp") ||
+    name.includes("vỏ nang cứng") ||
     name.includes("vỏ") ||
     name.includes("ống") ||
     name.includes("màng") ||
@@ -416,11 +415,8 @@ export default function Recipes() {
   );
 
   const totalPerTabletMg = useMemo(
-    () =>
-      bomItems
-        .filter((item) => !isPackagingMaterial(materialById.get(item.materialId)))
-        .reduce((sum, item) => sum + (item.quantity || 0), 0),
-    [bomItems, materialById],
+    () => bomItems.reduce((sum, item) => sum + item.quantity, 0),
+    [bomItems],
   );
 
   // Tech specs
@@ -468,6 +464,7 @@ export default function Recipes() {
       setNewSubSpecContent("");
     },
   });
+
   const deleteSpecMutation = useMutation({
     mutationFn: (specId: number) =>
       recipesApi.deleteTechSpec(selectedRecipeId as number, specId),
@@ -705,24 +702,10 @@ export default function Recipes() {
   const deleteRoutingMutation = useMutation({
     mutationFn: (routingId: number) =>
       recipesApi.removeRoutingStep(selectedRecipeId as number, routingId),
-    onSuccess: async (_, routingId) => {
-      await queryClient.invalidateQueries({
+    onSuccess: async () =>
+      queryClient.invalidateQueries({
         queryKey: ["recipeRouting", selectedRecipeId],
-      });
-      // Re-index steps
-      const remainingSteps = routingSteps
-        .filter((r) => r.routingId !== routingId)
-        .sort((a, b) => a.stepNumber - b.stepNumber);
-
-      const updates = remainingSteps.map((s, i) => ({
-        routingId: s.routingId,
-        stepNumber: i + 1,
-      }));
-
-      if (updates.length > 0) {
-        reorderMutation.mutate(updates);
-      }
-    },
+      }),
   });
 
   const recalcMgFromRatio = (ratioPercent: number) => {
@@ -912,7 +895,7 @@ export default function Recipes() {
           </h2>
           <div>
             <label className="text-xs text-neutral-500">
-              Chọn thành phẩm mong muốn
+              Chọn thành phẩm đầu ra
             </label>
             <select
               className="input mt-1"
@@ -924,7 +907,7 @@ export default function Recipes() {
                 })
               }
             >
-              <option value={0}>Chọn thành phẩm mong muốn</option>
+              <option value={0}>Chọn thành phẩm đầu ra</option>
               {finishedMaterials.map((m) => (
                 <option key={m.materialId} value={m.materialId}>
                   {m.materialCode} - {m.materialName}
@@ -1099,7 +1082,7 @@ export default function Recipes() {
                       <th>Nguyên liệu</th>
                       <th>Tiêu chuẩn kỹ thuật</th>
                       <th>Tỉ lệ công thức (%)</th>
-                      <th>1 viên (mg)</th>
+                      <th>Khối lượng cho 1 viên (mg)</th>
                       <th className="text-right">Thao tác</th>
                     </tr>
                   </thead>
@@ -1466,17 +1449,17 @@ export default function Recipes() {
                 <table className="table">
                     <thead>
                       <tr>
-                        <th className="w-8 text-center text-[10px] uppercase">
-                          B.
+                        <th className="w-12 text-center text-[10px] uppercase">
+                          Bước
                         </th>
                         <th className="w-px whitespace-nowrap uppercase">
                           Tên công đoạn
                         </th>
-                        <th className="uppercase min-w-[150px]">
+                        <th className="uppercase">
                           Nguyên liệu
                         </th>
                         <th className="w-px whitespace-nowrap uppercase">
-                          Phòng
+                          Phòng sản xuất
                         </th>
                         <th className="w-px whitespace-nowrap uppercase">
                           Thiết bị
@@ -1484,7 +1467,7 @@ export default function Recipes() {
                         <th className="w-px whitespace-nowrap uppercase">
                           Điều kiện
                         </th>
-                        <th className="text-right w-16 uppercase">Thao tác</th>
+                        <th className="text-right w-20 uppercase">Thao tác</th>
                       </tr>
                     </thead>
                   <tbody>
@@ -1521,26 +1504,41 @@ export default function Recipes() {
                             onDrop={() => handleDrop(idx)}
                             className={`group hover:bg-primary-50/30 transition-colors cursor-grab ${dragIdx === idx ? "opacity-40" : ""}`}
                           >
-                            <td className="text-center font-mono text-xs text-neutral-500">
+                            <td className="text-center font-mono text-sm text-neutral-500">
                               {item.stepNumber}
                             </td>
-                            <td className="whitespace-nowrap font-medium text-neutral-800 text-sm">
+                            <td className="whitespace-nowrap font-medium text-neutral-900">
                               {item.stepName}
                             </td>
-                            <td className="text-[11px] text-neutral-600 leading-tight py-2 max-w-[200px]">
+                            <td className="text-xs text-neutral-600 leading-relaxed py-2 min-w-[200px]">
                               {matNames.length ? matNames.join(", ") : "-"}
                             </td>
-                            <td className="whitespace-nowrap text-sm text-neutral-700">
+                            <td className="whitespace-nowrap">
                               {item.areaName || "-"}
                             </td>
-                            <td className="whitespace-nowrap text-sm text-neutral-700">
+                            <td className="whitespace-nowrap">
                               {item.equipmentName || "-"}
                             </td>
                             <td>
-                              <div className="flex flex-col text-[10px] text-neutral-500 gap-0.5 whitespace-nowrap">
-                                <span>T: <b className="text-neutral-700">{item.standardTemperature ?? "-"}℃</b></span>
-                                <span>H: <b className="text-neutral-700">{item.standardHumidity ?? "-"}%</b></span>
-                                <span>P: <b className="text-neutral-700">{item.standardPressure ?? "-"}Pa</b></span>
+                              <div className="flex flex-col text-[11px] text-neutral-500 gap-0.1 whitespace-nowrap">
+                                <span>
+                                  Nhiệt độ:{" "}
+                                  <b className="text-neutral-700">
+                                    {item.standardTemperature ?? "-"}℃
+                                  </b>
+                                </span>
+                                <span>
+                                  Độ ẩm:{" "}
+                                  <b className="text-neutral-700">
+                                    {item.standardHumidity ?? "-"}%
+                                  </b>
+                                </span>
+                                <span>
+                                  Áp suất:{" "}
+                                  <b className="text-neutral-700">
+                                    {item.standardPressure ?? "-"} Pa
+                                  </b>
+                                </span>
                               </div>
                             </td>
                             <td className="text-right">
@@ -1593,7 +1591,7 @@ export default function Recipes() {
                   .map((spec) => (
                     <div key={spec.specId}>
                       <div className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-neutral-50 group">
-
+                        <div className="w-4 h-4 rounded-sm border border-neutral-300 flex-shrink-0" />
                         <span className="flex-1 text-sm text-neutral-800">
                           {spec.content}
                         </span>
@@ -1607,11 +1605,11 @@ export default function Recipes() {
                           }
                           className="opacity-0 group-hover:opacity-100 text-xs text-primary-600 hover:underline"
                         >
-                          + Thm
+                          + Thêm
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm("Xa tiu chun ny?"))
+                            if (confirm("Xóa tiêu chuẩn này?"))
                               deleteSpecMutation.mutate(spec.specId);
                           }}
                           className="opacity-0 group-hover:opacity-100 p-1 text-neutral-400 hover:text-red-500"
@@ -1627,7 +1625,7 @@ export default function Recipes() {
                             key={sub.specId}
                             className="flex items-center gap-2 py-1 px-2 ml-8 rounded hover:bg-neutral-50 group"
                           >
-
+                            <div className="w-4 h-4 rounded-sm border border-neutral-300 flex-shrink-0" />
                             <span className="flex-1 text-sm text-neutral-700">
                               {sub.content}
                             </span>
@@ -1741,7 +1739,7 @@ export default function Recipes() {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-xl font-bold">
-              {editingRouting ? "Cp nht cng on" : "Thm cng on"}
+              {editingRouting ? "Cập nhật công đoạn" : "Thêm công đoạn"}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
               <div>

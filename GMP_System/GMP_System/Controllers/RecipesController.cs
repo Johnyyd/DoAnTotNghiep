@@ -323,7 +323,6 @@ namespace GMP_System.Controllers
                     r.Description,
                     r.EstimatedTimeMinutes,
                     r.DefaultEquipmentId,
-                    r.MaterialId,
                     r.AreaId,
                     r.CleanlinessStatus,
                     r.StandardTemperature,
@@ -334,7 +333,6 @@ namespace GMP_System.Controllers
                     r.SetPressure,
                     r.SetTimeMinutes,
                     r.MaterialIds,
-                    Material = r.Material == null ? null : new { r.Material.MaterialName },
                     Area = r.Area == null ? null : new { r.Area.AreaName },
                     DefaultEquipment = r.DefaultEquipment == null ? null : new
                     {
@@ -376,7 +374,6 @@ namespace GMP_System.Controllers
                 Description = request.Description,
                 EstimatedTimeMinutes = request.EstimatedTimeMinutes,
                 DefaultEquipmentId = request.DefaultEquipmentId,
-                MaterialId = request.MaterialId,
                 AreaId = request.AreaId,
                 CleanlinessStatus = request.CleanlinessStatus,
                 StandardTemperature = request.StandardTemperature,
@@ -413,7 +410,6 @@ namespace GMP_System.Controllers
             step.Description = request.Description;
             step.EstimatedTimeMinutes = request.EstimatedTimeMinutes;
             step.DefaultEquipmentId = request.DefaultEquipmentId;
-            step.MaterialId = request.MaterialId;
             step.AreaId = request.AreaId;
             step.CleanlinessStatus = request.CleanlinessStatus;
             step.StandardTemperature = request.StandardTemperature;
@@ -440,7 +436,20 @@ namespace GMP_System.Controllers
 
             _context.RecipeRoutings.Remove(step);
             await _context.SaveChangesAsync();
-            return Ok(new { success = true, message = "Đã xóa công đoạn." });
+
+            // Recalculate StepNumbers for remaining steps in this recipe/order
+            var remainingSteps = await _context.RecipeRoutings
+                .Where(r => r.RecipeId == id && r.OrderId == step.OrderId)
+                .OrderBy(r => r.StepNumber)
+                .ToListAsync();
+
+            for (int i = 0; i < remainingSteps.Count; i++)
+            {
+                remainingSteps[i].StepNumber = i + 1;
+            }
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Đã xóa công đoạn và cập nhật lại thứ tự các bước." });
         }
 
         // PUT: api/recipes/{id}/routing/reorder
@@ -522,27 +531,48 @@ namespace GMP_System.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { success = true, message = "Đã xóa tiêu chuẩn." });
         }
+        // New: Get tech specs for a specific order (snapshot)
         [HttpGet("order/{orderId}/tech-specs")]
-        public async Task<IActionResult> GetOrderTechSpecs(int orderId)
+        public async Task<IActionResult> GetTechSpecsByOrder(int orderId)
         {
             var specs = await _context.RecipeTechSpecs
                 .Where(s => s.OrderId == orderId)
                 .OrderBy(s => s.SortOrder)
+                .Select(s => new { s.SpecId, s.RecipeId, s.OrderId, s.ParentId, s.SortOrder, s.Content, s.IsChecked })
                 .ToListAsync();
 
-            return Ok(new { data = specs, success = true });
+            // If no snapshot exists yet, fallback to recipe's current specs (though snapshotting should happen at creation)
+            if (specs.Count == 0)
+            {
+                var order = await _context.ProductionOrders.FindAsync(orderId);
+                if (order != null)
+                {
+                    specs = await _context.RecipeTechSpecs
+                        .Where(s => s.RecipeId == order.RecipeId && s.OrderId == null)
+                        .OrderBy(s => s.SortOrder)
+                        .Select(s => new { s.SpecId, s.RecipeId, s.OrderId, s.ParentId, s.SortOrder, s.Content, s.IsChecked })
+                        .ToListAsync();
+                }
+            }
+
+            return Ok(new { success = true, data = specs });
         }
 
-        [HttpPost("tech-specs/{id}/toggle")]
-        public async Task<IActionResult> ToggleTechSpec(int id)
+        // New: Update tech spec check status (for QC verification)
+        [HttpPut("tech-specs/{specId}/check")]
+        public async Task<IActionResult> UpdateTechSpecStatus(int specId, [FromBody] TechSpecCheckRequest request)
         {
-            var spec = await _context.RecipeTechSpecs.FindAsync(id);
-            if (spec == null) return NotFound();
+            var spec = await _context.RecipeTechSpecs.FindAsync(specId);
+            if (spec == null) return NotFound(new { success = false, message = "Không tìm thấy tiêu chuẩn." });
 
-            spec.IsChecked = !spec.IsChecked;
+            spec.IsChecked = request.IsChecked;
             await _context.SaveChangesAsync();
+            return Ok(new { success = true, data = new { spec.SpecId, spec.IsChecked } });
+        }
 
-            return Ok(new { success = true, isChecked = spec.IsChecked });
+        public class TechSpecCheckRequest
+        {
+            public bool IsChecked { get; set; }
         }
     }
 
