@@ -815,6 +815,9 @@ class _DryingStepScreenState extends State<DryingStepScreen>
       if (resultStatus == 'PendingQC') {
         setState(() => _currentPhase = ExecutionPhase.verification);
       } else if (resultStatus == 'Passed') {
+        if (widget.orderId != null) {
+          await ApiService.updateOrderStatus(widget.orderId!, 'Pending Worker');
+        }
         setState(() => _currentPhase = ExecutionPhase.completed);
         Navigator.pop(context, true);
       }

@@ -569,6 +569,9 @@ class _MixingStepScreenState extends State<MixingStepScreen>
       if (success) {
         await _loadDataFromDB();
         if (resultStatus == 'Passed') {
+          if (widget.orderId != null) {
+            await ApiService.updateOrderStatus(widget.orderId!, 'Pending Worker');
+          }
           Navigator.pop(ctx, true);
         }
         if (!isInternal) {

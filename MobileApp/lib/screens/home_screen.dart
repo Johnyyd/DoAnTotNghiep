@@ -146,7 +146,9 @@ class _HomeScreenState extends State<HomeScreen>
     if (hasInProcess) return 'In-Process';
 
     // Fallback based on order status
-    if (status == 'Draft') return 'Pending Worker';
+    if (status == 'Draft' || status == 'Approved' || status == 'Pending Worker') {
+      return 'Pending Worker';
+    }
     if (status == 'In-Process' || status == 'InProcess' || status == 'Running') {
       return 'In-Process';
     }

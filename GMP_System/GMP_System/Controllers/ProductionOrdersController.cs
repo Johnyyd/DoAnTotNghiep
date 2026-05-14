@@ -250,9 +250,9 @@ namespace GMP_System.Controllers
             bool isAnyOrderRunning = await _context.ProductionOrders.AnyAsync(o => o.Status == "InProcess" || o.Status == "In-Process");
 
             // If status is not provided or is Approved/In-Process, determine automatically
-            if (string.IsNullOrEmpty(order.Status) || order.Status == "Approved" || order.Status == "In-Process")
+            if (string.IsNullOrEmpty(order.Status) || order.Status == "Approved" || order.Status == "In-Process" || order.Status == "Pending Worker")
             {
-                order.Status = isAnyOrderRunning ? "Approved" : "In-Process";
+                order.Status = isAnyOrderRunning ? "Approved" : "Pending Worker";
             }
             // Otherwise (e.g. "Draft"), respect the requested status
             order.CreatedAt = DateTime.Now;
