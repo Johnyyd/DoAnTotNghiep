@@ -51,7 +51,11 @@ namespace GMP_System.Controllers
                     {
                         b.BatchId,
                         b.BatchNumber,
-                        b.Status
+                        b.Status,
+                        LatestLogStatus = b.BatchProcessLogs
+                            .OrderByDescending(log => log.LogId)
+                            .Select(log => log.ResultStatus)
+                            .FirstOrDefault()
                     }),
                     ProductionOrderBoms = o.ProductionOrderBoms.Select(bom => new
                     {

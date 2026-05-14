@@ -118,13 +118,12 @@ class _MixingStepScreenState extends State<MixingStepScreen>
     });
   }
 
-  Future<void> _loadDataFromDB() async {
+  Future<void> _loadDataFromDB({bool showLoading = true}) async {
     if (widget.batchId == null) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && showLoading) setState(() => _isLoading = false);
       return;
     }
-
-    setState(() => _isLoading = true);
+    if (showLoading) setState(() => _isLoading = true);
     try {
       // Load Batch for BOM
       final batch = await ApiService.getBatchById(widget.batchId!);
@@ -253,7 +252,11 @@ class _MixingStepScreenState extends State<MixingStepScreen>
         final rawStatus = normalizeStatus(log['resultStatus']);
         if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
           _currentPhase = ExecutionPhase.verification;
-          startPolling(_loadDataFromDB);
+          if (AuthService.currentUser?['role'] != 'QA_QC') {
+            startPolling(() => _loadDataFromDB(showLoading: false));
+          } else {
+            stopPolling();
+          }
         } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
           _currentPhase = ExecutionPhase.execution;
           stopPolling();
@@ -298,7 +301,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
     } catch (e) {
       debugPrint("Error loading Mixing data: $e");
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && showLoading) setState(() => _isLoading = false);
     }
   }
 

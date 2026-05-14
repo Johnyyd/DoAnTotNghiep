@@ -313,6 +313,17 @@ namespace GMP_System.Controllers
                     }
 
                     _unitOfWork.ProductionBatches.Update(batch);
+
+                    // Update Order Status to "Pending QC" if this log is for QC
+                    if (batch.OrderId.HasValue && (activeLog.ResultStatus == "PendingQC" || activeLog.ResultStatus == "Pending_QC"))
+                    {
+                        var order = await _unitOfWork.ProductionOrders.GetByIdAsync(batch.OrderId.Value);
+                        if (order != null)
+                        {
+                            order.Status = "Pending QC";
+                            _unitOfWork.ProductionOrders.Update(order);
+                        }
+                    }
                 }
             }
 
@@ -377,6 +388,17 @@ namespace GMP_System.Controllers
                     }
 
                     _unitOfWork.ProductionBatches.Update(batch);
+
+                    // Update Order Status back to "In-Process" so it returns to Worker tabs
+                    if (batch.OrderId.HasValue && (status.Equals("Passed", StringComparison.OrdinalIgnoreCase) || status.Equals("Approved", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        var order = await _unitOfWork.ProductionOrders.GetByIdAsync(batch.OrderId.Value);
+                        if (order != null)
+                        {
+                            order.Status = "In-Process";
+                            _unitOfWork.ProductionOrders.Update(order);
+                        }
+                    }
                 }
             }
 
