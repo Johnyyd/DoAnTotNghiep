@@ -223,6 +223,17 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
             _buildReadOnlyParam('Cân IW2-60:', _workerData?['canIW2'] ?? '--'),
             _buildReadOnlyParam('Cân PMA-5000:', _workerData?['canPMA'] ?? '--'),
             _buildReadOnlyParam('Dụng cụ cân:', _workerData?['dungCuCan'] ?? '--'),
+            
+            const SizedBox(height: 20),
+            const Text('CHI TIẾT KHỐI LƯỢNG NGUYÊN LIỆU', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo, fontSize: 12)),
+            const SizedBox(height: 8),
+            if (_workerData?['materials'] != null)
+              ...( _workerData?['materials'] as Map<String, dynamic>).entries.map((e) {
+                final val = e.value as Map<String, dynamic>;
+                return _buildReadOnlyParam(e.key, '${val['actual'] ?? '--'} kg (Phiếu KN: ${val['phieuKN'] ?? 'N/A'})');
+              })
+            else
+              const Text('Chưa có dữ liệu nguyên liệu.', style: TextStyle(color: Colors.grey, fontSize: 12)),
           ] 
           else if (_currentStepName?.toUpperCase().contains('TRỘN') == true) ...[
             const Text('THÔNG SỐ THỰC TẾ TỪ CÔNG NHÂN (READ-ONLY)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
@@ -237,6 +248,16 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
             _buildReadOnlyParam('Phòng trộn khô:', _workerData?['veSinhPhong'] ?? '--'),
             _buildReadOnlyParam('Máy trộn lập phương:', _workerData?['veSinhMay'] ?? '--'),
             _buildReadOnlyParam('Dụng cụ sản xuất:', _workerData?['veSinhDungCu'] ?? '--'),
+            
+            const SizedBox(height: 20),
+            const Text('CHI TIẾT KHỐI LƯỢNG NGUYÊN LIỆU TRỘN', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo, fontSize: 12)),
+            const SizedBox(height: 8),
+            if (_workerData?['khoiLuongThucTe'] != null)
+              ...( _workerData?['khoiLuongThucTe'] as Map<String, dynamic>).entries.map((e) {
+                return _buildReadOnlyParam(e.key, '${e.value ?? '--'} kg');
+              })
+            else
+              const Text('Chưa có dữ liệu khối lượng trộn.', style: TextStyle(color: Colors.grey, fontSize: 12)),
           ]
           else ...[
             // Mặc định hoặc cho Sấy
