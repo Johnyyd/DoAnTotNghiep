@@ -151,7 +151,7 @@ class _DryingStepScreenState extends State<DryingStepScreen>
 
       if (isMatch) {
         final qtyStr = item['quantity']?.toString() ?? '0';
-        final qty = double.tryParse(qtyStr) ?? 0;
+        final qty = double.tryParse(qtyStr.replaceAll(',', '.')) ?? 0;
         if (qty > 0) {
           final displayName = name.isNotEmpty ? name : code;
           if (qty > 50) {
@@ -351,8 +351,8 @@ class _DryingStepScreenState extends State<DryingStepScreen>
       _currentPhase.index > ExecutionPhase.precheck.index || widget.isViewer;
   bool get _isMoistureMet =>
       widget.stepName.contains('NLC 3') &&
-      (double.tryParse(_inputMoistureCtrl.text) ?? 0) > 0 &&
-      (double.tryParse(_inputMoistureCtrl.text) ?? 0) <= 5.0;
+      (double.tryParse(_inputMoistureCtrl.text.replaceAll(',', '.')) ?? 0) > 0 &&
+      (double.tryParse(_inputMoistureCtrl.text.replaceAll(',', '.')) ?? 0) <= 5.0;
 
   bool get _isPhase2Locked =>
       _currentPhase.index > ExecutionPhase.input.index || widget.isViewer;
@@ -402,7 +402,8 @@ class _DryingStepScreenState extends State<DryingStepScreen>
           final h = int.parse(parts[0]);
           final m = int.parse(parts[1]);
           final minutesToAdd = int.tryParse(_tgSayCaiDatCtrl.text) ?? 180;
-          final timeStart = DateTime(2026, 1, 1, h, m);
+          final now = DateTime.now();
+          final timeStart = DateTime(now.year, now.month, now.day, h, m);
           final timeEnd = timeStart.add(Duration(minutes: minutesToAdd));
           _timeEndCtrl.text =
               "${timeEnd.hour.toString().padLeft(2, '0')}:${timeEnd.minute.toString().padLeft(2, '0')}";
@@ -440,7 +441,7 @@ class _DryingStepScreenState extends State<DryingStepScreen>
     if (truocStr.isEmpty) {
       if (mounted) setState(() => inputStatuses['slTruocSay'] = 'none');
     } else {
-      final val = double.tryParse(truocStr) ?? 0;
+      final val = double.tryParse(truocStr.replaceAll(',', '.')) ?? 0;
       bool isValid = val > 0;
 
       if (mounted) {
@@ -452,8 +453,8 @@ class _DryingStepScreenState extends State<DryingStepScreen>
     if (sauStr.isEmpty) {
       if (mounted) setState(() => inputStatuses['slSauSay'] = 'none');
     } else {
-      final truocVal = double.tryParse(truocStr) ?? 0;
-      final sauVal = double.tryParse(sauStr) ?? 0;
+      final truocVal = double.tryParse(truocStr.replaceAll(',', '.')) ?? 0;
+      final sauVal = double.tryParse(sauStr.replaceAll(',', '.')) ?? 0;
       if (sauVal <= 0) {
         if (mounted) setState(() => inputStatuses['slSauSay'] = 'invalid');
       } else if (truocVal > 0) {
@@ -559,8 +560,8 @@ class _DryingStepScreenState extends State<DryingStepScreen>
   }
 
   Future<void> _verifyAndSubmit() async {
-    final slTruoc = double.tryParse(_slTruocCtrl.text) ?? 0;
-    final slSau = double.tryParse(_slSauCtrl.text) ?? 0;
+    final slTruoc = double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0;
+    final slSau = double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0;
     if (slSau >= slTruoc && slSau > 0) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -697,8 +698,8 @@ class _DryingStepScreenState extends State<DryingStepScreen>
 
     // Ràng buộc kiểm tra Khối lượng trước và sau sấy
     if (resultStatus == 'Passed' && _currentPhase == ExecutionPhase.execution) {
-      final truocVal = double.tryParse(_slTruocCtrl.text) ?? 0;
-      final sauVal = double.tryParse(_slSauCtrl.text) ?? 0;
+      final truocVal = double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0;
+      final sauVal = double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0;
 
       if (truocVal <= 0 || sauVal <= 0) {
         if (mounted) {
@@ -775,12 +776,12 @@ class _DryingStepScreenState extends State<DryingStepScreen>
         'slTruocSay': _slTruocCtrl.text,
         'slSauSay': _slSauCtrl.text,
         'mauKiemTra': _mauKiemTra,
-        'netWeight': (double.tryParse(_slSauCtrl.text) ?? 0) -
-            ((double.tryParse(_mauKiemTra) ?? 0) / 1000.0),
+        'netWeight': (double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0) -
+            ((double.tryParse(_mauKiemTra.replaceAll(',', '.')) ?? 0) / 1000.0),
         'yieldLoss': _slTruocCtrl.text.isNotEmpty
-            ? (((double.tryParse(_slTruocCtrl.text) ?? 0) -
-                    (double.tryParse(_slSauCtrl.text) ?? 0)) /
-                (double.tryParse(_slTruocCtrl.text) ?? 1) *
+            ? (((double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0) -
+                    (double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0)) /
+                (double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 1) *
                 100)
             : 0,
         'viTriCuaGio': _cuaGioCtrl.text,
@@ -1422,7 +1423,7 @@ class _DryingStepScreenState extends State<DryingStepScreen>
                       const Text('Khối lượng tịnh (sau trừ mẫu):',
                           style: TextStyle(fontSize: 13)),
                       Text(
-                          '${((double.tryParse(_slSauCtrl.text) ?? 0) - ((double.tryParse(_mauKiemTra) ?? 0) / 1000.0)).toStringAsFixed(3)} kg',
+                          '${((double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0) - ((double.tryParse(_mauKiemTra.replaceAll(',', '.')) ?? 0) / 1000.0)).toStringAsFixed(3)} kg',
                           style: const TextStyle(
                               fontWeight: FontWeight.bold, color: Colors.blue)),
                     ],
@@ -1434,17 +1435,17 @@ class _DryingStepScreenState extends State<DryingStepScreen>
                       const Text('Hao hụt sau sấy:',
                           style: TextStyle(fontSize: 13)),
                       Text(
-                          '${_slTruocCtrl.text.isNotEmpty ? (((double.tryParse(_slTruocCtrl.text) ?? 0) - (double.tryParse(_slSauCtrl.text) ?? 0)) / (double.tryParse(_slTruocCtrl.text) ?? 1) * 100).toStringAsFixed(2) : 0}%',
+                          '${_slTruocCtrl.text.isNotEmpty ? (((double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0) - (double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0)) / (double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 1) * 100).toStringAsFixed(2) : 0}%',
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: _slTruocCtrl.text.isNotEmpty &&
-                                      (((double.tryParse(_slTruocCtrl.text) ??
+                                      (((double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ??
                                                       0) -
                                                   (double.tryParse(
-                                                          _slSauCtrl.text) ??
+                                                          _slSauCtrl.text.replaceAll(',', '.')) ??
                                                       0)) /
                                               (double.tryParse(
-                                                      _slTruocCtrl.text) ??
+                                                      _slTruocCtrl.text.replaceAll(',', '.')) ??
                                                   1) *
                                               100) >
                                           9.0
@@ -1461,7 +1462,7 @@ class _DryingStepScreenState extends State<DryingStepScreen>
           ElevatedButton.icon(
             onPressed: () async {
               // Kiểm tra độ ẩm trước khi cho phép Hoàn tất
-              final humidVal = double.tryParse(_humidAfterCtrl.text) ?? 0;
+              final humidVal = double.tryParse(_humidAfterCtrl.text.replaceAll(',', '.')) ?? 0;
 
               // Lấy tiêu chuẩn từ standardParams (nếu có)
               double maxAllowed = 5.0; // Mặc định 5% cho NLC

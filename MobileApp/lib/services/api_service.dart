@@ -124,12 +124,12 @@ class ApiService {
 
   /// Cập nhật trạng thái của Order
   static Future<bool> updateOrderStatus(int orderId, String newStatus) async {
-    final url = Uri.parse('$baseUrl/production-orders/$orderId/status');
+    final url = Uri.parse('$baseUrl/production-orders/$orderId');
     try {
-      final response = await http.patch(
+      final response = await http.put(
         url,
         headers: await _headers(),
-        body: jsonEncode(newStatus),
+        body: jsonEncode({"status": newStatus}),
       );
       return response.statusCode >= 200 && response.statusCode < 300;
     } catch (e) {

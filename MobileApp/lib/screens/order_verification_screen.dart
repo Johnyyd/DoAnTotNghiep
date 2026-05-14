@@ -59,7 +59,7 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
         if (paramsStr != null) {
           final Map<String, dynamic> params = jsonDecode(paramsStr);
           setState(() {
-            _workerData = params['rawInputs'];
+            _workerData = params['rawInputs'] ?? params;
           });
         }
       }

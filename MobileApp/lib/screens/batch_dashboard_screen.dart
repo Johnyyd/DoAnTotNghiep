@@ -31,10 +31,21 @@ class _BatchDashboardScreenState extends State<BatchDashboardScreen> {
     });
     final results = await ApiService.getBatches(orderId: widget.orderId);
 
-    // Explicit sorting by BatchNumber for GMP sequential logic
+    // Explicit sorting by BatchNumber for GMP sequential logic (Natural Sort)
     results.sort((a, b) {
       final aNo = a['batchNumber']?.toString() ?? '';
       final bNo = b['batchNumber']?.toString() ?? '';
+      
+      final aMatch = RegExp(r'\d+').firstMatch(aNo);
+      final bMatch = RegExp(r'\d+').firstMatch(bNo);
+      
+      if (aMatch != null && bMatch != null) {
+        final aPrefix = aNo.substring(0, aMatch.start);
+        final bPrefix = bNo.substring(0, bMatch.start);
+        if (aPrefix == bPrefix) {
+          return int.parse(aMatch.group(0)!).compareTo(int.parse(bMatch.group(0)!));
+        }
+      }
       return aNo.compareTo(bNo);
     });
 

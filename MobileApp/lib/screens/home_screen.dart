@@ -107,6 +107,9 @@ class _HomeScreenState extends State<HomeScreen>
     if (status == 'On-Hold' || status == 'Hold' || status == 'Error') {
       return 'On-Hold';
     }
+    if (status == 'Pending QC' || status == 'PendingQC') {
+      return 'Pending QC';
+    }
 
     final batches = order['productionBatches'] as List<dynamic>? ?? [];
     if (batches.isEmpty) return 'Pending Worker';
@@ -119,20 +122,20 @@ class _HomeScreenState extends State<HomeScreen>
     for (var b in batches) {
       if (b['status'] == 'Completed') continue;
       
-      final logStatusRaw = b['latestLogStatus']?.toString() ?? '';
-      final logStatus = logStatusRaw.replaceAll(' ', '').toUpperCase();
-
-      if (logStatus == 'PENDINGQC' || logStatus == 'PENDING_QC') {
-        hasPendingQC = true;
-      } else if (logStatus == 'APPROVED') {
-        hasInProcess = true;
-      } else if (logStatus == 'RUNNING' || logStatus == 'PASSED' || logStatus == '') {
-        // RUNNING: Công nhân đang nhập liệu (Phase 2)
-        // PASSED: Vừa xong công đoạn trước, chưa bắt đầu công đoạn sau (Phase 1)
-        // '': Chưa có log nào (Phase 1)
-        hasPendingWorker = true;
-      } else if (logStatus == 'FAILED' || logStatus == 'REJECTED') {
-        hasFailed = true;
+      if (b['latestLogStatus'] != null) {
+        final logStatus = b['latestLogStatus'].toString().replaceAll(' ', '').toUpperCase();
+        if (logStatus == 'PENDINGQC' || logStatus == 'PENDING_QC') {
+          hasPendingQC = true;
+        } else if (logStatus == 'APPROVED') {
+          hasInProcess = true;
+        } else if (logStatus == 'RUNNING' || logStatus == 'PASSED') {
+          hasPendingWorker = true;
+        } else if (logStatus == 'FAILED' || logStatus == 'REJECTED') {
+          hasFailed = true;
+        }
+      } else {
+        // Fallback for batch status if no log status is available
+        if (b['status'] == 'In-Process') hasPendingWorker = true;
       }
     }
 

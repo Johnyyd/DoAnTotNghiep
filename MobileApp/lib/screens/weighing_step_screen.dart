@@ -207,13 +207,11 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
                   } catch (_) {}
                 }
 
-                if (p['rawInputs'] != null) {
-                  final raw = p['rawInputs'] as Map;
-                  if (raw['netWeight'] != null) {
-                    totalNetFromDrying +=
-                        (double.tryParse(raw['netWeight'].toString()) ?? 0);
-                    hasDryingData = true;
-                  }
+                final raw = p['rawInputs'] != null ? p['rawInputs'] as Map : p;
+                if (raw['netWeight'] != null) {
+                  totalNetFromDrying +=
+                      (double.tryParse(raw['netWeight'].toString().replaceAll(',', '.')) ?? 0);
+                  hasDryingData = true;
                 }
               }
             }
@@ -322,8 +320,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
   }
 
   void _calculateDynamicBOM() {
-    double? A = double.tryParse(_lotWeightACtrl.text); // Lot weight in kg
-    double? C = double.tryParse(_purityCCtrl.text); // Alkaloid content in %
+    double? A = double.tryParse(_lotWeightACtrl.text.replaceAll(',', '.')); // Lot weight in kg
+    double? C = double.tryParse(_purityCCtrl.text.replaceAll(',', '.')); // Alkaloid content in %
 
     if (A == null || C == null || C < 0.1) {
       return;
@@ -468,7 +466,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
     // Total Weight Check against Batch Target
     double totalActual = 0;
     _materialsData.forEach((k, v) {
-      totalActual += double.tryParse(v['actual'] ?? '0') ?? 0;
+      totalActual += double.tryParse(v['actual']?.replaceAll(',', '.') ?? '0') ?? 0;
     });
 
     final target = (_batchInfo?['plannedQuantity'] as num?)?.toDouble() ?? 0.0;
@@ -493,7 +491,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
       }
 
       final actualStr = _materialsData[name]?['actual'] ?? '0';
-      final actualQty = double.tryParse(actualStr) ?? 0.0;
+      final actualQty = double.tryParse(actualStr.replaceAll(',', '.')) ?? 0.0;
 
       if (requiredQty > 0.0001) {
         final double diffPercent =
