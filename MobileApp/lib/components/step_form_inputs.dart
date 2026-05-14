@@ -372,7 +372,7 @@ class _MixingPackagingFieldState extends State<MixingPackagingField> {
     final kgLe = double.tryParse(kgLeStr.replaceAll(',', '.')) ?? 0;
     
     setState(() {
-      _total = ((tui * 10) + kgLe).toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
+      _total = ((tui * 10) + kgLe).toStringAsFixed(4).replaceAll(RegExp(r'\.?0+$'), '');
     });
     if (widget.onResultChanged != null) {
       widget.onResultChanged!(_total);
