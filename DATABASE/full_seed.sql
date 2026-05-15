@@ -420,7 +420,7 @@ IF @MatPvcId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM InventoryLots WHERE Mater
 -- =====================================================================
 PRINT 'Seeding RecipeTechSpecs...';
 
-DECLARE @CrilaRecipeId INT = (SELECT TOP 1 RecipeId FROM Recipes WHERE MaterialId IN (SELECT MaterialId FROM Materials WHERE MaterialCode = 'TP-VNC'));
+DECLARE @CrilaRecipeId INT = (SELECT TOP 1 RecipeId FROM Recipes WHERE MaterialId IN (SELECT MaterialId FROM Materials WHERE MaterialCode = 'TP-CRILA'));
 
 IF @CrilaRecipeId IS NOT NULL
 BEGIN

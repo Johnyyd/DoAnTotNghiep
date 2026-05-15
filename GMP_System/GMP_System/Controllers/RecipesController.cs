@@ -165,7 +165,7 @@ namespace GMP_System.Controllers
 
             // Xoá các dữ liệu liên quan (BOM và Routing) trước khi xoá Recipe để tránh lỗi Khóa ngoại
             var boms = await _context.RecipeBoms.Where(b => b.RecipeId == id).ToListAsync();
-            var routings = await _context.RecipeRoutings.Where(r => r.RecipeId == id).ToListAsync();
+            var routings = await _context.RecipeRoutings.Where(r => r.RecipeId == id && r.OrderId == null).ToListAsync();
             
             // Xoá StepParameters của các Routing thuộc Recipe này
             if (routings.Any())
@@ -310,7 +310,7 @@ namespace GMP_System.Controllers
             }
 
             var steps = await _context.RecipeRoutings
-                .Where(r => r.RecipeId == id)
+                .Where(r => r.RecipeId == id && r.OrderId == null)
                 .Include(r => r.DefaultEquipment)
                     .ThenInclude(e => e!.Area)
                 .OrderBy(r => r.StepNumber)
@@ -369,6 +369,7 @@ namespace GMP_System.Controllers
             var step = new RecipeRouting
             {
                 RecipeId = id,
+                OrderId = null,
                 StepNumber = request.StepNumber,
                 StepName = request.StepName.Trim(),
                 Description = request.Description,
@@ -394,7 +395,7 @@ namespace GMP_System.Controllers
         [HttpPut("{id}/routing/{routingId}")]
         public async Task<IActionResult> UpdateRoutingStep(int id, int routingId, [FromBody] RecipeRouting request)
         {
-            var step = await _context.RecipeRoutings.FirstOrDefaultAsync(r => r.RoutingId == routingId && r.RecipeId == id);
+            var step = await _context.RecipeRoutings.FirstOrDefaultAsync(r => r.RoutingId == routingId && r.RecipeId == id && r.OrderId == null);
             if (step == null)
             {
                 return NotFound(new { success = false, message = "Không tìm thấy công đoạn." });
@@ -428,7 +429,7 @@ namespace GMP_System.Controllers
         [HttpDelete("{id}/routing/{routingId}")]
         public async Task<IActionResult> DeleteRoutingStep(int id, int routingId)
         {
-            var step = await _context.RecipeRoutings.FirstOrDefaultAsync(r => r.RoutingId == routingId && r.RecipeId == id);
+            var step = await _context.RecipeRoutings.FirstOrDefaultAsync(r => r.RoutingId == routingId && r.RecipeId == id && r.OrderId == null);
             if (step == null)
             {
                 return NotFound(new { success = false, message = "Không tìm thấy công đoạn." });
@@ -439,7 +440,7 @@ namespace GMP_System.Controllers
 
             // Recalculate StepNumbers for remaining steps in this recipe/order
             var remainingSteps = await _context.RecipeRoutings
-                .Where(r => r.RecipeId == id && r.OrderId == step.OrderId)
+                .Where(r => r.RecipeId == id && r.OrderId == null)
                 .OrderBy(r => r.StepNumber)
                 .ToListAsync();
 
@@ -459,7 +460,7 @@ namespace GMP_System.Controllers
             if (items == null || items.Count == 0)
                 return BadRequest(new { success = false, message = "Danh sách rỗng." });
 
-            var steps = await _context.RecipeRoutings.Where(r => r.RecipeId == id).ToListAsync();
+            var steps = await _context.RecipeRoutings.Where(r => r.RecipeId == id && r.OrderId == null).ToListAsync();
             foreach (var item in items)
             {
                 var step = steps.FirstOrDefault(s => s.RoutingId == item.RoutingId);
@@ -478,7 +479,7 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> GetTechSpecs(int id)
         {
             var specs = await _context.RecipeTechSpecs
-                .Where(s => s.RecipeId == id)
+                .Where(s => s.RecipeId == id && s.OrderId == null)
                 .OrderBy(s => s.SortOrder)
                 .Select(s => new { s.SpecId, s.RecipeId, s.ParentId, s.SortOrder, s.Content, s.IsChecked })
                 .ToListAsync();
@@ -494,6 +495,7 @@ namespace GMP_System.Controllers
             var spec = new RecipeTechSpec
             {
                 RecipeId = id,
+                OrderId = null,
                 ParentId = request.ParentId,
                 SortOrder = request.SortOrder,
                 Content = request.Content?.Trim() ?? "",
@@ -507,7 +509,7 @@ namespace GMP_System.Controllers
         [HttpPut("{id}/tech-specs/{specId}")]
         public async Task<IActionResult> UpdateTechSpec(int id, int specId, [FromBody] RecipeTechSpec request)
         {
-            var spec = await _context.RecipeTechSpecs.FirstOrDefaultAsync(s => s.SpecId == specId && s.RecipeId == id);
+            var spec = await _context.RecipeTechSpecs.FirstOrDefaultAsync(s => s.SpecId == specId && s.RecipeId == id && s.OrderId == null);
             if (spec == null) return NotFound(new { success = false, message = "Không tìm thấy tiêu chuẩn." });
 
             spec.Content = request.Content?.Trim() ?? spec.Content;
@@ -521,11 +523,11 @@ namespace GMP_System.Controllers
         [HttpDelete("{id}/tech-specs/{specId}")]
         public async Task<IActionResult> DeleteTechSpec(int id, int specId)
         {
-            var spec = await _context.RecipeTechSpecs.FirstOrDefaultAsync(s => s.SpecId == specId && s.RecipeId == id);
+            var spec = await _context.RecipeTechSpecs.FirstOrDefaultAsync(s => s.SpecId == specId && s.RecipeId == id && s.OrderId == null);
             if (spec == null) return NotFound(new { success = false, message = "Không tìm thấy tiêu chuẩn." });
 
             // Also delete child specs
-            var children = await _context.RecipeTechSpecs.Where(s => s.ParentId == specId).ToListAsync();
+            var children = await _context.RecipeTechSpecs.Where(s => s.ParentId == specId && s.OrderId == null).ToListAsync();
             _context.RecipeTechSpecs.RemoveRange(children);
             _context.RecipeTechSpecs.Remove(spec);
             await _context.SaveChangesAsync();

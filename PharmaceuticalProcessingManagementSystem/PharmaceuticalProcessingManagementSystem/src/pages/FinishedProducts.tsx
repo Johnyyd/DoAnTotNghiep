@@ -42,6 +42,17 @@ export default function FinishedProducts() {
     }
   });
 
+  const deleteMaterialMutation = useMutation({
+    mutationFn: (materialId: number) => materialsApi.delete(materialId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      queryClient.invalidateQueries({ queryKey: ['inventoryLots'] });
+    },
+    onError: (err: any) => {
+      alert(err?.response?.data?.message ?? 'Không thể xóa thành phẩm này.');
+    },
+  });
+
   const materials = useMemo(() => {
     const rows = Array.isArray(materialsRaw) ? materialsRaw : (materialsRaw as any)?.data ?? [];
     return (rows as any[]).map(normalizeMaterial).filter((m) => m.type === 'FinishedGood');
@@ -122,6 +133,7 @@ export default function FinishedProducts() {
                   <th>Tên thành phẩm</th>
                   {tab === 'completed' && <th>Số lượng thành phẩm</th>}
                   {tab === 'completed' && <th>Giấy kiểm nghiệm</th>}
+                  {tab === 'target' && <th className="text-right">Thao tác</th>}
                 </tr>
               </thead>
               <tbody>
@@ -136,6 +148,21 @@ export default function FinishedProducts() {
                       <td className="font-medium text-neutral-900">{m.materialName}</td>
                       {tab === 'completed' && <td>{displayQty}{unit}</td>}
                       {tab === 'completed' && <td><a className="text-primary-600 hover:underline inline-flex items-center" href={certificatesApi.getFinishedCertificateUrl(m.materialCode)} target="_blank" rel="noreferrer"><FileCheck2 className="w-4 h-4 mr-1" /> Xem</a></td>}
+                      {tab === 'target' && (
+                        <td className="text-right">
+                          <button
+                            className="text-red-600 hover:underline disabled:text-neutral-400"
+                            disabled={deleteMaterialMutation.isPending}
+                            onClick={() => {
+                              if (confirm(`Xóa thành phẩm ${m.materialName}?`)) {
+                                deleteMaterialMutation.mutate(m.materialId);
+                              }
+                            }}
+                          >
+                            Xóa
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

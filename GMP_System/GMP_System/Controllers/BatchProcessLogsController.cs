@@ -36,13 +36,13 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> GetLogsByBatch(int batchId)
         {
             var batch = await _unitOfWork.ProductionBatches.GetByIdAsync(batchId);
-            if (batch == null) return NotFound(new { success = false, message = "KhÃ´ng tÃ¬m tháº¥y máº»." });
+            if (batch == null) return NotFound(new { success = false, message = "Không tìm thấy mẻ." });
 
             var order = await _unitOfWork.ProductionOrders.Query()
                 .Include(o => o.Recipe)
                 .FirstOrDefaultAsync(o => o.OrderId == batch.OrderId);
 
-            if (order == null) return NotFound(new { success = false, message = "KhÃ´ng tÃ¬m tháº¥y lá»‡nh sáº£n xuáº¥t." });
+            if (order == null) return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
 
             // Prioritize Order-specific routings (custom steps)
             var routings = await _unitOfWork.RecipeRoutings.Query()
@@ -165,13 +165,13 @@ namespace GMP_System.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] BatchProcessLog log)
         {
-            if (log == null) return BadRequest("Dá»¯ liá»‡u khÃ´ng há»£p lá»‡.");
+            if (log == null) return BadRequest("Dữ liệu không hợp lệ.");
             if (!log.BatchId.HasValue || !log.RoutingId.HasValue)
-                return BadRequest("Thiáº¿u BatchId hoáº·c RoutingId.");
+                return BadRequest("Thiếu BatchId hoặc RoutingId.");
 
             var routing = await _unitOfWork.RecipeRoutings.GetByIdAsync(log.RoutingId.Value);
             if (routing == null)
-                return BadRequest("KhÃ´ng tÃ¬m tháº¥y cÃ´ng Ä‘oáº¡n quy trÃ¬nh.");
+                return BadRequest("Không tìm thấy công đoạn quy trình.");
 
             var maxAttempts = Math.Max(1, routing.NumberOfRouting ?? 1);
 
@@ -206,7 +206,7 @@ namespace GMP_System.Controllers
                 return BadRequest(new
                 {
                     success = false,
-                    message = $"CÃ´ng Ä‘oáº¡n nÃ y chá»‰ Ä‘Æ°á»£c thá»±c hiá»‡n tá»‘i Ä‘a {maxAttempts} láº§n."
+                    message = $"Công đoạn này chỉ được thực hiện tối đa {maxAttempts} lần."
                 });
             }
 
@@ -326,8 +326,8 @@ namespace GMP_System.Controllers
             return Ok(new
             {
                 Message = activeLog.IsDeviation == true
-                    ? "Ghi nháº­t kÃ½ thÃ nh cÃ´ng (Cáº¢NH BÃO Tá»’N Táº I SAI Lá»†CH)!"
-                    : "Ghi nháº­t kÃ½ thÃ nh cÃ´ng!",
+                    ? "Ghi nhật ký thành công (CẢNH BÁO TỒN TẠI SAI LỆCH)!"
+                    : "Ghi nhật ký thành công!",
                 LogId = activeLog.LogId,
                 IsDeviation = activeLog.IsDeviation,
                 NumberOfRouting = activeLog.NumberOfRouting,
@@ -339,7 +339,7 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> Verify([FromBody] JsonElement body)
         {
             if (!body.TryGetProperty("logId", out var logIdProp) || !body.TryGetProperty("verifierId", out var verifierIdProp))
-                return BadRequest("Thiáº¿u thÃ´ng tin LogId hoáº·c VerifierId.");
+                return BadRequest("Thiếu thông tin LogId hoặc VerifierId.");
 
             long logId = logIdProp.GetInt64();
             int verifierId = verifierIdProp.GetInt32();
@@ -349,7 +349,7 @@ namespace GMP_System.Controllers
             var log = await _unitOfWork.BatchProcessLogs.Query()
                 .FirstOrDefaultAsync(x => x.LogId == logId);
 
-            if (log == null) return NotFound("KhÃ´ng tÃ¬m tháº¥y nháº­t kÃ½ máº».");
+            if (log == null) return NotFound("Không tìm thấy nhật ký mẻ.");
 
             log.VerifiedById = verifierId;
             log.VerifiedDate = DateTime.Now;
@@ -381,7 +381,7 @@ namespace GMP_System.Controllers
             }
 
             await _unitOfWork.CompleteAsync();
-            return Ok(new { Message = "XÃ¡c nháº­n QC thÃ nh cÃ´ng!", Status = log.ResultStatus });
+            return Ok(new { Message = "Xác nhận QC thành công!", Status = log.ResultStatus });
         }
 
         private static int ResolveAttemptNumber(int? requestedAttempt, BatchProcessLog? latestStepLog, string? incomingStatus, int maxAttempts)

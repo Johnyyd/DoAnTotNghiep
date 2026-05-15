@@ -126,7 +126,15 @@ export default function ManagerOperations() {
   }, [recipes, selectedRecipeId]);
 
   useEffect(() => {
-    if (!selectedOrderId && orders.length) {
+    if (!orders.length) {
+      if (selectedOrderId !== null) setSelectedOrderId(null);
+      return;
+    }
+
+    const hasSelectedOrder = selectedOrderId !== null
+      && orders.some((o) => o.orderId === selectedOrderId);
+
+    if (!hasSelectedOrder) {
       const inProcess = orders.find((o) => o.status === 'InProcess');
       setSelectedOrderId((inProcess ?? orders[0]).orderId);
     }
@@ -150,9 +158,9 @@ export default function ManagerOperations() {
 
 
   const { data: routingRaw } = useQuery({
-    queryKey: ['recipeRouting', selectedRecipeId],
-    queryFn: () => recipesApi.getRouting(selectedRecipeId as number),
-    enabled: !!selectedRecipeId,
+    queryKey: ['orderRouting', selectedOrderId],
+    queryFn: () => productionOrdersApi.getRoutings(selectedOrderId as number),
+    enabled: selectedOrderId !== null,
   });
 
   const routingSteps = useMemo<NormalizedRouting[]>(() => {
@@ -171,7 +179,12 @@ export default function ManagerOperations() {
       estimatedTimeMinutes: Number(item.estimatedTimeMinutes ?? item.EstimatedTimeMinutes ?? 0),
       description: item.description ?? item.Description,
     }));
-    return normalized;
+    const dedup = new Map<string, NormalizedRouting>();
+    normalized.forEach((item: NormalizedRouting) => {
+      const key = `${item.stepNumber}-${item.stepName}`;
+      if (!dedup.has(key)) dedup.set(key, item);
+    });
+    return Array.from(dedup.values()).sort((a, b) => a.stepNumber - b.stepNumber);
   }, [routingRaw]);
 
   const orderBatches = useMemo(() => {
@@ -283,22 +296,14 @@ export default function ManagerOperations() {
               <tr key={step.routingId}>
                 <td className="relative">
                   <div className="font-bold">{step.stepNumber}</div>
-                  {/* Batch Status Indicators */}
-                  <div className="flex flex-wrap gap-0.5 mt-1 justify-center">
-                    {orderBatches.map((batch, bIdx) => {
-                      const state = getPipelineState(bIdx, step.stepNumber, batch);
-                      const color = state === 'done' ? 'bg-emerald-500' 
-                                  : state === 'active' ? 'bg-amber-500' 
-                                  : state === 'blocked' ? 'bg-red-400' 
-                                  : 'bg-neutral-300';
-                      return (
-                        <div 
-                          key={batch.batchId} 
-                          className={`w-1.5 h-1.5 rounded-full ${color}`} 
-                          title={`${batch.batchNumber}: ${state}`}
-                        />
-                      );
-                    })}
+                  <div className="mt-1 text-[11px] text-neutral-600">
+                    {(() => {
+                      const done = orderBatches.filter((batch, bIdx) => getPipelineState(bIdx, step.stepNumber, batch) === "done").length;
+                      const active = orderBatches.filter((batch, bIdx) => getPipelineState(bIdx, step.stepNumber, batch) === "active").length;
+                      if (active > 0) return `Đang chạy (${active})`;
+                      if (done === orderBatches.length && orderBatches.length > 0) return "Hoàn thành";
+                      return "Chờ";
+                    })()}
                   </div>
                 </td>
                 <td className="font-medium text-neutral-900">{step.stepName}</td>
@@ -424,4 +429,3 @@ export default function ManagerOperations() {
     </div>
   );
 }
-

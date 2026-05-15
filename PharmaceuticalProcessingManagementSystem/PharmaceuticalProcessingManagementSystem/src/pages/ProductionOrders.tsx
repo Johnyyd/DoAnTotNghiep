@@ -57,7 +57,7 @@ export default function ProductionOrders() {
     plannedQuantity: 0,
     startDate: '',
     endDate: '',
-    status: 'Draft' as OrderStatus,
+    status: 'Approved' as OrderStatus,
   });
 
   const [planForm, setPlanForm] = useState({
@@ -200,12 +200,6 @@ export default function ProductionOrders() {
 
   const orderTechSpecs = useMemo(() => toRows<any>(techSpecsRaw), [techSpecsRaw]);
 
-  const updateSpecMutation = useMutation({
-    mutationFn: ({ specId, isChecked }: { specId: number; isChecked: boolean }) =>
-      recipesApi.updateOrderTechSpec(specId, { isChecked }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orderTechSpecs', batchPopupOrderId] }),
-  });
-
   const allSpecsChecked = useMemo(() => {
     if (orderTechSpecs.length === 0) return true;
     return orderTechSpecs.every(s => s.isChecked);
@@ -226,7 +220,7 @@ export default function ProductionOrders() {
         plannedQuantity: totalTablets,
         startDate: now.toISOString(),
         endDate: end.toISOString(),
-        status: 'Draft',
+        status: 'Approved',
       } as any);
     },
     onSuccess: async () => {
@@ -575,7 +569,7 @@ export default function ProductionOrders() {
                     <div key={bom.orderBomId} className="bg-white p-2.5 rounded-lg border border-neutral-200 flex justify-between items-center shadow-sm">
                       <div>
                         <p className="text-xs font-semibold text-neutral-900">{bom.materialName}</p>
-                        <p className="text-[10px] text-neutral-500">Mã: {bom.material?.materialCode ?? bom.Material?.MaterialCode ?? '-'}</p>
+                        <p className="text-[10px] text-neutral-500">Mã: {bom.materialCode ?? '-'}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-xs font-bold text-primary-700">{formatNumber(bom.requiredQuantity, 4)} {bom.uomName || 'kg'}</p>
@@ -604,11 +598,14 @@ export default function ProductionOrders() {
                     const s = b.status ?? b.Status ?? '';
                     const batchNum = b.batchNumber ?? b.BatchNumber ?? '';
                     const isCompleted = s === 'Completed';
+                    const rawStep = Number(b.currentStep ?? b.CurrentStep ?? 0);
+                    const currentStepDisplay =
+                      (s === 'In-Process' && rawStep <= 0) ? 1 : rawStep;
                     return (
                       <tr key={b.batchId ?? b.BatchId}>
                         <td><code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">{batchNum}</code></td>
                         <td><span className={`text-xs font-semibold px-2 py-1 rounded-full ${statusClass(s)}`}>{s}</span></td>
-                        <td>{b.currentStep ?? b.CurrentStep ?? '-'}</td>
+                        <td>{Number.isFinite(currentStepDisplay) ? currentStepDisplay : '-'}</td>
                         <td>{formatDate(b.manufactureDate)}</td>
                         <td>{formatDate(b.endTime)}</td>
                         <td>
@@ -642,40 +639,24 @@ export default function ProductionOrders() {
               <div className="bg-primary-50/50 border border-primary-200 rounded-xl p-4">
                 <h3 className="text-sm font-bold text-primary-800 mb-3 flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" />
-                  Xác nhận tiêu chuẩn kỹ thuật (QC)
+                  Tiêu chuẩn kỹ thuật (QC)
                 </h3>
                 <div className="space-y-2">
-                  {orderTechSpecs.filter(s => !s.parentId).map(spec => (
+                  {orderTechSpecs.filter((s) => !s.parentId).map((spec) => (
                     <div key={spec.specId} className="space-y-1">
-                      <label className="flex items-center gap-2 text-sm text-neutral-800 cursor-pointer hover:bg-white/50 p-1 rounded transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={spec.isChecked}
-                          onChange={(e) => updateSpecMutation.mutate({ specId: spec.specId, isChecked: e.target.checked })}
-                          className="w-4 h-4 accent-primary-600"
-                        />
-                        <span className="font-medium">{spec.content}</span>
-                      </label>
-                      {orderTechSpecs.filter(sub => sub.parentId === spec.specId).map(sub => (
-                        <label key={sub.specId} className="flex items-center gap-2 text-xs text-neutral-700 ml-6 cursor-pointer hover:bg-white/50 p-1 rounded transition-colors">
-                          <input
-                            type="checkbox"
-                            checked={sub.isChecked}
-                            onChange={(e) => updateSpecMutation.mutate({ specId: sub.specId, isChecked: e.target.checked })}
-                            className="w-3.5 h-3.5 accent-primary-600"
-                          />
-                          <span>{sub.content}</span>
-                        </label>
-                      ))}
+                      <div className="text-sm text-neutral-800 font-medium">{spec.content}</div>
+                      {orderTechSpecs
+                        .filter((sub) => sub.parentId === spec.specId)
+                        .map((sub) => (
+                          <div key={sub.specId} className="text-xs text-neutral-700 ml-6">{sub.content}</div>
+                        ))}
                     </div>
                   ))}
                 </div>
-                {!allSpecsChecked && (
-                  <p className="text-[10px] text-primary-600 mt-2 italic font-medium">* Cần xác nhận tất cả tiêu chuẩn để cho phép tải lên giấy kiểm nghiệm.</p>
-                )}
+                <p className="text-[10px] text-primary-600 mt-2 italic font-medium">* Xác nhận checklist và tải giấy kiểm nghiệm thực hiện trên giao diện QC Mobile.</p>
               </div>
             )}
-            {/* Hidden file input for batch cert upload */}
+{/* Hidden file input for batch cert upload */}
             <input
               ref={uploadInputRef}
               type="file"

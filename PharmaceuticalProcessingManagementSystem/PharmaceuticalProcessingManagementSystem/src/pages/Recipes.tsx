@@ -136,6 +136,18 @@ function toRows<T>(raw: unknown): T[] {
   return [];
 }
 
+function dedupeBy<T>(items: T[], keyFn: (item: T) => string): T[] {
+  const seen = new Set<string>();
+  const result: T[] = [];
+  for (const item of items) {
+    const key = keyFn(item);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(item);
+  }
+  return result;
+}
+
 function normalizeRecipe(item: any): UiRecipe {
   return {
     recipeId: Number(item.recipeId ?? item.RecipeId ?? 0),
@@ -390,13 +402,17 @@ export default function Recipes() {
     () => toRows<any>(bomRaw).map(normalizeBom),
     [bomRaw],
   );
-  const routingSteps = useMemo(
-    () =>
-      toRows<any>(routingRaw)
-        .map(normalizeRouting)
-        .sort((a, b) => a.stepNumber - b.stepNumber),
-    [routingRaw],
-  );
+  const routingSteps = useMemo(() => {
+    const normalized = toRows<any>(routingRaw)
+      .map(normalizeRouting)
+      .sort((a, b) => a.stepNumber - b.stepNumber);
+
+    return dedupeBy(
+      normalized,
+      (x) =>
+        `${x.stepNumber}|${x.stepName}|${x.defaultEquipmentId ?? 0}|${x.areaId ?? 0}|${x.materialIds ?? ""}`,
+    );
+  }, [routingRaw]);
   const materialById = useMemo(
     () => new Map(inputMaterials.map((m) => [m.materialId, m])),
     [inputMaterials],
@@ -425,18 +441,21 @@ export default function Recipes() {
     queryFn: () => recipesApi.getTechSpecs(selectedRecipeId as number),
     enabled: !!selectedRecipeId,
   });
-  const techSpecs = useMemo<UiTechSpec[]>(
-    () =>
-      toRows<any>(techSpecsRaw).map((s: any) => ({
-        specId: s.specId ?? s.SpecId ?? 0,
-        recipeId: s.recipeId ?? s.RecipeId ?? 0,
-        parentId: s.parentId ?? s.ParentId ?? null,
-        sortOrder: s.sortOrder ?? s.SortOrder ?? 0,
-        content: s.content ?? s.Content ?? "",
-        isChecked: !!(s.isChecked ?? s.IsChecked),
-      })),
-    [techSpecsRaw],
-  );
+  const techSpecs = useMemo<UiTechSpec[]>(() => {
+    const normalized = toRows<any>(techSpecsRaw).map((s: any) => ({
+      specId: s.specId ?? s.SpecId ?? 0,
+      recipeId: s.recipeId ?? s.RecipeId ?? 0,
+      parentId: s.parentId ?? s.ParentId ?? null,
+      sortOrder: s.sortOrder ?? s.SortOrder ?? 0,
+      content: s.content ?? s.Content ?? "",
+      isChecked: !!(s.isChecked ?? s.IsChecked),
+    }));
+
+    return dedupeBy(
+      normalized,
+      (x) => `${x.parentId ?? "root"}|${x.sortOrder}|${x.content.trim().toLowerCase()}`,
+    );
+  }, [techSpecsRaw]);
   const [newSpecContent, setNewSpecContent] = useState("");
   const [newSubSpecParent, setNewSubSpecParent] = useState<number | null>(null);
   const [newSubSpecContent, setNewSubSpecContent] = useState("");

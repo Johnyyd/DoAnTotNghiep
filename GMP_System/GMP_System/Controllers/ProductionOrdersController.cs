@@ -60,6 +60,7 @@ namespace GMP_System.Controllers
                         bom.MaterialId,
                         bom.RequiredQuantity,
                         MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
+                        MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
                         UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
                     })
                 })
@@ -110,6 +111,7 @@ namespace GMP_System.Controllers
                         bom.MaterialId,
                         bom.RequiredQuantity,
                         MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
+                        MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
                         UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
                     })
                 })
@@ -118,7 +120,7 @@ namespace GMP_System.Controllers
 
             if (order == null)
             {
-                return NotFound(new { success = false, message = $"Không tìm th?y l?nh s?n xu?t ID={id}" });
+                return NotFound(new { success = false, message = $"Không tìm thấy lệnh sản xuất ID={id}" });
             }
 
             return Ok(new { data = order, success = true, message = "Success" });
@@ -231,18 +233,18 @@ namespace GMP_System.Controllers
 
             if (order.RecipeId == null)
             {
-                return BadRequest(new { success = false, message = "Vui lòng ch?n công th?c (RecipeId)." });
+                return BadRequest(new { success = false, message = "Vui lòng chọn công thức (RecipeId)." });
             }
 
             if (order.PlannedQuantity <= 0)
             {
-                return BadRequest(new { success = false, message = "S? lu?ng k? ho?ch ph?i l?n hon 0." });
+                return BadRequest(new { success = false, message = "Số lượng kế hoạch phải lớn hơn 0." });
             }
 
             var recipe = await _unitOfWork.Recipes.GetByIdAsync(order.RecipeId.Value);
             if (recipe == null)
             {
-                return BadRequest(new { success = false, message = $"Không tìm th?y công th?c ID={order.RecipeId}" });
+                return BadRequest(new { success = false, message = $"Không tìm thấy công thức ID={order.RecipeId}" });
             }
 
             if (recipe.Status != "Approved" && recipe.Status != "Draft")
@@ -252,12 +254,8 @@ namespace GMP_System.Controllers
 
             bool isAnyOrderActive = await _context.ProductionOrders.AnyAsync(o => o.Status == "In-Process" || o.Status == "Hold");
 
-            // Default to Scheduled if something is already running, else In-Process
-            if (string.IsNullOrEmpty(order.Status) || order.Status == "Approved" || order.Status == "In-Process")
-            {
-                order.Status = isAnyOrderActive ? "Scheduled" : "In-Process";
-            }
-            // Otherwise (e.g. "Draft"), respect the requested status
+            // Quy tắc duy nhất: nếu đã có lệnh In-Process/Hold thì lệnh mới là Scheduled, ngược lại là In-Process.
+            order.Status = isAnyOrderActive ? "Scheduled" : "In-Process";
             order.CreatedAt = DateTime.Now;
             if (!order.StartDate.HasValue) order.StartDate = DateTime.Now;
             if (!order.EndDate.HasValue) order.EndDate = order.StartDate!.Value.AddDays(2);
@@ -286,7 +284,7 @@ namespace GMP_System.Controllers
                     return BadRequest(new
                     {
                         success = false,
-                        message = "Khong du nguyen lieu ton kho de tao lenh san xuat.",
+                        message = "Không đủ nguyên liệu tồn kho để tạo lệnh sản xuất.",
                         shortages
                     });
                 }
@@ -429,7 +427,7 @@ namespace GMP_System.Controllers
                                 BatchNumber = batchNumber,
                                 PlannedQuantity = currentBatchUnits,
                                 Status = (i == 0 && order.Status == "In-Process") ? "In-Process" : "Scheduled",
-                                CurrentStep = 0,
+                                CurrentStep = (i == 0 && order.Status == "In-Process") ? 1 : 0,
                                 ManufactureDate = DateTime.Now
                             });
                         }
