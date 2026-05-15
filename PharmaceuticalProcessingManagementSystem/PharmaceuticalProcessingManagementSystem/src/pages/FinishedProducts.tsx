@@ -42,6 +42,17 @@ export default function FinishedProducts() {
     }
   });
 
+  const deleteMaterialMutation = useMutation({
+    mutationFn: (materialId: number) => materialsApi.delete(materialId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      queryClient.invalidateQueries({ queryKey: ['inventoryLots'] });
+    },
+    onError: (err: any) => {
+      alert(err?.response?.data?.message ?? 'Không thể xóa thành phẩm này.');
+    },
+  });
+
   const materials = useMemo(() => {
     const rows = Array.isArray(materialsRaw) ? materialsRaw : (materialsRaw as any)?.data ?? [];
     return (rows as any[]).map(normalizeMaterial).filter((m) => m.type === 'FinishedGood');
@@ -94,8 +105,8 @@ export default function FinishedProducts() {
       <div className="card space-y-3">
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
-            <button className={`px-4 py-2 rounded-lg border ${tab === 'completed' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white border-neutral-300'}`} onClick={() => setTab('completed')}>Thành phẩm đã hoàn thành</button>
-            <button className={`px-4 py-2 rounded-lg border ${tab === 'target' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white border-neutral-300'}`} onClick={() => setTab('target')}>Thành phẩm mong muốn</button>
+            <button className={`px-4 py-2 rounded-lg border ${tab === 'completed' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white border-neutral-300'}`} onClick={() => setTab('completed')}>Thống kê</button>
+            <button className={`px-4 py-2 rounded-lg border ${tab === 'target' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white border-neutral-300'}`} onClick={() => setTab('target')}>Thành phẩm đầu ra</button>
           </div>
           {tab === 'target' && (
             <button className="btn-primary flex items-center" onClick={() => setShowAddModal(true)}>
@@ -122,6 +133,7 @@ export default function FinishedProducts() {
                   <th>Tên thành phẩm</th>
                   {tab === 'completed' && <th>Số lượng thành phẩm</th>}
                   {tab === 'completed' && <th>Giấy kiểm nghiệm</th>}
+                  {tab === 'target' && <th className="text-right">Thao tác</th>}
                 </tr>
               </thead>
               <tbody>
@@ -136,6 +148,21 @@ export default function FinishedProducts() {
                       <td className="font-medium text-neutral-900">{m.materialName}</td>
                       {tab === 'completed' && <td>{displayQty}{unit}</td>}
                       {tab === 'completed' && <td><a className="text-primary-600 hover:underline inline-flex items-center" href={certificatesApi.getFinishedCertificateUrl(m.materialCode)} target="_blank" rel="noreferrer"><FileCheck2 className="w-4 h-4 mr-1" /> Xem</a></td>}
+                      {tab === 'target' && (
+                        <td className="text-right">
+                          <button
+                            className="text-red-600 hover:underline disabled:text-neutral-400"
+                            disabled={deleteMaterialMutation.isPending}
+                            onClick={() => {
+                              if (confirm(`Xóa thành phẩm ${m.materialName}?`)) {
+                                deleteMaterialMutation.mutate(m.materialId);
+                              }
+                            }}
+                          >
+                            Xóa
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -148,7 +175,7 @@ export default function FinishedProducts() {
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
           <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-xl font-bold">Thêm thành phẩm mong muốn</h3>
+            <h3 className="text-xl font-bold">Thêm thành phẩm đầu ra</h3>
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-neutral-500">Mã thành phẩm</label>

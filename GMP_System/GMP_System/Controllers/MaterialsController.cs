@@ -103,11 +103,19 @@ namespace GMP_System.Controllers
             var hasRecipeAsProduct = await _unitOfWork.Recipes.Query().AnyAsync(x => x.MaterialId == id);
             if (hasRecipeAsProduct)
             {
-                return BadRequest(new
+                // Check if any recipe for this product is used in an active/scheduled order
+                var recipeIds = await _unitOfWork.Recipes.Query().Where(x => x.MaterialId == id).Select(x => x.RecipeId).ToListAsync();
+                var hasActiveOrder = await _context.ProductionOrders.AnyAsync(o => recipeIds.Contains(o.RecipeId ?? 0) && 
+                    (o.Status == "In-Process" || o.Status == "Hold" || o.Status == "Scheduled"));
+
+                if (hasActiveOrder)
                 {
-                    success = false,
-                    message = "Nguyên liệu đang được dùng trong công thức hoặc sản phẩm, không thể xóa."
-                });
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Sản phẩm này đang có lệnh sản xuất (In-Process/Hold/Scheduled), không thể xóa."
+                    });
+                }
             }
 
             var lotIds = await _unitOfWork.InventoryLots.Query()
@@ -145,7 +153,7 @@ namespace GMP_System.Controllers
                 return BadRequest(new
                 {
                     success = false,
-                    message = "Nguyên liệu đang liên kết dữ liệu nghiệp vụ khác nên chưa thể xóa."
+                    message = "Nguyên liệu đang liên kết dữ liệu lệnh sản xuất khác, không thể xóa."
                 });
             }
             catch (Exception ex)

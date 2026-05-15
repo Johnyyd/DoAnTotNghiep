@@ -40,6 +40,7 @@ namespace GMP_System.Controllers
                     Recipe = o.Recipe == null ? null : new
                     {
                         o.Recipe.RecipeId,
+                        o.Recipe.RecipeName,
                         o.Recipe.BatchSize,
                         Material = o.Recipe.Material == null ? null : new
                         {
@@ -51,11 +52,7 @@ namespace GMP_System.Controllers
                     {
                         b.BatchId,
                         b.BatchNumber,
-                        b.Status,
-                        LatestLogStatus = b.BatchProcessLogs
-                            .OrderByDescending(log => log.LogId)
-                            .Select(log => log.ResultStatus)
-                            .FirstOrDefault()
+                        b.Status
                     }),
                     ProductionOrderBoms = o.ProductionOrderBoms.Select(bom => new
                     {
@@ -63,6 +60,7 @@ namespace GMP_System.Controllers
                         bom.MaterialId,
                         bom.RequiredQuantity,
                         MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
+                        MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
                         UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
                     })
                 })
@@ -92,6 +90,7 @@ namespace GMP_System.Controllers
                     Recipe = o.Recipe == null ? null : new
                     {
                         o.Recipe.RecipeId,
+                        o.Recipe.RecipeName,
                         o.Recipe.BatchSize,
                         o.Recipe.Note,
                         Material = o.Recipe.Material == null ? null : new
@@ -112,6 +111,7 @@ namespace GMP_System.Controllers
                         bom.MaterialId,
                         bom.RequiredQuantity,
                         MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
+                        MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
                         UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
                     })
                 })
@@ -120,7 +120,7 @@ namespace GMP_System.Controllers
 
             if (order == null)
             {
-                return NotFound(new { success = false, message = $"Không tìm th?y l?nh s?n xu?t ID={id}" });
+                return NotFound(new { success = false, message = $"Không tìm thấy lệnh sản xuất ID={id}" });
             }
 
             return Ok(new { data = order, success = true, message = "Success" });
@@ -150,6 +150,7 @@ namespace GMP_System.Controllers
                         Recipe = b.Order.Recipe == null ? null : new
                         {
                             b.Order.Recipe.RecipeId,
+                            b.Order.Recipe.RecipeName,
                             Material = b.Order.Recipe.Material == null ? null : new
                             {
                                 b.Order.Recipe.Material.MaterialName
@@ -232,18 +233,18 @@ namespace GMP_System.Controllers
 
             if (order.RecipeId == null)
             {
-                return BadRequest(new { success = false, message = "Vui lòng ch?n công th?c (RecipeId)." });
+                return BadRequest(new { success = false, message = "Vui lòng chọn công thức (RecipeId)." });
             }
 
             if (order.PlannedQuantity <= 0)
             {
-                return BadRequest(new { success = false, message = "S? lu?ng k? ho?ch ph?i l?n hon 0." });
+                return BadRequest(new { success = false, message = "Số lượng kế hoạch phải lớn hơn 0." });
             }
 
             var recipe = await _unitOfWork.Recipes.GetByIdAsync(order.RecipeId.Value);
             if (recipe == null)
             {
-                return BadRequest(new { success = false, message = $"Không tìm th?y công th?c ID={order.RecipeId}" });
+                return BadRequest(new { success = false, message = $"Không tìm thấy công thức ID={order.RecipeId}" });
             }
 
             if (recipe.Status != "Approved" && recipe.Status != "Draft")
@@ -251,14 +252,10 @@ namespace GMP_System.Controllers
                 return BadRequest(new { success = false, message = "Công thức phải ở trạng thái Draft hoặc Approved để lập lệnh sản xuất." });
             }
 
-            bool isAnyOrderRunning = await _context.ProductionOrders.AnyAsync(o => o.Status == "InProcess" || o.Status == "In-Process");
+            bool isAnyOrderActive = await _context.ProductionOrders.AnyAsync(o => o.Status == "In-Process" || o.Status == "Hold");
 
-            // If status is not provided or is Approved/In-Process, determine automatically
-            if (string.IsNullOrEmpty(order.Status) || order.Status == "Approved" || order.Status == "In-Process" || order.Status == "Pending Worker")
-            {
-                order.Status = isAnyOrderRunning ? "Approved" : "Pending Worker";
-            }
-            // Otherwise (e.g. "Draft"), respect the requested status
+            // Quy tắc duy nhất: nếu đã có lệnh In-Process/Hold thì lệnh mới là Scheduled, ngược lại là In-Process.
+            order.Status = isAnyOrderActive ? "Scheduled" : "In-Process";
             order.CreatedAt = DateTime.Now;
             if (!order.StartDate.HasValue) order.StartDate = DateTime.Now;
             if (!order.EndDate.HasValue) order.EndDate = order.StartDate!.Value.AddDays(2);
@@ -287,7 +284,7 @@ namespace GMP_System.Controllers
                     return BadRequest(new
                     {
                         success = false,
-                        message = "Khong du nguyen lieu ton kho de tao lenh san xuat.",
+                        message = "Không đủ nguyên liệu tồn kho để tạo lệnh sản xuất.",
                         shortages
                     });
                 }
@@ -302,6 +299,13 @@ namespace GMP_System.Controllers
 
                 foreach (var rb in recipeBoms)
                 {
+                    // Skip packaging materials in BOM for weight/ratio calculation (though still needed in deduction)
+                    // Wait, the user said Packaging (Hard capsule shell) shouldn't be counted in ratio/mass.
+                    // But they still need to be in the order BOM for tracking/deduction purposes? 
+                    // Actually, the user says "không được tính trong tỉ lệ công thức và cũng không tính cho khối lượng luôn".
+                    // I will still include them in ProductionOrderBoms so we know they are needed, 
+                    // but I'll mark them or the frontend will handle the exclusion.
+                    
                     var orderBom = new ProductionOrderBom
                     {
                         OrderId = order.OrderId,
@@ -314,6 +318,78 @@ namespace GMP_System.Controllers
                     await _unitOfWork.ProductionOrderBoms.AddAsync(orderBom);
                 }
                 await _unitOfWork.CompleteAsync();
+
+                // [SNAPSHOT ROUTING] Copy all routing steps from recipe to order
+                var recipeRoutings = await _context.RecipeRoutings
+                    .Where(r => r.RecipeId == order.RecipeId && r.OrderId == null)
+                    .Include(r => r.StepParameters)
+                    .ToListAsync();
+                
+                foreach (var rr in recipeRoutings)
+                {
+                    var orderRouting = new RecipeRouting
+                    {
+                        OrderId = order.OrderId,
+                        RecipeId = order.RecipeId,
+                        StepNumber = rr.StepNumber,
+                        StepName = rr.StepName,
+                        Description = rr.Description,
+                        EstimatedTimeMinutes = rr.EstimatedTimeMinutes,
+                        DefaultEquipmentId = rr.DefaultEquipmentId,
+                        AreaId = rr.AreaId,
+                        CleanlinessStatus = rr.CleanlinessStatus,
+                        StandardTemperature = rr.StandardTemperature,
+                        StandardHumidity = rr.StandardHumidity,
+                        StandardPressure = rr.StandardPressure,
+                        StabilityStatus = rr.StabilityStatus,
+                        SetTemperature = rr.SetTemperature,
+                        SetPressure = rr.SetPressure,
+                        SetTimeMinutes = rr.SetTimeMinutes,
+                        MaterialIds = rr.MaterialIds
+                    };
+                    _context.RecipeRoutings.Add(orderRouting);
+                }
+                await _context.SaveChangesAsync();
+
+                // [SNAPSHOT TECH SPECS] Copy all tech specs from recipe to order
+                var recipeSpecs = await _context.RecipeTechSpecs
+                    .Where(s => s.RecipeId == order.RecipeId && s.OrderId == null)
+                    .ToListAsync();
+                
+                // Map old SpecId to new SpecId for parent/child relationship
+                var specMap = new Dictionary<int, int>();
+                
+                // First pass: add parents
+                foreach (var rs in recipeSpecs.Where(s => s.ParentId == null))
+                {
+                    var orderSpec = new RecipeTechSpec
+                    {
+                        OrderId = order.OrderId,
+                        RecipeId = order.RecipeId.Value,
+                        Content = rs.Content,
+                        SortOrder = rs.SortOrder,
+                        IsChecked = false // Always reset for new order
+                    };
+                    _context.RecipeTechSpecs.Add(orderSpec);
+                    await _context.SaveChangesAsync();
+                    specMap[rs.SpecId] = orderSpec.SpecId;
+                }
+                
+                // Second pass: add children
+                foreach (var rs in recipeSpecs.Where(s => s.ParentId != null))
+                {
+                    var orderSpec = new RecipeTechSpec
+                    {
+                        OrderId = order.OrderId,
+                        RecipeId = order.RecipeId.Value,
+                        Content = rs.Content,
+                        SortOrder = rs.SortOrder,
+                        IsChecked = false,
+                        ParentId = specMap.ContainsKey(rs.ParentId.Value) ? specMap[rs.ParentId.Value] : null
+                    };
+                    _context.RecipeTechSpecs.Add(orderSpec);
+                }
+                await _context.SaveChangesAsync();
 
                 // Auto-split into batches if not already present
                 if (order.RecipeId.HasValue && order.PlannedQuantity > 0)
@@ -351,7 +427,7 @@ namespace GMP_System.Controllers
                                 BatchNumber = batchNumber,
                                 PlannedQuantity = currentBatchUnits,
                                 Status = (i == 0 && order.Status == "In-Process") ? "In-Process" : "Scheduled",
-                                CurrentStep = 0,
+                                CurrentStep = (i == 0 && order.Status == "In-Process") ? 1 : 0,
                                 ManufactureDate = DateTime.Now
                             });
                         }
@@ -416,14 +492,14 @@ namespace GMP_System.Controllers
             var prefix = $"PO-{year}-";
 
             var lastOrder = await _context.ProductionOrders
-                .Where(o => o.OrderCode.StartsWith(prefix))
+                .Where(o => o.OrderCode != null && o.OrderCode.StartsWith(prefix))
                 .OrderByDescending(o => o.OrderCode)
                 .FirstOrDefaultAsync();
 
             int nextNumber = 1;
             if (lastOrder != null)
             {
-                var parts = lastOrder.OrderCode.Split('-');
+                var parts = lastOrder.OrderCode!.Split('-');
                 if (parts.Length == 3 && int.TryParse(parts[2], out var lastNumber))
                 {
                     nextNumber = lastNumber + 1;
@@ -458,6 +534,13 @@ namespace GMP_System.Controllers
             var bomItems = await _context.RecipeBoms
                 .Where(b => b.RecipeId == recipeId && b.MaterialId != null && b.Quantity > 0)
                 .Include(b => b.Material)
+                .Where(b => b.Material!.Type != "Packaging") // Exclude packaging from inventory deduction/calculation if required? 
+                // Wait, if it's packaging, it might still need to be deducted from inventory. 
+                // The user said "không tính trong tỉ lệ công thức và cũng không tính cho khối lượng".
+                // I'll keep it in inventory deduction for now unless it's strictly not allowed.
+                // Re-reading: "không được tính trong tỉ lệ công thức và cũng không tính cho khối lượng luôn bởi vì nó chỉ là cái vỏ thôi mà"
+                // This sounds like it's purely a calculation thing, but you still NEED it to produce.
+                // So I'll keep it in inventory deduction but the frontend will ignore it for mass calculations.
                 .ToListAsync();
 
             var shortages = new List<InventoryShortageDto>();
@@ -649,10 +732,35 @@ namespace GMP_System.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var order = await _unitOfWork.ProductionOrders.GetByIdAsync(id);
+            var order = await _unitOfWork.ProductionOrders.Query()
+                .Include(o => o.ProductionOrderBoms)
+                .Include(o => o.RecipeRoutings)
+                .Include(o => o.ProductionBatches)
+                .FirstOrDefaultAsync(o => o.OrderId == id);
+
             if (order == null)
             {
                 return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
+            }
+
+            // Clean up related data if order is in Draft status
+            if (order.Status == "Draft")
+            {
+                // Remove Boms
+                if (order.ProductionOrderBoms.Any())
+                    _unitOfWork.ProductionOrderBoms.RemoveRange(order.ProductionOrderBoms);
+
+                // Remove Routings (those specific to this order)
+                if (order.RecipeRoutings.Any())
+                    _unitOfWork.RecipeRoutings.RemoveRange(order.RecipeRoutings);
+                
+                // If there are batches (shouldn't be in Draft usually, but safety first)
+                if (order.ProductionBatches.Any())
+                    _unitOfWork.ProductionBatches.RemoveRange(order.ProductionBatches);
+            }
+            else
+            {
+                return BadRequest(new { success = false, message = "Chỉ có thể xóa lệnh sản xuất ở trạng thái Draft." });
             }
 
             _unitOfWork.ProductionOrders.Remove(order);

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Clock3, FlaskConical, ShieldCheck } from 'lucide-react';
+import { FlaskConical, Search } from 'lucide-react';
 import { productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
 
 type NormalizedRecipe = {
@@ -13,16 +13,6 @@ type NormalizedRecipe = {
   approvedDate?: string;
   materialName?: string;
 };
-
-type NormalizedBom = {
-  bomId: number;
-  materialName: string;
-  technicalStandard?: string;
-  quantity: number;
-  ratioPercent: number;
-  uomName: string;
-};
-
 type NormalizedRouting = {
   routingId: number;
   stepNumber: number;
@@ -62,13 +52,6 @@ function normalizeStatus(raw?: string): string {
   if (value.includes('process')) return 'InProcess';
   if (value.includes('complete')) return 'Completed';
   return raw;
-}
-
-function formatDate(value?: string): string {
-  if (!value) return '-';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return '-';
-  return parsed.toLocaleDateString('vi-VN');
 }
 
 export default function ManagerOperations() {
@@ -143,7 +126,15 @@ export default function ManagerOperations() {
   }, [recipes, selectedRecipeId]);
 
   useEffect(() => {
-    if (!selectedOrderId && orders.length) {
+    if (!orders.length) {
+      if (selectedOrderId !== null) setSelectedOrderId(null);
+      return;
+    }
+
+    const hasSelectedOrder = selectedOrderId !== null
+      && orders.some((o) => o.orderId === selectedOrderId);
+
+    if (!hasSelectedOrder) {
       const inProcess = orders.find((o) => o.status === 'InProcess');
       setSelectedOrderId((inProcess ?? orders[0]).orderId);
     }
@@ -165,33 +156,12 @@ export default function ManagerOperations() {
     [recipes, selectedRecipeId]
   );
 
-  const { data: bomRaw } = useQuery({
-    queryKey: ['recipeBOM', selectedRecipeId],
-    queryFn: () => recipesApi.getBOM(selectedRecipeId as number),
-    enabled: !!selectedRecipeId,
-  });
 
   const { data: routingRaw } = useQuery({
-    queryKey: ['recipeRouting', selectedRecipeId],
-    queryFn: () => recipesApi.getRouting(selectedRecipeId as number),
-    enabled: !!selectedRecipeId,
+    queryKey: ['orderRouting', selectedOrderId],
+    queryFn: () => productionOrdersApi.getRoutings(selectedOrderId as number),
+    enabled: selectedOrderId !== null,
   });
-
-  const bomItems = useMemo<NormalizedBom[]>(() => {
-    const rows = Array.isArray(bomRaw) ? bomRaw : (bomRaw as any)?.data ?? [];
-    const normalized: NormalizedBom[] = rows.map((item: any) => ({
-      bomId: Number(item.bomId ?? item.BomId ?? 0),
-      materialName: item.material?.materialName ?? item.Material?.MaterialName ?? item.materialName ?? 'Nguyên liệu',
-      technicalStandard: item.technicalStandard ?? item.TechnicalStandard ?? '',
-      quantity: Number(item.quantity ?? item.Quantity ?? 0),
-      ratioPercent: 0, // computed below
-      uomName: item.uom?.uomName ?? item.Uom?.UomName ?? item.unit ?? 'kg',
-    }));
-    // compute ratio from total
-    const total = normalized.reduce((s, b) => s + b.quantity, 0);
-    normalized.forEach((b) => { b.ratioPercent = total > 0 ? (b.quantity / total) * 100 : 0; });
-    return normalized;
-  }, [bomRaw]);
 
   const routingSteps = useMemo<NormalizedRouting[]>(() => {
     const rows = Array.isArray(routingRaw) ? routingRaw : (routingRaw as any)?.data ?? [];
@@ -209,7 +179,12 @@ export default function ManagerOperations() {
       estimatedTimeMinutes: Number(item.estimatedTimeMinutes ?? item.EstimatedTimeMinutes ?? 0),
       description: item.description ?? item.Description,
     }));
-    return normalized;
+    const dedup = new Map<string, NormalizedRouting>();
+    normalized.forEach((item: NormalizedRouting) => {
+      const key = `${item.stepNumber}-${item.stepName}`;
+      if (!dedup.has(key)) dedup.set(key, item);
+    });
+    return Array.from(dedup.values()).sort((a, b) => a.stepNumber - b.stepNumber);
   }, [routingRaw]);
 
   const orderBatches = useMemo(() => {
@@ -235,11 +210,7 @@ export default function ManagerOperations() {
     return Math.round(((pointer - 1) / totalSteps) * 100);
   };
 
-  const overallProgress = useMemo(() => {
-    if (!orderBatches.length) return 0;
-    const sum = orderBatches.reduce((acc, batch) => acc + getBatchProgress(batch), 0);
-    return Math.round(sum / orderBatches.length);
-  }, [orderBatches]);
+
 
   const getPipelineState = (batchIndex: number, stepNumber: number, batch: NormalizedBatch) => {
     const pointer = getStepPointer(batch);
@@ -271,159 +242,102 @@ export default function ManagerOperations() {
   return (
     <div className="space-y-6">
       <div className="gmp-sheet">
-        <div className="gmp-sheet-header">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.18em] text-neutral-600">CÔNG TY ABC</p>
-            <h1 className="text-xl font-bold text-neutral-900">THEO DÕI TIẾN ĐỘ CÁC LỆNH SẢN XUẤT</h1>
-          </div>
-          <div className="text-right text-sm text-neutral-700">
-            <p>Số tờ: ...</p>
-            <p>Ngày: {new Date().toLocaleDateString('vi-VN')}</p>
-            <p>Hiệu lực: Đang vận hành</p>
-          </div>
-        </div>
-
         <div className="mb-4">
-          <label className="text-sm font-medium text-neutral-700">
+          <label className="text-sm font-bold text-neutral-900">
             Chọn Lệnh Sản Xuất
             <select
-              value={selectedOrderId ?? ''}
-              onChange={(event) => setSelectedOrderId(Number(event.target.value))}
+              value={selectedOrderId ?? ""}
+              onChange={(event) =>
+                setSelectedOrderId(Number(event.target.value))
+              }
               className="input mt-1"
             >
-              {orders.length === 0 && <option value="">Chưa có lệnh sản xuất</option>}
+              {orders.length === 0 && (
+                <option value="">Chưa có lệnh sản xuất</option>
+              )}
               {orders.map((order) => (
                 <option key={order.orderId} value={order.orderId}>
-                  {order.orderCode} - {order.status} - {order.plannedQuantity.toLocaleString()} đơn vị
+                  {order.orderCode} - {order.status} -{" "}
+                  {order.plannedQuantity.toLocaleString()} đơn vị
                 </option>
               ))}
             </select>
           </label>
-        </div>
-
-        <div className="gmp-title-row">I - THÀNH PHẦN BOM (Bill of Materials)</div>
-        <table className="gmp-grid-table mb-5">
-          <thead>
-            <tr>
-              <th>STT</th>
-              <th>Tên nguyên liệu</th>
-              <th>Tiêu chuẩn kỹ thuật</th>
-              <th>Số lượng</th>
-              <th>Đơn vị</th>
-              <th>Tỉ lệ công thức (%)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {bomItems.length === 0 && (
-              <tr>
-                <td colSpan={6} className="text-center py-4 text-neutral-500">Chưa có dữ liệu BOM từ cơ sở dữ liệu.</td>
-              </tr>
-            )}
-            {bomItems.map((item, index) => (
-              <tr key={item.bomId || index}>
-                <td>{index + 1}</td>
-                <td>{item.materialName}</td>
-                <td>{item.technicalStandard || '-'}</td>
-                <td>{item.quantity.toLocaleString()}</td>
-                <td>{item.uomName}</td>
-                <td>{item.ratioPercent.toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <div className="gmp-title-row">II - RECIPE & ROUTING</div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-          <div className="gmp-info-card">
+          <div className="gmp-info-card text-right ">
             <FlaskConical className="w-5 h-5 text-primary-600" />
             <div>
-              <p className="text-xs uppercase tracking-wide text-neutral-500">Recipe</p>
-              <p className="font-semibold text-neutral-900">{selectedRecipe?.recipeCode ?? '-'}</p>
-              <p className="text-sm text-neutral-600">{selectedRecipe?.recipeName ?? '-'}</p>
-            </div>
-          </div>
-          <div className="gmp-info-card">
-            <ShieldCheck className="w-5 h-5 text-emerald-600" />
-            <div>
-              <p className="text-xs uppercase tracking-wide text-neutral-500">Trạng thái</p>
-              <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusClass(selectedRecipe?.status ?? 'Draft')}`}>
-                {selectedRecipe?.status ?? 'Draft'}
-              </span>
-              <p className="text-sm text-neutral-600 mt-1">Ngày duyệt: {formatDate(selectedRecipe?.approvedDate)}</p>
+              <p className="font-semibold text-neutral-900">
+                {selectedRecipe?.recipeName ?? "-"}
+              </p>
             </div>
           </div>
         </div>
-
+        <div className="gmp-title-row">CÔNG THỨC VÀ CÁC CÔNG ĐOẠN</div>
         <table className="gmp-grid-table mb-5">
           <thead>
             <tr>
-              <th>Bước</th>
+              <th className="w-16">Bước</th>
               <th>Công đoạn</th>
               <th>Thiết bị được sử dụng</th>
-              <th>Khu vá»±c</th>
-              <th>Thời gian cài đặt</th>
-              <th>Mô tả</th>
+              <th className="w-px whitespace-nowrap">Khu vực</th>
+              <th className="w-px whitespace-nowrap">Thời gian</th>
+              <th className="w-px whitespace-nowrap">Mô tả</th>
             </tr>
           </thead>
           <tbody>
             {routingSteps.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center py-4 text-neutral-500">Chưa có dữ liệu quy trình công đoạn.</td>
+                <td colSpan={6} className="text-center py-4 text-neutral-500">
+                  Chưa có dữ liệu quy trình công đoạn.
+                </td>
               </tr>
             )}
             {routingSteps.map((step) => (
               <tr key={step.routingId}>
-                <td>{step.stepNumber}</td>
-                <td>{step.stepName}</td>
+                <td className="relative">
+                  <div className="font-bold">{step.stepNumber}</div>
+                  <div className="mt-1 text-[11px] text-neutral-600">
+                    {(() => {
+                      const done = orderBatches.filter((batch, bIdx) => getPipelineState(bIdx, step.stepNumber, batch) === "done").length;
+                      const active = orderBatches.filter((batch, bIdx) => getPipelineState(bIdx, step.stepNumber, batch) === "active").length;
+                      if (active > 0) return `Đang chạy (${active})`;
+                      if (done === orderBatches.length && orderBatches.length > 0) return "Hoàn thành";
+                      return "Chờ";
+                    })()}
+                  </div>
+                </td>
+                <td className="font-medium text-neutral-900">{step.stepName}</td>
                 <td>{step.equipmentName}</td>
-                <td>{step.areaName}</td>
-                <td>{step.estimatedTimeMinutes ? `${step.estimatedTimeMinutes} phút` : '-'}</td>
-                <td>
-                  {step.description && step.description.trim() !== '' && step.description !== '-' ? (
-                    <button 
-                      onClick={() => setViewedDescription(step.description ?? null)}
-                      className="text-primary-600 hover:underline text-sm font-medium"
+                <td className="whitespace-nowrap">{step.areaName}</td>
+                <td className="whitespace-nowrap">
+                  {step.estimatedTimeMinutes
+                    ? `${step.estimatedTimeMinutes} phút`
+                    : "-"}
+                </td>
+                <td className="text-center">
+                  {step.description &&
+                  step.description.trim() !== "" &&
+                  step.description !== "-" ? (
+                    <button
+                      onClick={() =>
+                        setViewedDescription(step.description ?? null)
+                      }
+                      className="text-primary-600 hover:bg-primary-50 p-1.5 rounded-md transition-colors"
                     >
-                      Xem
+                      <Search className="w-4 h-4" />
                     </button>
-                  ) : '-'}
+                  ) : (
+                    "-"
+                  )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        <div className="gmp-title-row">III - LẬP LỆNH SẢN XUẤT VÀ DANH SÁCH MẺ</div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-          <div className="border border-neutral-300 rounded-lg p-4">
-            <p className="text-xs uppercase tracking-wide text-neutral-500 mb-2">Thông tin lệnh</p>
-            <div className="space-y-2 text-sm">
-              <p><span className="font-semibold">Mã lệnh:</span> {selectedOrder?.orderCode ?? '-'}</p>
-              <p><span className="font-semibold">Trạng thái:</span> {selectedOrder?.status ?? '-'}</p>
-              <p><span className="font-semibold">Số lượng kế hoạch:</span> {(selectedOrder?.plannedQuantity ?? 0).toLocaleString()}</p>
-              <p><span className="font-semibold">Ngày bắt đầu:</span> {formatDate(selectedOrder?.startDate)}</p>
-              <p><span className="font-semibold">Ngày kết thúc:</span> {formatDate(selectedOrder?.endDate)}</p>
-            </div>
-          </div>
-          <div className="border border-neutral-300 rounded-lg p-4">
-            <p className="text-xs uppercase tracking-wide text-neutral-500 mb-2">Phê duyệt GMP</p>
-            <div className="grid grid-cols-3 gap-3 text-sm">
-              <div className="border border-dashed border-neutral-300 rounded-md p-2 text-center">
-                <p className="font-semibold">Người soạn</p>
-                <p className="text-neutral-700 font-medium mt-4 text-sm">{selectedOrder?.createdByName ?? '................'}</p>
-              </div>
-              <div className="border border-dashed border-neutral-300 rounded-md p-2 text-center">
-                <p className="font-semibold">Người kiểm tra</p>
-                <p className="text-neutral-500 mt-6">................</p>
-              </div>
-              <div className="border border-dashed border-neutral-300 rounded-md p-2 text-center">
-                <p className="font-semibold">Người phê duyệt</p>
-                <p className="text-neutral-500 mt-6">................</p>
-              </div>
-            </div>
-          </div>
+        <div className="gmp-title-row">
+          DANH SÁCH MẺ
         </div>
-
         <table className="gmp-grid-table mb-5">
           <thead>
             <tr>
@@ -436,30 +350,48 @@ export default function ManagerOperations() {
           <tbody>
             {orderBatches.length === 0 && (
               <tr>
-                <td colSpan={4} className="text-center py-4 text-neutral-500">Chưa có dữ liệu mẻ sản xuất cho lệnh này.</td>
+                <td colSpan={4} className="text-center py-4 text-neutral-500">
+                  Chưa có dữ liệu mẻ sản xuất cho lệnh này.
+                </td>
               </tr>
             )}
             {orderBatches.map((batch) => {
               const pointer = Math.min(getStepPointer(batch), totalSteps);
               if (orders.length === 0) {
-    return <div className="space-y-6"><div className="card text-neutral-500">Chưa có lệnh sản xuất trong cơ sở dữ liệu</div></div>;
-  }
+                return (
+                  <div className="space-y-6">
+                    <div className="card text-neutral-500">
+                      Chưa có lệnh sản xuất trong cơ sở dữ liệu
+                    </div>
+                  </div>
+                );
+              }
 
-  return (
+              return (
                 <tr key={batch.batchId}>
                   <td>{batch.batchNumber}</td>
                   <td>
-                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusClass(batch.status)}`}>
+                    <span
+                      className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusClass(batch.status)}`}
+                    >
                       {batch.status}
                     </span>
                   </td>
-                  <td>{routingSteps.find((step) => step.stepNumber === pointer)?.stepName ?? '-'}</td>
+                  <td>
+                    {routingSteps.find((step) => step.stepNumber === pointer)
+                      ?.stepName ?? "-"}
+                  </td>
                   <td>
                     <div className="w-full">
                       <div className="progress-track">
-                        <div className="progress-fill" style={{ width: `${getBatchProgress(batch)}%` }} />
+                        <div
+                          className="progress-fill"
+                          style={{ width: `${getBatchProgress(batch)}%` }}
+                        />
                       </div>
-                      <p className="text-xs text-neutral-600 mt-1">{getBatchProgress(batch)}%</p>
+                      <p className="text-xs text-neutral-600 mt-1">
+                        {getBatchProgress(batch)}%
+                      </p>
                     </div>
                   </td>
                 </tr>
@@ -468,93 +400,27 @@ export default function ManagerOperations() {
           </tbody>
         </table>
 
-        <div className="gmp-title-row">IV - BÁO CÁO TIẾN ĐỘ (Pipeline theo mẻ và công đoạn)</div>
-        <div className="border border-neutral-300 rounded-lg p-4 mb-3">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-semibold text-neutral-800">Tiến độ tổng lệnh {selectedOrder?.orderCode ?? ''}</p>
-            <span className="text-sm font-semibold text-primary-700">{overallProgress}%</span>
-          </div>
-          <div className="progress-track h-3">
-            <div className="progress-fill h-3" style={{ width: `${overallProgress}%` }} />
-          </div>
-          <p className="text-xs text-neutral-600 mt-2">
-            Logic dây chuyền: mẻ trước chuyển sang bước tiếp theo thì mẻ sau mới được vào bước trước đó.
-          </p>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="gmp-grid-table">
-            <thead>
-              <tr>
-                <th>Mẻ / Bước</th>
-                {routingSteps.map((step) => (
-                  <th key={step.routingId}>{`Bước ${step.stepNumber}`}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {orderBatches.length === 0 && (
-                <tr>
-                  <td colSpan={Math.max(2, routingSteps.length + 1)} className="text-center py-4 text-neutral-500">Chưa có dữ liệu pipeline.</td>
-                </tr>
-              )}
-              {orderBatches.map((batch, batchIndex) => (
-                <tr key={batch.batchId}>
-                  <td className="font-semibold">{batch.batchNumber}</td>
-                  {routingSteps.map((step) => {
-                    const state = getPipelineState(batchIndex, step.stepNumber, batch);
-                    const label = state === 'done'
-                      ? 'Hoàn thành'
-                      : state === 'active'
-                        ? 'Đang thực hiện'
-                        : state === 'blocked'
-                          ? 'Chờ mẻ trước'
-                          : 'Chờ đến lượt';
-                    const classes = state === 'done'
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : state === 'active'
-                        ? 'bg-amber-100 text-amber-700'
-                        : state === 'blocked'
-                          ? 'bg-red-100 text-red-700'
-                          : 'bg-neutral-100 text-neutral-700';
-                    if (orders.length === 0) {
-    return <div className="space-y-6"><div className="card text-neutral-500">Chưa có lệnh sản xuất trong cơ sở dữ liệu</div></div>;
-  }
-
-  return (
-                      <td key={`${batch.batchId}-${step.routingId}`}>
-                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${classes}`}>
-                          {label}
-                        </span>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-
-
-        <div className="flex items-center justify-between text-xs text-neutral-500 mt-4">
-          <div className="flex items-center gap-2">
-            <Clock3 className="w-4 h-4" />
-            Báo cáo tự động cập nhật theo API backend .NET + SQL Server
-          </div>
-          <p>Role thực hiện: Trưởng phòng (người phê duyệt)</p>
-        </div>
+        {/* Removd TIẾN ĐỘ SẢN XUẤT table to simplify UI as requested */}
 
         {/* Description Modal */}
         {viewedDescription && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl w-full max-w-lg p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-900 border-b pb-2 mb-2 w-full text-left">Mô tả công đoạn</h3>
+                <h3 className="text-lg font-bold text-gray-900 border-b pb-2 mb-2 w-full text-left">
+                  Mô tả công đoạn
+                </h3>
               </div>
-              <div className="text-sm text-neutral-700 whitespace-pre-wrap">{viewedDescription}</div>
+              <div className="text-sm text-neutral-700 whitespace-pre-wrap">
+                {viewedDescription}
+              </div>
               <div className="flex justify-end pt-4 mt-4 border-t">
-                <button onClick={() => setViewedDescription(null)} className="btn-primary">Đóng</button>
+                <button
+                  onClick={() => setViewedDescription(null)}
+                  className="btn-primary"
+                >
+                  Đóng
+                </button>
               </div>
             </div>
           </div>
@@ -563,4 +429,3 @@ export default function ManagerOperations() {
     </div>
   );
 }
-

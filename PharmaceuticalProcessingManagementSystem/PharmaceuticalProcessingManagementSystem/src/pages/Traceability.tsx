@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { certificatesApi, inventoryApi } from '@/services/api';
 import { Search, Info, FileCheck2 } from 'lucide-react';

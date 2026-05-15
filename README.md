@@ -363,12 +363,12 @@ npm audit fix
 cd .\MobileApp\
 flutter pub get
 cd ..
-docker-compose up -d --build
+docker compose up -d --build
 
 ```
 
 **Câu lệnh reset database**
 ```
-docker-compose down -v
+docker compose down -v
 
 ```

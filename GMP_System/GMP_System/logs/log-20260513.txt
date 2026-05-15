@@ -1,0 +1,52 @@
+2026-05-13 00:17:13.208 +00:00 [WRN] No store type was specified for the decimal property 'PlannedQuantity' on entity type 'ProductionBatch'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-13 00:17:13.247 +00:00 [WRN] No store type was specified for the decimal property 'WastePercentage' on entity type 'ProductionOrderBom'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-13 00:17:13.248 +00:00 [WRN] No store type was specified for the decimal property 'SetPressure' on entity type 'RecipeRouting'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-13 00:17:13.248 +00:00 [WRN] No store type was specified for the decimal property 'SetTemperature' on entity type 'RecipeRouting'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-13 00:17:14.384 +00:00 [INF] Executed DbCommand (13ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-13 00:17:14.395 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-13 00:17:14.471 +00:00 [INF] Executed DbCommand (73ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF EXISTS
+    (SELECT *
+     FROM [sys].[objects] o
+     WHERE [o].[type] = 'U'
+     AND [o].[is_ms_shipped] = 0
+     AND NOT EXISTS (SELECT *
+         FROM [sys].[extended_properties] AS [ep]
+         WHERE [ep].[major_id] = [o].[object_id]
+             AND [ep].[minor_id] = 0
+             AND [ep].[class] = 1
+             AND [ep].[name] = N'microsoft_database_tools_support'
+    )
+)
+SELECT 1 ELSE SELECT 0
+2026-05-13 00:17:14.636 +00:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [AppUsers] AS [a]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-05-13 00:17:14.797 +00:00 [WRN] Storing keys in a directory '/root/.aspnet/DataProtection-Keys' that may not be persisted outside of the container. Protected data will be unavailable when container is destroyed. For more information go to https://aka.ms/aspnet/dataprotectionwarning
+2026-05-13 00:17:14.798 +00:00 [INF] User profile is available. Using '/root/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-05-13 00:17:14.819 +00:00 [WRN] Overriding HTTP_PORTS '8080' and HTTPS_PORTS ''. Binding to values defined by URLS instead 'http://0.0.0.0:5000'.
+2026-05-13 00:17:14.893 +00:00 [INF] Now listening on: http://0.0.0.0:5000
+2026-05-13 00:17:14.894 +00:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-05-13 00:17:14.894 +00:00 [INF] Hosting environment: Development
+2026-05-13 00:17:14.894 +00:00 [INF] Content root path: /src
+2026-05-13 00:17:14.787 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-13 00:17:19.611 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-13 00:17:19.646 +00:00 [INF] Executed DbCommand (14ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-13 00:17:19.661 +00:00 [INF] Writing value of type '<>f__AnonymousType90`2' as Json.
+2026-05-13 00:17:19.671 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-13 00:17:19.701 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 1640.6806ms
+2026-05-13 00:17:49.752 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-05-13 00:17:49.756 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-05-13 00:17:49.804 +00:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-13 00:17:49.807 +00:00 [INF] Writing value of type '<>f__AnonymousType90`2' as Json.
+2026-05-13 00:17:49.808 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-05-13 00:17:49.810 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 57.7038ms

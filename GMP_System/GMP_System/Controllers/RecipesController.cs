@@ -162,7 +162,7 @@ namespace GMP_System.Controllers
 
             // Xoá các dữ liệu liên quan (BOM và Routing) trước khi xoá Recipe để tránh lỗi Khóa ngoại
             var boms = await _context.RecipeBoms.Where(b => b.RecipeId == id).ToListAsync();
-            var routings = await _context.RecipeRoutings.Where(r => r.RecipeId == id).ToListAsync();
+            var routings = await _context.RecipeRoutings.Where(r => r.RecipeId == id && r.OrderId == null).ToListAsync();
             
             // Xoá StepParameters của các Routing thuộc Recipe này
             if (routings.Any())
@@ -307,7 +307,7 @@ namespace GMP_System.Controllers
             }
 
             var steps = await _context.RecipeRoutings
-                .Where(r => r.RecipeId == id)
+                .Where(r => r.RecipeId == id && r.OrderId == null)
                 .Include(r => r.DefaultEquipment)
                     .ThenInclude(e => e!.Area)
                 .OrderBy(r => r.StepNumber)
@@ -320,7 +320,6 @@ namespace GMP_System.Controllers
                     r.Description,
                     r.EstimatedTimeMinutes,
                     r.DefaultEquipmentId,
-                    r.MaterialId,
                     r.AreaId,
                     r.CleanlinessStatus,
                     r.StandardTemperature,
@@ -331,7 +330,6 @@ namespace GMP_System.Controllers
                     r.SetPressure,
                     r.SetTimeMinutes,
                     r.MaterialIds,
-                    Material = r.Material == null ? null : new { r.Material.MaterialName },
                     Area = r.Area == null ? null : new { r.Area.AreaName },
                     DefaultEquipment = r.DefaultEquipment == null ? null : new
                     {
@@ -368,12 +366,12 @@ namespace GMP_System.Controllers
             var step = new RecipeRouting
             {
                 RecipeId = id,
+                OrderId = null,
                 StepNumber = request.StepNumber,
                 StepName = request.StepName.Trim(),
                 Description = request.Description,
                 EstimatedTimeMinutes = request.EstimatedTimeMinutes,
                 DefaultEquipmentId = request.DefaultEquipmentId,
-                MaterialId = request.MaterialId,
                 AreaId = request.AreaId,
                 CleanlinessStatus = request.CleanlinessStatus,
                 StandardTemperature = request.StandardTemperature,
@@ -394,7 +392,7 @@ namespace GMP_System.Controllers
         [HttpPut("{id}/routing/{routingId}")]
         public async Task<IActionResult> UpdateRoutingStep(int id, int routingId, [FromBody] RecipeRouting request)
         {
-            var step = await _context.RecipeRoutings.FirstOrDefaultAsync(r => r.RoutingId == routingId && r.RecipeId == id);
+            var step = await _context.RecipeRoutings.FirstOrDefaultAsync(r => r.RoutingId == routingId && r.RecipeId == id && r.OrderId == null);
             if (step == null)
             {
                 return NotFound(new { success = false, message = "Không tìm thấy công đoạn." });
@@ -410,7 +408,6 @@ namespace GMP_System.Controllers
             step.Description = request.Description;
             step.EstimatedTimeMinutes = request.EstimatedTimeMinutes;
             step.DefaultEquipmentId = request.DefaultEquipmentId;
-            step.MaterialId = request.MaterialId;
             step.AreaId = request.AreaId;
             step.CleanlinessStatus = request.CleanlinessStatus;
             step.StandardTemperature = request.StandardTemperature;
@@ -429,7 +426,7 @@ namespace GMP_System.Controllers
         [HttpDelete("{id}/routing/{routingId}")]
         public async Task<IActionResult> DeleteRoutingStep(int id, int routingId)
         {
-            var step = await _context.RecipeRoutings.FirstOrDefaultAsync(r => r.RoutingId == routingId && r.RecipeId == id);
+            var step = await _context.RecipeRoutings.FirstOrDefaultAsync(r => r.RoutingId == routingId && r.RecipeId == id && r.OrderId == null);
             if (step == null)
             {
                 return NotFound(new { success = false, message = "Không tìm thấy công đoạn." });
@@ -437,7 +434,20 @@ namespace GMP_System.Controllers
 
             _context.RecipeRoutings.Remove(step);
             await _context.SaveChangesAsync();
-            return Ok(new { success = true, message = "Đã xóa công đoạn." });
+
+            // Recalculate StepNumbers for remaining steps in this recipe/order
+            var remainingSteps = await _context.RecipeRoutings
+                .Where(r => r.RecipeId == id && r.OrderId == null)
+                .OrderBy(r => r.StepNumber)
+                .ToListAsync();
+
+            for (int i = 0; i < remainingSteps.Count; i++)
+            {
+                remainingSteps[i].StepNumber = i + 1;
+            }
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Đã xóa công đoạn và cập nhật lại thứ tự các bước." });
         }
 
         // PUT: api/recipes/{id}/routing/reorder
@@ -447,7 +457,7 @@ namespace GMP_System.Controllers
             if (items == null || items.Count == 0)
                 return BadRequest(new { success = false, message = "Danh sách rỗng." });
 
-            var steps = await _context.RecipeRoutings.Where(r => r.RecipeId == id).ToListAsync();
+            var steps = await _context.RecipeRoutings.Where(r => r.RecipeId == id && r.OrderId == null).ToListAsync();
             foreach (var item in items)
             {
                 var step = steps.FirstOrDefault(s => s.RoutingId == item.RoutingId);
@@ -466,7 +476,7 @@ namespace GMP_System.Controllers
         public async Task<IActionResult> GetTechSpecs(int id)
         {
             var specs = await _context.RecipeTechSpecs
-                .Where(s => s.RecipeId == id)
+                .Where(s => s.RecipeId == id && s.OrderId == null)
                 .OrderBy(s => s.SortOrder)
                 .Select(s => new { s.SpecId, s.RecipeId, s.ParentId, s.SortOrder, s.Content, s.IsChecked })
                 .ToListAsync();
@@ -482,6 +492,7 @@ namespace GMP_System.Controllers
             var spec = new RecipeTechSpec
             {
                 RecipeId = id,
+                OrderId = null,
                 ParentId = request.ParentId,
                 SortOrder = request.SortOrder,
                 Content = request.Content?.Trim() ?? "",
@@ -495,7 +506,7 @@ namespace GMP_System.Controllers
         [HttpPut("{id}/tech-specs/{specId}")]
         public async Task<IActionResult> UpdateTechSpec(int id, int specId, [FromBody] RecipeTechSpec request)
         {
-            var spec = await _context.RecipeTechSpecs.FirstOrDefaultAsync(s => s.SpecId == specId && s.RecipeId == id);
+            var spec = await _context.RecipeTechSpecs.FirstOrDefaultAsync(s => s.SpecId == specId && s.RecipeId == id && s.OrderId == null);
             if (spec == null) return NotFound(new { success = false, message = "Không tìm thấy tiêu chuẩn." });
 
             spec.Content = request.Content?.Trim() ?? spec.Content;
@@ -509,15 +520,58 @@ namespace GMP_System.Controllers
         [HttpDelete("{id}/tech-specs/{specId}")]
         public async Task<IActionResult> DeleteTechSpec(int id, int specId)
         {
-            var spec = await _context.RecipeTechSpecs.FirstOrDefaultAsync(s => s.SpecId == specId && s.RecipeId == id);
+            var spec = await _context.RecipeTechSpecs.FirstOrDefaultAsync(s => s.SpecId == specId && s.RecipeId == id && s.OrderId == null);
             if (spec == null) return NotFound(new { success = false, message = "Không tìm thấy tiêu chuẩn." });
 
             // Also delete child specs
-            var children = await _context.RecipeTechSpecs.Where(s => s.ParentId == specId).ToListAsync();
+            var children = await _context.RecipeTechSpecs.Where(s => s.ParentId == specId && s.OrderId == null).ToListAsync();
             _context.RecipeTechSpecs.RemoveRange(children);
             _context.RecipeTechSpecs.Remove(spec);
             await _context.SaveChangesAsync();
             return Ok(new { success = true, message = "Đã xóa tiêu chuẩn." });
+        }
+        // New: Get tech specs for a specific order (snapshot)
+        [HttpGet("order/{orderId}/tech-specs")]
+        public async Task<IActionResult> GetTechSpecsByOrder(int orderId)
+        {
+            var specs = await _context.RecipeTechSpecs
+                .Where(s => s.OrderId == orderId)
+                .OrderBy(s => s.SortOrder)
+                .Select(s => new { s.SpecId, s.RecipeId, s.OrderId, s.ParentId, s.SortOrder, s.Content, s.IsChecked })
+                .ToListAsync();
+
+            // If no snapshot exists yet, fallback to recipe's current specs (though snapshotting should happen at creation)
+            if (specs.Count == 0)
+            {
+                var order = await _context.ProductionOrders.FindAsync(orderId);
+                if (order != null)
+                {
+                    specs = await _context.RecipeTechSpecs
+                        .Where(s => s.RecipeId == order.RecipeId && s.OrderId == null)
+                        .OrderBy(s => s.SortOrder)
+                        .Select(s => new { s.SpecId, s.RecipeId, s.OrderId, s.ParentId, s.SortOrder, s.Content, s.IsChecked })
+                        .ToListAsync();
+                }
+            }
+
+            return Ok(new { success = true, data = specs });
+        }
+
+        // New: Update tech spec check status (for QC verification)
+        [HttpPut("tech-specs/{specId}/check")]
+        public async Task<IActionResult> UpdateTechSpecStatus(int specId, [FromBody] TechSpecCheckRequest request)
+        {
+            var spec = await _context.RecipeTechSpecs.FindAsync(specId);
+            if (spec == null) return NotFound(new { success = false, message = "Không tìm thấy tiêu chuẩn." });
+
+            spec.IsChecked = request.IsChecked;
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, data = new { spec.SpecId, spec.IsChecked } });
+        }
+
+        public class TechSpecCheckRequest
+        {
+            public bool IsChecked { get; set; }
         }
     }
 

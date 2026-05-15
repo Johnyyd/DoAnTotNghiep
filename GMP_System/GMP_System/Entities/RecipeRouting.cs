@@ -23,7 +23,7 @@ public partial class RecipeRouting
 
     public int? DefaultEquipmentId { get; set; }
 
-    public int? MaterialId { get; set; }
+
 
     public string? MaterialIds { get; set; }
 
@@ -56,7 +56,7 @@ public partial class RecipeRouting
 
     public virtual Equipment? DefaultEquipment { get; set; }
 
-    public virtual Material? Material { get; set; }
+
 
     [JsonIgnore]
     public virtual Recipe? Recipe { get; set; }

@@ -104,8 +104,10 @@ export const recipesApi = {
 
   // Tech Specs
   getTechSpecs: (recipeId: number) => api.get<ApiResponse<any[]>>(`/recipes/${recipeId}/tech-specs`),
+  getTechSpecsByOrder: (orderId: number) => api.get<ApiResponse<any[]>>(`/recipes/order/${orderId}/tech-specs`),
   addTechSpec: (recipeId: number, data: any) => api.post<ApiResponse<any>>(`/recipes/${recipeId}/tech-specs`, data),
   updateTechSpec: (recipeId: number, specId: number, data: any) => api.put<ApiResponse<any>>(`/recipes/${recipeId}/tech-specs/${specId}`, data),
+  updateOrderTechSpec: (specId: number, data: { isChecked: boolean }) => api.put<ApiResponse<any>>(`/recipes/tech-specs/${specId}/check`, data),
   deleteTechSpec: (recipeId: number, specId: number) => api.delete<ApiResponse<null>>(`/recipes/${recipeId}/tech-specs/${specId}`),
 };
 

@@ -178,9 +178,9 @@ using (var scope = app.Services.CreateScope())
                                     {
                                         command.CommandText = trimmedBatch;
                                         command.CommandType = System.Data.CommandType.Text;
-                                        if (command.Connection.State != System.Data.ConnectionState.Open)
+                                        if (command.Connection!.State != System.Data.ConnectionState.Open)
                                         {
-                                            command.Connection.Open();
+                                            command.Connection!.Open();
                                         }
                                         command.ExecuteNonQuery();
                                     }
