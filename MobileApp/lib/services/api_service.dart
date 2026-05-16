@@ -110,8 +110,9 @@ class ApiService {
             'completedBatches': completedBatches,
             'status': order['status'] ?? 'Draft',
             'productionBatches': batches, // Include batches for status tracking
-            'recipe':
-                order['recipe'], // Keep full recipe for BOM access in pre-check
+            'recipe': order['recipe'], // Keep full recipe for BOM access in pre-check
+            'productionOrderBoms': order['productionOrderBoms'] ?? order['ProductionOrderBoms'],
+            'isFullyDispensed': order['isFullyDispensed'] ?? order['IsFullyDispensed'],
           };
         }).toList();
       }
@@ -129,6 +130,21 @@ class ApiService {
         url,
         headers: await _headers(),
         body: jsonEncode({"status": newStatus}),
+      );
+      return response.statusCode >= 200 && response.statusCode < 300;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Xác nhận cấp phát nguyên liệu (Warehouse Staff)
+  static Future<bool> dispenseBomItem(int bomId, int userId) async {
+    final url = Uri.parse('$baseUrl/production-orders/bom/$bomId/dispense');
+    try {
+      final response = await http.post(
+        url,
+        headers: await _headers(),
+        body: jsonEncode({"userId": userId}),
       );
       return response.statusCode >= 200 && response.statusCode < 300;
     } catch (e) {

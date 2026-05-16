@@ -10,7 +10,7 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<any>;
   logout: () => void;
 }
 
@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: true,
         isLoading: false,
       });
+      return user; // Trả về user để caller kiểm tra
     } catch (err) {
       setState(s => ({ ...s, isLoading: false }));
       throw err;

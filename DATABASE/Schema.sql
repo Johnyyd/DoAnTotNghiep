@@ -203,7 +203,10 @@ CREATE TABLE ProductionOrderBom (
     RequiredQuantity DECIMAL(18, 4) NOT NULL,
     UomId INT REFERENCES UnitOfMeasure(UomId),
     WastePercentage DECIMAL(5, 2) DEFAULT 0,
-    Note NVARCHAR(200)
+    Note NVARCHAR(500),
+    DispensingStatus NVARCHAR(20) DEFAULT 'Pending',
+    DispensedAt DATETIME,
+    DispensedBy INT REFERENCES AppUsers(UserId)
 );
 GO
 

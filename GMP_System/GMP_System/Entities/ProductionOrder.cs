@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace GMP_System.Entities;
@@ -32,6 +32,9 @@ public partial class ProductionOrder
     public virtual ICollection<ProductionBatch> ProductionBatches { get; set; } = new List<ProductionBatch>();
     public virtual ICollection<RecipeRouting> RecipeRoutings { get; set; } = new List<RecipeRouting>();
     public virtual ICollection<ProductionOrderBom> ProductionOrderBoms { get; set; } = new List<ProductionOrderBom>();
+    
+    [NotMapped]
+    public bool IsFullyDispensed => ProductionOrderBoms.Count > 0 && ProductionOrderBoms.All(b => b.DispensingStatus == "Dispensed");
 
     [JsonIgnore]
     public virtual Recipe? Recipe { get; set; }
