@@ -209,7 +209,7 @@ INSERT INTO RecipeRouting (RoutingId, RecipeId, OrderId, StepNumber, StepName, D
 -- Recipe 1: Viên nang Crila (Existing)
 (1, 1, NULL, 1, N'Sấy Tá Dược 8 (TD 8)', 12, 180, N'Sấy tinh bột TD 8 tại 75°C, 180p. Độ ẩm < 5%.', 1, 1, N'Sạch', N'21 - 25', N'45 - 70', N'10 - 999', N'ổn định', 75.00, 10.00, 180, '6'),
 (2, 1, NULL, 2, N'Sấy Cao Khô NLC 3', 12, 180, N'Sấy cao khô Trinh nữ tại 75°C, 180p. Độ ẩm < 3%.', 1, 1, N'Sạch', N'21 - 25', N'45 - 70', N'10 - 999', N'ổn định', 75.00, 10.00, 180, '1'),
-(3, 1, NULL, 3, N'Cân Nguyên Liệu', 1, 90, N'Cân chính xác 6 loại theo BOM động (Section 4 BMR). Đối chiếu nhãn phụ.', 1, 2, N'Sạch', N' - ', N' - ', N' - ', N'ổn định', 0.00, 0.00, 90, '1,2,3,4,5,6'),
+(3, 1, NULL, 3, N'Cân Nguyên Liệu', 1, 5, N'Cân chính xác 6 loại theo BOM động (Section 4 BMR). Đối chiếu nhãn phụ.', 1, 2, N'Sạch', N' - ', N' - ', N' - ', N'ổn định', 0.00, 0.00, 90, '1,2,3,4,5,6'),
 (4, 1, NULL, 4, N'Trộn Khô', 4, 15, N'Trộn premix bột tá dược trước. Trộn chính 15 phút, 15 vòng/phút.', 1, 3, N'Sạch', N'21 - 25', N'45 - 70', N'10 - 999', N'ổn định', 0.00, 10.00, 15, '1,2,3,4,5,6'),
 (7, 1, NULL, 5, N'Đóng Nang', 6, 120, N'Đóng nang số 0, khối lượng đích 540mg/viên.', 1, 4, N'Sạch', N' - ', N' - ', N' - ', N'ổn định', 0.00, 0.00, 120, '7'),
 -- Recipe 2: Paracetamol (Existing)

@@ -177,6 +177,8 @@ namespace GMP_System.Controllers
             var routings = await _unitOfWork.RecipeRoutings.Query()
                 .Where(r => r.OrderId == orderId)
                 .Include(r => r.StepParameters)
+                .Include(r => r.DefaultEquipment)
+                    .ThenInclude(e => e.Area)
                 .OrderBy(r => r.StepNumber)
                 .ToListAsync();
 
@@ -186,6 +188,8 @@ namespace GMP_System.Controllers
                 routings = await _unitOfWork.RecipeRoutings.Query()
                     .Where(r => r.RecipeId == order.RecipeId && r.OrderId == null)
                     .Include(r => r.StepParameters)
+                    .Include(r => r.DefaultEquipment)
+                        .ThenInclude(e => e.Area)
                     .OrderBy(r => r.StepNumber)
                     .AsNoTracking()
                     .ToListAsync();
