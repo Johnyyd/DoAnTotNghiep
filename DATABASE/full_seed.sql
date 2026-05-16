@@ -251,6 +251,7 @@ BEGIN
     CREATE TABLE RecipeTechSpecs (
         SpecId INT PRIMARY KEY IDENTITY(1,1),
         RecipeId INT NOT NULL REFERENCES Recipes(RecipeId) ON DELETE CASCADE,
+        OrderId INT NULL REFERENCES ProductionOrders(OrderId),
         ParentId INT NULL,
         SortOrder INT NOT NULL DEFAULT 0,
         Content NVARCHAR(500) NOT NULL,

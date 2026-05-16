@@ -44,6 +44,7 @@ IF OBJECT_ID('Equipments', 'U') IS NOT NULL DROP TABLE Equipments;
 IF OBJECT_ID('ProductionAreas', 'U') IS NOT NULL DROP TABLE ProductionAreas;
 IF OBJECT_ID('UomConversions', 'U') IS NOT NULL DROP TABLE UomConversions;
 IF OBJECT_ID('UnitOfMeasure', 'U') IS NOT NULL DROP TABLE UnitOfMeasure;
+IF OBJECT_ID('RecipeTechSpecs', 'U') IS NOT NULL DROP TABLE RecipeTechSpecs;
 IF OBJECT_ID('AppUsers', 'U') IS NOT NULL DROP TABLE AppUsers;
 GO
 
@@ -153,6 +154,7 @@ CREATE TABLE Recipes (
     ApprovedDate DATETIME2,
     CreatedAt DATETIME2 DEFAULT GETDATE(),
     EffectiveDate DATETIME2,
+    RecipeName NVARCHAR(200) NULL,
     Note NVARCHAR(500)
 );
 GO
@@ -256,6 +258,7 @@ BEGIN
     CREATE TABLE RecipeTechSpecs (
         SpecId INT PRIMARY KEY IDENTITY(1,1),
         RecipeId INT NOT NULL REFERENCES Recipes(RecipeId) ON DELETE CASCADE,
+        OrderId INT NULL REFERENCES ProductionOrders(OrderId),
         ParentId INT NULL,
         SortOrder INT NOT NULL DEFAULT 0,
         Content NVARCHAR(500) NOT NULL,

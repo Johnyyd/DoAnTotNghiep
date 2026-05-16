@@ -40,7 +40,7 @@ namespace GMP_System.Controllers
                     Recipe = o.Recipe == null ? null : new
                     {
                         o.Recipe.RecipeId,
-                        o.Recipe.RecipeName,
+                        RecipeName = o.Recipe.RecipeName ?? (o.Recipe.Material != null ? o.Recipe.Material.MaterialName : "Unknown Recipe"),
                         o.Recipe.BatchSize,
                         Material = o.Recipe.Material == null ? null : new
                         {
@@ -67,7 +67,7 @@ namespace GMP_System.Controllers
                 .AsNoTracking()
                 .ToListAsync();
 
-            return Ok(new { data = orders, totalCount = orders.Count, success = true, message = "Success" });
+            return Ok(new { data = orders, totalCount = orders != null ? orders.Count : 0, success = true, message = "Success" });
         }
 
         [HttpGet("{id}")]
@@ -90,7 +90,7 @@ namespace GMP_System.Controllers
                     Recipe = o.Recipe == null ? null : new
                     {
                         o.Recipe.RecipeId,
-                        o.Recipe.RecipeName,
+                        RecipeName = o.Recipe.RecipeName ?? (o.Recipe.Material != null ? o.Recipe.Material.MaterialName : "Unknown Recipe"),
                         o.Recipe.BatchSize,
                         o.Recipe.Note,
                         Material = o.Recipe.Material == null ? null : new
@@ -150,7 +150,7 @@ namespace GMP_System.Controllers
                         Recipe = b.Order.Recipe == null ? null : new
                         {
                             b.Order.Recipe.RecipeId,
-                            b.Order.Recipe.RecipeName,
+                            RecipeName = b.Order.Recipe.RecipeName ?? (b.Order.Recipe.Material != null ? b.Order.Recipe.Material.MaterialName : "Unknown Recipe"),
                             Material = b.Order.Recipe.Material == null ? null : new
                             {
                                 b.Order.Recipe.Material.MaterialName

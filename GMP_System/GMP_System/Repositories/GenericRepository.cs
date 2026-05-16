@@ -94,9 +94,14 @@ namespace GMP_System.Repositories
             _context.Entry(entity).State = EntityState.Modified;
         }
 
-        public void Remove(T entity)
+        public virtual void Remove(T entity)
         {
             _dbSet.Remove(entity);
+        }
+
+        public virtual void RemoveRange(IEnumerable<T> entities)
+        {
+            _dbSet.RemoveRange(entities);
         }
     }
 }

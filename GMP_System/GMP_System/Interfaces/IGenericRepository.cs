@@ -9,6 +9,7 @@ namespace GMP_System.Interfaces
         Task AddAsync(T entity);
         void Update(T entity);
         void Remove(T entity);
+        void RemoveRange(IEnumerable<T> entities);
 
         // Overloads hỗ trợ eager loading (.Include)
         Task<IEnumerable<T>> GetAllWithIncludeAsync(params Expression<Func<T, object>>[] includes);

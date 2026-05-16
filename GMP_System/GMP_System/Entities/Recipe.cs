@@ -24,6 +24,8 @@ public partial class Recipe
 
     public DateTime? EffectiveDate { get; set; }
 
+    public string? RecipeName { get; set; }
+
     public string? Note { get; set; }
 
     public virtual AppUser? ApprovedByNavigation { get; set; }

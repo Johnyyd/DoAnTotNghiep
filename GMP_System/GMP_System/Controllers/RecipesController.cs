@@ -32,6 +32,7 @@ namespace GMP_System.Controllers
                     r.ApprovedDate,
                     r.CreatedAt,
                     r.EffectiveDate,
+                    r.RecipeName,
                     r.Note,
                     Material = r.Material == null ? null : new {
                         r.Material.MaterialId,
@@ -60,6 +61,7 @@ namespace GMP_System.Controllers
                     r.ApprovedDate,
                     r.CreatedAt,
                     r.EffectiveDate,
+                    r.RecipeName,
                     r.Note,
                     Material = r.Material == null ? null : new {
                         r.Material.MaterialId,
@@ -111,6 +113,7 @@ namespace GMP_System.Controllers
 
             existing.MaterialId = recipe.MaterialId;
             existing.BatchSize = recipe.BatchSize;
+            existing.RecipeName = recipe.RecipeName;
             existing.Note = recipe.Note;
             existing.EffectiveDate = recipe.EffectiveDate;
             existing.Status = recipe.Status;
