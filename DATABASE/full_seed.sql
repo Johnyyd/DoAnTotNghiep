@@ -185,6 +185,7 @@ GO
 SET IDENTITY_INSERT RecipeBOM ON;
 INSERT INTO RecipeBOM (BomId, RecipeId, MaterialId, Quantity, UomId, WastePercentage, Note) VALUES
 (1,  1, 1,  250.00, 2, 0.20, N'NLC 3'),
+
 (2,  1, 2,    1.62,  2, 0.10, N'Aerosil'),
 (3,  1, 3,   29.70,  2, 0.20, N'SSG'),
 (4,  1, 4,    4.05,  2, 0.10, N'Talc'),
