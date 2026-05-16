@@ -44,6 +44,16 @@ type NormalizedBatch = {
 
 
 
+function getStatusLabel(status: string) {
+  if (status === 'Draft') return 'Bản nháp';
+  if (status === 'Approved') return 'Đã duyệt';
+  if (status === 'InProcess' || status === 'In-Process') return 'Đang chạy';
+  if (status === 'Hold') return 'Chờ';
+  if (status === 'Scheduled') return 'Đã lên lịch';
+  if (status === 'Completed') return 'Hoàn thành';
+  return status;
+}
+
 function normalizeStatus(raw?: string): string {
   if (!raw) return 'Draft';
   const value = raw.toLowerCase();
@@ -218,6 +228,9 @@ export default function ManagerOperations() {
     const prevPointer = prevBatch ? getStepPointer(prevBatch) : totalSteps + 1;
     const gateOpen = !prevBatch || prevPointer > stepNumber;
 
+    // If batch is scheduled, everything is waiting
+    if (batch.status === 'Scheduled') return 'waiting';
+
     if (batch.status === 'Completed' || pointer > stepNumber) return 'done';
     if (pointer === stepNumber && gateOpen) return 'active';
     if (!gateOpen && pointer <= stepNumber) return 'blocked';
@@ -226,11 +239,12 @@ export default function ManagerOperations() {
 
   const getStatusClass = (status: string) => {
     const normalized = normalizeStatus(status);
-    if (normalized === 'Approved') return 'bg-blue-100 text-blue-700';
-    if (normalized === 'InProcess') return 'bg-amber-100 text-amber-700';
-    if (normalized === 'Hold') return 'bg-red-100 text-red-700';
-    if (normalized === 'Completed') return 'bg-emerald-100 text-emerald-700';
-    return 'bg-neutral-100 text-neutral-700';
+    if (normalized === 'Approved') return 'bg-green-100 text-green-700 border border-green-200';
+    if (normalized === 'InProcess') return 'bg-orange-100 text-orange-700 border border-orange-200';
+    if (normalized === 'Hold') return 'bg-red-100 text-red-700 border border-red-200';
+    if (normalized === 'Scheduled') return 'bg-blue-100 text-blue-700 border border-blue-200';
+    if (normalized === 'Completed') return 'bg-green-100 text-green-700 border border-green-200';
+    return 'bg-gray-100 text-gray-700 border border-gray-200';
   };
 
 
@@ -257,7 +271,7 @@ export default function ManagerOperations() {
               )}
               {orders.map((order) => (
                 <option key={order.orderId} value={order.orderId}>
-                  {order.orderCode} - {order.status} -{" "}
+                  {order.orderCode} - {getStatusLabel(order.status)} -{" "}
                   {order.plannedQuantity.toLocaleString()} đơn vị
                 </option>
               ))}
@@ -300,7 +314,7 @@ export default function ManagerOperations() {
                     {(() => {
                       const done = orderBatches.filter((batch, bIdx) => getPipelineState(bIdx, step.stepNumber, batch) === "done").length;
                       const active = orderBatches.filter((batch, bIdx) => getPipelineState(bIdx, step.stepNumber, batch) === "active").length;
-                      if (active > 0) return `Đang chạy (${active})`;
+                      if (active > 0) return `Đang chạy`;
                       if (done === orderBatches.length && orderBatches.length > 0) return "Hoàn thành";
                       return "Chờ";
                     })()}
@@ -374,7 +388,7 @@ export default function ManagerOperations() {
                     <span
                       className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusClass(batch.status)}`}
                     >
-                      {batch.status}
+                      {getStatusLabel(batch.status)}
                     </span>
                   </td>
                   <td>
