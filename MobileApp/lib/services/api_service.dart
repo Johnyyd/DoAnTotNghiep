@@ -27,8 +27,7 @@ class ApiService {
     }
 
     // Mặc định fallback cho môi trường dev nội bộ
-    // Nếu bạn dùng Android Emulator, có thể đổi thành 10.0.2.2
-    return 'http://192.168.100.160:5001/api';
+    return 'https://porter-unhittable-synovially.ngrok-free.dev/api';
   }
 
   /// Tiện ích log lỗi cho dev
