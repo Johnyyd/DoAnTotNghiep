@@ -19,8 +19,6 @@ import Equipments from '@/pages/Equipments';
 import ManagerOperations from '@/pages/ManagerOperations';
 import FinishedGoodsStats from '@/pages/FinishedGoodsStats';
 import ProductionAreas from '@/pages/ProductionAreas';
-import DispensingManagement from '@/pages/DispensingManagement';
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
