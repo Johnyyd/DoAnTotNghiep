@@ -431,8 +431,13 @@ export default function Recipes() {
   );
 
   const totalPerTabletMg = useMemo(
-    () => bomItems.reduce((sum, item) => sum + item.quantity, 0),
-    [bomItems],
+    () =>
+      bomItems
+        .filter(
+          (item) => !isPackagingMaterial(allMaterialById.get(item.materialId)),
+        )
+        .reduce((sum, item) => sum + item.quantity, 0),
+    [bomItems, allMaterialById],
   );
 
   // Tech specs
@@ -1026,7 +1031,18 @@ export default function Recipes() {
                     {recipe.recipeName ? `${recipe.recipeName} - ` : ""}
                     {recipe.materialName ?? "-"}
                   </p>
-                  <p className="text-xs text-neutral-500">{recipe.status}</p>
+                  <p className="text-xs mt-1">
+                    {recipe.status === "Draft" && (
+                      <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                        Bản nháp
+                      </span>
+                    )}
+                    {recipe.status === "Approved" && (
+                      <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                        Đã duyệt
+                      </span>
+                    )}
+                  </p>
                 </button>
               ))}
             </div>
@@ -1059,11 +1075,29 @@ export default function Recipes() {
                 {selectedRecipe.status === "Draft" && (
                   <button
                     className="btn-secondary text-sm"
-                    onClick={() =>
-                      approveRecipeMutation.mutate(selectedRecipe.recipeId)
-                    }
+                    onClick={() => {
+                      const nonPackagingMaterials = bomItems.filter(
+                        (item) =>
+                          !isPackagingMaterial(
+                            allMaterialById.get(item.materialId),
+                          ),
+                      );
+                      if (nonPackagingMaterials.length < 2) {
+                        alert(
+                          "Công thức phải có ít nhất 2 nguyên liệu (không tính bao bì) để có thể duyệt.",
+                        );
+                        return;
+                      }
+                      if (routingSteps.length < 2) {
+                        alert(
+                          "Công thức phải có ít nhất 2 công đoạn để có thể duyệt.",
+                        );
+                        return;
+                      }
+                      approveRecipeMutation.mutate(selectedRecipe.recipeId);
+                    }}
                   >
-                    <CheckCircle2 className="w-4 h-4 mr-1" /> Approved
+                    <CheckCircle2 className="w-4 h-4 mr-1" /> Duyệt
                   </button>
                 )}
                 <button

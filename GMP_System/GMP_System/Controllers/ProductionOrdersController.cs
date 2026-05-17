@@ -59,10 +59,12 @@ namespace GMP_System.Controllers
                         bom.OrderBomId,
                         bom.MaterialId,
                         bom.RequiredQuantity,
+                        bom.DispensingStatus,
                         MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
                         MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
                         UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
-                    })
+                    }),
+                    IsFullyDispensed = o.ProductionOrderBoms.All(bom => bom.DispensingStatus == "Dispensed")
                 })
                 .AsNoTracking()
                 .ToListAsync();
@@ -110,10 +112,12 @@ namespace GMP_System.Controllers
                         bom.OrderBomId,
                         bom.MaterialId,
                         bom.RequiredQuantity,
+                        bom.DispensingStatus,
                         MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
                         MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
                         UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
-                    })
+                    }),
+                    IsFullyDispensed = o.ProductionOrderBoms.All(bom => bom.DispensingStatus == "Dispensed")
                 })
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
@@ -173,6 +177,8 @@ namespace GMP_System.Controllers
             var routings = await _unitOfWork.RecipeRoutings.Query()
                 .Where(r => r.OrderId == orderId)
                 .Include(r => r.StepParameters)
+                .Include(r => r.DefaultEquipment)
+                    .ThenInclude(e => e.Area)
                 .OrderBy(r => r.StepNumber)
                 .ToListAsync();
 
@@ -182,6 +188,8 @@ namespace GMP_System.Controllers
                 routings = await _unitOfWork.RecipeRoutings.Query()
                     .Where(r => r.RecipeId == order.RecipeId && r.OrderId == null)
                     .Include(r => r.StepParameters)
+                    .Include(r => r.DefaultEquipment)
+                        .ThenInclude(e => e.Area)
                     .OrderBy(r => r.StepNumber)
                     .AsNoTracking()
                     .ToListAsync();
@@ -727,6 +735,25 @@ namespace GMP_System.Controllers
             await _unitOfWork.CompleteAsync();
 
             return Ok(new { success = true, message = "Đã hoàn thành lệnh sản xuất." });
+        }
+
+        [HttpPost("bom/{bomId}/dispense")]
+        public async Task<IActionResult> DispenseBomItem(int bomId, [FromBody] DispenseRequest request)
+        {
+            var bom = await _context.ProductionOrderBoms.FindAsync(bomId);
+            if (bom == null) return NotFound(new { success = false, message = "Không tìm thấy dòng BOM." });
+
+            bom.DispensingStatus = "Dispensed";
+            bom.DispensedAt = DateTime.Now;
+            bom.DispensedBy = request.UserId;
+            
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, message = "Đã xác nhận cấp phát nguyên liệu." });
+        }
+
+        public class DispenseRequest
+        {
+            public int UserId { get; set; }
         }
 
         [HttpDelete("{id}")]

@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import 'login_screen.dart';
 import 'main_navigation.dart';
 import 'order_verification_screen.dart';
+import 'dispensing_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -82,19 +83,28 @@ class _HomeScreenState extends State<HomeScreen>
     }).toList();
 
     setState(() {
-      _inProcessOrders = filtered
+      final filteredByRole = filtered.where((o) {
+        final role = AuthService.currentUser?['role'];
+        if (role == 'Operator' || role == 'QA_QC') {
+          // CHỈ thấy lệnh khi đã được KHO cấp phát đầy đủ 100% nguyên liệu
+          return o['isFullyDispensed'] == true;
+        }
+        return true;
+      }).toList();
+
+      _inProcessOrders = filteredByRole
           .where((o) => _getOrderDisplayStatus(o) == 'In-Process')
           .toList();
-      _pendingWorkerOrders = filtered
+      _pendingWorkerOrders = filteredByRole
           .where((o) => _getOrderDisplayStatus(o) == 'Pending Worker')
           .toList();
-      _pendingQCOrders = filtered
+      _pendingQCOrders = filteredByRole
           .where((o) => _getOrderDisplayStatus(o) == 'Pending QC')
           .toList();
-      _errorOrders = filtered
+      _errorOrders = filteredByRole
           .where((o) => _getOrderDisplayStatus(o) == 'On-Hold')
           .toList();
-      _completedOrders = filtered
+      _completedOrders = filteredByRole
           .where((o) => _getOrderDisplayStatus(o) == 'Completed')
           .toList();
       _isLoading = false;
@@ -575,30 +585,49 @@ class _HomeScreenState extends State<HomeScreen>
       appBar: AppBar(
         title: const Text('Trang Chủ',
             style: TextStyle(fontWeight: FontWeight.bold)),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(100), // Height for chips + tabs
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildCategoryChips(),
-              TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white70,
-                indicatorColor: Colors.white,
-                indicatorWeight: 3,
-                tabs: const [
-                  Tab(text: 'Đang sản xuất'),
-                  Tab(text: 'Chờ Công nhân'),
-                  Tab(text: 'Chờ QC xét duyệt'),
-                  Tab(text: 'Đang tạm dừng'),
-                  Tab(text: 'Đã hoàn tất'),
+        bottom: role == 'WarehouseStaff' 
+          ? null 
+          : PreferredSize(
+              preferredSize: const Size.fromHeight(100), // Height for chips + tabs
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: _buildCategoryChips()),
+                      if (role == 'Admin' || role == 'Manager')
+                        Padding(
+                          padding: const EdgeInsets.only(right: 16),
+                          child: IconButton.filledTonal(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const DispensingScreen()),
+                              );
+                            },
+                            icon: const Icon(Icons.inventory_2),
+                            tooltip: 'Cấp phát vật tư',
+                          ),
+                        ),
+                    ],
+                  ),
+                  TabBar(
+                    controller: _tabController,
+                    isScrollable: true,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: Colors.white70,
+                    indicatorColor: Colors.white,
+                    indicatorWeight: 3,
+                    tabs: const [
+                      Tab(text: 'Đang sản xuất'),
+                      Tab(text: 'Chờ Công nhân'),
+                      Tab(text: 'Chờ QC xét duyệt'),
+                      Tab(text: 'Đang tạm dừng'),
+                      Tab(text: 'Đã hoàn tất'),
+                    ],
+                  ),
                 ],
               ),
-            ],
-          ),
-        ),
+            ),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -660,16 +689,18 @@ class _HomeScreenState extends State<HomeScreen>
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildOrderList(_inProcessOrders, false),
-                _buildOrderList(_pendingWorkerOrders, true, isQC: false),
-                _buildOrderList(_pendingQCOrders, true, isQC: true),
-                _buildOrderList(_errorOrders, false),
-                _buildCompletedList(_completedOrders),
-              ],
-            ),
+          : role == 'WarehouseStaff'
+              ? const DispensingScreen()
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildOrderList(_inProcessOrders, false),
+                    _buildOrderList(_pendingWorkerOrders, true, isQC: false),
+                    _buildOrderList(_pendingQCOrders, true, isQC: true),
+                    _buildOrderList(_errorOrders, false),
+                    _buildCompletedList(_completedOrders),
+                  ],
+                ),
     );
   }
 }

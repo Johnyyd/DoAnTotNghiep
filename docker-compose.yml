@@ -38,7 +38,7 @@ services:
       context: ./PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: http://gmp-api:80
+        VITE_API_URL: https://porter-unhittable-synovially.ngrok-free.dev/api
     container_name: gmp-frontend
     ports:
       - "8080:80"

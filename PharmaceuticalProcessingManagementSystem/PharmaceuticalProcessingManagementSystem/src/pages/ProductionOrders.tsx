@@ -30,12 +30,23 @@ function toRows<T>(raw: unknown): T[] {
 }
 
 function statusClass(status: string) {
-  if (status === 'Draft') return 'bg-gray-100 text-gray-700';
-  if (status === 'Approved') return 'bg-blue-100 text-blue-700';
-  if (status === 'InProcess') return 'bg-purple-100 text-purple-700';
-  if (status === 'Hold') return 'bg-orange-100 text-orange-700';
-  if (status === 'Completed') return 'bg-emerald-100 text-emerald-700';
-  return 'bg-gray-100 text-gray-700';
+  if (status === 'Draft') return 'bg-gray-100 text-gray-700 border-gray-200';
+  if (status === 'Approved') return 'bg-green-100 text-green-700 border-green-200';
+  if (status === 'InProcess') return 'bg-orange-100 text-orange-700 border-orange-200';
+  if (status === 'Hold') return 'bg-red-100 text-red-700 border-red-200';
+  if (status === 'Scheduled') return 'bg-blue-100 text-blue-700 border-blue-200';
+  if (status === 'Completed') return 'bg-green-100 text-green-700 border-green-200';
+  return 'bg-gray-100 text-gray-700 border-gray-200';
+}
+
+function getStatusLabel(status: string) {
+  if (status === 'Draft') return 'Bản nháp';
+  if (status === 'Approved') return 'Đã duyệt';
+  if (status === 'InProcess') return 'Đang chạy';
+  if (status === 'Hold') return 'Chờ';
+  if (status === 'Scheduled') return 'Đã lên lịch';
+  if (status === 'Completed') return 'Hoàn thành';
+  return status;
 }
 
 type MassUnit = 'kg' | 'g' | 'vien';
@@ -437,8 +448,8 @@ export default function ProductionOrders() {
                      <td className="font-medium text-neutral-900">{order.recipeName || `Công thức #${order.recipeId}`}</td>
                     <td>{formatNumber(order.plannedQuantity, 0)} <span className="text-neutral-500 text-xs">{order.uomName}</span></td>
                     <td>
-                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${statusClass(order.status)}`}>
-                        {order.status}
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold border ${statusClass(order.status)}`}>
+                        {getStatusLabel(order.status)}
                       </span>
                     </td>
                     <td>{formatDate(order.plannedStartDate)}</td>
@@ -604,7 +615,7 @@ export default function ProductionOrders() {
                     return (
                       <tr key={b.batchId ?? b.BatchId}>
                         <td><code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">{batchNum}</code></td>
-                        <td><span className={`text-xs font-semibold px-2 py-1 rounded-full ${statusClass(s)}`}>{s}</span></td>
+                        <td><span className={`text-[10px] font-bold px-2 py-1 rounded-full border ${statusClass(s)}`}>{getStatusLabel(s)}</span></td>
                         <td>{Number.isFinite(currentStepDisplay) ? currentStepDisplay : '-'}</td>
                         <td>{formatDate(b.manufactureDate)}</td>
                         <td>{formatDate(b.endTime)}</td>
