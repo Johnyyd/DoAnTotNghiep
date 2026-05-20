@@ -317,10 +317,12 @@ class _DryingStepScreenState extends State<DryingStepScreen>
               _currentPhase = ExecutionPhase.completed;
               _secondsRemaining = 0;
               _timer?.cancel();
-            } else if (rawStatus == 'APPROVED') {
+            } else if (rawStatus == 'APPROVED' || rawStatus == 'EXECUTING') {
               // APPROVED -> Chuyển qua giai đoạn EXECUTION (Sấy) và bắt đầu bộ đếm ngược 20s
               _currentPhase = ExecutionPhase.execution;
-              if (_secondsRemaining == 20 && _timer == null) {
+              if (rawStatus == 'EXECUTING') {
+                _secondsRemaining = 0;
+              } else if (_secondsRemaining == 20 && _timer == null) {
                 Future.delayed(
                     const Duration(milliseconds: 500), () => _startTimer());
               }
@@ -375,8 +377,8 @@ class _DryingStepScreenState extends State<DryingStepScreen>
           setState(() {
             _autoCalcTimeEnd();
           });
-          // Lưu trạng thái Running và giờ kết thúc dự kiến nhưng không chốt Log
-          _submit('Running', null, isInternal: true);
+          // Lưu trạng thái Executing và giờ kết thúc dự kiến nhưng không chốt Log
+          _submit('Executing', null, isInternal: true);
         }
       }
     });
@@ -891,6 +893,7 @@ class _DryingStepScreenState extends State<DryingStepScreen>
     }
     String status = 'Running';
     if (_currentPhase == ExecutionPhase.verification) status = 'PendingQC';
+    if (_currentPhase == ExecutionPhase.execution) status = 'Executing';
     
     await _submit(status, null, isInternal: true);
     if (mounted) Navigator.pop(context);
@@ -1013,20 +1016,20 @@ class _DryingStepScreenState extends State<DryingStepScreen>
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20, right: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+      child: Wrap(
+        alignment: WrapAlignment.end,
+        crossAxisAlignment: WrapCrossAlignment.end,
+        spacing: 12,
+        runSpacing: 12,
         children: [
           if (_currentPhase != ExecutionPhase.precheck &&
               _currentPhase != ExecutionPhase.completed)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: FloatingActionButton.extended(
-                heroTag: 'btnBack',
-                onPressed: isSaving ? null : _prevPhase,
-                label: const Text('QUAY LẠI'),
-                icon: const Icon(Icons.arrow_back),
-                backgroundColor: Colors.grey.shade700,
-              ),
+            FloatingActionButton.extended(
+              heroTag: 'btnBack',
+              onPressed: isSaving ? null : _prevPhase,
+              label: const Text('QUAY LẠI'),
+              icon: const Icon(Icons.arrow_back),
+              backgroundColor: Colors.grey.shade700,
             ),
           FloatingActionButton.extended(
             heroTag: 'btnNext',

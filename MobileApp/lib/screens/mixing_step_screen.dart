@@ -257,7 +257,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
           } else {
             stopPolling();
           }
-        } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
+        } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED' || rawStatus == 'EXECUTING') {
           _currentPhase = ExecutionPhase.execution;
           stopPolling();
         } else if (rawStatus == 'RUNNING') {
@@ -628,6 +628,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
     }
     String status = 'Running';
     if (_currentPhase == ExecutionPhase.verification) status = 'PendingQC';
+    if (_currentPhase == ExecutionPhase.execution) status = 'Executing';
     
     await _submit(status, null, isInternal: true);
     if (mounted) Navigator.pop(context);
@@ -764,20 +765,20 @@ class _MixingStepScreenState extends State<MixingStepScreen>
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20, right: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+      child: Wrap(
+        alignment: WrapAlignment.end,
+        crossAxisAlignment: WrapCrossAlignment.end,
+        spacing: 12,
+        runSpacing: 12,
         children: [
           if (_currentPhase != ExecutionPhase.precheck &&
               _currentPhase != ExecutionPhase.completed)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: FloatingActionButton.extended(
-                heroTag: 'btnBackM',
-                onPressed: isSaving ? null : _prevPhase,
-                label: const Text('QUAY LẠI'),
-                icon: const Icon(Icons.arrow_back),
-                backgroundColor: Colors.grey.shade700,
-              ),
+            FloatingActionButton.extended(
+              heroTag: 'btnBackM',
+              onPressed: isSaving ? null : _prevPhase,
+              label: const Text('QUAY LẠI'),
+              icon: const Icon(Icons.arrow_back),
+              backgroundColor: Colors.grey.shade700,
             ),
           FloatingActionButton.extended(
             heroTag: 'btnNextM',

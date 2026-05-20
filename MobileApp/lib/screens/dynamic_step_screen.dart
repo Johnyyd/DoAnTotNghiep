@@ -69,7 +69,7 @@ class _DynamicStepScreenState extends State<DynamicStepScreen>
           // Cập nhật Phase dựa trên status
           if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
             _currentPhase = ExecutionPhase.verification;
-          } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
+          } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED' || rawStatus == 'EXECUTING') {
             _currentPhase = ExecutionPhase.execution;
           } else if (rawStatus == 'RUNNING') {
             _currentPhase = ExecutionPhase.input;
@@ -152,6 +152,7 @@ class _DynamicStepScreenState extends State<DynamicStepScreen>
     }
     String status = 'Running';
     if (_currentPhase == ExecutionPhase.verification) status = 'PendingQC';
+    if (_currentPhase == ExecutionPhase.execution) status = 'Executing';
     
     await _submitPhase(status);
     if (mounted) Navigator.pop(context);

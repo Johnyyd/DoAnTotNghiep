@@ -240,7 +240,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
           } else {
             stopPolling();
           }
-        } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
+        } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED' || rawStatus == 'EXECUTING') {
           _currentPhase = ExecutionPhase.execution;
           stopPolling();
         } else if (rawStatus == 'RUNNING') {
@@ -646,6 +646,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
     }
     String status = 'Running';
     if (_currentPhase == ExecutionPhase.verification) status = 'PendingQC';
+    if (_currentPhase == ExecutionPhase.execution) status = 'Executing';
     
     await _submit(status, null, isInternal: true);
     if (mounted) Navigator.pop(context);
