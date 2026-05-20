@@ -560,17 +560,6 @@ class _DryingStepScreenState extends State<DryingStepScreen>
   }
 
   Future<void> _verifyAndSubmit() async {
-    final slTruoc = double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0;
-    final slSau = double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0;
-    if (slSau >= slTruoc && slSau > 0) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-                '❌ Lỗi: Khối lượng sau sấy phải nhỏ hơn khối lượng trước sấy!')));
-      }
-      return;
-    }
-
     final pin = await showPinDialog();
     if (pin == null) return;
 
@@ -895,10 +884,32 @@ class _DryingStepScreenState extends State<DryingStepScreen>
     }
   }
 
+  Future<void> _exitAndSave() async {
+    if (widget.isViewer || _currentPhase == ExecutionPhase.completed) {
+      if (mounted) Navigator.pop(context);
+      return;
+    }
+    String status = 'Running';
+    if (_currentPhase == ExecutionPhase.verification) status = 'PendingQC';
+    
+    await _submit(status, null, isInternal: true);
+    if (mounted) Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        await _exitAndSave();
+      },
+      child: Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _exitAndSave,
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -946,7 +957,7 @@ class _DryingStepScreenState extends State<DryingStepScreen>
         ],
       ),
       floatingActionButton: _buildContextualFAB(),
-    );
+    ));
   }
 
   Widget _buildStatusHeader() {

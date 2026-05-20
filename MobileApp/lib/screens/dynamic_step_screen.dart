@@ -145,12 +145,34 @@ class _DynamicStepScreenState extends State<DynamicStepScreen>
     }
   }
 
+  Future<void> _exitAndSave() async {
+    if (widget.isViewer || _currentPhase == ExecutionPhase.completed) {
+      if (mounted) Navigator.pop(context);
+      return;
+    }
+    String status = 'Running';
+    if (_currentPhase == ExecutionPhase.verification) status = 'PendingQC';
+    
+    await _submitPhase(status);
+    if (mounted) Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        await _exitAndSave();
+      },
+      child: Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _exitAndSave,
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -171,7 +193,7 @@ class _DynamicStepScreenState extends State<DynamicStepScreen>
         ],
       ),
       floatingActionButton: widget.isViewer ? null : _buildFab(),
-    );
+    ));
   }
 
   Widget _buildForm() {
