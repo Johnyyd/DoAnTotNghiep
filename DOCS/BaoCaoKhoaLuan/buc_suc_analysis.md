@@ -76,27 +76,40 @@ Tại bước 4: Nếu mã tra cứu không tồn tại, hệ thống sẽ thôn
 
 ## 2.3. Đặc tả Use Case hệ thống (SUC)
 
-### 6 SUC Chính
+### 7 SUC Chính
 
-**1. Quản lý công thức và lệnh sản xuất**
-**Tên use case** Quản lý công thức và lệnh sản xuất
-**Tóm tắt** Quản lý thiết lập công thức sản xuất, định mức vật tư và tạo lệnh sản xuất mới, chuyển thông tin đến kho để chuẩn bị.
+**1. Quản lý công thức sản xuất**
+**Tên use case** Quản lý công thức sản xuất
+**Tóm tắt** Quản lý thiết lập công thức sản phẩm, định mức nguyên vật liệu (BOM) và quy trình các bước (Routing) làm tiêu chuẩn cho sản xuất.
 **Tác nhân** Quản lý
-**Use case liên quan** Cấp phát nguyên vật liệu
+**Use case liên quan** Lập lệnh sản xuất
+**Dòng sự kiện chính** Quản lý đăng nhập vào hệ thống.
+Truy cập chức năng quản lý công thức.
+Khai báo mới công thức, nhập định mức vật tư và thiết lập thông số các công đoạn.
+Lưu thông tin cấu hình vào hệ thống.
+**Dòng sự kiện phụ** Hệ thống kiểm tra và cảnh báo nếu thiếu thông tin định mức hoặc công đoạn chưa được thiết lập.
+**Điều kiện tiên quyết** Danh mục vật tư và thiết bị đã được khai báo trên hệ thống.
+**Hậu điều kiện** Thông tin công thức sản xuất được lưu làm cơ sở dữ liệu gốc để tạo lệnh.
+
+**2. Lập lệnh sản xuất**
+**Tên use case** Lập lệnh sản xuất
+**Tóm tắt** Quản lý tạo lệnh sản xuất mới dựa trên công thức có sẵn, hệ thống tự động tính toán nhu cầu vật tư và chuyển thông báo đến kho.
+**Tác nhân** Quản lý
+**Use case liên quan** Quản lý công thức sản xuất, Cấp phát nguyên vật liệu
 **Dòng sự kiện chính** Quản lý đăng nhập vào hệ thống.
 Truy cập chức năng tạo lệnh sản xuất.
-Chọn công thức và nhập số lượng mẻ cần sản xuất.
+Chọn công thức sản phẩm và nhập ngày bắt đầu dự kiến, số lượng mẻ.
 Lưu thông tin tạo lệnh.
-Hệ thống tính toán định mức vật tư, lưu lệnh sản xuất và thông báo đến nhân viên kho.
-**Dòng sự kiện phụ** Hệ thống kiểm tra và cảnh báo nếu thông tin lệnh sản xuất nhập vào bị thiếu hoặc không hợp lệ.
-**Điều kiện tiên quyết** Danh mục công thức và vật tư đã được khai báo trên hệ thống.
-**Hậu điều kiện** Thông tin lệnh sản xuất được lưu và chuyển tiếp đến tác nhân kho.
+Hệ thống tính toán tổng định mức vật tư, khởi tạo lệnh sản xuất và thông báo đến nhân viên kho.
+**Dòng sự kiện phụ** Hệ thống kiểm tra và cảnh báo nếu thông tin số lượng mẻ hoặc ngày bắt đầu không hợp lệ.
+**Điều kiện tiên quyết** Công thức sản phẩm đã được thiết lập đầy đủ.
+**Hậu điều kiện** Lệnh sản xuất được lưu thành công và chuyển tiếp yêu cầu đến tác nhân kho.
 
-**2. Cấp phát nguyên vật liệu**
+**3. Cấp phát nguyên vật liệu**
 **Tên use case** Cấp phát nguyên vật liệu
 **Tóm tắt** Nhân viên kho kiểm tra yêu cầu từ lệnh sản xuất, thực hiện xuất vật tư và ghi nhận khối lượng vào hệ thống.
 **Tác nhân** Nhân viên kho
-**Use case liên quan** Quản lý công thức và lệnh sản xuất, Vận hành công đoạn cân
+**Use case liên quan** Lập lệnh sản xuất, Vận hành công đoạn cân
 **Dòng sự kiện chính** Nhân viên kho đăng nhập vào hệ thống.
 Chọn lệnh sản xuất đang chờ cấp phát từ danh sách.
 Chọn lô vật tư và nhập khối lượng cấp phát thực tế.
@@ -106,7 +119,7 @@ Hệ thống lưu thông tin, trừ tồn kho và cập nhật trạng thái l�
 **Điều kiện tiên quyết** Lệnh sản xuất đã được tạo và vật tư có sẵn trong kho.
 **Hậu điều kiện** Thông tin cấp phát được lưu và lệnh sản xuất sẵn sàng để vận hành.
 
-**3. Vận hành công đoạn cân**
+**4. Vận hành công đoạn cân**
 **Tên use case** Vận hành công đoạn cân
 **Tóm tắt** Người thực hiện tiến hành cân nguyên liệu thô theo định mức, nhập khối lượng vào hệ thống và chuyển dữ liệu cho người kiểm tra xác nhận.
 **Tác nhân** Người thực hiện
@@ -122,7 +135,7 @@ Hệ thống lưu thông tin cân và thông báo đến Người kiểm tra.
 Người thực hiện có quyền thao tác sản xuất.
 **Hậu điều kiện** Thông tin về khối lượng nguyên liệu được lưu và chuyển tiếp đến người kiểm tra.
 
-**4. Vận hành công đoạn trộn**
+**5. Vận hành công đoạn trộn**
 **Tên use case** Vận hành công đoạn trộn
 **Tóm tắt** Người thực hiện thao tác máy trộn, nhập khối lượng bán thành phẩm thu được và chuyển dữ liệu cho người kiểm tra.
 **Tác nhân** Người thực hiện
@@ -137,7 +150,7 @@ Hệ thống tính toán hao hụt, lưu thông tin và thông báo đến Ngư�
 **Điều kiện tiên quyết** Công đoạn cân trước đó đã được hoàn tất và phê duyệt.
 **Hậu điều kiện** Thông tin về quá trình trộn được lưu và chuyển tiếp đến người kiểm tra.
 
-**5. Vận hành công đoạn sấy**
+**6. Vận hành công đoạn sấy**
 **Tên use case** Vận hành công đoạn sấy
 **Tóm tắt** Người thực hiện vận hành tủ sấy, nhập thông số độ ẩm, khối lượng và chuyển dữ liệu cho người kiểm tra đánh giá.
 **Tác nhân** Người thực hiện
@@ -152,7 +165,7 @@ Hệ thống lưu thông tin sấy và thông báo đến Người kiểm tra.
 **Điều kiện tiên quyết** Công đoạn trộn trước đó đã được hoàn tất và phê duyệt.
 **Hậu điều kiện** Thông tin về quá trình sấy được lưu và chuyển tiếp đến người kiểm tra.
 
-**6. Phê duyệt công đoạn**
+**7. Phê duyệt công đoạn**
 **Tên use case** Phê duyệt công đoạn
 **Tóm tắt** Người kiểm tra xem xét dữ liệu từ các công đoạn sản xuất, đối chiếu tiêu chuẩn và xác nhận cho phép mẻ sản xuất đi tiếp.
 **Tác nhân** Người kiểm tra
