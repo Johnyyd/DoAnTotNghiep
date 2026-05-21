@@ -14,8 +14,8 @@
 **Các dòng thay thế:**
 Tại bước 4: Nếu có sai sót hoặc thiếu thông tin khi lập lệnh, hệ thống sẽ cảnh báo để quản lý kiểm tra lại và chỉnh sửa cho phù hợp.
 
-### BUC 2: Quản lý và cấp phát nguyên vật liệu
-**Use case nghiệp vụ:** Quản lý và cấp phát nguyên vật liệu
+### BUC 2: Cấp phát nguyên vật liệu
+**Use case nghiệp vụ:** Cấp phát nguyên vật liệu
 **Use case bắt đầu khi:** Nhân viên kho tiến hành xuất kho nguyên vật liệu theo yêu cầu của lệnh sản xuất. Mục tiêu của use case là đảm bảo cấp phát đúng và đủ vật tư theo định mức để bắt đầu sản xuất.
 **Các bước cơ bản:**
 1. Nhân viên kho đăng nhập vào hệ thống.
@@ -51,16 +51,15 @@ Tại bước 5: Nếu chữ ký điện tử hoặc mã xác thực không đú
 **Các dòng thay thế:**
 Tại bước 4: Nếu thông số không đạt chuẩn, người kiểm tra sẽ từ chối phê duyệt và yêu cầu người thực hiện kiểm tra lại hoặc xử lý lại mẻ sản xuất.
 
-### BUC 5: Thiết lập và quản lý dữ liệu gốc
-**Use case nghiệp vụ:** Thiết lập và quản lý dữ liệu gốc
-**Use case bắt đầu khi:** Quản trị viên tiến hành khai báo các dữ liệu nền tảng cho hệ thống. Mục tiêu của use case là tạo lập cơ sở dữ liệu chuẩn (danh mục vật tư, thiết bị, người dùng) để hệ thống hoạt động đồng bộ.
+### BUC 5: Thiết lập và quản lý BOM, Recipe, Routing
+**Use case nghiệp vụ:** Thiết lập và quản lý BOM, Recipe, Routing
+**Use case bắt đầu khi:** Quản lý tiến hành chuẩn bị và thiết lập các thông tin về công thức, định mức và quy trình sản xuất. Mục tiêu của use case là tạo lập dữ liệu chuẩn xác về quy trình công đoạn (Routing), định mức nguyên vật liệu (BOM) và công thức sản phẩm (Recipe) để hệ thống vận hành đồng bộ.
 **Các bước cơ bản:**
-1. Quản trị viên đăng nhập vào hệ thống quản trị.
-2. Quản trị viên truy cập các chức năng quản lý danh mục.
-3. Quản trị viên thêm mới, cập nhật thông tin về người dùng, thiết bị, công thức và nguyên vật liệu.
-4. Quản trị viên lưu dữ liệu vào hệ thống.
+1. Quản lý thu thập các thông tin đầu vào về công thức, định mức nguyên vật liệu và quy trình các công đoạn sản xuất.
+2. Quản lý tổng hợp và khai báo các dữ liệu danh mục này vào hệ thống.
+3. Quản lý kiểm tra lại tính toàn vẹn và lưu thông tin thiết lập.
 **Các dòng thay thế:**
-Tại bước 4: Nếu thông tin bị trùng lặp hoặc không hợp lệ, hệ thống sẽ cảnh báo để quản trị viên kiểm tra lại và chỉnh sửa cho phù hợp.
+Tại bước 2: Nếu có sai sót hoặc thông tin định mức không hợp lệ, quản lý sẽ kiểm tra lại và chỉnh sửa thông tin cho phù hợp.
 
 ### BUC 6: Theo dõi tiến độ và thống kê
 **Use case nghiệp vụ:** Theo dõi tiến độ và thống kê
