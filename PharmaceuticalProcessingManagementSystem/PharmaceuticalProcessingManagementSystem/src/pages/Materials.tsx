@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { certificatesApi, inventoryApi, materialsApi } from '@/services/api';
 import { Plus, Search, Eye, FileCheck2, Upload, Pencil, Trash2 } from 'lucide-react';
-import { formatNumber, formatDate } from '@/utils/format';
 
 interface CreateMaterialLotForm {
   materialCode: string;
@@ -57,7 +56,13 @@ function buildAutoLotNumber(materialCode: string) {
 }
 
 function formatDateDDMMYYYY(value?: string) {
-  return formatDate(value);
+  if (!value) return '-';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '-';
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
 }
 
 function toInputDate(value?: string) {
@@ -356,8 +361,11 @@ export default function Materials() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowInput = tomorrow.toISOString().slice(0, 10);
 
-  // Vietnamese number format: space for thousands, comma for decimal
-  const fmtVN = (n: number) => formatNumber(n, 4);
+  // Format number: space for thousands, dot for decimal
+  const fmtVN = (n: number) => {
+    const formatted = n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
+    return formatted.replace(/,/g, ' ');
+  };
   const convertDisplayQty = (value: number, unitRaw: string) => {
     const unit = (unitRaw || '').toLowerCase();
     if (unit === 'kg' || unit === 'g') {
@@ -476,10 +484,12 @@ export default function Materials() {
               <div>
                 <label className="text-xs text-neutral-500">Đơn vị tính</label>
                 <select className="input" value={form.baseUomId} onChange={(e) => setForm({ ...form, baseUomId: Number(e.target.value) })}>
+                  <option value={9}>mg</option>
                   <option value={2}>g</option>
                   <option value={1}>kg</option>
-                  <option value={4}>Viên</option>
+                  <option value={10}>ml</option>
                   <option value={3}>Lít</option>
+                  <option value={4}>Viên</option>
                   <option value={8}>Cái</option>
                 </select>
               </div>
@@ -549,7 +559,7 @@ export default function Materials() {
             </div>
             <div className="rounded-lg border border-dashed border-neutral-300 p-4">
               <label className="text-sm font-medium text-neutral-700 flex items-center mb-2">
-                <Upload className="w-4 h-4 mr-2" />Tải giấy kiểm nghiệm (tuỳ chọn)
+                <Upload className="w-4 h-4 mr-2" />Tải giấy kiểm nghiệm
               </label>
               <input type="file" accept=".jpg,.jpeg,.png,.webp" onChange={(e) => setImportCertFile(e.target.files?.[0] ?? null)} />
             </div>

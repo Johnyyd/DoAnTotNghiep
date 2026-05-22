@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FlaskConical, Search } from 'lucide-react';
 import { productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
+import { formatRecipeBatchSize, isRecipeLiquid } from '@/utils/format';
 
 type NormalizedRecipe = {
   recipeId: number;
@@ -12,6 +13,7 @@ type NormalizedRecipe = {
   batchSize: number;
   approvedDate?: string;
   materialName?: string;
+  uomName?: string;
 };
 type NormalizedRouting = {
   routingId: number;
@@ -27,6 +29,7 @@ type NormalizedOrder = {
   orderId: number;
   orderCode: string;
   recipeId: number;
+  recipeName?: string;
   plannedQuantity: number;
   status: string;
   startDate?: string;
@@ -99,22 +102,37 @@ export default function ManagerOperations() {
       batchSize: Number(item.batchSize ?? item.BatchSize ?? 0),
       approvedDate: item.approvedDate ?? item.ApprovedDate,
       materialName: item.material?.materialName ?? item.Material?.MaterialName,
+      uomName: item.material?.baseUom?.uomName ?? item.Material?.BaseUom?.UomName,
     }));
   }, [recipesRaw]);
 
   const orders = useMemo<NormalizedOrder[]>(() => {
     const rows = Array.isArray(ordersRaw) ? ordersRaw : (ordersRaw as any)?.data ?? (ordersRaw as any)?.items ?? [];
-    return rows.map((item: any) => ({
-      orderId: Number(item.orderId ?? item.OrderId ?? 0),
-      orderCode: item.orderCode ?? item.OrderCode ?? `PO-${item.orderId ?? item.OrderId ?? ''}`,
-      recipeId: Number(item.recipeId ?? item.RecipeId ?? 0),
-      plannedQuantity: Number(item.plannedQuantity ?? item.PlannedQuantity ?? 0),
-      status: normalizeStatus(item.status ?? item.Status),
-      startDate: item.startDate ?? item.StartDate,
-      endDate: item.endDate ?? item.EndDate,
-      createdByName: item.createdByName ?? item.CreatedByName,
-    }));
-  }, [ordersRaw]);
+    return rows.map((item: any) => {
+      const recipe = recipes.find((r) => r.recipeId === Number(item.recipeId ?? item.RecipeId));
+      const rName = item.recipe?.recipeName ?? item.recipe?.RecipeName ?? recipe?.recipeName ?? '';
+      const mName = item.recipe?.material?.materialName ?? item.recipe?.Material?.MaterialName ?? recipe?.materialName ?? '';
+      const bSize = recipe?.batchSize ?? item.recipe?.batchSize ?? item.recipe?.BatchSize ?? 0;
+      const uom = recipe?.uomName ?? item.recipe?.material?.baseUom?.uomName ?? item.recipe?.Material?.BaseUom?.UomName ?? 'viên';
+      const formattedBatchSize = formatRecipeBatchSize(bSize, isRecipeLiquid(mName, uom));
+      
+      const recipeName = rName 
+        ? `${rName} ${mName} (${formattedBatchSize})` 
+        : `${mName} (${formattedBatchSize})`;
+
+      return {
+        orderId: Number(item.orderId ?? item.OrderId ?? 0),
+        orderCode: item.orderCode ?? item.OrderCode ?? `PO-${item.orderId ?? item.OrderId ?? ''}`,
+        recipeId: Number(item.recipeId ?? item.RecipeId ?? 0),
+        recipeName: recipeName || `Công thức #${item.recipeId ?? item.RecipeId}`,
+        plannedQuantity: Number(item.plannedQuantity ?? item.PlannedQuantity ?? 0),
+        status: normalizeStatus(item.status ?? item.Status),
+        startDate: item.startDate ?? item.StartDate,
+        endDate: item.endDate ?? item.EndDate,
+        createdByName: item.createdByName ?? item.CreatedByName,
+      };
+    });
+  }, [ordersRaw, recipes]);
 
   const batches = useMemo<NormalizedBatch[]>(() => {
     const rows = Array.isArray(batchesRaw) ? batchesRaw : (batchesRaw as any)?.data ?? [];
@@ -179,12 +197,17 @@ export default function ManagerOperations() {
       routingId: Number(item.routingId ?? item.RoutingId ?? index + 1),
       stepNumber: Number(item.stepNumber ?? item.StepNumber ?? index + 1),
       stepName: item.stepName ?? item.StepName ?? `Công đoạn ${index + 1}`,
-      equipmentName: item.defaultEquipment?.equipmentName
+      equipmentName: item.equipment?.equipmentName
+        ?? item.Equipment?.EquipmentName
+        ?? item.defaultEquipment?.equipmentName
         ?? item.DefaultEquipment?.EquipmentName
         ?? item.equipmentName
         ?? 'Chưa gán thiết bị',
-      areaName: item.defaultEquipment?.area?.areaName
+      areaName: item.area?.areaName
+        ?? item.Area?.AreaName
+        ?? item.defaultEquipment?.area?.areaName
         ?? item.DefaultEquipment?.Area?.AreaName
+        ?? item.areaName
         ?? '-',
       estimatedTimeMinutes: Number(item.estimatedTimeMinutes ?? item.EstimatedTimeMinutes ?? 0),
       description: item.description ?? item.Description,
@@ -228,8 +251,8 @@ export default function ManagerOperations() {
     const prevPointer = prevBatch ? getStepPointer(prevBatch) : totalSteps + 1;
     const gateOpen = !prevBatch || prevPointer > stepNumber;
 
-    // If batch is scheduled, everything is waiting
-    if (batch.status === 'Scheduled') return 'waiting';
+    // If order or batch is scheduled, everything is waiting
+    if (selectedOrder?.status === 'Scheduled' || batch.status === 'Scheduled') return 'waiting';
 
     if (batch.status === 'Completed' || pointer > stepNumber) return 'done';
     if (pointer === stepNumber && gateOpen) return 'active';
@@ -239,12 +262,12 @@ export default function ManagerOperations() {
 
   const getStatusClass = (status: string) => {
     const normalized = normalizeStatus(status);
-    if (normalized === 'Approved') return 'bg-green-100 text-green-700 border border-green-200';
+    if (normalized === 'Approved') return 'bg-blue-100 text-blue-700 border border-blue-200';
     if (normalized === 'InProcess') return 'bg-orange-100 text-orange-700 border border-orange-200';
     if (normalized === 'Hold') return 'bg-red-100 text-red-700 border border-red-200';
     if (normalized === 'Scheduled') return 'bg-blue-100 text-blue-700 border border-blue-200';
     if (normalized === 'Completed') return 'bg-green-100 text-green-700 border border-green-200';
-    return 'bg-gray-100 text-gray-700 border border-gray-200';
+    return 'bg-white text-gray-700 border border-gray-200';
   };
 
 
@@ -258,7 +281,7 @@ export default function ManagerOperations() {
       <div className="gmp-sheet">
         <div className="mb-4">
           <label className="text-sm font-bold text-neutral-900">
-            Chọn Lệnh Sản Xuất
+            Chọn lệnh sản xuất
             <select
               value={selectedOrderId ?? ""}
               onChange={(event) =>
@@ -271,22 +294,24 @@ export default function ManagerOperations() {
               )}
               {orders.map((order) => (
                 <option key={order.orderId} value={order.orderId}>
-                  {order.orderCode} - {getStatusLabel(order.status)} -{" "}
-                  {order.plannedQuantity.toLocaleString()} đơn vị
+                  {order.orderCode} - ({order.recipeName}) - {getStatusLabel(order.status)} - {" "}
+                  {order.plannedQuantity.toLocaleString('en-US').replace(/,/g, ' ')} đơn vị
                 </option>
               ))}
             </select>
           </label>
-          <div className="gmp-info-card text-right ">
-            <FlaskConical className="w-5 h-5 text-primary-600" />
-            <div>
-              <p className="font-semibold text-neutral-900">
-                {selectedRecipe?.recipeName ?? "-"}
-              </p>
+          {selectedOrder && (
+            <div className="mt-3 flex items-start gap-3 bg-neutral-50 border border-neutral-200 rounded-lg p-3">
+              <FlaskConical className="w-5 h-5 text-primary-600 mt-0.5" />
+              <div>
+                <p className="font-bold text-neutral-900 text-sm">
+                  {selectedOrder.recipeName || selectedRecipe?.recipeName || "-"}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
-        <div className="gmp-title-row">CÔNG THỨC VÀ CÁC CÔNG ĐOẠN</div>
+        <div className="gmp-title-row">Các công đoạn</div>
         <table className="gmp-grid-table mb-5">
           <thead>
             <tr>
@@ -350,7 +375,7 @@ export default function ManagerOperations() {
         </table>
 
         <div className="gmp-title-row">
-          DANH SÁCH MẺ
+          Danh sách mẻ
         </div>
         <table className="gmp-grid-table mb-5">
           <thead>

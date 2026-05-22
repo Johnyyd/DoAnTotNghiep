@@ -20,6 +20,9 @@ public partial class ProductionOrderBom
     public decimal? WastePercentage { get; set; }
 
     public string? Note { get; set; }
+    public string DispensingStatus { get; set; } = "Pending";
+    public DateTime? DispensedAt { get; set; }
+    public int? DispensedBy { get; set; }
 
     public virtual Material? Material { get; set; }
 

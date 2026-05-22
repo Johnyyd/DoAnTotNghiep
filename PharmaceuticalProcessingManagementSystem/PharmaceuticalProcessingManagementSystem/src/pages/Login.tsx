@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Eye, EyeOff, Lock, User, AlertCircle } from 'lucide-react';
 
 export default function Login() {
-  const { login, isLoading } = useAuth();
+  const { login, logout, isLoading } = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -22,7 +22,14 @@ export default function Login() {
     }
 
     try {
-      await login(username.trim(), password);
+      const user: any = await login(username.trim(), password);
+      
+      if (user?.role === 'WarehouseStaff' || user?.role === 'Operator') {
+        logout(); // Đăng xuất ngay lập tức
+        setError('Tài khoản này chỉ được phép sử dụng trên Mobile App. Vui lòng không sử dụng giao diện Web.');
+        return;
+      }
+
       toast.success('Đăng nhập thành công! Chào mừng trở lại.');
       navigate('/dashboard', { replace: true });
     } catch (err: any) {

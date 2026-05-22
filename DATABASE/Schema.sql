@@ -44,6 +44,7 @@ IF OBJECT_ID('Equipments', 'U') IS NOT NULL DROP TABLE Equipments;
 IF OBJECT_ID('ProductionAreas', 'U') IS NOT NULL DROP TABLE ProductionAreas;
 IF OBJECT_ID('UomConversions', 'U') IS NOT NULL DROP TABLE UomConversions;
 IF OBJECT_ID('UnitOfMeasure', 'U') IS NOT NULL DROP TABLE UnitOfMeasure;
+IF OBJECT_ID('RecipeTechSpecs', 'U') IS NOT NULL DROP TABLE RecipeTechSpecs;
 IF OBJECT_ID('AppUsers', 'U') IS NOT NULL DROP TABLE AppUsers;
 GO
 
@@ -145,7 +146,6 @@ GO
 -- -------------------------------------------------------------------------
 CREATE TABLE Recipes (
     RecipeId INT PRIMARY KEY IDENTITY(1,1),
-    RecipeName NVARCHAR(200),
     MaterialId INT REFERENCES Materials(MaterialId),
     VersionNumber INT DEFAULT 1,
     BatchSize DECIMAL(18, 2) NOT NULL,
@@ -154,6 +154,7 @@ CREATE TABLE Recipes (
     ApprovedDate DATETIME2,
     CreatedAt DATETIME2 DEFAULT GETDATE(),
     EffectiveDate DATETIME2,
+    RecipeName NVARCHAR(200) NULL,
     Note NVARCHAR(500)
 );
 GO
@@ -189,6 +190,23 @@ CREATE TABLE ProductionOrders (
     PlannedCartons INT,
     CreatedAt DATETIME2 DEFAULT GETDATE(),
     Note NVARCHAR(MAX)
+);
+GO
+
+-- -------------------------------------------------------------------------
+-- 9b. ProductionOrderBom
+-- -------------------------------------------------------------------------
+CREATE TABLE ProductionOrderBom (
+    OrderBomId INT PRIMARY KEY IDENTITY(1,1),
+    OrderId INT REFERENCES ProductionOrders(OrderId),
+    MaterialId INT REFERENCES Materials(MaterialId),
+    RequiredQuantity DECIMAL(18, 4) NOT NULL,
+    UomId INT REFERENCES UnitOfMeasure(UomId),
+    WastePercentage DECIMAL(5, 2) DEFAULT 0,
+    Note NVARCHAR(500),
+    DispensingStatus NVARCHAR(20) DEFAULT 'Pending',
+    DispensedAt DATETIME,
+    DispensedBy INT REFERENCES AppUsers(UserId)
 );
 GO
 
@@ -233,6 +251,23 @@ CREATE TABLE StepParameters (
     IsCritical BIT DEFAULT 1,
     Note NVARCHAR(200)
 );
+GO
+
+-- -------------------------------------------------------------------------
+-- 11b. RecipeTechSpecs
+-- -------------------------------------------------------------------------
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'RecipeTechSpecs')
+BEGIN
+    CREATE TABLE RecipeTechSpecs (
+        SpecId INT PRIMARY KEY IDENTITY(1,1),
+        RecipeId INT NOT NULL REFERENCES Recipes(RecipeId) ON DELETE CASCADE,
+        OrderId INT NULL REFERENCES ProductionOrders(OrderId),
+        ParentId INT NULL,
+        SortOrder INT NOT NULL DEFAULT 0,
+        Content NVARCHAR(500) NOT NULL,
+        IsChecked BIT NOT NULL DEFAULT 0
+    );
+END
 GO
 
 -- -------------------------------------------------------------------------

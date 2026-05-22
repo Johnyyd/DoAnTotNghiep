@@ -24,7 +24,6 @@ namespace GMP_System.Controllers
             var recipes = await _context.Recipes
                 .Select(r => new {
                     r.RecipeId,
-                    r.RecipeName,
                     r.MaterialId,
                     r.VersionNumber,
                     r.BatchSize,
@@ -33,11 +32,15 @@ namespace GMP_System.Controllers
                     r.ApprovedDate,
                     r.CreatedAt,
                     r.EffectiveDate,
+                    r.RecipeName,
                     r.Note,
                     Material = r.Material == null ? null : new {
                         r.Material.MaterialId,
                         r.Material.MaterialName,
-                        r.Material.MaterialCode
+                        r.Material.MaterialCode,
+                        BaseUom = r.Material.BaseUom == null ? null : new {
+                            r.Material.BaseUom.UomName
+                        }
                     }
                 })
                 .OrderBy(r => r.RecipeId)
@@ -53,7 +56,6 @@ namespace GMP_System.Controllers
                 .Where(r => r.RecipeId == id)
                 .Select(r => new {
                     r.RecipeId,
-                    r.RecipeName,
                     r.MaterialId,
                     r.VersionNumber,
                     r.BatchSize,
@@ -62,11 +64,15 @@ namespace GMP_System.Controllers
                     r.ApprovedDate,
                     r.CreatedAt,
                     r.EffectiveDate,
+                    r.RecipeName,
                     r.Note,
                     Material = r.Material == null ? null : new {
                         r.Material.MaterialId,
                         r.Material.MaterialName,
-                        r.Material.MaterialCode
+                        r.Material.MaterialCode,
+                        BaseUom = r.Material.BaseUom == null ? null : new {
+                            r.Material.BaseUom.UomName
+                        }
                     }
                 })
                 .FirstOrDefaultAsync();
@@ -111,9 +117,9 @@ namespace GMP_System.Controllers
                 return NotFound(new { success = false, message = "Không tìm thấy công thức." });
             }
 
-            existing.RecipeName = recipe.RecipeName;
             existing.MaterialId = recipe.MaterialId;
             existing.BatchSize = recipe.BatchSize;
+            existing.RecipeName = recipe.RecipeName;
             existing.Note = recipe.Note;
             existing.EffectiveDate = recipe.EffectiveDate;
             existing.Status = recipe.Status;

@@ -142,6 +142,8 @@ export const productionOrdersApi = {
   getRoutings: (orderId: number) => api.get<ApiResponse<RecipeRouting[]>>(`/production-orders/${orderId}/routings`),
   saveRoutings: (orderId: number, routings: RecipeRouting[]) => 
     api.post<ApiResponse<null>>(`/production-orders/${orderId}/routings`, routings),
+  dispenseBomItem: (bomId: number, data: { userId: number }) =>
+    api.post<ApiResponse<any>>(`/production-orders/bom/${bomId}/dispense`, data),
 };
 
 // ============== PRODUCTION BATCHES ==============

@@ -7,7 +7,7 @@ namespace GMP_System.Entities;
 public partial class Recipe
 {
     public int RecipeId { get; set; }
-    public string? RecipeName { get; set; }
+
     public int? MaterialId { get; set; }
 
     public int VersionNumber { get; set; }
@@ -23,6 +23,8 @@ public partial class Recipe
     public DateTime? CreatedAt { get; set; }
 
     public DateTime? EffectiveDate { get; set; }
+
+    public string? RecipeName { get; set; }
 
     public string? Note { get; set; }
 

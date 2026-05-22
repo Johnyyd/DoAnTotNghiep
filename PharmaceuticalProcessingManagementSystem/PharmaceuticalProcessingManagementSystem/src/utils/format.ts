@@ -1,29 +1,43 @@
-/**
- * Formats a number for display in the GMP system.
- * - Thousands separator: space ( )
- * - Decimal separator: comma (,)
- * @param value The number to format
- * @param decimals Number of decimal places (default: 2)
- */
-export function formatNumber(value: number | string | undefined | null, decimals: number = 2): string {
-  if (value === undefined || value === null) return '0';
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-  if (isNaN(num)) return '0';
-
-  // Use Intl.NumberFormat for robust formatting
-  // We use 'fr-FR' or similar because it uses space for thousands and comma for decimal
-  return new Intl.NumberFormat('fr-FR', {
+export function formatNumber(value: number | undefined | null, decimals: number = 2): string {
+  if (value === undefined || value === null || isNaN(value)) return "0";
+  const str = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: decimals,
-  }).format(num).replace(/\u00a0/g, ' '); // Replace non-breaking space with regular space
+  }).format(value);
+  return str.replace(/,/g, " ");
 }
 
-/**
- * Formats a date string to DD/MM/YYYY
- */
-export function formatDate(dateStr: string | undefined | null): string {
-  if (!dateStr) return '-';
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return '-';
-  return date.toLocaleDateString('vi-VN');
+export function formatDate(date: string | Date | undefined | null): string {
+  if (!date) return "-";
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "-";
+    return new Intl.DateTimeFormat("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(d);
+  } catch {
+    return "-";
+  }
+}
+
+export function isRecipeLiquid(materialName: string = '', uomName: string = ''): boolean {
+  const n = materialName.toLowerCase();
+  const u = uomName.toLowerCase();
+  return n.includes('nước') || n.includes('dung dịch') || n.includes('siro') || n.includes('sirô') || 
+         u.includes('ml') || u.includes('l') || u.includes('chai') || u.includes('ống');
+}
+
+export function formatRecipeBatchSize(batchSize: number, isLiquid: boolean): string {
+  if (isLiquid) {
+    if (batchSize >= 1000 && batchSize % 1000 === 0) return `${formatNumber(batchSize / 1000)} L`;
+    return `${formatNumber(batchSize)} ml`;
+  } else {
+    if (batchSize >= 1000000 && batchSize % 1000000 === 0) return `${formatNumber(batchSize / 1000000)} kg`;
+    if (batchSize >= 1000 && batchSize % 1000 === 0) return `${formatNumber(batchSize / 1000)} g`;
+    return `${formatNumber(batchSize)} mg`;
+  }
 }

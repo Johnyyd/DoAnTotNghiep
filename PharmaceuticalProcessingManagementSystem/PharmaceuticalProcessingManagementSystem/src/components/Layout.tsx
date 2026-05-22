@@ -12,31 +12,34 @@ import {
   LogOut,
   Settings,
   FileText,
+  BarChart3,
   Factory,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-
-const navigation = [
-  { name: 'Bảng Điều Khiển', href: '/dashboard', icon: LayoutDashboard, roles: ['Admin', 'Manager', 'QualityControl', 'Operator'] },
-  { name: 'Nguyên Liệu', href: '/materials', icon: Pill, roles: ['Admin', 'Manager', 'QualityControl'] },
-  { name: 'Thành Phẩm', href: '/finished-products', icon: Package, roles: ['Admin', 'Manager', 'QualityControl'] },
-  { name: 'Công Thức', href: '/recipes', icon: ClipboardList, roles: ['Admin', 'Manager'] },
-  { name: 'Lệnh Sản Xuất', href: '/production-orders', icon: Warehouse, roles: ['Admin', 'Manager'] },
-  { name: 'Mẻ Sản Xuất', href: '/batches', icon: Package, roles: ['Admin', 'Manager'] },
-  { name: 'Truy Xuất', href: '/traceability', icon: Search, roles: ['Admin', 'Manager', 'QualityControl'] },
-  { name: 'Theo Dõi Tiến Độ', href: '/manager-operations', icon: FileText, roles: ['Admin', 'Manager'] },
-  { name: 'Thiết Bị', href: '/equipments', icon: Settings, roles: ['Admin', 'Manager'] },
-  { name: 'Khu Sản Xuất', href: '/production-areas', icon: Factory, roles: ['Admin', 'Manager'] },
-  { name: 'Tài Khoản', href: '/users', icon: Users, roles: ['Admin'] },
-];
 
 const roleLabels: Record<string, string> = {
   Admin: 'Quản trị viên',
   QualityControl: 'Kiểm soát chất lượng',
   Manager: 'Trưởng phòng',
   Operator: 'Nhân viên vận hành',
+  WarehouseStaff: 'Nhân viên kho',
 };
+
+const navigation = [
+  { name: 'Bảng Điều Khiển', href: '/dashboard', icon: LayoutDashboard, roles: ['Admin', 'Manager', 'QualityControl', 'Operator', 'WarehouseStaff'] },
+  { name: 'Nguyên Liệu', href: '/materials', icon: Pill, roles: ['Admin', 'Manager', 'QualityControl'] },
+  { name: 'Thành Phẩm', href: '/finished-products', icon: Package, roles: ['Admin', 'Manager', 'QualityControl'] },
+  { name: 'Công Thức', href: '/recipes', icon: ClipboardList, roles: ['Admin', 'Manager'] },
+  { name: 'Lệnh Sản Xuất', href: '/production-orders', icon: Warehouse, roles: ['Admin', 'Manager'] },
+  { name: 'Mẻ Sản Xuất', href: '/batches', icon: Package, roles: ['Admin', 'Manager', 'Operator'] },
+  { name: 'Truy Xuất', href: '/traceability', icon: Search, roles: ['Admin', 'Manager', 'QualityControl'] },
+  { name: 'Theo Dõi Tiến Độ', href: '/manager-operations', icon: FileText, roles: ['Admin', 'Manager'] },
+  { name: 'Thiết Bị', href: '/equipments', icon: Settings, roles: ['Admin', 'Manager'] },
+  { name: 'Khu Sản Xuất', href: '/production-areas', icon: Factory, roles: ['Admin', 'Manager'] },
+  { name: 'Thống Kê', href: '/finished-goods-stats', icon: BarChart3, roles: ['Admin', 'Manager'] },
+  { name: 'Tài Khoản', href: '/users', icon: Users, roles: ['Admin'] },
+];
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

@@ -22,6 +22,7 @@ GO
 -- XÓA DỮ LIỆU CŨ (THEO THỨ TỰ NGƯỢC KHÓA NGOẠI)
 -- =====================================================================
 PRINT 'Deleting existing data...';
+IF OBJECT_ID('ProductionOrderBom', 'U') IS NOT NULL DELETE FROM ProductionOrderBom;
 IF OBJECT_ID('BatchProcessParameterValue', 'U') IS NOT NULL DELETE FROM BatchProcessParameterValue;
 IF OBJECT_ID('StepParameters', 'U') IS NOT NULL DELETE FROM StepParameters;
 IF OBJECT_ID('QualityTests', 'U') IS NOT NULL DELETE FROM QualityTests;
@@ -62,6 +63,7 @@ IF OBJECT_ID('BatchProcessParameterValue', 'U') IS NOT NULL DBCC CHECKIDENT ('Ba
 IF OBJECT_ID('ProductionOrders', 'U') IS NOT NULL DBCC CHECKIDENT ('ProductionOrders', RESEED, 0);
 IF OBJECT_ID('ProductionBatches', 'U') IS NOT NULL DBCC CHECKIDENT ('ProductionBatches', RESEED, 0);
 IF OBJECT_ID('InventoryLots', 'U') IS NOT NULL DBCC CHECKIDENT ('InventoryLots', RESEED, 0);
+IF OBJECT_ID('ProductionOrderBom', 'U') IS NOT NULL DBCC CHECKIDENT ('ProductionOrderBom', RESEED, 0);
 GO
 PRINT 'Reset Identity Completed Successfully!';
 
@@ -76,7 +78,8 @@ VALUES
 (3, 'op01',    N'Nguyễn Văn Công Nhân',     'Operator',          1, '$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW', DATEADD(DAY,-60,GETDATE()), '123456'),
 (4, 'mgr01',   N'Lê Quang Quản Lý',         'ProductionManager', 1, '$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW', DATEADD(DAY,-90,GETDATE()), '123456'),
 (5, 'qc02',    N'Phạm Thị Chất Lượng',      'QA_QC',             1, '$2b$11$f1zats7FFnLII0ru7JfcZu0uJsbE7DEsMLXooia8ZfAlbsj3bZKWK', DATEADD(DAY,-30,GETDATE()), '123456'),
-(6, 'op02',    N'Hoàng Văn Thao Tác',       'Operator',          1, '$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW', DATEADD(DAY,-30,GETDATE()), '123456');
+(6, 'op02',    N'Hoàng Văn Thao Tác',       'Operator',          1, '$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW', DATEADD(DAY,-30,GETDATE()), '123456'),
+(7, 'wh01',    N'Nguyễn Kho Vận',           'WarehouseStaff',    1, '$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW', DATEADD(DAY,-10,GETDATE()), '123456');
 SET IDENTITY_INSERT AppUsers OFF;
 GO
 
@@ -92,7 +95,9 @@ INSERT INTO UnitOfMeasure (UomId, UomName, Description) VALUES
 (5, 'Vỉ',      N'Vỉ (10 viên/vỉ)'),
 (6, 'Hộp',     N'Hộp (10 vỉ/hộp)'),
 (7, 'Thùng',   N'Thùng (12 hộp/thùng)'),
-(8, N'Cái',    N'Đơn vị cái');
+(8, N'Cái',    N'Đơn vị cái'),
+(9, 'mg',      N'Milligram'),
+(10, 'ml',     N'Milliliter');
 SET IDENTITY_INSERT UnitOfMeasure OFF;
 GO
 
@@ -118,7 +123,11 @@ INSERT INTO UomConversions (ConversionId, FromUomId, ToUomId, ConversionFactor, 
 (2, 2, 1,  0.001,  N'1 g = 0.001 kg'),
 (3, 6, 5,  10.0,   N'1 hộp = 10 vỉ'),
 (4, 7, 6,  12.0,   N'1 thùng = 12 hộp'),
-(5, 5, 4,  10.0,   N'1 vỉ = 10 viên');
+(5, 5, 4,  10.0,   N'1 vỉ = 10 viên'),
+(6, 2, 9,  1000.0, N'1 g = 1000 mg'),
+(7, 9, 2,  0.001,  N'1 mg = 0.001 g'),
+(8, 3, 10, 1000.0, N'1 L = 1000 ml'),
+(9, 10, 3, 0.001,  N'1 ml = 0.001 L');
 SET IDENTITY_INSERT UomConversions OFF;
 GO
 
@@ -161,9 +170,9 @@ INSERT INTO Materials (MaterialId, MaterialCode, MaterialName, Type, BaseUomId, 
 (12, 'AMP',     N'Ống thủy tinh 2ml',                  'Packaging',    8, 1, N'USP 30', GETDATE()),
 (13, 'ALU',     N'Màng nhôm ép vỉ',                    'Packaging',    1, 1, N'DĐVN V', GETDATE()),
 (14, 'PVC',     N'Màng PVC trong suốt',                'Packaging',    1, 1, N'DĐVN V', GETDATE()),
-(15, 'TP-CRILA',N'Viên nang Crila',                    'FinishedGood', 4, 1, N'DĐVN V', GETDATE()),
-(16, 'TP-PARA', N'Viên nén Paracetamol 500mg',         'FinishedGood', 4, 1, N'DĐVN V', GETDATE()),
-(17, 'TP-DIPY', N'Thuốc ống Dipyridamole 10mg/2ml',    'FinishedGood', 4, 1, N'DĐVN V', GETDATE());
+(15, 'TP-CRILA',N'Crila',                              'FinishedGood', 4, 1, N'DĐVN V', GETDATE()),
+(16, 'TP-PARA', N'Paracetamol',                        'FinishedGood', 4, 1, N'DĐVN V', GETDATE()),
+(17, 'TP-DIPY', N'Dipyridamole',                       'FinishedGood', 4, 1, N'DĐVN V', GETDATE());
 SET IDENTITY_INSERT Materials OFF;
 GO
 
@@ -171,9 +180,9 @@ GO
 -- 7. Recipes
 -- =====================================================================
 SET IDENTITY_INSERT Recipes ON;
-INSERT INTO Recipes (RecipeId, RecipeName, MaterialId, VersionNumber, BatchSize, Status, ApprovedBy, ApprovedDate, CreatedAt, EffectiveDate, Note) VALUES
-(1, N'Viên nang Crila 540mg', 15, 1, 540.00,  'Approved', 2, DATEADD(DAY,-30,GETDATE()), DATEADD(DAY,-45,GETDATE()), DATEADD(DAY,-25,GETDATE()), N'NLC 3 mẻ 100k viên.'),
-(2, N'Viên nén Paracetamol 500mg', 16, 2, 5000.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Paracetamol 500mg.');
+INSERT INTO Recipes (RecipeId, MaterialId, VersionNumber, BatchSize, Status, ApprovedBy, ApprovedDate, CreatedAt, EffectiveDate, RecipeName, Note) VALUES
+(1, 15, 1, 540.00,  'Approved', 2, DATEADD(DAY,-30,GETDATE()), DATEADD(DAY,-45,GETDATE()), DATEADD(DAY,-25,GETDATE()), N'Viên nang', N'NLC 3 mẻ 540mg/viên.'),
+(2, 16, 2, 495.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Viên nén', N'Paracetamol 495mg/viên.');
 SET IDENTITY_INSERT Recipes OFF;
 GO
 
@@ -227,19 +236,7 @@ INSERT INTO RecipeRouting (RoutingId, RecipeId, OrderId, StepNumber, StepName, D
 (20, 5, NULL, 6, N'Dập viên', 4, 180, N'Dập viên nén 500mg.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 SET IDENTITY_INSERT RecipeRouting OFF;
 GO
--- -------------------------------------------------------------------------
--- 9b. ProductionOrderBom
--- -------------------------------------------------------------------------
-CREATE TABLE ProductionOrderBom (
-    OrderBomId INT PRIMARY KEY IDENTITY(1,1),
-    OrderId INT REFERENCES ProductionOrders(OrderId),
-    MaterialId INT REFERENCES Materials(MaterialId),
-    RequiredQuantity DECIMAL(18, 4) NOT NULL,
-    UomId INT REFERENCES UnitOfMeasure(UomId),
-    WastePercentage DECIMAL(5, 2) DEFAULT 0,
-    Note NVARCHAR(200)
-);
-GO
+
 -- =====================================================================
 -- 10. StepParameters
 -- =====================================================================
@@ -272,29 +269,70 @@ END
 GO
 -- =====================================================================
 -- 11. ProductionOrders
-/*
 SET IDENTITY_INSERT ProductionOrders ON;
-INSERT INTO ProductionOrders (OrderId, OrderCode, RecipeId, PlannedQuantity, ActualQuantity, StartDate, EndDate, Status, CreatedBy, CreatedAt, Note) VALUES
+INSERT INTO ProductionOrders (OrderId, OrderCode, RecipeId, PlannedQuantity, ActualQuantity, StartDate, EndDate, Status, CreatedBy, CreatedAt, RecipeName, Note) VALUES
 (1,  'PO-26-001', 1, 100000.00, 100050.00, DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), 'Completed',  4, GETDATE(), N'Lệnh xong.'),
-(2,  'PO-26-002', 1, 300000.00, NULL,      DATEADD(DAY,-1,GETDATE()), DATEADD(DAY,3, GETDATE()), 'InProcess', 4, GETDATE(), N'Đang chạy.'),
-(4,  'PO-26-004', 2, 200000.00, NULL,      DATEADD(DAY,-2,GETDATE()), DATEADD(DAY,2, GETDATE()), 'InProcess', 4, GETDATE(), N'Para lô 1.'),
+(2,  'PO-26-002', 1, 300000.00, NULL,      DATEADD(DAY,-1,GETDATE()), DATEADD(DAY,3, GETDATE()), 'In-Process', 4, GETDATE(), N'Đang chạy.'),
+(4,  'PO-26-004', 2, 200000.00, NULL,      DATEADD(DAY,-2,GETDATE()), DATEADD(DAY,2, GETDATE()), 'In-Process', 4, GETDATE(), N'Para lô 1.'),
 (7,  'PO-26-007', 2, 200000.00, 197800.00, DATEADD(DAY,-10,GETDATE()),DATEADD(DAY,-7,GETDATE()), 'Completed',  4, GETDATE(), N'Lô cũ.');
 SET IDENTITY_INSERT ProductionOrders OFF;
-*/
+GO
+
+-- =====================================================================
+-- 11.5. ProductionOrderBom (Dữ liệu BOM cho từng lệnh)
+-- =====================================================================
+INSERT INTO ProductionOrderBom (OrderId, MaterialId, UomId, RequiredQuantity, WastePercentage, DispensingStatus, Note) VALUES
+-- PO-26-001 (OrderId 1, Recipe 1, 100k viên)
+(1, 1, 1, 25.0500, 0.20, 'Dispensed', N'Cao khô NLC3'),
+(1, 2, 1, 0.1622, 0.10, 'Dispensed', N'Aerosil'),
+(1, 3, 1, 2.9760, 0.20, 'Dispensed', N'SSG'),
+(1, 4, 1, 0.4054, 0.10, 'Dispensed', N'Talc'),
+(1, 5, 1, 0.4054, 0.10, 'Dispensed', N'Magnesi stearat'),
+(1, 6, 1, 25.1833, 0.50, 'Dispensed', N'Tinh bột'),
+-- PO-26-002 (OrderId 2, Recipe 1, 300k viên)
+(2, 1, 1, 75.1500, 0.20, 'Pending', N'Cao khô NLC3'),
+(2, 2, 1, 0.4865, 0.10, 'Pending', N'Aerosil'),
+(2, 3, 1, 8.9280, 0.20, 'Pending', N'SSG'),
+(2, 4, 1, 1.2162, 0.10, 'Pending', N'Talc'),
+(2, 5, 1, 1.2162, 0.10, 'Pending', N'Magnesi stearat'),
+(2, 6, 1, 75.5499, 0.50, 'Pending', N'Tinh bột'),
+-- PO-26-004 (OrderId 4, Recipe 2, 200k viên)
+(4, 9, 1, 50.1500, 0.30, 'Pending', N'Paracetamol'),
+(4, 6, 1, 30.3000, 1.00, 'Pending', N'Tinh bột ngô'),
+(4, 10, 1, 16.0800, 0.50, 'Pending', N'Lactose'),
+(4, 5, 1, 1.0010, 0.10, 'Pending', N'Magie stearat'),
+(4, 8, 1, 2.0040, 0.20, 'Pending', N'PVP K30'),
+-- PO-26-007 (OrderId 7, Recipe 2, 200k viên)
+(7, 9, 1, 50.1500, 0.30, 'Dispensed', N'Paracetamol'),
+(7, 6, 1, 30.3000, 1.00, 'Dispensed', N'Tinh bột ngô'),
+(7, 10, 1, 16.0800, 0.50, 'Dispensed', N'Lactose'),
+(7, 5, 1, 1.0010, 0.10, 'Dispensed', N'Magie stearat'),
+(7, 8, 1, 2.0040, 0.20, 'Dispensed', N'PVP K30');
 GO
 
 -- =====================================================================
 -- 12. ProductionBatches
-/*
 SET IDENTITY_INSERT ProductionBatches ON;
 INSERT INTO ProductionBatches (BatchId, OrderId, BatchNumber, Status, ManufactureDate, EndTime, ExpiryDate, CurrentStep, CreatedAt) VALUES
 (1, 1, 'B26-001-01', 'Completed', DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
+(12, 1, 'B26-001-02', 'Completed', DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
 (2, 2, 'B26-002-01', 'InProcess', DATEADD(HOUR,-24,GETDATE()),DATEADD(HOUR,-12,GETDATE()),DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
-(4, 2, 'B26-002-02', 'Hold', GETDATE(), NULL, NULL, 2, GETDATE());
+(3, 2, 'B26-002-02', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(4, 2, 'B26-002-03', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(5, 2, 'B26-002-04', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(6, 2, 'B26-002-05', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(7, 2, 'B26-002-06', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(8, 4, 'B26-004-01', 'InProcess', DATEADD(DAY,-2,GETDATE()), NULL, NULL, 1, GETDATE()),
+(9, 4, 'B26-004-02', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(10, 4, 'B26-004-03', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(11, 4, 'B26-004-04', 'Hold', GETDATE(), NULL, NULL, 0, GETDATE()),
+(13, 7, 'B26-007-01', 'Completed', DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-7,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
+(14, 7, 'B26-007-02', 'Completed', DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-7,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
+(15, 7, 'B26-007-03', 'Completed', DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-7,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
+(16, 7, 'B26-007-04', 'Completed', DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-7,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE());
 SET IDENTITY_INSERT ProductionBatches OFF;
-*/
-GO
 
+GO
 -- =====================================================================
 -- 13. InventoryLotsHold
 -- =====================================================================
@@ -306,7 +344,7 @@ INSERT INTO InventoryLots (LotId, MaterialId, LotNumber, QuantityCurrent, Manufa
 (4, 4, 'L-TALC-01', 5.00, DATEADD(DAY,-45,GETDATE()), DATEADD(YEAR,3,GETDATE()), N'Nhà cung cấp C', GETDATE()),
 (5, 5, 'L-MAGIE-01', 3.00, DATEADD(DAY,-40,GETDATE()), DATEADD(YEAR,3,GETDATE()), N'Nhà cung cấp D', GETDATE()),
 (6, 6, 'L-STR-01', 2.00, DATEADD(DAY,-45,GETDATE()), DATEADD(YEAR,2,GETDATE()), N'Đồng Nai', GETDATE()),
-(7, 7, 'L-NANG-01', 6000.00, DATEADD(DAY,-35,GETDATE()), DATEADD(YEAR,3,GETDATE()), N'Nhà cung cấp E', GETDATE()),
+(7, 7, 'L-NANG-01', 50.00, DATEADD(DAY,-35,GETDATE()), DATEADD(YEAR,3,GETDATE()), N'Nhà cung cấp E', GETDATE()),
 (8, 8, 'L-PVP-01', 10.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,3,GETDATE()), N'Nhà cung cấp F', GETDATE()),
 (9, 9, 'L-PARA-01', 3.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,2,GETDATE()), N'Ấn Độ', GETDATE()),
 (10, 10, 'L-LAC-01', 15.00, DATEADD(DAY,-25,GETDATE()), DATEADD(YEAR,3,GETDATE()), N'Nhà cung cấp G', GETDATE()),
@@ -321,24 +359,24 @@ GO
 
 -- =====================================================================
 -- 14. MaterialUsage
-/*
 SET IDENTITY_INSERT MaterialUsage ON;
 INSERT INTO MaterialUsage (UsageId, BatchId, InventoryLotId, ActualAmount, UsedDate, DispensedBy, Note) VALUES
 (1, 1, 1, 1.50, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất NLC3'),
 (2, 1, 6, 1.00, DATEADD(DAY,-5,GETDATE()), 3, N'Xuất Tinh bột');
 SET IDENTITY_INSERT MaterialUsage OFF;
-*/
 GO
 
 -- =====================================================================
 -- 15. BatchProcessLogs
-/*
 SET IDENTITY_INSERT BatchProcessLogs ON;
 INSERT INTO BatchProcessLogs (LogId, BatchId, RoutingId, EquipmentId, OperatorId, StartTime, EndTime, ResultStatus, ParametersData, Notes, IsDeviation, VerifiedById, VerifiedDate, NumberOfRouting) VALUES
 (1, 1, 1, 2, 3, DATEADD(HOUR,-124,GETDATE()), DATEADD(HOUR,-122,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1),
-(2, 1, 2, 2, 3, DATEADD(HOUR,-122,GETDATE()), DATEADD(HOUR,-120,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1);
+(2, 1, 2, 2, 3, DATEADD(HOUR,-122,GETDATE()), DATEADD(HOUR,-120,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1),
+(3, 2, 1, 12, 3, DATEADD(HOUR,-24,GETDATE()), DATEADD(HOUR,-21,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1),
+(4, 2, 2, 12, 3, DATEADD(HOUR,-21,GETDATE()), DATEADD(HOUR,-18,GETDATE()), 'Passed', N'{"nhietDo":75}', NULL, 0, 2, GETDATE(), 1),
+(5, 2, 3, 1, 3, DATEADD(HOUR,-18,GETDATE()), DATEADD(HOUR,-16,GETDATE()), 'Passed', N'{"KhoiLuong":"Đạt"}', NULL, 0, 2, GETDATE(), 1),
+(6, 2, 4, 4, 3, DATEADD(HOUR,-16,GETDATE()), DATEADD(HOUR,-15,GETDATE()), 'Passed', N'{"TocDo":"15"}', NULL, 0, 2, GETDATE(), 1);
 SET IDENTITY_INSERT BatchProcessLogs OFF;
-*/
 GO
 
 -- =====================================================================

@@ -36,7 +36,6 @@ namespace GMP_System.Controllers
                         b.Order.OrderCode,
                         Recipe = b.Order.Recipe == null ? null : new {
                             b.Order.Recipe.RecipeId,
-                            b.Order.Recipe.RecipeName,
                             Material = b.Order.Recipe.Material == null ? null : new {
                                 b.Order.Recipe.Material.MaterialName
                             }
@@ -146,7 +145,6 @@ namespace GMP_System.Controllers
                     batch.Order.RecipeId,
                     Recipe = batch.Order.Recipe == null ? null : new {
                         batch.Order.Recipe.RecipeId,
-                        batch.Order.Recipe.RecipeName,
                         Material = batch.Order.Recipe.Material == null ? null : new {
                             batch.Order.Recipe.Material.MaterialName,
                             UnitOfMeasure = batch.Order.Recipe.Material.BaseUom == null ? null : new {

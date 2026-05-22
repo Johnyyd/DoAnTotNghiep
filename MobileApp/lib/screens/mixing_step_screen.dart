@@ -118,13 +118,12 @@ class _MixingStepScreenState extends State<MixingStepScreen>
     });
   }
 
-  Future<void> _loadDataFromDB() async {
+  Future<void> _loadDataFromDB({bool showLoading = true}) async {
     if (widget.batchId == null) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && showLoading) setState(() => _isLoading = false);
       return;
     }
-
-    setState(() => _isLoading = true);
+    if (showLoading) setState(() => _isLoading = true);
     try {
       // Load Batch for BOM
       final batch = await ApiService.getBatchById(widget.batchId!);
@@ -253,7 +252,11 @@ class _MixingStepScreenState extends State<MixingStepScreen>
         final rawStatus = normalizeStatus(log['resultStatus']);
         if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
           _currentPhase = ExecutionPhase.verification;
-          startPolling(_loadDataFromDB);
+          if (AuthService.currentUser?['role'] != 'QA_QC') {
+            startPolling(() => _loadDataFromDB(showLoading: false));
+          } else {
+            stopPolling();
+          }
         } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
           _currentPhase = ExecutionPhase.execution;
           stopPolling();
@@ -298,7 +301,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
     } catch (e) {
       debugPrint("Error loading Mixing data: $e");
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && showLoading) setState(() => _isLoading = false);
     }
   }
 
@@ -323,7 +326,8 @@ class _MixingStepScreenState extends State<MixingStepScreen>
           final m = int.parse(parts[1]);
           final minutesToAdd = int.tryParse(_tgThucTeCtrl.text) ?? 0;
           if (minutesToAdd >= 0) {
-            final timeStart = DateTime(2026, 1, 1, h, m);
+            final now = DateTime.now();
+            final timeStart = DateTime(now.year, now.month, now.day, h, m);
             final timeEnd = timeStart.add(Duration(minutes: minutesToAdd));
             _timeEndCtrl.text =
                 "${timeEnd.hour.toString().padLeft(2, '0')}:${timeEnd.minute.toString().padLeft(2, '0')}";
@@ -339,7 +343,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
       final mat = item['material'] ?? {};
       final name = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
       final actualStr = _actualMaterials[name] ?? '0';
-      total += double.tryParse(actualStr) ?? 0.0;
+      total += double.tryParse(actualStr.replaceAll(',', '.')) ?? 0.0;
     }
     return total;
   }
@@ -414,7 +418,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
       final name = item['material']?['materialName'] ?? 'N/A';
       final requiredQty = (item['quantity'] as num?)?.toDouble() ?? 0.0;
       final actualStr = _actualMaterials[name] ?? '0';
-      final actualQty = double.tryParse(actualStr) ?? 0.0;
+      final actualQty = double.tryParse(actualStr.replaceAll(',', '.')) ?? 0.0;
 
       if (requiredQty > 0) {
         final double diffPercent =
@@ -490,7 +494,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
         return;
       }
 
-      final packagingQty = double.tryParse(_slDongGoi);
+      final packagingQty = double.tryParse(_slDongGoi.replaceAll(',', '.'));
       if (packagingQty == null || packagingQty <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('❌ Tổng khối lượng đóng gói phải lớn hơn 0!'),
@@ -567,7 +571,15 @@ class _MixingStepScreenState extends State<MixingStepScreen>
       setState(() => isSaving = false);
       if (success) {
         await _loadDataFromDB();
-        if (resultStatus == 'Passed') {
+        if (resultStatus == 'PendingQC') {
+          if (widget.orderId != null) {
+            await ApiService.updateOrderStatus(widget.orderId!, 'Pending QC');
+          }
+          Navigator.pop(ctx, true);
+        } else if (resultStatus == 'Passed') {
+          if (widget.orderId != null) {
+            await ApiService.updateOrderStatus(widget.orderId!, 'Pending Worker');
+          }
           Navigator.pop(ctx, true);
         }
         if (!isInternal) {
@@ -914,11 +926,20 @@ class _MixingStepScreenState extends State<MixingStepScreen>
   }
 
   Widget _buildPhase3() {
-    return _buildCenteredStatus(
-        Icons.hourglass_empty,
-        Colors.orange,
-        'ĐANG ĐỢI QC XÁC NHẬN',
-        'Dữ liệu đã được khóa. Vui lòng báo QC ký xác nhận.');
+    return Column(
+      children: [
+        _buildPhase1(),
+        const SizedBox(height: 24),
+        _buildPhase2(),
+        const SizedBox(height: 40),
+        _buildCenteredStatus(
+          Icons.hourglass_empty,
+          Colors.orange,
+          'ĐANG ĐỢI QC XÁC NHẬN',
+          'Dữ liệu đã được khóa. Vui lòng báo QC ký xác nhận.'
+        ),
+      ],
+    );
   }
 
   Widget _buildPhase4() {
@@ -1082,7 +1103,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
                   const Text('Khối lượng đóng gói (Output):',
                       style: TextStyle(fontSize: 13)),
                   Text(
-                      '${double.tryParse(_slDongGoi)?.toStringAsFixed(4) ?? "0.0000"} kg',
+                      '${double.tryParse(_slDongGoi.replaceAll(',', '.'))?.toStringAsFixed(4) ?? "0.0000"} kg',
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),

@@ -16,6 +16,8 @@ class OrderVerificationScreen extends StatefulWidget {
 class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
   bool _isLoading = false;
   Map<String, dynamic>? _workerData;
+  String? _currentBatchName;
+  String? _currentStepName;
 
   @override
   void initState() {
@@ -50,6 +52,8 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
         
         if (log.isNotEmpty) {
           foundLog = log;
+          _currentBatchName = b['batchNumber'] ?? b['name'] ?? 'Mẻ $bId';
+          _currentStepName = log['step']?['stepName'] ?? 'Công đoạn ${log['stepId'] ?? ''}';
           break; // Tìm thấy rồi thì thôi
         }
       }
@@ -59,7 +63,7 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
         if (paramsStr != null) {
           final Map<String, dynamic> params = jsonDecode(paramsStr);
           setState(() {
-            _workerData = params['rawInputs'];
+            _workerData = params['rawInputs'] ?? params;
           });
         }
       }
@@ -195,41 +199,94 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
                 Text('Sản phẩm: ${widget.orderData['productName']}', style: const TextStyle(fontSize: 16)),
                 const SizedBox(height: 4),
                 Text('Cỡ lô chỉ định: ${widget.orderData['batchSize']}'),
+                if (_currentBatchName != null) ...[
+                  const Divider(color: Colors.blueAccent),
+                  Text('Đang duyệt cho Mẻ: $_currentBatchName', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                  Text('Công đoạn: ${_currentStepName ?? "Không xác định"}', style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.blueGrey)),
+                ],
               ],
             ),
           ),
           const SizedBox(height: 24),
           
-          const Text('THÔNG SỐ THỰC TẾ TỪ CÔNG NHÂN (READ-ONLY)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
-          const SizedBox(height: 12),
-          
-          
-          _buildReadOnlyParam('Nhiệt độ đọc được:', '${_workerData?['nhietDo'] ?? '--'} °C'),
-          _buildReadOnlyParam('Độ ẩm đọc được:', '${_workerData?['doAm'] ?? '--'} %'),
-          _buildReadOnlyParam('Áp lực phòng:', '${_workerData?['apLuc'] ?? '--'} Pa'),
-          _buildReadOnlyParam('Thời gian kiểm tra:', '${_workerData?['thoiGianCheck'] ?? '--'}'),
-          
-          const SizedBox(height: 20),
-          const Text('KIỂM TRA VỆ SINH & ĐIỀU KIỆN', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
-          const SizedBox(height: 8),
-          _buildReadOnlyParam('Phòng pha chế:', _workerData?['checkPhong'] ?? '--'),
-          _buildReadOnlyParam('Máy sấy tầng sôi:', _workerData?['checkMay'] ?? '--'),
-          _buildReadOnlyParam('Dụng cụ sấy:', _workerData?['checkDungCu'] ?? '--'),
-          _buildReadOnlyParam('Tình trạng không tải:', _workerData?['checkKhongTai'] ?? '--'),
-          
-          const SizedBox(height: 20),
-          const Text('QUY TRÌNH THAO TÁC (CHECKLIST)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
-          const SizedBox(height: 8),
-          _buildCheckItem('Kiểm tra túi lọc (số 4, 5):', _workerData?['checkTuiLoc'] == true),
-          _buildCheckItem('Lắp ráp máy theo SOP:', _workerData?['checkLapRap'] == true),
-          _buildCheckItem('Rải nhẹ nhàng mẫu vào thùng:', _workerData?['checkRaiNhe'] == true),
-          _buildCheckItem('Khỏa bằng mặt mẫu:', _workerData?['checkKhoaBang'] == true),
-          _buildCheckItem('Đẩy thùng sấy vào máy:', _workerData?['checkDayThung'] == true),
-          
-          const SizedBox(height: 20),
-          const Text('SẢN LƯỢNG ĐẦU VÀO', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
-          const SizedBox(height: 8),
-          _buildReadOnlyParam('Khối lượng nguyên liệu sấy:', '${_workerData?['slTruocSay'] ?? '--'} kg'),
+          if (_currentStepName?.toUpperCase().contains('CÂN') == true) ...[
+            const Text('THÔNG SỐ THỰC TẾ TỪ CÔNG NHÂN (READ-ONLY)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+            const SizedBox(height: 12),
+            _buildReadOnlyParam('Nhiệt độ phòng cân:', '${_workerData?['temperature'] ?? '--'} °C'),
+            _buildReadOnlyParam('Độ ẩm phòng cân:', '${_workerData?['humidity'] ?? '--'} %'),
+            _buildReadOnlyParam('Áp lực phòng cân:', '${_workerData?['pressure'] ?? '--'} Pa'),
+            _buildReadOnlyParam('Thời gian kiểm tra:', '${_workerData?['checkTime'] ?? '--'}'),
+            const SizedBox(height: 20),
+            const Text('KIỂM TRA VỆ SINH & ĐIỀU KIỆN', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+            const SizedBox(height: 8),
+            _buildReadOnlyParam('Phòng pha chế:', _workerData?['phongPhaChe'] ?? '--'),
+            _buildReadOnlyParam('Cân IW2-60:', _workerData?['canIW2'] ?? '--'),
+            _buildReadOnlyParam('Cân PMA-5000:', _workerData?['canPMA'] ?? '--'),
+            _buildReadOnlyParam('Dụng cụ cân:', _workerData?['dungCuCan'] ?? '--'),
+            
+            const SizedBox(height: 20),
+            const Text('CHI TIẾT KHỐI LƯỢNG NGUYÊN LIỆU', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo, fontSize: 12)),
+            const SizedBox(height: 8),
+            if (_workerData?['materials'] != null)
+              ...( _workerData?['materials'] as Map<String, dynamic>).entries.map((e) {
+                final val = e.value as Map<String, dynamic>;
+                return _buildReadOnlyParam(e.key, '${val['actual'] ?? '--'} kg (Phiếu KN: ${val['phieuKN'] ?? 'N/A'})');
+              })
+            else
+              const Text('Chưa có dữ liệu nguyên liệu.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+          ] 
+          else if (_currentStepName?.toUpperCase().contains('TRỘN') == true) ...[
+            const Text('THÔNG SỐ THỰC TẾ TỪ CÔNG NHÂN (READ-ONLY)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+            const SizedBox(height: 12),
+            _buildReadOnlyParam('Nhiệt độ phòng trộn:', '${_workerData?['nhietDo'] ?? '--'} °C'),
+            _buildReadOnlyParam('Độ ẩm phòng trộn:', '${_workerData?['doAm'] ?? '--'} %'),
+            _buildReadOnlyParam('Áp lực phòng trộn:', '${_workerData?['apLuc'] ?? '--'} Pa'),
+            _buildReadOnlyParam('Thời gian kiểm tra:', '${_workerData?['thoiGianKiemTra'] ?? '--'}'),
+            const SizedBox(height: 20),
+            const Text('KIỂM TRA VỆ SINH & ĐIỀU KIỆN', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+            const SizedBox(height: 8),
+            _buildReadOnlyParam('Phòng trộn khô:', _workerData?['veSinhPhong'] ?? '--'),
+            _buildReadOnlyParam('Máy trộn lập phương:', _workerData?['veSinhMay'] ?? '--'),
+            _buildReadOnlyParam('Dụng cụ sản xuất:', _workerData?['veSinhDungCu'] ?? '--'),
+            
+            const SizedBox(height: 20),
+            const Text('CHI TIẾT KHỐI LƯỢNG NGUYÊN LIỆU TRỘN', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo, fontSize: 12)),
+            const SizedBox(height: 8),
+            if (_workerData?['khoiLuongThucTe'] != null)
+              ...( _workerData?['khoiLuongThucTe'] as Map<String, dynamic>).entries.map((e) {
+                return _buildReadOnlyParam(e.key, '${e.value ?? '--'} kg');
+              })
+            else
+              const Text('Chưa có dữ liệu khối lượng trộn.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+          ]
+          else ...[
+            // Mặc định hoặc cho Sấy
+            const Text('THÔNG SỐ THỰC TẾ TỪ CÔNG NHÂN (READ-ONLY)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+            const SizedBox(height: 12),
+            _buildReadOnlyParam('Nhiệt độ đọc được:', '${_workerData?['nhietDo'] ?? '--'} °C'),
+            _buildReadOnlyParam('Độ ẩm đọc được:', '${_workerData?['doAm'] ?? '--'} %'),
+            _buildReadOnlyParam('Áp lực phòng:', '${_workerData?['apLuc'] ?? '--'} Pa'),
+            _buildReadOnlyParam('Thời gian kiểm tra:', '${_workerData?['thoiGianCheck'] ?? '--'}'),
+            const SizedBox(height: 20),
+            const Text('KIỂM TRA VỆ SINH & ĐIỀU KIỆN', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+            const SizedBox(height: 8),
+            _buildReadOnlyParam('Phòng pha chế:', _workerData?['checkPhong'] ?? '--'),
+            _buildReadOnlyParam('Máy sấy tầng sôi:', _workerData?['checkMay'] ?? '--'),
+            _buildReadOnlyParam('Dụng cụ sấy:', _workerData?['checkDungCu'] ?? '--'),
+            _buildReadOnlyParam('Tình trạng không tải:', _workerData?['checkKhongTai'] ?? '--'),
+            const SizedBox(height: 20),
+            const Text('QUY TRÌNH THAO TÁC (CHECKLIST)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+            const SizedBox(height: 8),
+            _buildCheckItem('Kiểm tra túi lọc (số 4, 5):', _workerData?['checkTuiLoc'] == true),
+            _buildCheckItem('Lắp ráp máy theo SOP:', _workerData?['checkLapRap'] == true),
+            _buildCheckItem('Rải nhẹ nhàng mẫu vào thùng:', _workerData?['checkRaiNhe'] == true),
+            _buildCheckItem('Khỏa bằng mặt mẫu:', _workerData?['checkKhoaBang'] == true),
+            _buildCheckItem('Đẩy thùng sấy vào máy:', _workerData?['checkDayThung'] == true),
+            const SizedBox(height: 20),
+            const Text('SẢN LƯỢNG ĐẦU VÀO', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+            const SizedBox(height: 8),
+            _buildReadOnlyParam('Khối lượng nguyên liệu sấy:', '${_workerData?['slTruocSay'] ?? '--'} kg'),
+          ],
           
           const SizedBox(height: 32),
           const FormSectionHeader('XÁC NHẬN CỦA QC'),

@@ -36,11 +36,12 @@ namespace GMP_System.Controllers
                     o.EndDate,
                     o.CreatedAt,
                     o.CreatedBy,
+                    o.RecipeName,
                     CreatedByName = o.CreatedByNavigation == null ? null : o.CreatedByNavigation.FullName,
                     Recipe = o.Recipe == null ? null : new
                     {
                         o.Recipe.RecipeId,
-                        o.Recipe.RecipeName,
+                        RecipeName = o.Recipe.RecipeName ?? (o.Recipe.Material != null ? o.Recipe.Material.MaterialName : "Unknown Recipe"),
                         o.Recipe.BatchSize,
                         Material = o.Recipe.Material == null ? null : new
                         {
@@ -59,15 +60,17 @@ namespace GMP_System.Controllers
                         bom.OrderBomId,
                         bom.MaterialId,
                         bom.RequiredQuantity,
+                        bom.DispensingStatus,
                         MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
                         MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
                         UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
-                    })
+                    }),
+                    IsFullyDispensed = o.ProductionOrderBoms.All(bom => bom.DispensingStatus == "Dispensed")
                 })
                 .AsNoTracking()
                 .ToListAsync();
 
-            return Ok(new { data = orders, totalCount = orders.Count, success = true, message = "Success" });
+            return Ok(new { data = orders, totalCount = orders != null ? orders.Count : 0, success = true, message = "Success" });
         }
 
         [HttpGet("{id}")]
@@ -87,10 +90,11 @@ namespace GMP_System.Controllers
                     o.StartDate,
                     o.EndDate,
                     o.CreatedAt,
+                    o.RecipeName,
                     Recipe = o.Recipe == null ? null : new
                     {
                         o.Recipe.RecipeId,
-                        o.Recipe.RecipeName,
+                        RecipeName = o.Recipe.RecipeName ?? (o.Recipe.Material != null ? o.Recipe.Material.MaterialName : "Unknown Recipe"),
                         o.Recipe.BatchSize,
                         o.Recipe.Note,
                         Material = o.Recipe.Material == null ? null : new
@@ -110,10 +114,12 @@ namespace GMP_System.Controllers
                         bom.OrderBomId,
                         bom.MaterialId,
                         bom.RequiredQuantity,
+                        bom.DispensingStatus,
                         MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
                         MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
                         UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
-                    })
+                    }),
+                    IsFullyDispensed = o.ProductionOrderBoms.All(bom => bom.DispensingStatus == "Dispensed")
                 })
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
@@ -150,7 +156,7 @@ namespace GMP_System.Controllers
                         Recipe = b.Order.Recipe == null ? null : new
                         {
                             b.Order.Recipe.RecipeId,
-                            b.Order.Recipe.RecipeName,
+                            RecipeName = b.Order.Recipe.RecipeName ?? (b.Order.Recipe.Material != null ? b.Order.Recipe.Material.MaterialName : "Unknown Recipe"),
                             Material = b.Order.Recipe.Material == null ? null : new
                             {
                                 b.Order.Recipe.Material.MaterialName
@@ -261,6 +267,7 @@ namespace GMP_System.Controllers
             // Quy tắc duy nhất: nếu đã có lệnh In-Process/Hold thì lệnh mới là Scheduled, ngược lại là In-Process.
             order.Status = isAnyOrderActive ? "Scheduled" : "In-Process";
             order.CreatedAt = DateTime.Now;
+            order.RecipeName = recipe.RecipeName;
             if (!order.StartDate.HasValue) order.StartDate = DateTime.Now;
             if (!order.EndDate.HasValue) order.EndDate = order.StartDate!.Value.AddDays(2);
             if (string.IsNullOrWhiteSpace(order.OrderCode) || order.OrderCode.Length > 12)
@@ -731,6 +738,25 @@ namespace GMP_System.Controllers
             await _unitOfWork.CompleteAsync();
 
             return Ok(new { success = true, message = "Đã hoàn thành lệnh sản xuất." });
+        }
+
+        [HttpPost("bom/{bomId}/dispense")]
+        public async Task<IActionResult> DispenseBomItem(int bomId, [FromBody] DispenseRequest request)
+        {
+            var bom = await _context.ProductionOrderBoms.FindAsync(bomId);
+            if (bom == null) return NotFound(new { success = false, message = "Không tìm thấy dòng BOM." });
+
+            bom.DispensingStatus = "Dispensed";
+            bom.DispensedAt = DateTime.Now;
+            bom.DispensedBy = request.UserId;
+            
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, message = "Đã xác nhận cấp phát nguyên liệu." });
+        }
+
+        public class DispenseRequest
+        {
+            public int UserId { get; set; }
         }
 
         [HttpDelete("{id}")]

@@ -78,7 +78,9 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
         }
 
         if (_currentPhase == ExecutionPhase.verification) {
-          startPolling(_loadDataFromDB);
+          if (AuthService.currentUser?['role'] != 'QA_QC') {
+            startPolling(() => _loadDataFromDB(showLoading: false));
+          }
         }
       });
     } else {
@@ -89,12 +91,12 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
     }
   }
 
-  Future<void> _loadDataFromDB() async {
+  Future<void> _loadDataFromDB({bool showLoading = true}) async {
     if (widget.batchId == null) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && showLoading) setState(() => _isLoading = false);
       return;
     }
-    setState(() => _isLoading = true);
+    if (showLoading) setState(() => _isLoading = true);
     try {
       // Load Batch for BOM
       final batch = await ApiService.getBatchById(widget.batchId!);
@@ -207,13 +209,11 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
                   } catch (_) {}
                 }
 
-                if (p['rawInputs'] != null) {
-                  final raw = p['rawInputs'] as Map;
-                  if (raw['netWeight'] != null) {
-                    totalNetFromDrying +=
-                        (double.tryParse(raw['netWeight'].toString()) ?? 0);
-                    hasDryingData = true;
-                  }
+                final raw = p['rawInputs'] != null ? p['rawInputs'] as Map : p;
+                if (raw['netWeight'] != null) {
+                  totalNetFromDrying +=
+                      (double.tryParse(raw['netWeight'].toString().replaceAll(',', '.')) ?? 0);
+                  hasDryingData = true;
                 }
               }
             }
@@ -235,7 +235,11 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
         final rawStatus = normalizeStatus(log['resultStatus']);
         if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
           _currentPhase = ExecutionPhase.verification;
-          startPolling(_loadDataFromDB);
+          if (AuthService.currentUser?['role'] != 'QA_QC') {
+            startPolling(() => _loadDataFromDB(showLoading: false));
+          } else {
+            stopPolling();
+          }
         } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
           _currentPhase = ExecutionPhase.execution;
           stopPolling();
@@ -252,7 +256,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
     } catch (e) {
       debugPrint("Error loading Weighing data: $e");
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && showLoading) setState(() => _isLoading = false);
     }
   }
 
@@ -322,8 +326,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
   }
 
   void _calculateDynamicBOM() {
-    double? A = double.tryParse(_lotWeightACtrl.text); // Lot weight in kg
-    double? C = double.tryParse(_purityCCtrl.text); // Alkaloid content in %
+    double? A = double.tryParse(_lotWeightACtrl.text.replaceAll(',', '.')); // Lot weight in kg
+    double? C = double.tryParse(_purityCCtrl.text.replaceAll(',', '.')); // Alkaloid content in %
 
     if (A == null || C == null || C < 0.1) {
       return;
@@ -468,7 +472,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
     // Total Weight Check against Batch Target
     double totalActual = 0;
     _materialsData.forEach((k, v) {
-      totalActual += double.tryParse(v['actual'] ?? '0') ?? 0;
+      totalActual += double.tryParse(v['actual']?.replaceAll(',', '.') ?? '0') ?? 0;
     });
 
     final target = (_batchInfo?['plannedQuantity'] as num?)?.toDouble() ?? 0.0;
@@ -493,7 +497,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
       }
 
       final actualStr = _materialsData[name]?['actual'] ?? '0';
-      final actualQty = double.tryParse(actualStr) ?? 0.0;
+      final actualQty = double.tryParse(actualStr.replaceAll(',', '.')) ?? 0.0;
 
       if (requiredQty > 0.0001) {
         final double diffPercent =
@@ -612,8 +616,15 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
 
       if (success && mounted) {
         if (resultStatus == 'PendingQC') {
+          if (widget.orderId != null) {
+            await ApiService.updateOrderStatus(widget.orderId!, 'Pending QC');
+          }
           setState(() => _currentPhase = ExecutionPhase.verification);
+          Navigator.pop(context, true);
         } else if (resultStatus == 'Passed') {
+          if (widget.orderId != null) {
+            await ApiService.updateOrderStatus(widget.orderId!, 'Pending Worker');
+          }
           setState(() => _currentPhase = ExecutionPhase.completed);
           Navigator.pop(context, true);
         }
@@ -762,6 +773,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
   }
 
   Widget _buildPhase1() {
+    final bool isLocked = _currentPhase.index >= ExecutionPhase.input.index || widget.isViewer;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const FormSectionHeader('PHẦN 1: KIỂM TRA GIÁ TRỊ ĐẦU VÀO'),
       SegmentedToggle(
@@ -769,7 +781,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
           optionA: 'Sạch',
           optionB: 'Không sạch',
           value: _phongPhaChe,
-          onChanged: (v) => setState(() => _phongPhaChe = v)),
+          onChanged: isLocked ? null : (v) => setState(() => _phongPhaChe = v)),
       StandardInputField(
           label: 'Thời gian kiểm tra (Tự động)',
           controller: _checkTimeCtrl,
@@ -790,6 +802,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
             ],
+            readOnly: isLocked,
             onChanged: (v) => validateInput('temperature', v, _standardParams,
                 matchName: 'Nhiệt độ phòng cân'),
           )),
@@ -804,6 +817,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
             ],
+            readOnly: isLocked,
             onChanged: (v) => validateInput('humidity', v, _standardParams,
                 matchName: 'Độ ẩm phòng cân'),
           )),
@@ -816,6 +830,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
         standardText: getStandardText('Áp lực phòng cân', _standardParams),
         keyboardType: TextInputType.number,
         inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))],
+        readOnly: isLocked,
         onChanged: (v) => validateInput('pressure', v, _standardParams,
             matchName: 'Áp lực phòng cân'),
       ),
@@ -824,23 +839,24 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
           optionA: 'Tốt',
           optionB: 'Không ổn định',
           value: _canIW2,
-          onChanged: (v) => setState(() => _canIW2 = v)),
+          onChanged: isLocked ? null : (v) => setState(() => _canIW2 = v)),
       SegmentedToggle(
           label: 'Cân PMA-5000',
           optionA: 'Tốt',
           optionB: 'Không ổn định',
           value: _canPMA,
-          onChanged: (v) => setState(() => _canPMA = v)),
+          onChanged: isLocked ? null : (v) => setState(() => _canPMA = v)),
       SegmentedToggle(
           label: 'Dụng cụ cân',
           optionA: 'Sạch',
           optionB: 'Không sạch',
           value: _dungCuCan,
-          onChanged: (v) => setState(() => _dungCuCan = v)),
+          onChanged: isLocked ? null : (v) => setState(() => _dungCuCan = v)),
     ]);
   }
 
   Widget _buildPhase2() {
+    final bool isLocked = _currentPhase.index >= ExecutionPhase.verification.index || widget.isViewer;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const FormSectionHeader('PHẦN 2: GHI NHẬN KHỐI LƯỢNG THỰC TẾ'),
       ExpansionTile(
@@ -857,6 +873,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
               label: 'Khối lượng lô NLC 3 (A - kg)',
               controller: _lotWeightACtrl,
               hint: 'Ví dụ: 16',
+              readOnly: isLocked,
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
               ],
@@ -865,6 +882,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
               label: 'Hàm lượng Alkaloid (C - %)',
               controller: _purityCCtrl,
               hint: 'Ví dụ: 0.4',
+              readOnly: isLocked,
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
               ],
@@ -895,6 +913,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
             unitLabel: unitLabel,
             initialActualWeight: _materialsData[name]?['actual'] ?? '',
             initialPhieuKN: _materialsData[name]?['phieuKN'] ?? '',
+            readOnly: isLocked,
             onWeightChanged: (v) => _updateMaterial(name, 'actual', v),
             onPhieuKNChanged: (v) => _updateMaterial(name, 'phieuKN', v));
       }),
@@ -902,6 +921,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
       TextField(
         controller: _noteCtrl,
         maxLines: 4,
+        readOnly: isLocked,
         decoration: const InputDecoration(
           hintText: 'Nhập ghi chú chi tiết tại đây...',
           border: OutlineInputBorder(),
@@ -910,17 +930,21 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
     ]);
   }
 
-  Widget _buildPhase3() => const Center(
-          child: Column(children: [
-        SizedBox(height: 40),
-        Icon(Icons.hourglass_empty, size: 80, color: Colors.orange),
-        SizedBox(height: 24),
-        Text('ĐANG ĐỢI QC XÁC NHẬN',
+  Widget _buildPhase3() => Column(children: [
+        _buildPhase1(),
+        const SizedBox(height: 24),
+        _buildPhase2(),
+        const SizedBox(height: 40),
+        const Icon(Icons.hourglass_empty, size: 80, color: Colors.orange),
+        const SizedBox(height: 24),
+        const Text('ĐANG ĐỢI QC XÁC NHẬN',
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.orange))
-      ]));
+                color: Colors.orange)),
+        if (AuthService.currentUser?['role'] != 'QA_QC')
+          const CircularProgressIndicator(color: Colors.orange)
+      ]);
   Widget _buildPhase4() => const Column(children: [
         SizedBox(height: 20),
         Icon(Icons.play_circle_fill, size: 80, color: Colors.green),

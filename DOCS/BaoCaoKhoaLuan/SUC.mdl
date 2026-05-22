@@ -1,0 +1,112 @@
+(object Petal
+    version    	50
+    _written   	"Rose 2006.0.0.060314"
+    charSet    	0)
+
+(object Design "Logical View"
+    is_unit    	TRUE
+    is_loaded  	TRUE
+    quid       	"664687A00000"
+    root_usecase_package 	(object Class_Category "Use Case View"
+        quid       	"664687A00001"
+        exportControl 	"Public"
+        global     	TRUE
+        logical_models 	(list unit_reference_list
+            (object Class "Nguoi dung" quid "ACT01" stereotype "Actor")
+            (object Class "Nhan vien san xuat" quid "ACT02" stereotype "Actor")
+            (object Class "Nhan vien kho" quid "ACT03" stereotype "Actor")
+            (object Class "Nhan vien QC QA" quid "ACT04" stereotype "Actor")
+            (object Class "Quan ly" quid "ACT05" stereotype "Actor")
+
+            (object UseCase "1. Can nguyen lieu san xuat vien nang" quid "UC01")
+            (object UseCase "2. Quan Ly Quy Trinh Che Bien Vien Nang" quid "UC02")
+            (object UseCase "3. Doi chieu" quid "UC03")
+            (object UseCase "4. Quan ly sai lech" quid "UC04")
+            (object UseCase "5. Truy xuat nguon goc" quid "UC05")
+            (object UseCase "6. Thiet lap ma PIN chu ky dien tu" quid "UC06")
+            (object UseCase "7. Lap lenh san xuat" quid "UC07")
+            (object UseCase "8. Duyet lenh san xuat" quid "UC08")
+            (object UseCase "9. Chia me san xuat" quid "UC09")
+            (object UseCase "10. Dang nhap he thong" quid "UC10")
+            (object UseCase "11. Cau hinh cong thuc goc" quid "UC11")
+            (object UseCase "12. Quan ly danh muc nguyen vat lieu" quid "UC12")
+            (object UseCase "13. Tiep nhan va kiem nghiem lo nguyen lieu" quid "UC13")
+            (object UseCase "14. Xac nhan cap phat nguyen vat lieu" quid "UC14")
+            (object UseCase "15. Kiem tra ve sinh va moi truong" quid "UC15")
+            (object UseCase "16. Thuc thi cong doan say hat" quid "UC16")
+            (object UseCase "17. Thuc thi cong doan tron bot" quid "UC17")
+            (object UseCase "18. Phe duyet kiem soat trong qua trinh IPC" quid "UC18")
+            (object UseCase "19. Giam sat trang thai va nhat ky thiet bi" quid "UC19")
+            (object UseCase "20. Quan ly lo thanh pham va cap CoA" quid "UC20")
+            (object UseCase "21. Xem va ket xuat Ho so lo dien tu" quid "UC21")
+            (object UseCase "22. Truy xuat nhat ky he thong" quid "UC22")
+            (object UseCase "23. Quan ly danh muc khu vuc va thiet bi" quid "UC23")
+
+            (object Association "$UNNAMED$1" quid "AS01" roles (list role_list (object Role "" quid "RL1_1" supplier "Use Case View::10. Dang nhap he thong" quidu "UC10" is_navigable TRUE) (object Role "" quid "RL1_2" supplier "Use Case View::Nguoi dung" quidu "ACT01")))
+            (object Association "$UNNAMED$2" quid "AS02" roles (list role_list (object Role "" quid "RL2_1" supplier "Use Case View::6. Thiet lap ma PIN chu ky dien tu" quidu "UC06" is_navigable TRUE) (object Role "" quid "RL2_2" supplier "Use Case View::Nguoi dung" quidu "ACT01")))
+            
+            (object Association "$UNNAMED$3" quid "AS03" roles (list role_list (object Role "" quid "RL3_1" supplier "Use Case View::15. Kiem tra ve sinh va moi truong" quidu "UC15" is_navigable TRUE) (object Role "" quid "RL3_2" supplier "Use Case View::Nhan vien san xuat" quidu "ACT02")))
+            (object Association "$UNNAMED$4" quid "AS04" roles (list role_list (object Role "" quid "RL4_1" supplier "Use Case View::1. Can nguyen lieu san xuat vien nang" quidu "UC01" is_navigable TRUE) (object Role "" quid "RL4_2" supplier "Use Case View::Nhan vien san xuat" quidu "ACT02")))
+            (object Association "$UNNAMED$5" quid "AS05" roles (list role_list (object Role "" quid "RL5_1" supplier "Use Case View::16. Thuc thi cong doan say hat" quidu "UC16" is_navigable TRUE) (object Role "" quid "RL5_2" supplier "Use Case View::Nhan vien san xuat" quidu "ACT02")))
+            (object Association "$UNNAMED$6" quid "AS06" roles (list role_list (object Role "" quid "RL6_1" supplier "Use Case View::17. Thuc thi cong doan tron bot" quidu "UC17" is_navigable TRUE) (object Role "" quid "RL6_2" supplier "Use Case View::Nhan vien san xuat" quidu "ACT02")))
+
+            (object Association "$UNNAMED$7" quid "AS07" roles (list role_list (object Role "" quid "RL7_1" supplier "Use Case View::14. Xac nhan cap phat nguyen vat lieu" quidu "UC14" is_navigable TRUE) (object Role "" quid "RL7_2" supplier "Use Case View::Nhan vien kho" quidu "ACT03")))
+
+            (object Association "$UNNAMED$8" quid "AS08" roles (list role_list (object Role "" quid "RL8_1" supplier "Use Case View::13. Tiep nhan va kiem nghiem lo nguyen lieu" quidu "UC13" is_navigable TRUE) (object Role "" quid "RL8_2" supplier "Use Case View::Nhan vien QC QA" quidu "ACT04")))
+            (object Association "$UNNAMED$9" quid "AS09" roles (list role_list (object Role "" quid "RL9_1" supplier "Use Case View::18. Phe duyet kiem soat trong qua trinh IPC" quidu "UC18" is_navigable TRUE) (object Role "" quid "RL9_2" supplier "Use Case View::Nhan vien QC QA" quidu "ACT04")))
+            (object Association "$UNNAMED$10" quid "AS10" roles (list role_list (object Role "" quid "RL10_1" supplier "Use Case View::3. Doi chieu" quidu "UC03" is_navigable TRUE) (object Role "" quid "RL10_2" supplier "Use Case View::Nhan vien QC QA" quidu "ACT04")))
+            (object Association "$UNNAMED$11" quid "AS11" roles (list role_list (object Role "" quid "RL11_1" supplier "Use Case View::4. Quan ly sai lech" quidu "UC04" is_navigable TRUE) (object Role "" quid "RL11_2" supplier "Use Case View::Nhan vien QC QA" quidu "ACT04")))
+
+            (object Association "$UNNAMED$12" quid "AS12" roles (list role_list (object Role "" quid "RL12_1" supplier "Use Case View::2. Quan Ly Quy Trinh Che Bien Vien Nang" quidu "UC02" is_navigable TRUE) (object Role "" quid "RL12_2" supplier "Use Case View::Quan ly" quidu "ACT05")))
+            (object Association "$UNNAMED$13" quid "AS13" roles (list role_list (object Role "" quid "RL13_1" supplier "Use Case View::7. Lap lenh san xuat" quidu "UC07" is_navigable TRUE) (object Role "" quid "RL13_2" supplier "Use Case View::Quan ly" quidu "ACT05")))
+            (object Association "$UNNAMED$14" quid "AS14" roles (list role_list (object Role "" quid "RL14_1" supplier "Use Case View::8. Duyet lenh san xuat" quidu "UC08" is_navigable TRUE) (object Role "" quid "RL14_2" supplier "Use Case View::Quan ly" quidu "ACT05")))
+            (object Association "$UNNAMED$15" quid "AS15" roles (list role_list (object Role "" quid "RL15_1" supplier "Use Case View::9. Chia me san xuat" quidu "UC09" is_navigable TRUE) (object Role "" quid "RL15_2" supplier "Use Case View::Quan ly" quidu "ACT05")))
+            (object Association "$UNNAMED$16" quid "AS16" roles (list role_list (object Role "" quid "RL16_1" supplier "Use Case View::11. Cau hinh cong thuc goc" quidu "UC11" is_navigable TRUE) (object Role "" quid "RL16_2" supplier "Use Case View::Quan ly" quidu "ACT05")))
+            (object Association "$UNNAMED$17" quid "AS17" roles (list role_list (object Role "" quid "RL17_1" supplier "Use Case View::12. Quan ly danh muc nguyen vat lieu" quidu "UC12" is_navigable TRUE) (object Role "" quid "RL17_2" supplier "Use Case View::Quan ly" quidu "ACT05")))
+            (object Association "$UNNAMED$18" quid "AS18" roles (list role_list (object Role "" quid "RL18_1" supplier "Use Case View::19. Giam sat trang thai va nhat ky thiet bi" quidu "UC19" is_navigable TRUE) (object Role "" quid "RL18_2" supplier "Use Case View::Quan ly" quidu "ACT05")))
+            (object Association "$UNNAMED$19" quid "AS19" roles (list role_list (object Role "" quid "RL19_1" supplier "Use Case View::20. Quan ly lo thanh pham va cap CoA" quidu "UC20" is_navigable TRUE) (object Role "" quid "RL19_2" supplier "Use Case View::Quan ly" quidu "ACT05")))
+            (object Association "$UNNAMED$20" quid "AS20" roles (list role_list (object Role "" quid "RL20_1" supplier "Use Case View::21. Xem va ket xuat Ho so lo dien tu" quidu "UC21" is_navigable TRUE) (object Role "" quid "RL20_2" supplier "Use Case View::Quan ly" quidu "ACT05")))
+            (object Association "$UNNAMED$21" quid "AS21" roles (list role_list (object Role "" quid "RL21_1" supplier "Use Case View::22. Truy xuat nhat ky he thong" quidu "UC22" is_navigable TRUE) (object Role "" quid "RL21_2" supplier "Use Case View::Quan ly" quidu "ACT05")))
+            (object Association "$UNNAMED$22" quid "AS22" roles (list role_list (object Role "" quid "RL22_1" supplier "Use Case View::5. Truy xuat nguon goc" quidu "UC05" is_navigable TRUE) (object Role "" quid "RL22_2" supplier "Use Case View::Quan ly" quidu "ACT05")))
+            (object Association "$UNNAMED$23" quid "AS23" roles (list role_list (object Role "" quid "RL23_1" supplier "Use Case View::23. Quan ly danh muc khu vuc va thiet bi" quidu "UC23" is_navigable TRUE) (object Role "" quid "RL23_2" supplier "Use Case View::Quan ly" quidu "ACT05")))
+        )
+        logical_presentations 	(list unit_reference_list
+            (object UseCaseDiagram "Main SUC Diagram"
+                quid       	"DIAG001"
+                title      	"Main SUC Diagram"
+                zoom       	100
+                max_height 	28350
+                max_width  	21600
+                origin_x   	0
+                origin_y   	0
+                items      	(list diagram_item_list)))
+    )
+    root_category 	(object Class_Category "Logical View"
+        quid       	"CAT001"
+        exportControl 	"Public"
+        global     	TRUE
+        subsystem  	"Component View"
+        quidu      	"CAT002"
+        logical_models 	(list unit_reference_list)
+        logical_presentations 	(list unit_reference_list))
+    root_subsystem 	(object SubSystem "Component View"
+        quid       	"CAT002"
+        physical_models 	(list unit_reference_list)
+        physical_presentations 	(list unit_reference_list)
+        category   	"Logical View"
+        quidu      	"CAT001")
+    process_structure 	(object Processes
+        quid       	"PROC001"
+        ProcsNDevs 	(list
+            (object Process_Diagram "Deployment View"
+                quid       	"PROC002"
+                title      	"Deployment View"
+                zoom       	100
+                max_height 	28350
+                max_width  	21600
+                origin_x   	0
+                origin_y   	0
+                items      	(list diagram_item_list))))
+    properties 	(object Properties
+        quid       	"PROP001")
+)

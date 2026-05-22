@@ -1,0 +1,284 @@
+(object Petal
+    version    	50
+    _written   	"Rose 2006.0.0.060314"
+    charSet    	0)
+
+(object Design "Logical View"
+    is_unit    	TRUE
+    is_loaded  	TRUE
+    quid       	"664687A00000"
+    root_usecase_package 	(object Class_Category "Use Case View"
+        quid       	"664687A00001"
+        exportControl 	"Public"
+        global     	TRUE
+        logical_models 	(list unit_reference_list
+            (object Class "Nhan vien san xuat" quid "ACT001" stereotype "Business Actor")
+            (object Class "Nhan vien QC" quid "ACT002" stereotype "Business Actor")
+            (object Class "Nhan vien quan ly" quid "ACT003" stereotype "Business Actor")
+            (object Class "Nhan vien kho" quid "ACT004" stereotype "Business Actor")
+
+            (object UseCase "1. Kiem tra ve sinh va moi truong"
+                quid       	"UC001"
+                stereotype 	"Business Use Case"
+                statemachine 	(object State_Machine "State/Activity Model"
+                    quid       	"SM001"
+                    states     	(list States)
+                    partitions 	(list Partitions)
+                    objects    	(list Objects)
+                    transitions 	(list transition_list)
+                    objectflows 	(list objectflow_list)
+                    statediagrams 	(list StateDiagrams
+                        (object ActivityDiagram "Activity Diagram"
+                            quid       	"AD001"
+                            title      	"Activity Diagram"
+                            zoom       	100
+                            max_height 	28350
+                            max_width  	21600
+                            origin_x   	0
+                            origin_y   	0
+                            items      	(list diagram_item_list)))))
+
+            (object UseCase "2. Thuc thi cong doan Say"
+                quid       	"UC002"
+                stereotype 	"Business Use Case"
+                statemachine 	(object State_Machine "State/Activity Model"
+                    quid       	"SM002"
+                    states     	(list States)
+                    partitions 	(list Partitions)
+                    objects    	(list Objects)
+                    transitions 	(list transition_list)
+                    objectflows 	(list objectflow_list)
+                    statediagrams 	(list StateDiagrams
+                        (object ActivityDiagram "Activity Diagram"
+                            quid       	"AD002"
+                            title      	"Activity Diagram"
+                            zoom       	100
+                            max_height 	28350
+                            max_width  	21600
+                            origin_x   	0
+                            origin_y   	0
+                            items      	(list diagram_item_list)))))
+
+            (object UseCase "3. Can nguyen lieu"
+                quid       	"UC003"
+                stereotype 	"Business Use Case"
+                statemachine 	(object State_Machine "State/Activity Model"
+                    quid       	"SM003"
+                    states     	(list States)
+                    partitions 	(list Partitions)
+                    objects    	(list Objects)
+                    transitions 	(list transition_list)
+                    objectflows 	(list objectflow_list)
+                    statediagrams 	(list StateDiagrams
+                        (object ActivityDiagram "Activity Diagram"
+                            quid       	"AD003"
+                            title      	"Activity Diagram"
+                            zoom       	100
+                            max_height 	28350
+                            max_width  	21600
+                            origin_x   	0
+                            origin_y   	0
+                            items      	(list diagram_item_list)))))
+
+            (object UseCase "4. Tron nguyen lieu"
+                quid       	"UC004"
+                stereotype 	"Business Use Case"
+                statemachine 	(object State_Machine "State/Activity Model"
+                    quid       	"SM004"
+                    states     	(list States)
+                    partitions 	(list Partitions)
+                    objects    	(list Objects)
+                    transitions 	(list transition_list)
+                    objectflows 	(list objectflow_list)
+                    statediagrams 	(list StateDiagrams
+                        (object ActivityDiagram "Activity Diagram"
+                            quid       	"AD004"
+                            title      	"Activity Diagram"
+                            zoom       	100
+                            max_height 	28350
+                            max_width  	21600
+                            origin_x   	0
+                            origin_y   	0
+                            items      	(list diagram_item_list)))))
+
+            (object UseCase "5. Quan ly lap lenh san xuat"
+                quid       	"UC005"
+                stereotype 	"Business Use Case"
+                statemachine 	(object State_Machine "State/Activity Model"
+                    quid       	"SM005"
+                    states     	(list States)
+                    partitions 	(list Partitions)
+                    objects    	(list Objects)
+                    transitions 	(list transition_list)
+                    objectflows 	(list objectflow_list)
+                    statediagrams 	(list StateDiagrams
+                        (object ActivityDiagram "Activity Diagram"
+                            quid       	"AD005"
+                            title      	"Activity Diagram"
+                            zoom       	100
+                            max_height 	28350
+                            max_width  	21600
+                            origin_x   	0
+                            origin_y   	0
+                            items      	(list diagram_item_list)))))
+
+            (object UseCase "6. Xac nhan cap phat NVL theo me"
+                quid       	"UC006"
+                stereotype 	"Business Use Case"
+                statemachine 	(object State_Machine "State/Activity Model"
+                    quid       	"SM006"
+                    states     	(list States)
+                    partitions 	(list Partitions)
+                    objects    	(list Objects)
+                    transitions 	(list transition_list)
+                    objectflows 	(list objectflow_list)
+                    statediagrams 	(list StateDiagrams
+                        (object ActivityDiagram "Activity Diagram"
+                            quid       	"AD006"
+                            title      	"Activity Diagram"
+                            zoom       	100
+                            max_height 	28350
+                            max_width  	21600
+                            origin_x   	0
+                            origin_y   	0
+                            items      	(list diagram_item_list)))))
+
+            (object UseCase "7. Theo doi va cap nhat tien do"
+                quid       	"UC007"
+                stereotype 	"Business Use Case"
+                statemachine 	(object State_Machine "State/Activity Model"
+                    quid       	"SM007"
+                    states     	(list States)
+                    partitions 	(list Partitions)
+                    objects    	(list Objects)
+                    transitions 	(list transition_list)
+                    objectflows 	(list objectflow_list)
+                    statediagrams 	(list StateDiagrams
+                        (object ActivityDiagram "Activity Diagram"
+                            quid       	"AD007"
+                            title      	"Activity Diagram"
+                            zoom       	100
+                            max_height 	28350
+                            max_width  	21600
+                            origin_x   	0
+                            origin_y   	0
+                            items      	(list diagram_item_list)))))
+
+            (object UseCase "8. Cap nhat trang thai lenh san xuat"
+                quid       	"UC008"
+                stereotype 	"Business Use Case"
+                statemachine 	(object State_Machine "State/Activity Model"
+                    quid       	"SM008"
+                    states     	(list States)
+                    partitions 	(list Partitions)
+                    objects    	(list Objects)
+                    transitions 	(list transition_list)
+                    objectflows 	(list objectflow_list)
+                    statediagrams 	(list StateDiagrams
+                        (object ActivityDiagram "Activity Diagram"
+                            quid       	"AD008"
+                            title      	"Activity Diagram"
+                            zoom       	100
+                            max_height 	28350
+                            max_width  	21600
+                            origin_x   	0
+                            origin_y   	0
+                            items      	(list diagram_item_list)))))
+
+            (object UseCase "9. Quan ly lo thanh pham"
+                quid       	"UC009"
+                stereotype 	"Business Use Case"
+                statemachine 	(object State_Machine "State/Activity Model"
+                    quid       	"SM009"
+                    states     	(list States)
+                    partitions 	(list Partitions)
+                    objects    	(list Objects)
+                    transitions 	(list transition_list)
+                    objectflows 	(list objectflow_list)
+                    statediagrams 	(list StateDiagrams
+                        (object ActivityDiagram "Activity Diagram"
+                            quid       	"AD009"
+                            title      	"Activity Diagram"
+                            zoom       	100
+                            max_height 	28350
+                            max_width  	21600
+                            origin_x   	0
+                            origin_y   	0
+                            items      	(list diagram_item_list)))))
+
+            (object UseCase "10. Bao cao tien do san xuat"
+                quid       	"UC010"
+                stereotype 	"Business Use Case"
+                statemachine 	(object State_Machine "State/Activity Model"
+                    quid       	"SM010"
+                    states     	(list States)
+                    partitions 	(list Partitions)
+                    objects    	(list Objects)
+                    transitions 	(list transition_list)
+                    objectflows 	(list objectflow_list)
+                    statediagrams 	(list StateDiagrams
+                        (object ActivityDiagram "Activity Diagram"
+                            quid       	"AD010"
+                            title      	"Activity Diagram"
+                            zoom       	100
+                            max_height 	28350
+                            max_width  	21600
+                            origin_x   	0
+                            origin_y   	0
+                            items      	(list diagram_item_list)))))
+
+            (object Association "$UNNAMED$1" quid "ASS001" roles (list role_list (object Role "$UNNAMED$1_1" quid "RL1_1" supplier "Use Case View::1. Kiem tra ve sinh va moi truong" quidu "UC001" is_navigable TRUE) (object Role "$UNNAMED$1_2" quid "RL1_2" supplier "Use Case View::Nhan vien san xuat" quidu "ACT001")))
+            (object Association "$UNNAMED$2" quid "ASS002" roles (list role_list (object Role "$UNNAMED$2_1" quid "RL2_1" supplier "Use Case View::2. Thuc thi cong doan Say" quidu "UC002" is_navigable TRUE) (object Role "$UNNAMED$2_2" quid "RL2_2" supplier "Use Case View::Nhan vien san xuat" quidu "ACT001")))
+            (object Association "$UNNAMED$3" quid "ASS003" roles (list role_list (object Role "$UNNAMED$3_1" quid "RL3_1" supplier "Use Case View::2. Thuc thi cong doan Say" quidu "UC002" is_navigable TRUE) (object Role "$UNNAMED$3_2" quid "RL3_2" supplier "Use Case View::Nhan vien QC" quidu "ACT002")))
+            (object Association "$UNNAMED$4" quid "ASS004" roles (list role_list (object Role "$UNNAMED$4_1" quid "RL4_1" supplier "Use Case View::3. Can nguyen lieu" quidu "UC003" is_navigable TRUE) (object Role "$UNNAMED$4_2" quid "RL4_2" supplier "Use Case View::Nhan vien san xuat" quidu "ACT001")))
+            (object Association "$UNNAMED$5" quid "ASS005" roles (list role_list (object Role "$UNNAMED$5_1" quid "RL5_1" supplier "Use Case View::3. Can nguyen lieu" quidu "UC003" is_navigable TRUE) (object Role "$UNNAMED$5_2" quid "RL5_2" supplier "Use Case View::Nhan vien QC" quidu "ACT002")))
+            (object Association "$UNNAMED$6" quid "ASS006" roles (list role_list (object Role "$UNNAMED$6_1" quid "RL6_1" supplier "Use Case View::4. Tron nguyen lieu" quidu "UC004" is_navigable TRUE) (object Role "$UNNAMED$6_2" quid "RL6_2" supplier "Use Case View::Nhan vien san xuat" quidu "ACT001")))
+            (object Association "$UNNAMED$7" quid "ASS007" roles (list role_list (object Role "$UNNAMED$7_1" quid "RL7_1" supplier "Use Case View::4. Tron nguyen lieu" quidu "UC004" is_navigable TRUE) (object Role "$UNNAMED$7_2" quid "RL7_2" supplier "Use Case View::Nhan vien QC" quidu "ACT002")))
+            (object Association "$UNNAMED$8" quid "ASS008" roles (list role_list (object Role "$UNNAMED$8_1" quid "RL8_1" supplier "Use Case View::5. Quan ly lap lenh san xuat" quidu "UC005" is_navigable TRUE) (object Role "$UNNAMED$8_2" quid "RL8_2" supplier "Use Case View::Nhan vien quan ly" quidu "ACT003")))
+            (object Association "$UNNAMED$9" quid "ASS009" roles (list role_list (object Role "$UNNAMED$9_1" quid "RL9_1" supplier "Use Case View::6. Xac nhan cap phat NVL theo me" quidu "UC006" is_navigable TRUE) (object Role "$UNNAMED$9_2" quid "RL9_2" supplier "Use Case View::Nhan vien kho" quidu "ACT004")))
+            (object Association "$UNNAMED$10" quid "ASS010" roles (list role_list (object Role "$UNNAMED$10_1" quid "RL10_1" supplier "Use Case View::7. Theo doi va cap nhat tien do" quidu "UC007" is_navigable TRUE) (object Role "$UNNAMED$10_2" quid "RL10_2" supplier "Use Case View::Nhan vien san xuat" quidu "ACT001")))
+            (object Association "$UNNAMED$11" quid "ASS011" roles (list role_list (object Role "$UNNAMED$11_1" quid "RL11_1" supplier "Use Case View::8. Cap nhat trang thai lenh san xuat" quidu "UC008" is_navigable TRUE) (object Role "$UNNAMED$11_2" quid "RL11_2" supplier "Use Case View::Nhan vien san xuat" quidu "ACT001")))
+            (object Association "$UNNAMED$12" quid "ASS012" roles (list role_list (object Role "$UNNAMED$12_1" quid "RL12_1" supplier "Use Case View::8. Cap nhat trang thai lenh san xuat" quidu "UC008" is_navigable TRUE) (object Role "$UNNAMED$12_2" quid "RL12_2" supplier "Use Case View::Nhan vien quan ly" quidu "ACT003")))
+            (object Association "$UNNAMED$13" quid "ASS013" roles (list role_list (object Role "$UNNAMED$13_1" quid "RL13_1" supplier "Use Case View::9. Quan ly lo thanh pham" quidu "UC009" is_navigable TRUE) (object Role "$UNNAMED$13_2" quid "RL13_2" supplier "Use Case View::Nhan vien quan ly" quidu "ACT003")))
+            (object Association "$UNNAMED$14" quid "ASS014" roles (list role_list (object Role "$UNNAMED$14_1" quid "RL14_1" supplier "Use Case View::10. Bao cao tien do san xuat" quidu "UC010" is_navigable TRUE) (object Role "$UNNAMED$14_2" quid "RL14_2" supplier "Use Case View::Nhan vien quan ly" quidu "ACT003")))
+        )
+        logical_presentations 	(list unit_reference_list
+            (object UseCaseDiagram "Main BUC Diagram"
+                quid       	"DIAG001"
+                title      	"Main BUC Diagram"
+                zoom       	100
+                max_height 	28350
+                max_width  	21600
+                origin_x   	0
+                origin_y   	0
+                items      	(list diagram_item_list)))
+    )
+    root_category 	(object Class_Category "Logical View"
+        quid       	"CAT001"
+        exportControl 	"Public"
+        global     	TRUE
+        subsystem  	"Component View"
+        quidu      	"CAT002"
+        logical_models 	(list unit_reference_list)
+        logical_presentations 	(list unit_reference_list))
+    root_subsystem 	(object SubSystem "Component View"
+        quid       	"CAT002"
+        physical_models 	(list unit_reference_list)
+        physical_presentations 	(list unit_reference_list)
+        category   	"Logical View"
+        quidu      	"CAT001")
+    process_structure 	(object Processes
+        quid       	"PROC001"
+        ProcsNDevs 	(list
+            (object Process_Diagram "Deployment View"
+                quid       	"PROC002"
+                title      	"Deployment View"
+                zoom       	100
+                max_height 	28350
+                max_width  	21600
+                origin_x   	0
+                origin_y   	0
+                items      	(list diagram_item_list))))
+    properties 	(object Properties
+        quid       	"PROP001")
+)
