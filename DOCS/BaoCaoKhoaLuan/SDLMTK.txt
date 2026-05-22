@@ -1,0 +1,218 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+package "System Module" {
+    class AppUser {
+        - Username: string
+        - Role: string
+        - PinCode: string
+        + CreateUser(userDto: AppUser): void
+        + UpdateUser(userId: int, userDto: AppUser): void
+        + FindUser(id: int): AppUser
+        + Authenticate(username: string, pass: string): bool
+        + ChangePinCode(userId: int, newPin: string): void
+    }
+    
+    class SystemAuditLog {
+        - TableName: string
+        - Action: string
+        - OldValue: string
+        - NewValue: string
+        - ChangedDate: DateTime
+        + LogChange(action: string, data: string): void
+        + SearchAuditTrail(fromDate: DateTime, toDate: DateTime): List<SystemAuditLog>
+    }
+}
+
+package "Master Data Module" {
+    class UnitOfMeasure {
+        - UomName: string
+        + Create(name: string): void
+        + Update(id: int, name: string): void
+    }
+    
+    class UomConversion {
+        - ConversionFactor: decimal
+        - Note: string
+        + CalculateConversion(qty: decimal): decimal
+        + UpdateFactor(newFactor: decimal): void
+    }
+    
+    class ProductionArea {
+        - AreaCode: string
+        - AreaName: string
+        + Create(code: string, name: string): void
+        + Update(id: int, name: string): void
+    }
+    
+    class Equipment {
+        - EquipmentCode: string
+        - EquipmentName: string
+        - UsagePurpose: string
+        + Create(dto: Equipment): void
+        + Update(id: int, dto: Equipment): void
+        + CheckAvailability(equipId: int): bool
+    }
+
+    class Material {
+        - MaterialCode: string
+        - MaterialName: string
+        - IsActive: bool
+        + CreateMaterial(dto: Material): void
+        + UpdateMaterial(id: int, dto: Material): void
+        + SearchMaterials(keyword: string): List<Material>
+        + Deactivate(id: int): void
+    }
+    
+    class InventoryLot {
+        - LotNumber: string
+        - QuantityCurrent: decimal
+        - ExpDate: DateTime
+        + FindLot(lotNumber: string): InventoryLot
+        + ReceiveStock(qty: decimal): void
+        + IssueStock(qty: decimal): bool
+        + CheckExpiry(): bool
+    }
+    
+    class QualityTest {
+        - TestName: string
+        - ResultValue: string
+        - PassStatus: bool
+        + InputTestResult(val: string): void
+        + EvaluatePassFail(): bool
+        + PrintCOA(): void
+    }
+}
+
+package "Recipe Module" {
+    class Recipe {
+        - VersionNumber: int
+        - Status: string
+        + CreateRecipe(dto: Recipe): void
+        + UpdateRecipe(id: int, dto: Recipe): void
+        + FindRecipe(id: int): Recipe
+        + CalculateBatchSize(targetQty: decimal): decimal
+        + ApproveRecipe(userId: int): void
+    }
+    
+    class RecipeBom {
+        - Quantity: decimal
+        - WastePercentage: decimal
+        + AddMaterial(matId: int, qty: decimal): void
+        + UpdateQuantity(id: int, qty: decimal): void
+        + CalculateWaste(): decimal
+    }
+    
+    class RecipeRouting {
+        - StepNumber: int
+        - StepName: string
+        - EstimatedTimeMinutes: int
+        + AddStep(dto: RecipeRouting): void
+        + ReorderSteps(stepList: List<int>): void
+        + SetEstimatedTime(minutes: int): void
+    }
+    
+    class StepParameter {
+        - ParameterName: string
+        - MinValue: decimal
+        - MaxValue: decimal
+        - IsCritical: bool
+        + SetLimits(min: decimal, max: decimal): void
+        + CheckCriticality(): bool
+    }
+    
+    class RecipeTechSpecs {
+        - Content: string
+        - IsChecked: bool
+        + AddSpec(content: string): void
+        + UpdateSpec(id: int, content: string): void
+    }
+}
+
+package "Execution Module" {
+    class ProductionOrder {
+        - OrderCode: string
+        - PlannedQuantity: decimal
+        - Status: string
+        + CreateOrder(recipeId: int, qty: decimal): void
+        + UpdateOrder(id: int, status: string): void
+        + FindOrder(id: int): ProductionOrder
+        + GenerateOrderBom(): List<ProductionOrderBom>
+        + GenerateBatches(numberOfBatches: int): void
+        + ReleaseOrder(): void
+    }
+    
+    class ProductionOrderBom {
+        - RequiredQuantity: decimal
+        - DispensingStatus: string
+        + FindOrderBom(id: int): ProductionOrderBom
+        + DispenseMaterial(qty: decimal, userId: int): void
+        + CheckDispensingStatus(): bool
+    }
+    
+    class ProductionBatch {
+        - BatchNumber: string
+        - Status: string
+        - CurrentStep: int
+        + FindBatch(id: int): ProductionBatch
+        + UpdateStatus(status: string): void
+        + MoveToNextStep(): void
+    }
+    
+    class BatchProcessLog {
+        - StartTime: DateTime
+        - EndTime: DateTime
+        - ResultStatus: string
+        + StartOperation(): void
+        + EndOperation(): void
+        + SignElectronically(pinCode: string): bool
+        + VerifyQC(userId: int, isApproved: bool): void
+        + LogDeviation(note: string): void
+    }
+    
+    class BatchProcessParameterValue {
+        - ActualValue: decimal
+        - RecordedDate: DateTime
+        + RecordValue(val: decimal): void
+        + ValidateAgainstLimits(min: decimal, max: decimal): bool
+    }
+    
+    class MaterialUsage {
+        - ActualAmount: decimal
+        - UsedDate: DateTime
+        + RecordUsage(qty: decimal): void
+        + VerifyAmount(): bool
+    }
+}
+
+' --- Relationships ---
+
+AppUser "1" -- "0..*" BatchProcessLog : Approves >
+AppUser "1" -- "0..*" SystemAuditLog : Generates >
+
+ProductionArea "1" -- "0..*" Equipment : Contains >
+UnitOfMeasure "1" -- "0..*" Material : Measured In >
+UnitOfMeasure "1" -- "0..*" UomConversion : From/To >
+Material "1" -- "0..*" InventoryLot : Has >
+InventoryLot "1" *-- "0..*" QualityTest : Checked By >
+
+Recipe "1" *-- "1..*" RecipeBom : Composed of >
+Recipe "1" *-- "1..*" RecipeRouting : Contains Steps >
+Recipe "1" *-- "0..*" RecipeTechSpecs : Has Rules >
+RecipeRouting "1" *-- "0..*" StepParameter : Specifies >
+RecipeRouting "1" -- "0..1" Equipment : Default Machine >
+
+Recipe "1" -- "0..*" ProductionOrder : Template For >
+ProductionOrder "1" *-- "1..*" ProductionOrderBom : Requires >
+ProductionOrder "1" *-- "1..*" ProductionBatch : Divided Into >
+
+ProductionBatch "1" *-- "1..*" BatchProcessLog : Tracked Via >
+BatchProcessLog "1" *-- "0..*" BatchProcessParameterValue : Records >
+
+StepParameter "1" -- "0..*" BatchProcessParameterValue : Compared Against >
+ProductionBatch "1" -- "0..*" MaterialUsage : Consumes >
+InventoryLot "1" -- "0..*" MaterialUsage : Supplied From >
+
+@enduml
