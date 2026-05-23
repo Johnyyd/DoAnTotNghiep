@@ -361,8 +361,16 @@ export default function Materials() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowInput = tomorrow.toISOString().slice(0, 10);
 
+<<<<<<< HEAD
   // Vietnamese number format: dot for thousands, comma for decimal
   const fmtVN = (n: number) => n.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
+=======
+  // Format number: space for thousands, dot for decimal
+  const fmtVN = (n: number) => {
+    const formatted = n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
+    return formatted.replace(/,/g, ' ');
+  };
+>>>>>>> pr/15
   const convertDisplayQty = (value: number, unitRaw: string) => {
     const unit = (unitRaw || '').toLowerCase();
     if (unit === 'kg' || unit === 'g') {
@@ -481,10 +489,12 @@ export default function Materials() {
               <div>
                 <label className="text-xs text-neutral-500">Đơn vị tính</label>
                 <select className="input" value={form.baseUomId} onChange={(e) => setForm({ ...form, baseUomId: Number(e.target.value) })}>
+                  <option value={9}>mg</option>
                   <option value={2}>g</option>
                   <option value={1}>kg</option>
-                  <option value={4}>Viên</option>
+                  <option value={10}>ml</option>
                   <option value={3}>Lít</option>
+                  <option value={4}>Viên</option>
                   <option value={8}>Cái</option>
                 </select>
               </div>
@@ -554,7 +564,7 @@ export default function Materials() {
             </div>
             <div className="rounded-lg border border-dashed border-neutral-300 p-4">
               <label className="text-sm font-medium text-neutral-700 flex items-center mb-2">
-                <Upload className="w-4 h-4 mr-2" />Tải giấy kiểm nghiệm (tuỳ chọn)
+                <Upload className="w-4 h-4 mr-2" />Tải giấy kiểm nghiệm
               </label>
               <input type="file" accept=".jpg,.jpeg,.png,.webp" onChange={(e) => setImportCertFile(e.target.files?.[0] ?? null)} />
             </div>

@@ -36,6 +36,7 @@ namespace GMP_System.Controllers
                     o.EndDate,
                     o.CreatedAt,
                     o.CreatedBy,
+                    o.RecipeName,
                     CreatedByName = o.CreatedByNavigation == null ? null : o.CreatedByNavigation.FullName,
                     Recipe = o.Recipe == null ? null : new
                     {
@@ -90,6 +91,7 @@ namespace GMP_System.Controllers
                     o.StartDate,
                     o.EndDate,
                     o.CreatedAt,
+                    o.RecipeName,
                     Recipe = o.Recipe == null ? null : new
                     {
                         o.Recipe.RecipeId,
@@ -268,6 +270,7 @@ namespace GMP_System.Controllers
             // Quy tắc duy nhất: nếu đã có lệnh In-Process/Hold thì lệnh mới là Scheduled, ngược lại là In-Process.
             order.Status = isAnyOrderActive ? "Scheduled" : "In-Process";
             order.CreatedAt = DateTime.Now;
+            order.RecipeName = recipe.RecipeName;
             if (!order.StartDate.HasValue) order.StartDate = DateTime.Now;
             if (!order.EndDate.HasValue) order.EndDate = order.StartDate!.Value.AddDays(2);
             if (string.IsNullOrWhiteSpace(order.OrderCode) || order.OrderCode.Length > 12)

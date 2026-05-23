@@ -16,7 +16,7 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
-import { formatNumber } from "@/utils/format";
+import { formatNumber, formatRecipeBatchSize, isRecipeLiquid } from "@/utils/format";
 
 type MaterialOption = {
   materialId: number;
@@ -41,6 +41,7 @@ type UiRecipe = {
   batchSize: number;
   status: string;
   versionNumber: number;
+  uomName?: string;
 };
 type UiBom = {
   bomId: number;
@@ -157,6 +158,7 @@ function normalizeRecipe(item: any): UiRecipe {
     batchSize: Number(item.batchSize ?? item.BatchSize ?? 0),
     status: item.status ?? item.Status ?? "Draft",
     versionNumber: Number(item.versionNumber ?? item.VersionNumber ?? 1),
+    uomName: item.material?.baseUom?.uomName ?? item.Material?.BaseUom?.UomName,
   };
 }
 
@@ -202,6 +204,8 @@ function normalizeRouting(item: any): UiRouting {
     materialId: Number(item.materialId ?? item.MaterialId ?? 0) || undefined,
     areaId: Number(item.areaId ?? item.AreaId ?? 0) || undefined,
     equipmentName:
+      item.equipment?.equipmentName ??
+      item.Equipment?.EquipmentName ??
       item.defaultEquipment?.equipmentName ??
       item.DefaultEquipment?.EquipmentName,
     materialName: item.material?.materialName ?? item.Material?.MaterialName,
@@ -529,8 +533,8 @@ export default function Recipes() {
         if (unit === "mg") return value;
         if (unit === "g") return value * 1000;
         if (unit === "kg") return value * 1000000;
-        if (unit === "ml") return value * 1000;
-        if (unit === "l") return value * 1000000;
+        if (unit === "ml") return value;
+        if (unit === "l") return value * 1000;
         return value;
       };
       return recipesApi.create({
@@ -953,7 +957,7 @@ export default function Recipes() {
           </div>
           <div>
             <label className="text-xs text-neutral-500">
-              Khối lượng 1 viên
+              Khối lượng 1 đơn vị
             </label>
             <div className="mt-1 grid grid-cols-[1fr_120px] gap-2">
               <input
@@ -1028,17 +1032,17 @@ export default function Recipes() {
                 >
                   <p className="font-semibold text-neutral-900 truncate">
                     #{recipe.recipeId} -{" "}
-                    {recipe.recipeName ? `${recipe.recipeName} - ` : ""}
-                    {recipe.materialName ?? "-"}
+                    {recipe.recipeName ? `${recipe.recipeName} ` : ""}
+                    {recipe.materialName ?? "-"} ({formatRecipeBatchSize(recipe.batchSize, isRecipeLiquid(recipe.materialName, recipe.uomName))})
                   </p>
                   <p className="text-xs mt-1">
                     {recipe.status === "Draft" && (
-                      <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                      <span className="px-2 py-0.5 rounded-full bg-white text-gray-700 border border-gray-200">
                         Bản nháp
                       </span>
                     )}
                     {recipe.status === "Approved" && (
-                      <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                      <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
                         Đã duyệt
                       </span>
                     )}
@@ -1060,15 +1064,12 @@ export default function Recipes() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-bold text-neutral-900">
-                  Công thức #{selectedRecipe.recipeId} -{" "}
-                  {selectedRecipe.recipeName
-                    ? `${selectedRecipe.recipeName} - `
-                    : ""}
+                  Công thức {selectedRecipe.recipeName? `${selectedRecipe.recipeName} `: ""}
                   {selectedRecipe.materialName}
                 </h2>
                 <p className="text-sm text-neutral-600">
-                  Khối lượng 1 viên:{" "}
-                  <strong>{formatNumber(selectedRecipe.batchSize)} mg</strong>
+                  Khối lượng 1 đơn vị:{" "}
+                  <strong>{formatRecipeBatchSize(selectedRecipe.batchSize, isRecipeLiquid(selectedRecipe.materialName, selectedRecipe.uomName))}</strong>
                 </p>
               </div>
               <div className="flex gap-2">
@@ -1795,7 +1796,7 @@ export default function Recipes() {
               {editingRouting ? "Cập nhật công đoạn" : "Thêm công đoạn"}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-              <div>
+              <div className="lg:col-span-1">
                 <label className="text-xs text-neutral-500">Số bước</label>
                 <input
                   type="number"
@@ -1821,7 +1822,57 @@ export default function Recipes() {
                   }
                 />
               </div>
-              <div className="lg:col-span-3">
+              <div className="lg:col-span-1">
+                <label className="text-xs text-neutral-500">
+                  Phòng sản xuất
+                </label>
+                <select
+                  className="input"
+                  value={routingForm.areaId}
+                  onChange={(e) => {
+                    setRoutingForm({
+                      ...routingForm,
+                      areaId: Number(e.target.value),
+                      defaultEquipmentId: 0,
+                    });
+                  }}
+                >
+                  <option value={0}>Chọn khu vực</option>
+                  {areas.map((a) => (
+                    <option key={a.areaId} value={a.areaId}>
+                      {a.areaName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="lg:col-span-2">
+                <label className="text-xs text-neutral-500">Thiết bị</label>
+                <select
+                  className="input disabled:opacity-50"
+                  value={routingForm.defaultEquipmentId}
+                  disabled={routingForm.areaId === 0}
+                  onChange={(e) =>
+                    setRoutingForm({
+                      ...routingForm,
+                      defaultEquipmentId: Number(e.target.value),
+                    })
+                  }
+                >
+                  <option value={0}>
+                    {routingForm.areaId === 0
+                      ? "Vui lòng chọn phòng trước"
+                      : "Chọn thiết bị"}
+                  </option>
+                  {equipments
+                    .filter((e) => e.areaId === routingForm.areaId)
+                    .map((eq) => (
+                      <option key={eq.equipmentId} value={eq.equipmentId}>
+                        {eq.equipmentCode} - {eq.equipmentName}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div className="lg:col-span-6">
                 <label className="text-xs text-neutral-500">
                   Chọn nguyên liệu ({routingForm.materialIds.length} đã chọn)
                 </label>
@@ -1892,58 +1943,7 @@ export default function Recipes() {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs text-neutral-500">
-                  Phòng sản xuất
-                </label>
-                <select
-                  className="input"
-                  value={routingForm.areaId}
-                  onChange={(e) => {
-                    setRoutingForm({
-                      ...routingForm,
-                      areaId: Number(e.target.value),
-                      defaultEquipmentId: 0,
-                    });
-                  }}
-                >
-                  <option value={0}>Chọn khu vực</option>
-                  {areas.map((a) => (
-                    <option key={a.areaId} value={a.areaId}>
-                      {a.areaName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs text-neutral-500">Thiết bị</label>
-                <select
-                  className="input disabled:opacity-50"
-                  value={routingForm.defaultEquipmentId}
-                  disabled={routingForm.areaId === 0}
-                  onChange={(e) =>
-                    setRoutingForm({
-                      ...routingForm,
-                      defaultEquipmentId: Number(e.target.value),
-                    })
-                  }
-                >
-                  <option value={0}>
-                    {routingForm.areaId === 0
-                      ? "Vui lòng chọn phòng trước"
-                      : "Chọn thiết bị"}
-                  </option>
-                  {equipments
-                    .filter((e) => e.areaId === routingForm.areaId)
-                    .map((eq) => (
-                      <option key={eq.equipmentId} value={eq.equipmentId}>
-                        {eq.equipmentCode} - {eq.equipmentName}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            </div>
+
 
             {(() => {
               const currentEquipment = equipments.find(
@@ -2140,12 +2140,13 @@ export default function Recipes() {
                 Huỷ
               </button>
               <button
+                disabled={routingForm.materialIds.length === 0 || routingForm.areaId === 0 || routingForm.defaultEquipmentId === 0}
                 onClick={() =>
                   editingRouting
                     ? updateRoutingMutation.mutate()
                     : addRoutingMutation.mutate()
                 }
-                className="btn-primary"
+                className="btn-primary disabled:opacity-50"
               >
                 {editingRouting ? "Lưu cập nhật" : "Thêm công đoạn"}
               </button>

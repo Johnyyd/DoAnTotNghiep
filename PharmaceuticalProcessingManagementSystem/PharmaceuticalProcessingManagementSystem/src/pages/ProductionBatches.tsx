@@ -121,7 +121,8 @@ export default function ProductionBatches() {
     if (normalized.includes('complete')) return { label: 'Hoàn thành', badgeClass: 'bg-green-100 text-green-700 border border-green-200' };
     if (normalized.includes('hold')) return { label: 'Chờ', badgeClass: 'bg-red-100 text-red-700 border border-red-200' };
     if (normalized.includes('scheduled')) return { label: 'Đã lên lịch', badgeClass: 'bg-blue-100 text-blue-700 border border-blue-200' };
-    return { label: status || 'Bản nháp', badgeClass: 'bg-gray-100 text-gray-700 border border-gray-200' };
+    if (normalized.includes('approved')) return { label: 'Đã duyệt', badgeClass: 'bg-blue-100 text-blue-700 border border-blue-200' };
+    return { label: status || 'Bản nháp', badgeClass: 'bg-white text-gray-700 border border-gray-200' };
   };
 
   const fmt = (dateString?: string) => {

@@ -27,7 +27,11 @@ class ApiService {
     }
 
     // Mặc định fallback cho môi trường dev nội bộ
+<<<<<<< HEAD
     return 'http://192.168.100.160:5001/api';
+=======
+    return 'https://porter-unhittable-synovially.ngrok-free.dev/api';
+>>>>>>> pr/15
   }
 
   /// Tiện ích log lỗi cho dev
@@ -110,12 +114,18 @@ class ApiService {
             'completedBatches': completedBatches,
             'status': order['status'] ?? 'Draft',
             'productionBatches': batches, // Include batches for status tracking
+<<<<<<< HEAD
             'recipe':
                 order['recipe'], // Keep full recipe for BOM access in pre-check
             'productionOrderBoms':
                 order['productionOrderBoms'] ?? order['ProductionOrderBoms'],
             'isFullyDispensed':
                 order['isFullyDispensed'] ?? order['IsFullyDispensed'],
+=======
+            'recipe': order['recipe'], // Keep full recipe for BOM access in pre-check
+            'productionOrderBoms': order['productionOrderBoms'] ?? order['ProductionOrderBoms'],
+            'isFullyDispensed': order['isFullyDispensed'] ?? order['IsFullyDispensed'],
+>>>>>>> pr/15
           };
         }).toList();
       }

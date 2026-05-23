@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { certificatesApi, productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
 import { Calculator, CheckCircle2, ClipboardList, FileCheck2, Layers, Pencil, Search, Trash2, Upload, X } from 'lucide-react';
-import { formatNumber, formatDate } from '@/utils/format';
+import { formatNumber, formatDate, formatRecipeBatchSize, isRecipeLiquid } from '@/utils/format';
 
 type OrderStatus = 'Draft' | 'Approved' | 'InProcess' | 'Hold' | 'Completed';
 
@@ -30,26 +30,26 @@ function toRows<T>(raw: unknown): T[] {
 }
 
 function statusClass(status: string) {
-  if (status === 'Draft') return 'bg-gray-100 text-gray-700 border-gray-200';
-  if (status === 'Approved') return 'bg-green-100 text-green-700 border-green-200';
-  if (status === 'InProcess') return 'bg-orange-100 text-orange-700 border-orange-200';
+  if (status === 'Draft') return 'bg-white text-gray-700 border-gray-200';
+  if (status === 'Approved') return 'bg-blue-100 text-blue-700 border-blue-200';
+  if (status === 'InProcess' || status === 'In-Process') return 'bg-orange-100 text-orange-700 border-orange-200';
   if (status === 'Hold') return 'bg-red-100 text-red-700 border-red-200';
   if (status === 'Scheduled') return 'bg-blue-100 text-blue-700 border-blue-200';
   if (status === 'Completed') return 'bg-green-100 text-green-700 border-green-200';
-  return 'bg-gray-100 text-gray-700 border-gray-200';
+  return 'bg-white text-gray-700 border-gray-200';
 }
 
 function getStatusLabel(status: string) {
   if (status === 'Draft') return 'Bản nháp';
   if (status === 'Approved') return 'Đã duyệt';
-  if (status === 'InProcess') return 'Đang chạy';
+  if (status === 'InProcess' || status === 'In-Process') return 'Đang chạy';
   if (status === 'Hold') return 'Chờ';
   if (status === 'Scheduled') return 'Đã lên lịch';
   if (status === 'Completed') return 'Hoàn thành';
   return status;
 }
 
-type MassUnit = 'kg' | 'g' | 'vien';
+type MassUnit = 'kg' | 'g' | 'vien' | 'L' | 'ml' | 'chai';
 
 
 export default function ProductionOrders() {
@@ -88,9 +88,11 @@ export default function ProductionOrders() {
     const mName = r.material?.materialName ?? r.Material?.MaterialName ?? `Sản phẩm #${r.materialId ?? r.MaterialId}`;
     return {
       recipeId: Number(r.recipeId ?? r.RecipeId ?? 0),
-      recipeName: rName ? `${rName} - ${mName}` : mName,
+      recipeName: rName ? `${rName} ${mName}` : mName,
       batchSize: Number(r.batchSize ?? r.BatchSize ?? 0),
       uomName: r.material?.baseUom?.uomName ?? r.Material?.BaseUom?.UomName ?? 'viên',
+      materialName: mName,
+      status: r.status ?? r.Status ?? 'Draft',
     };
   }), [recipesRaw]);
 
@@ -165,22 +167,36 @@ export default function ProductionOrders() {
       .reduce((acc, m) => acc + (totalTablets * m.mgPerTablet), 0);
   }, [requiredMaterials, totalTablets]);
 
+  const isLiquid = useMemo(() => {
+    if (!selectedPlanRecipe) return false;
+    const uom = (selectedPlanRecipe.uomName || '').toLowerCase();
+    return uom.includes('ml') || uom.includes('l') || uom.includes('chai') || uom.includes('ống');
+  }, [selectedPlanRecipe]);
+
+  const productUnit = isLiquid ? 'chai' : 'viên';
+  const baseMassUnit = isLiquid ? 'ml' : 'mg';
+
   const displayFinishedMass = useMemo(() => {
     if (planForm.massUnit === 'g') return `${formatNumber(totalMassMgExclPackaging / 1000)} g`;
     if (planForm.massUnit === 'vien') return `${formatNumber(totalTablets, 0)} viên`;
+    if (planForm.massUnit === 'ml') return `${formatNumber(totalMassMgExclPackaging / 1000)} ml`;
+    if (planForm.massUnit === 'chai') return `${formatNumber(totalTablets, 0)} chai`;
+    if (planForm.massUnit === 'L') return `${formatNumber(totalMassMgExclPackaging / 1_000_000, 3)} L`;
     return `${formatNumber(totalMassMgExclPackaging / 1_000_000, 3)} kg`;
   }, [planForm.massUnit, totalMassMgExclPackaging, totalTablets]);
 
   const orders = useMemo<UiProductionOrder[]>(() => toRows<any>(ordersRaw).map((o) => {
     const recipe = recipes.find((r) => r.recipeId === Number(o.recipeId ?? o.RecipeId));
-    const rName = o.recipe?.recipeName ?? o.recipe?.RecipeName ?? recipe?.recipeName ?? '';
-    const mName = o.recipe?.material?.materialName ?? o.recipe?.Material?.MaterialName ?? '';
     
+    // format as recipeName + " " + materialName if not already formatted
+    const recipeName = recipe?.recipeName 
+      || (o.recipe?.recipeName ? `${o.recipe.recipeName} ${o.recipe.material?.materialName ?? ''}` : (o.recipe?.material?.materialName ?? ''));
+
     return {
       orderId: Number(o.orderId ?? o.OrderId ?? 0),
       orderCode: o.orderCode ?? o.OrderCode ?? '',
       recipeId: Number(o.recipeId ?? o.RecipeId ?? 0),
-      recipeName: rName ? `${rName} - ${mName}` : mName,
+      recipeName: recipeName || `Công thức #${o.recipeId ?? o.RecipeId}`,
       uomName: o.recipe?.material?.baseUom?.uomName ?? recipe?.uomName ?? 'viên',
       plannedQuantity: Number(o.plannedQuantity ?? o.PlannedQuantity ?? 0),
       status: (o.status ?? o.Status ?? 'Draft') as OrderStatus,
@@ -340,27 +356,38 @@ export default function ProductionOrders() {
             <label className="text-xs text-neutral-600">Chọn công thức</label>
             <select className="input" value={planForm.recipeId} onChange={(e) => setPlanForm({ ...planForm, recipeId: Number(e.target.value) })}>
               <option value={0}>Chọn công thức</option>
-              {recipes.map((recipe) => <option key={recipe.recipeId} value={recipe.recipeId}>#{recipe.recipeId} - {recipe.recipeName}</option>)}
+              {recipes.filter((r: any) => r.status === 'Approved').map((recipe) => <option key={recipe.recipeId} value={recipe.recipeId}>#{recipe.recipeId} - {recipe.recipeName}</option>)}
             </select>
           </div>
           <div>
             <label className="text-xs text-neutral-600">Đơn vị hiển thị khối lượng thành phẩm</label>
             <select className="input" value={planForm.massUnit} onChange={(e) => setPlanForm({ ...planForm, massUnit: e.target.value as MassUnit })}>
-              <option value="kg">kg</option><option value="g">g</option><option value="vien">viên</option>
+              {isLiquid ? (
+                <>
+                  <option value="L">L</option>
+                  <option value="ml">ml</option>
+                  <option value="chai">chai</option>
+                </>
+              ) : (
+                <>
+                  <option value="kg">kg</option>
+                  <option value="g">g</option>
+                  <option value="vien">viên</option>
+                </>
+              )}
             </select>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div><label className="text-xs text-neutral-600">Số thùng</label><input type="number" className="input" value={planForm.cartons} onChange={(e) => setPlanForm({ ...planForm, cartons: Number(e.target.value) })} /></div>
-          <div><label className="text-xs text-neutral-600">Số chai/thùng</label><input type="number" className="input" value={planForm.bottlesPerCarton} onChange={(e) => setPlanForm({ ...planForm, bottlesPerCarton: Number(e.target.value) })} /></div>
-          <div><label className="text-xs text-neutral-600">Số viên/chai</label><input type="number" className="input" value={planForm.tabletsPerBottle} onChange={(e) => setPlanForm({ ...planForm, tabletsPerBottle: Number(e.target.value) })} /></div>
-          <div><label className="text-xs text-neutral-600">Viên lẻ</label><input type="number" className="input" value={planForm.looseTablets} onChange={(e) => setPlanForm({ ...planForm, looseTablets: Number(e.target.value) })} /></div>
+          <div><label className="text-xs text-neutral-600">Số chai, hộp/thùng</label><input type="number" className="input" value={planForm.bottlesPerCarton} onChange={(e) => setPlanForm({ ...planForm, bottlesPerCarton: Number(e.target.value) })} /></div>
+          <div><label className="text-xs text-neutral-600">Số {productUnit}</label><input type="number" className="input" value={planForm.tabletsPerBottle} onChange={(e) => setPlanForm({ ...planForm, tabletsPerBottle: Number(e.target.value) })} /></div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-          <div className="p-3 rounded-lg bg-white border border-primary-200"><p className="text-neutral-500">Tổng số viên</p><p className="text-xl font-bold text-neutral-900">{formatNumber(totalTablets, 0)}</p></div>
-          <div className="p-3 rounded-lg bg-white border border-primary-200"><p className="text-neutral-500">Khối lượng 1 viên</p><p className="text-xl font-bold text-neutral-900">{formatNumber(oneTabletMg)} mg</p></div>
+          <div className="p-3 rounded-lg bg-white border border-primary-200"><p className="text-neutral-500">Tổng số {productUnit}</p><p className="text-xl font-bold text-neutral-900">{formatNumber(totalTablets, 0)}</p></div>
+          <div className="p-3 rounded-lg bg-white border border-primary-200"><p className="text-neutral-500">Khối lượng 1 đơn vị thành phẩm</p><p className="text-xl font-bold text-neutral-900">{formatNumber(oneTabletMg)} {baseMassUnit}</p></div>
           <div className="p-3 rounded-lg bg-white border border-primary-200"><p className="text-neutral-500">Khối lượng thành phẩm lý thuyết</p><p className="text-xl font-bold text-neutral-900">{displayFinishedMass}</p></div>
         </div>
 
@@ -378,7 +405,7 @@ export default function ProductionOrders() {
         {requiredMaterials.length > 0 && (
           <div className="table-container bg-white rounded-lg border border-primary-200">
             <table className="table">
-              <thead><tr><th>Nguyên liệu</th><th>Định mức (mg/viên)</th><th>Số lượng cần (kg/viên)</th><th>Tồn hiện tại</th><th>Đủ/Thiếu</th></tr></thead>
+              <thead><tr><th>Nguyên liệu</th><th>Định mức</th><th>Số lượng cần</th><th>Tồn hiện tại</th><th>Tình trạng</th></tr></thead>
               <tbody>
                 {requiredMaterials.map((item, idx) => (
                   <tr key={`${item.materialId}-${idx}`}>
@@ -493,7 +520,7 @@ export default function ProductionOrders() {
               <div><label className="text-xs text-neutral-500">Công thức</label>
                 <select className="input" value={orderForm.recipeId} onChange={(e) => setOrderForm({ ...orderForm, recipeId: Number(e.target.value) })}>
                   <option value={0}>Chọn công thức</option>
-                  {recipes.map((recipe) => <option key={recipe.recipeId} value={recipe.recipeId}>#{recipe.recipeId} - {recipe.recipeName}</option>)}
+                  {recipes.filter(r => r.status === 'Approved' || r.recipeId === orderForm.recipeId).map((recipe) => <option key={recipe.recipeId} value={recipe.recipeId}>#{recipe.recipeId} - {recipe.recipeName} ({formatRecipeBatchSize(recipe.batchSize, isRecipeLiquid(recipe.materialName, recipe.uomName))})</option>)}
                 </select>
               </div>
               <div><label className="text-xs text-neutral-500">Số lượng kế hoạch</label>
@@ -527,17 +554,14 @@ export default function ProductionOrders() {
                   <div><label className="text-xs text-neutral-500">Số thùng</label>
                     <input type="number" min={0} className="input" value={planForm.cartons} onChange={(e) => setPlanForm({ ...planForm, cartons: Number(e.target.value) })} />
                   </div>
-                  <div><label className="text-xs text-neutral-500">Số chai/thùng</label>
+                  <div><label className="text-xs text-neutral-500">Số chai, hộp/thùng</label>
                     <input type="number" min={0} className="input" value={planForm.bottlesPerCarton} onChange={(e) => setPlanForm({ ...planForm, bottlesPerCarton: Number(e.target.value) })} />
                   </div>
-                  <div><label className="text-xs text-neutral-500">Số viên/chai</label>
+                  <div><label className="text-xs text-neutral-500">Số viên</label>
                     <input type="number" min={0} className="input" value={planForm.tabletsPerBottle} onChange={(e) => setPlanForm({ ...planForm, tabletsPerBottle: Number(e.target.value) })} />
                   </div>
-                  <div><label className="text-xs text-neutral-500">Viên lẻ</label>
-                    <input type="number" min={0} className="input" value={planForm.looseTablets} onChange={(e) => setPlanForm({ ...planForm, looseTablets: Number(e.target.value) })} />
-                  </div>
                   <div><label className="text-xs text-neutral-500">Tổng viên tính được</label>
-                    <input type="number" className="input bg-neutral-100" readOnly value={Math.max(planForm.cartons,0) * Math.max(planForm.bottlesPerCarton,0) * Math.max(planForm.tabletsPerBottle,0) + Math.max(planForm.looseTablets,0)} />
+                    <input type="number" className="input bg-neutral-100" readOnly value={Math.max(planForm.cartons,0) * Math.max(planForm.bottlesPerCarton,0) * Math.max(planForm.tabletsPerBottle,0)} />
                   </div>
                 </div>
                 <button className="btn-secondary text-sm" onClick={() => {

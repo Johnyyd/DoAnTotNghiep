@@ -138,7 +138,11 @@ class _HomeScreenState extends State<HomeScreen>
           hasPendingQC = true;
         } else if (logStatus == 'APPROVED') {
           hasInProcess = true;
+<<<<<<< HEAD
         } else if (logStatus == 'RUNNING' || logStatus == 'PASSED' || logStatus == 'EXECUTING') {
+=======
+        } else if (logStatus == 'RUNNING' || logStatus == 'PASSED') {
+>>>>>>> pr/15
           hasPendingWorker = true;
         } else if (logStatus == 'FAILED' || logStatus == 'REJECTED') {
           hasFailed = true;

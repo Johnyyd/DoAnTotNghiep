@@ -257,7 +257,11 @@ class _MixingStepScreenState extends State<MixingStepScreen>
           } else {
             stopPolling();
           }
+<<<<<<< HEAD
         } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED' || rawStatus == 'EXECUTING') {
+=======
+        } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
+>>>>>>> pr/15
           _currentPhase = ExecutionPhase.execution;
           stopPolling();
         } else if (rawStatus == 'RUNNING') {

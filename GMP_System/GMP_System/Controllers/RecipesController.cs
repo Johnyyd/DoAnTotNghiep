@@ -37,7 +37,10 @@ namespace GMP_System.Controllers
                     Material = r.Material == null ? null : new {
                         r.Material.MaterialId,
                         r.Material.MaterialName,
-                        r.Material.MaterialCode
+                        r.Material.MaterialCode,
+                        BaseUom = r.Material.BaseUom == null ? null : new {
+                            r.Material.BaseUom.UomName
+                        }
                     }
                 })
                 .OrderBy(r => r.RecipeId)
@@ -66,7 +69,10 @@ namespace GMP_System.Controllers
                     Material = r.Material == null ? null : new {
                         r.Material.MaterialId,
                         r.Material.MaterialName,
-                        r.Material.MaterialCode
+                        r.Material.MaterialCode,
+                        BaseUom = r.Material.BaseUom == null ? null : new {
+                            r.Material.BaseUom.UomName
+                        }
                     }
                 })
                 .FirstOrDefaultAsync();

@@ -308,15 +308,15 @@
 	    (object Class "NewInterface"
 		quid       	"6A08DAB301FC"
 		stereotype 	"Interface")
-	    (object Association "S"
+	    (object Association "$UNNAMED$42"
 		quid       	"6A08DB6702A4"
 		roles      	(list role_list
-		    (object Role "$UNNAMED$42"
+		    (object Role "$UNNAMED$43"
 			quid       	"6A08DB680287"
 			supplier   	"Use Case View::7. Theo doi va cap nhat tien do"
 			quidu      	"6A08D9E00230"
 			is_navigable 	TRUE)
-		    (object Role "$UNNAMED$43"
+		    (object Role "$UNNAMED$44"
 			quid       	"6A08DB68028B"
 			supplier   	"Use Case View::Nhan vien quan ly"
 			quidu      	"6A08D9E00220"))))
@@ -1986,7 +1986,7 @@
 				    (2865, 207)
 				    (2574, 179))
 				line_style 	0)))
-		    (object AssociationViewNew "S" @85
+		    (object AssociationViewNew "$UNNAMED$42" @85
 			location   	(1267, 346)
 			font       	(object Font
 			    size       	10
@@ -1997,32 +1997,11 @@
 			    strike     	FALSE
 			    color      	0
 			    default_color 	TRUE)
-			label      	(object SegLabel @86
-			    Parent_View 	@85
-			    location   	(1267, 287)
-			    font       	(object Font
-				size       	10
-				face       	"Arial"
-				bold       	FALSE
-				italics    	TRUE
-				underline  	FALSE
-				strike     	FALSE
-				color      	0
-				default_color 	TRUE)
-			    anchor     	1
-			    anchor_loc 	1
-			    nlines     	1
-			    max_width  	60
-			    justify    	0
-			    label      	"S"
-			    pctDist    	0.500000
-			    height     	60
-			    orientation 	0)
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"6A08DB6702A4"
 			roleview_list 	(list RoleViews
-			    (object RoleView "$UNNAMED$42" @87
+			    (object RoleView "$UNNAMED$43" @86
 				Parent_View 	@85
 				location   	(1100, -180)
 				stereotype 	TRUE
@@ -2034,7 +2013,7 @@
 				    (1267, 346)
 				    (2270, 187))
 				line_style 	0)
-			    (object RoleView "$UNNAMED$43" @88
+			    (object RoleView "$UNNAMED$44" @87
 				Parent_View 	@85
 				location   	(1100, -180)
 				stereotype 	TRUE

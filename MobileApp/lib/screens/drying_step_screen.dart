@@ -562,6 +562,20 @@ class _DryingStepScreenState extends State<DryingStepScreen>
   }
 
   Future<void> _verifyAndSubmit() async {
+<<<<<<< HEAD
+=======
+    final slTruoc = double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0;
+    final slSau = double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0;
+    if (slSau >= slTruoc && slSau > 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+                '❌ Lỗi: Khối lượng sau sấy phải nhỏ hơn khối lượng trước sấy!')));
+      }
+      return;
+    }
+
+>>>>>>> pr/15
     final pin = await showPinDialog();
     if (pin == null) return;
 
