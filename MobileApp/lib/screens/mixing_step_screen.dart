@@ -257,7 +257,11 @@ class _MixingStepScreenState extends State<MixingStepScreen>
           } else {
             stopPolling();
           }
+<<<<<<< HEAD
+        } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED' || rawStatus == 'EXECUTING') {
+=======
         } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
+>>>>>>> pr/15
           _currentPhase = ExecutionPhase.execution;
           stopPolling();
         } else if (rawStatus == 'RUNNING') {
@@ -621,14 +625,37 @@ class _MixingStepScreenState extends State<MixingStepScreen>
     );
   }
 
+  Future<void> _exitAndSave() async {
+    if (widget.isViewer || _currentPhase == ExecutionPhase.completed) {
+      if (mounted) Navigator.pop(context);
+      return;
+    }
+    String status = 'Running';
+    if (_currentPhase == ExecutionPhase.verification) status = 'PendingQC';
+    if (_currentPhase == ExecutionPhase.execution) status = 'Executing';
+    
+    await _submit(status, null, isInternal: true);
+    if (mounted) Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        await _exitAndSave();
+      },
+      child: Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _exitAndSave,
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -681,7 +708,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
         ],
       ),
       floatingActionButton: _buildContextualFAB(),
-    );
+    ));
   }
 
   Widget _buildStatusHeader() {
@@ -742,20 +769,20 @@ class _MixingStepScreenState extends State<MixingStepScreen>
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20, right: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+      child: Wrap(
+        alignment: WrapAlignment.end,
+        crossAxisAlignment: WrapCrossAlignment.end,
+        spacing: 12,
+        runSpacing: 12,
         children: [
           if (_currentPhase != ExecutionPhase.precheck &&
               _currentPhase != ExecutionPhase.completed)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: FloatingActionButton.extended(
-                heroTag: 'btnBackM',
-                onPressed: isSaving ? null : _prevPhase,
-                label: const Text('QUAY LẠI'),
-                icon: const Icon(Icons.arrow_back),
-                backgroundColor: Colors.grey.shade700,
-              ),
+            FloatingActionButton.extended(
+              heroTag: 'btnBackM',
+              onPressed: isSaving ? null : _prevPhase,
+              label: const Text('QUAY LẠI'),
+              icon: const Icon(Icons.arrow_back),
+              backgroundColor: Colors.grey.shade700,
             ),
           FloatingActionButton.extended(
             heroTag: 'btnNextM',

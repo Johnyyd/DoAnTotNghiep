@@ -69,7 +69,7 @@ class _DynamicStepScreenState extends State<DynamicStepScreen>
           // Cập nhật Phase dựa trên status
           if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
             _currentPhase = ExecutionPhase.verification;
-          } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
+          } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED' || rawStatus == 'EXECUTING') {
             _currentPhase = ExecutionPhase.execution;
           } else if (rawStatus == 'RUNNING') {
             _currentPhase = ExecutionPhase.input;
@@ -145,12 +145,35 @@ class _DynamicStepScreenState extends State<DynamicStepScreen>
     }
   }
 
+  Future<void> _exitAndSave() async {
+    if (widget.isViewer || _currentPhase == ExecutionPhase.completed) {
+      if (mounted) Navigator.pop(context);
+      return;
+    }
+    String status = 'Running';
+    if (_currentPhase == ExecutionPhase.verification) status = 'PendingQC';
+    if (_currentPhase == ExecutionPhase.execution) status = 'Executing';
+    
+    await _submitPhase(status);
+    if (mounted) Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        await _exitAndSave();
+      },
+      child: Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _exitAndSave,
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -171,7 +194,7 @@ class _DynamicStepScreenState extends State<DynamicStepScreen>
         ],
       ),
       floatingActionButton: widget.isViewer ? null : _buildFab(),
-    );
+    ));
   }
 
   Widget _buildForm() {

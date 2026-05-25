@@ -361,11 +361,16 @@ export default function Materials() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowInput = tomorrow.toISOString().slice(0, 10);
 
+<<<<<<< HEAD
+  // Vietnamese number format: dot for thousands, comma for decimal
+  const fmtVN = (n: number) => n.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
+=======
   // Format number: space for thousands, dot for decimal
   const fmtVN = (n: number) => {
     const formatted = n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
     return formatted.replace(/,/g, ' ');
   };
+>>>>>>> pr/15
   const convertDisplayQty = (value: number, unitRaw: string) => {
     const unit = (unitRaw || '').toLowerCase();
     if (unit === 'kg' || unit === 'g') {

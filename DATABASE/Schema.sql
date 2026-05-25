@@ -3,8 +3,8 @@
    Schema Cơ sở dữ liệu cơ bản - v3.5 (Robust Build)
    ========================================================================= */
 
-USE [PharmaceuticalProcessingManagementSystem];
-GO
+--USE [PharmaceuticalProcessingManagementSystem];
+--GO
 
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
@@ -47,7 +47,8 @@ IF OBJECT_ID('UnitOfMeasure', 'U') IS NOT NULL DROP TABLE UnitOfMeasure;
 IF OBJECT_ID('RecipeTechSpecs', 'U') IS NOT NULL DROP TABLE RecipeTechSpecs;
 IF OBJECT_ID('AppUsers', 'U') IS NOT NULL DROP TABLE AppUsers;
 GO
-
+--CREATE DATABASE PharmaceuticalProcessingManagementSystem;
+--USE PharmaceuticalProcessingManagementSystem;
 -- -------------------------------------------------------------------------
 -- 1. AppUsers
 -- -------------------------------------------------------------------------
@@ -74,7 +75,7 @@ CREATE TABLE SystemAuditLog (
     Action NVARCHAR(50) NOT NULL,
     OldValue NVARCHAR(MAX),
     NewValue NVARCHAR(MAX),
-    ChangedBy INT,
+    ChangedBy INT REFERENCES AppUsers(UserId),
     ChangedDate DATETIME2 DEFAULT GETDATE()
 );
 GO
@@ -121,7 +122,7 @@ CREATE TABLE Equipments (
     EquipmentName NVARCHAR(200) NOT NULL,
     TechnicalSpecification NVARCHAR(300),
     UsagePurpose NVARCHAR(300),
-    AreaId INT -- Managed by Program.cs EnsureColumnsAsync or explicit ALTER
+    AreaId INT REFERENCES ProductionAreas(AreaId) -- Managed by Program.cs EnsureColumnsAsync or explicit ALTER
 );
 GO
 
@@ -225,7 +226,7 @@ CREATE TABLE RecipeRouting (
     NumberOfRouting INT DEFAULT 1,
     MaterialId INT,
     MaterialIds NVARCHAR(500) NULL,
-    AreaId INT,
+    AreaId INT REFERENCES ProductionAreas(AreaId),
     CleanlinessStatus NVARCHAR(50),
     StandardTemperature NVARCHAR(50),
     StandardHumidity NVARCHAR(50),
