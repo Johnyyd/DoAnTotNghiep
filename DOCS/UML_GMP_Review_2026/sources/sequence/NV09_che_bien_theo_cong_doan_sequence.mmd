@@ -1,0 +1,23 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+sequenceDiagram
+    autonumber
+    actor OP as Công nhân
+    participant MOB as Mobile App
+    participant API as BatchProcessLogs API
+    participant DB as CSDL
+    actor QC as QA/QC
+    OP->>MOB: Chọn công đoạn trộn/sấy/đóng nang
+    MOB->>API: GET /api/batch-process-logs/batch/{batchId}
+    API->>DB: Lấy workflow routing + log hiện có
+    API-->>MOB: Hiển thị công đoạn hiện tại
+    OP->>MOB: Nhập thông số vận hành thực tế
+    MOB->>API: POST /api/batch-process-logs
+    API->>DB: Lưu log và ParameterValues
+    alt Có sai lệch hoặc yêu cầu QC
+    API->>DB: Status = PendingQC/Failed
+    QC->>API: POST /verify
+    API->>DB: Cập nhật ResultStatus
+    else Đạt
+    API->>DB: Tăng CurrentStep
+    end
+    API-->>MOB: Trả trạng thái công đoạn

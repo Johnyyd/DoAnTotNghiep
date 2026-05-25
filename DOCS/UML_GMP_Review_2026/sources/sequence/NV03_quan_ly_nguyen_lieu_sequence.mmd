@@ -1,0 +1,20 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+sequenceDiagram
+    autonumber
+    actor WH as Kho/Admin
+    participant WEB as Web Admin
+    participant API as Materials/Inventory API
+    participant FILE as File Storage
+    participant DB as CSDL
+    WH->>WEB: Nhập nguyên liệu/lô tồn kho
+    WEB->>API: POST /api/materials hoặc /api/inventory-lots
+    API->>DB: Validate mã, UOM, hạn dùng
+    alt Dữ liệu không hợp lệ
+    API-->>WEB: 400 + cảnh báo
+    else Hợp lệ
+    API->>DB: Lưu Material/InventoryLot
+    WH->>WEB: Upload COA nguyên liệu
+    WEB->>API: POST /api/certificates/material/upload
+    API->>FILE: Lưu file COA
+    API-->>WEB: 200 OK
+    end

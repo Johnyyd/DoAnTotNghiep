@@ -6,8 +6,11 @@ services:
     environment:
       - SA_PASSWORD=${SA_PASSWORD}
       - ACCEPT_EULA=Y
+      - MSSQL_AGENT_ENABLED=true
     ports:
       - "1435:1433"
+    volumes:
+      - ./DATABASE/backups:/var/opt/mssql/backups
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "SA", "-P", "${SA_PASSWORD}", "-Q", "SELECT 1"]

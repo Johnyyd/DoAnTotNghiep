@@ -1,0 +1,20 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+sequenceDiagram
+    autonumber
+    actor OP as Công nhân
+    participant MOB as Mobile App
+    participant API as BatchProcessLogs API
+    participant DB as CSDL
+    actor QC as QA/QC
+    OP->>MOB: Nhập nhiệt độ, độ ẩm, áp lực, vệ sinh
+    MOB->>API: POST /api/batch-process-logs
+    API->>DB: Lấy StepParameters môi trường
+    API->>API: So sánh giá trị thực tế với min/max
+    alt Ngoài ngưỡng
+    API->>DB: Lưu log IsDeviation = true
+    API-->>MOB: Cảnh báo không cho bắt đầu
+    QC->>MOB: Yêu cầu điều chỉnh/đo lại
+    else Đạt
+    API->>DB: Lưu log đạt chuẩn
+    API-->>MOB: Cho phép vào công đoạn kế tiếp
+    end

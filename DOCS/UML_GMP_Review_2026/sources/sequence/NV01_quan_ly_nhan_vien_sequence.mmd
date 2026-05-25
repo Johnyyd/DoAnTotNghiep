@@ -1,0 +1,18 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+sequenceDiagram
+    autonumber
+    actor ADM as Admin
+    participant WEB as Web Admin
+    participant API as AppUsers/Auth API
+    participant DB as CSDL
+    participant AUD as Audit Trail
+    ADM->>WEB: Nhập thông tin nhân viên và vai trò
+    WEB->>API: POST /api/app-users
+    API->>DB: Kiểm tra username duy nhất
+    alt Trùng username hoặc thiếu dữ liệu
+    API-->>WEB: 400 + yêu cầu nhập lại
+    else Hợp lệ
+    API->>DB: Lưu AppUser + Role + PinCode
+    API->>AUD: Ghi Create/Update user
+    API-->>WEB: 200 OK
+    end

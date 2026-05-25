@@ -1,0 +1,18 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+sequenceDiagram
+    autonumber
+    actor TECH as Chuyên viên kỹ thuật
+    participant WEB as Recipes UI
+    participant API as RecipesController
+    participant DB as CSDL
+    actor MGR as Quản lý/QC
+    TECH->>WEB: Tạo Recipe và BatchSize
+    WEB->>API: POST /api/recipes
+    API->>DB: Lưu Recipe trạng thái Draft
+    TECH->>WEB: Thêm BOM, Routing, StepParameters, TechSpecs
+    WEB->>API: POST /bom, /routing, /tech-specs
+    API->>DB: Lưu định mức và trình tự công đoạn
+    MGR->>WEB: Kiểm tra và phê duyệt
+    WEB->>API: POST /api/recipes/{id}/approve
+    API->>DB: Cập nhật Status = Approved
+    API-->>WEB: Công thức sẵn sàng lập lệnh

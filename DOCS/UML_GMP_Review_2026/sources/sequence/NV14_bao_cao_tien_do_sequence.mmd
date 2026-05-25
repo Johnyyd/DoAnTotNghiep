@@ -1,0 +1,19 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+sequenceDiagram
+    autonumber
+    actor MGR as Quản lý
+    participant WEB as Dashboard/Báo cáo
+    participant API as ProductionOrders/Batches API
+    participant DB as CSDL
+    actor DIR as Ban giám đốc
+    MGR->>WEB: Mở báo cáo tiến độ
+    WEB->>API: GET /api/production-orders và /production-batches
+    API->>DB: Query orders, batches, logs, routing
+    DB-->>API: Dữ liệu tiến độ
+    API-->>WEB: Danh sách lệnh + % hoàn thành
+    WEB->>WEB: Tính/hiển thị cảnh báo Hold, Pending QC
+    alt Thiếu dữ liệu công đoạn
+    WEB-->>MGR: Yêu cầu bộ phận sản xuất cập nhật bổ sung
+    else Đủ dữ liệu
+    MGR-->>DIR: Báo cáo điều phối sản xuất
+    end

@@ -12,8 +12,10 @@ services:
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=${SA_PASSWORD}
+      - MSSQL_AGENT_ENABLED=true
     volumes:
       - ./DATABASE:/var/opt/mssql/backup:ro
+      - ./DATABASE/backups:/var/opt/mssql/backups
       - gmp-sqlserver-data:/var/opt/mssql
     healthcheck:
       test:

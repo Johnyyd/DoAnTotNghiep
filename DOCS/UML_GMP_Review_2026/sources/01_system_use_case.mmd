@@ -1,0 +1,59 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+flowchart LR
+    Admin(["Admin"])
+    Tech(["Chuyên viên kỹ thuật"])
+    Planner(["Nhân viên kế hoạch"])
+    Manager(["Quản lý sản xuất"])
+    Warehouse(["Nhân viên kho"])
+    Operator(["Công nhân vận hành"])
+    QC(["QA/QC"])
+    Auditor(["Thanh tra/Auditor"])
+
+    subgraph SYS["Hệ thống quản lý quy trình chế biến thuốc GMP-WHO"]
+        UC_Login(["Đăng nhập / phân quyền"])
+        UC_Pin(["Thiết lập PIN chữ ký điện tử"])
+        UC_User(["Quản lý người dùng"])
+        UC_Material(["Quản lý nguyên liệu, UOM, lô tồn"])
+        UC_Equip(["Quản lý thiết bị và khu vực"])
+        UC_Recipe(["Thiết lập Recipe, BOM, Routing, Tech Specs"])
+        UC_Order(["Lập lệnh sản xuất"])
+        UC_Snapshot(["Snapshot BOM/Routing/Tech Specs"])
+        UC_Dispense(["Xác nhận cấp phát nguyên vật liệu"])
+        UC_Batch(["Theo dõi và cập nhật công đoạn mẻ"])
+        UC_QC(["QC gate và giấy kiểm nghiệm"])
+        UC_FG(["Quản lý lô thành phẩm"])
+        UC_Report(["Báo cáo tiến độ sản xuất"])
+        UC_Trace(["Truy xuất nguồn gốc"])
+        UC_Audit(["Audit trail / nhật ký hệ thống"])
+    end
+
+    Admin --> UC_Login
+    Admin --> UC_User
+    Admin --> UC_Material
+    Admin --> UC_Equip
+    Admin --> UC_Audit
+    Tech --> UC_Recipe
+    Planner --> UC_Order
+    Manager --> UC_Order
+    Manager --> UC_Report
+    Manager --> UC_FG
+    Warehouse --> UC_Dispense
+    Operator --> UC_Batch
+    Operator --> UC_Dispense
+    QC --> UC_QC
+    QC --> UC_Trace
+    QC --> UC_Report
+    Auditor --> UC_Audit
+    Auditor --> UC_Trace
+
+    UC_Order -. "include" .-> UC_Snapshot
+    UC_Batch -. "include" .-> UC_QC
+    UC_FG -. "include" .-> UC_QC
+    UC_Dispense -. "trace" .-> UC_Trace
+    UC_Batch -. "log" .-> UC_Audit
+    UC_Order -. "log" .-> UC_Audit
+
+    classDef actor fill:#FEF3C7,stroke:#D97706,stroke-width:2px,color:#111827;
+    classDef uc fill:#DBEAFE,stroke:#1D4ED8,stroke-width:2px,color:#111827;
+    class Admin,Tech,Planner,Manager,Warehouse,Operator,QC,Auditor actor;
+    class UC_Login,UC_Pin,UC_User,UC_Material,UC_Equip,UC_Recipe,UC_Order,UC_Snapshot,UC_Dispense,UC_Batch,UC_QC,UC_FG,UC_Report,UC_Trace,UC_Audit uc;
