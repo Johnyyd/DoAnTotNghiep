@@ -1,0 +1,20 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+sequenceDiagram
+    autonumber
+    actor QC as QA/QC/Auditor
+    participant WEB as Traceability UI
+    participant API as TraceabilityController
+    participant DB as CSDL
+    participant FILE as Certificate Storage
+    QC->>WEB: Nhập batchNumber hoặc lotNumber
+    WEB->>API: GET /api/traceability/backward/{batchNumber}
+    API->>DB: Tìm ProductionBatch, Order, Recipe
+    API->>DB: Lấy ProductionOrderBom, MaterialUsage, InventoryLot
+    API->>DB: Lấy BatchProcessLog và người ký
+    API->>FILE: Gắn URL giấy kiểm nghiệm
+    alt Không tìm thấy mã lô
+    API-->>WEB: 404/400 + thông báo lỗi
+    else Tìm thấy
+    API-->>WEB: Genealogy thành phẩm → nguyên liệu
+    QC->>WEB: Xuất báo cáo truy xuất
+    end

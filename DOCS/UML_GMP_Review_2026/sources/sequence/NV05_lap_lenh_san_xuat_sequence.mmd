@@ -1,0 +1,23 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+sequenceDiagram
+    autonumber
+    actor PLAN as Nhân viên kế hoạch
+    participant WEB as ProductionOrders UI
+    participant API as ProductionOrdersController
+    participant DB as CSDL
+    participant AUD as Audit Trail
+    PLAN->>WEB: Chọn recipe và nhập planned quantity
+    WEB->>API: POST /api/production-orders
+    API->>DB: Kiểm tra Recipe, BOM, Routing
+    API->>DB: BEGIN TRANSACTION
+    API->>DB: Kiểm tra/trừ tồn kho theo BOM
+    alt Không đủ tồn hoặc dữ liệu thiếu
+    API->>DB: ROLLBACK
+    API-->>WEB: 400 + danh sách thiếu hụt
+    else Hợp lệ
+    API->>DB: INSERT ProductionOrder
+    API->>DB: Snapshot ProductionOrderBom + Routing + TechSpecs
+    API->>DB: Tự động tạo ProductionBatch
+    API->>AUD: Ghi audit lập lệnh
+    API-->>WEB: 200 OK
+    end

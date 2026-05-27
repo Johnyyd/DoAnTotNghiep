@@ -1,0 +1,41 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+flowchart LR
+    subgraph ACT["Tác nhân"]
+        A01(["Admin"])
+        A02(["Quản lý sản xuất"])
+        A03(["Nhân viên"])
+    end
+    subgraph PROC["Nghiệp vụ"]
+        UC(["NV01 - Quản lý thông tin nhân viên"])
+        S01["1. Khởi tạo hồ sơ nhân viên"]
+        UC --> S01
+        S02["2. Gán vai trò và nền tảng truy cập"]
+        S01 --> S02
+        S03["3. Thiết lập PIN chữ ký điện tử"]
+        S02 --> S03
+        S04["4. Kích hoạt hoặc khóa tài khoản"]
+        S03 --> S04
+        S05["5. Ghi nhận audit trail"]
+        S04 --> S05
+    end
+    subgraph ENT["Thực thể nghiệp vụ / dữ liệu"]
+        E01[["AppUser"]]
+        E02[["Role"]]
+        E03[["PinCode"]]
+        E04[["SystemAuditLog"]]
+    end
+    A01 --> UC
+    A02 --> UC
+    A03 --> UC
+    S05 --> E01
+    S05 --> E02
+    S05 --> E03
+    S05 --> E04
+    classDef actor fill:#FEF3C7,stroke:#D97706,stroke-width:2px,color:#111827;
+    classDef usecase fill:#DBEAFE,stroke:#1D4ED8,stroke-width:2px,color:#111827;
+    classDef step fill:#EFF6FF,stroke:#60A5FA,color:#111827;
+    classDef entity fill:#DCFCE7,stroke:#15803D,stroke-width:2px,color:#111827;
+    class UC usecase;
+    class A01,A02,A03 actor;
+    class S01,S02,S03,S04,S05 step;
+    class E01,E02,E03,E04 entity;

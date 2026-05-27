@@ -1,0 +1,45 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+flowchart LR
+    subgraph ACT["Tác nhân"]
+        A01(["QA/QC"])
+        A02(["Quản lý sản xuất"])
+        A03(["Thanh tra/Auditor"])
+    end
+    subgraph PROC["Nghiệp vụ"]
+        UC(["NV15 - Truy xuất nguồn gốc sản phẩm"])
+        S01["1. Nhập mã lô thành phẩm hoặc mã lô nguyên liệu"]
+        UC --> S01
+        S02["2. Truy xuất ngược từ thành phẩm về nguyên liệu"]
+        S01 --> S02
+        S03["3. Truy xuất xuôi từ nguyên liệu đến thành phẩm"]
+        S02 --> S03
+        S04["4. Hiển thị thiết bị, người thao tác, COA"]
+        S03 --> S04
+        S05["5. Xuất hồ sơ phục vụ kiểm tra GMP"]
+        S04 --> S05
+    end
+    subgraph ENT["Thực thể nghiệp vụ / dữ liệu"]
+        E01[["ProductionBatch"]]
+        E02[["ProductionOrder"]]
+        E03[["MaterialUsage"]]
+        E04[["InventoryLot"]]
+        E05[["BatchProcessLog"]]
+        E06[["Certificate"]]
+    end
+    A01 --> UC
+    A02 --> UC
+    A03 --> UC
+    S05 --> E01
+    S05 --> E02
+    S05 --> E03
+    S05 --> E04
+    S05 --> E05
+    S05 --> E06
+    classDef actor fill:#FEF3C7,stroke:#D97706,stroke-width:2px,color:#111827;
+    classDef usecase fill:#DBEAFE,stroke:#1D4ED8,stroke-width:2px,color:#111827;
+    classDef step fill:#EFF6FF,stroke:#60A5FA,color:#111827;
+    classDef entity fill:#DCFCE7,stroke:#15803D,stroke-width:2px,color:#111827;
+    class UC usecase;
+    class A01,A02,A03 actor;
+    class S01,S02,S03,S04,S05 step;
+    class E01,E02,E03,E04,E05,E06 entity;

@@ -1,0 +1,20 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+sequenceDiagram
+    autonumber
+    actor OP as Công nhân
+    participant MOB as Mobile App
+    participant API as ProductionBatches API
+    participant DB as CSDL
+    actor MGR as Quản lý/QC
+    OP->>MOB: Chọn kết thúc mẻ
+    MOB->>API: POST /api/production-batches/{id}/finish
+    API->>DB: Lấy routing của order/recipe
+    API->>DB: Kiểm tra log Passed/Approved từng công đoạn
+    alt Còn công đoạn chưa duyệt
+    API-->>MOB: 400 + danh sách công đoạn thiếu
+    else Đủ điều kiện
+    API->>DB: Batch.Status = Completed, EndTime = now
+    API->>DB: Nếu mọi mẻ xong thì Order.Status = Completed
+    MGR->>MOB: Ký xác nhận đối chiếu/yield
+    API-->>MOB: Đóng mẻ thành công
+    end

@@ -1,0 +1,18 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+sequenceDiagram
+    autonumber
+    actor PACK as Công nhân đóng gói
+    participant MOB as Mobile App
+    participant API as BatchProcessLogs/Inventory API
+    participant DB as CSDL
+    actor WH as Kho thành phẩm
+    PACK->>MOB: Mở công đoạn đóng gói
+    MOB->>API: GET /api/production-batches/{id}
+    API->>DB: Lấy quy cách, bao bì, batch number
+    PACK->>MOB: Nhập số chai/thùng, bao bì dùng, ghi chú
+    MOB->>API: POST /api/batch-process-logs
+    API->>DB: Lưu log đóng gói
+    PACK->>MOB: Xác nhận chuyển biệt trữ
+    MOB->>API: POST /api/inventory-lots
+    API->>DB: Tạo lô thành phẩm chờ QC
+    API-->>WH: Thông tin lô biệt trữ

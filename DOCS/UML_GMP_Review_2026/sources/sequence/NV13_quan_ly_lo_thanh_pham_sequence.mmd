@@ -1,0 +1,22 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+sequenceDiagram
+    autonumber
+    actor OP as Công nhân/Quản lý
+    participant WEB as Web Admin
+    participant API as Inventory + Certificates API
+    participant DB as CSDL
+    actor QC as QA/QC
+    OP->>WEB: Chọn lệnh/mẻ đã Completed
+    WEB->>API: POST /api/inventory-lots
+    API->>DB: Kiểm tra batch/order hoàn tất
+    API->>DB: Lưu lô thành phẩm
+    QC->>WEB: Tick toàn bộ RecipeTechSpecs
+    WEB->>API: PUT /api/recipes/tech-specs/{id}/check
+    QC->>WEB: Upload giấy kiểm nghiệm mẻ
+    WEB->>API: POST /api/certificates/batch/upload
+    API->>DB: Kiểm tra không còn TechSpec chưa đạt
+    alt Còn tiêu chuẩn chưa đạt
+    API-->>WEB: Từ chối upload/nhập kho
+    else Đạt
+    API-->>WEB: Lô thành phẩm hợp lệ
+    end

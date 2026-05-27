@@ -1,0 +1,45 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+flowchart LR
+    subgraph ACT["Tác nhân"]
+        A01(["Nhân viên kế hoạch"])
+        A02(["Quản lý sản xuất"])
+        A03(["Hệ thống"])
+    end
+    subgraph PROC["Nghiệp vụ"]
+        UC(["NV05 - Lập lệnh sản xuất"])
+        S01["1. Tiếp nhận nhu cầu sản xuất"]
+        UC --> S01
+        S02["2. Chọn Recipe/BOM/Routing đã duyệt"]
+        S01 --> S02
+        S03["3. Nhập số lượng và ngày sản xuất"]
+        S02 --> S03
+        S04["4. Tính nguyên liệu, trừ tồn, snapshot dữ liệu"]
+        S03 --> S04
+        S05["5. Tự động chia mẻ và xếp hàng lệnh"]
+        S04 --> S05
+    end
+    subgraph ENT["Thực thể nghiệp vụ / dữ liệu"]
+        E01[["Recipe"]]
+        E02[["ProductionOrder"]]
+        E03[["ProductionOrderBom"]]
+        E04[["ProductionBatch"]]
+        E05[["RecipeRouting snapshot"]]
+        E06[["RecipeTechSpec snapshot"]]
+    end
+    A01 --> UC
+    A02 --> UC
+    A03 --> UC
+    S05 --> E01
+    S05 --> E02
+    S05 --> E03
+    S05 --> E04
+    S05 --> E05
+    S05 --> E06
+    classDef actor fill:#FEF3C7,stroke:#D97706,stroke-width:2px,color:#111827;
+    classDef usecase fill:#DBEAFE,stroke:#1D4ED8,stroke-width:2px,color:#111827;
+    classDef step fill:#EFF6FF,stroke:#60A5FA,color:#111827;
+    classDef entity fill:#DCFCE7,stroke:#15803D,stroke-width:2px,color:#111827;
+    class UC usecase;
+    class A01,A02,A03 actor;
+    class S01,S02,S03,S04,S05 step;
+    class E01,E02,E03,E04,E05,E06 entity;

@@ -48,3 +48,22 @@ Trong file `appsettings.json` của Backend, hãy đảm bảo thông tin khớp
 ## ⚠️ Lưu ý quan trọng
 - **Tên Database**: Phải là `PharmaceuticalProcessingManagementSystem` để đồng bộ với code Backend.
 - **Ràng buộc khóa ngoại**: Nếu cập nhật thủ công, hãy chú ý thứ tự xóa/tạo bảng để tránh lỗi ràng buộc (Foreign Key). Các file module đã được sắp xếp để hạn chế tối đa vấn đề này.
+
+## Backup / Restore bằng SQL Server Agent
+
+- Chạy `BackupRestoreJobs.sql` để tạo stored procedure backup/restore và 2 SQL Server Agent Jobs.
+- Có thể tham khảo `RestoreDatabase.example.sql` để chạy lệnh khôi phục thủ công.
+- Full backup: 17:00 thứ bảy hằng tuần.
+- Differential backup: 17:00 thứ ba và thứ năm hằng tuần.
+- File `.bak` mặc định nằm trong `/var/opt/mssql/backups` trên SQL Server container, mount ra host tại `DATABASE/backups`.
+- Khôi phục full backup:
+  ```sql
+  EXEC master.dbo.usp_RestoreGmpDatabaseFromBackup
+      @FullBackupFileName = N'PharmaceuticalProcessingManagementSystem_full_YYYYMMDD_HHMMSS.bak';
+  ```
+- Khôi phục tới differential backup:
+  ```sql
+  EXEC master.dbo.usp_RestoreGmpDatabaseFromBackup
+      @FullBackupFileName = N'PharmaceuticalProcessingManagementSystem_full_YYYYMMDD_HHMMSS.bak',
+      @DifferentialBackupFileName = N'PharmaceuticalProcessingManagementSystem_differential_YYYYMMDD_HHMMSS.bak';
+  ```

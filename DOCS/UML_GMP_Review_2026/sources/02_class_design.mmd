@@ -1,0 +1,155 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+classDiagram
+direction LR
+    class AppUser {
+        +int UserId
+        +string Username
+        +string FullName
+        +string Role
+        +string PinCode
+        +bool IsActive
+    }
+    class Material {
+        +int MaterialId
+        +string MaterialCode
+        +string MaterialName
+        +string Type
+        +int BaseUomId
+    }
+    class UnitOfMeasure {
+        +int UomId
+        +string UomName
+    }
+    class InventoryLot {
+        +int LotId
+        +int MaterialId
+        +string LotNumber
+        +decimal QuantityCurrent
+        +DateTime ExpiryDate
+    }
+    class Recipe {
+        +int RecipeId
+        +string RecipeName
+        +int MaterialId
+        +int VersionNumber
+        +decimal BatchSize
+        +string Status
+    }
+    class RecipeBom {
+        +int BomId
+        +int RecipeId
+        +int MaterialId
+        +decimal Quantity
+        +decimal WastePercentage
+    }
+    class RecipeRouting {
+        +int RoutingId
+        +int RecipeId
+        +int OrderId
+        +int StepNumber
+        +string StepName
+        +int NumberOfRouting
+    }
+    class StepParameter {
+        +int ParameterId
+        +int RoutingId
+        +string ParameterName
+        +decimal MinValue
+        +decimal MaxValue
+        +bool IsCritical
+    }
+    class RecipeTechSpec {
+        +int SpecId
+        +int RecipeId
+        +int OrderId
+        +int ParentId
+        +string Content
+        +bool IsChecked
+    }
+    class ProductionOrder {
+        +int OrderId
+        +string OrderCode
+        +int RecipeId
+        +decimal PlannedQuantity
+        +string Status
+        +int CreatedBy
+    }
+    class ProductionOrderBom {
+        +int OrderBomId
+        +int OrderId
+        +int MaterialId
+        +decimal RequiredQuantity
+        +string DispensingStatus
+    }
+    class ProductionBatch {
+        +int BatchId
+        +int OrderId
+        +string BatchNumber
+        +string Status
+        +int CurrentStep
+        +decimal PlannedQuantity
+    }
+    class BatchProcessLog {
+        +long LogId
+        +int BatchId
+        +int RoutingId
+        +int OperatorId
+        +string ResultStatus
+        +bool IsDeviation
+    }
+    class BatchProcessParameterValue {
+        +long ValueId
+        +long LogId
+        +int ParameterId
+        +decimal ActualValue
+    }
+    class MaterialUsage {
+        +int UsageId
+        +int BatchId
+        +int InventoryLotId
+        +decimal PlannedAmount
+        +decimal ActualAmount
+    }
+    class Equipment {
+        +int EquipmentId
+        +string EquipmentCode
+        +string EquipmentName
+        +int AreaId
+    }
+    class ProductionArea {
+        +int AreaId
+        +string AreaCode
+        +string AreaName
+    }
+    class SystemAuditLog {
+        +long AuditId
+        +string TableName
+        +string RecordId
+        +string Action
+        +DateTime ChangedDate
+    }
+    Material "1" --> "0..1" UnitOfMeasure : base UOM
+    InventoryLot "0..*" --> "1" Material : lot của nguyên liệu
+    Recipe "0..*" --> "1" Material : sản phẩm đầu ra
+    Recipe "1" --> "1..*" RecipeBom : BOM
+    RecipeBom "0..*" --> "1" Material : thành phần
+    Recipe "1" --> "1..*" RecipeRouting : routing
+    RecipeRouting "0..*" --> "0..1" Equipment : thiết bị mặc định
+    RecipeRouting "0..*" --> "0..1" ProductionArea : khu vực
+    RecipeRouting "1" --> "0..*" StepParameter : tham số
+    Recipe "1" --> "0..*" RecipeTechSpec : tiêu chuẩn
+    ProductionOrder "0..*" --> "1" Recipe : dựa trên
+    ProductionOrder "0..*" --> "0..1" AppUser : người lập
+    ProductionOrder "1" --> "1..*" ProductionOrderBom : snapshot BOM
+    ProductionOrder "1" --> "1..*" ProductionBatch : chia mẻ
+    ProductionOrder "1" --> "0..*" RecipeRouting : snapshot routing
+    ProductionOrderBom "0..*" --> "1" Material : cần cấp
+    ProductionBatch "1" --> "0..*" BatchProcessLog : eBMR log
+    BatchProcessLog "0..*" --> "1" RecipeRouting : công đoạn
+    BatchProcessLog "0..*" --> "0..1" Equipment : máy dùng
+    BatchProcessLog "0..*" --> "0..1" AppUser : operator/QC
+    BatchProcessLog "1" --> "0..*" BatchProcessParameterValue : giá trị đo
+    BatchProcessParameterValue "0..*" --> "1" StepParameter : chuẩn so sánh
+    ProductionBatch "1" --> "0..*" MaterialUsage : nguyên liệu dùng
+    MaterialUsage "0..*" --> "1" InventoryLot : lô xuất
+    SystemAuditLog "0..*" --> "0..1" AppUser : người thay đổi

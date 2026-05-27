@@ -1,0 +1,23 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+sequenceDiagram
+    autonumber
+    actor OP as Công nhân cân
+    participant MOB as Mobile App
+    participant API as BatchProcessLogs API
+    participant DB as CSDL
+    actor QC as Người kiểm soát/QC
+    OP->>MOB: Mở công đoạn cân của mẻ
+    MOB->>API: GET /api/production-batches/{id}
+    API->>DB: Lấy BOM snapshot đã scale theo mẻ
+    API-->>MOB: Danh sách nguyên liệu cần cân
+    OP->>MOB: Nhập khối lượng thực tế
+    MOB->>API: POST /api/batch-process-logs
+    API->>DB: Lưu ParameterValues
+    API->>API: Kiểm tra sai lệch so với định mức
+    alt Sai lệch vượt ngưỡng
+    API->>DB: Đánh dấu IsDeviation / PendingQC
+    QC->>API: POST /api/batch-process-logs/verify
+    else Hợp lệ
+    API->>DB: Cập nhật CurrentStep
+    end
+    API-->>MOB: Hoàn tất ghi nhận cân

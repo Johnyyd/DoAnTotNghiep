@@ -1,0 +1,17 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+sequenceDiagram
+    autonumber
+    actor WH as Nhân viên kho
+    participant MOB as Mobile/Web cấp phát
+    participant API as ProductionOrders API
+    participant DB as CSDL
+    actor OP as Công nhân sản xuất
+    WH->>MOB: Mở danh sách lệnh chờ cấp phát
+    MOB->>API: GET /api/production-orders
+    API->>DB: Lấy ProductionOrderBom + tồn kho
+    API-->>MOB: BOM snapshot và trạng thái cấp phát
+    WH->>MOB: Chọn dòng BOM và xác nhận cấp phát
+    MOB->>API: POST /api/production-orders/bom/{bomId}/dispense
+    API->>DB: Cập nhật DispensingStatus, DispensedBy, DispensedAt
+    API-->>MOB: 200 OK
+    OP->>MOB: Tiếp nhận nguyên liệu trước sản xuất

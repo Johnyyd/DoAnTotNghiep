@@ -1,0 +1,26 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "18px", "primaryColor": "#DBEAFE", "primaryTextColor": "#111827", "primaryBorderColor": "#1D4ED8", "lineColor": "#374151", "secondaryColor": "#DCFCE7", "tertiaryColor": "#FEF3C7"}}}%%
+sequenceDiagram
+    autonumber
+    actor OP as Công nhân
+    participant SYS as Validation hệ thống
+    participant API as BatchProcessLogs API
+    participant DB as CSDL
+    actor QC as QA/QC
+    actor MGR as Quản lý
+    OP->>API: Gửi dữ liệu công đoạn
+    API->>SYS: Kiểm tra StepParameters min/max
+    alt Vượt ngưỡng
+    SYS->>API: IsDeviation = true
+    API->>DB: Lưu log Failed/PendingQC
+    API->>DB: Cập nhật Batch OnHold hoặc Order Pending QC
+    QC->>API: Điều tra và xác nhận /verify
+    alt QC duyệt tiếp tục
+    API->>DB: Status = Passed/Approved
+    API->>DB: Batch trở lại In-Process
+    else QC không duyệt
+    MGR->>API: Giữ Hold hoặc hủy lô
+    API->>DB: Lưu quyết định xử lý
+    end
+    else Không sai lệch
+    API->>DB: Lưu log Passed
+    end
