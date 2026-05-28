@@ -211,8 +211,9 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
 
                 final raw = p['rawInputs'] != null ? p['rawInputs'] as Map : p;
                 if (raw['netWeight'] != null) {
-                  totalNetFromDrying +=
-                      (double.tryParse(raw['netWeight'].toString().replaceAll(',', '.')) ?? 0);
+                  totalNetFromDrying += (double.tryParse(
+                          raw['netWeight'].toString().replaceAll(',', '.')) ??
+                      0);
                   hasDryingData = true;
                 }
               }
@@ -240,11 +241,9 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
           } else {
             stopPolling();
           }
-<<<<<<< HEAD
-        } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED' || rawStatus == 'EXECUTING') {
-=======
-        } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
->>>>>>> pr/15
+        } else if (rawStatus == 'APPROVED' ||
+            rawStatus == 'PASSED' ||
+            rawStatus == 'EXECUTING') {
           _currentPhase = ExecutionPhase.execution;
           stopPolling();
         } else if (rawStatus == 'RUNNING') {
@@ -330,8 +329,10 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
   }
 
   void _calculateDynamicBOM() {
-    double? A = double.tryParse(_lotWeightACtrl.text.replaceAll(',', '.')); // Lot weight in kg
-    double? C = double.tryParse(_purityCCtrl.text.replaceAll(',', '.')); // Alkaloid content in %
+    double? A = double.tryParse(
+        _lotWeightACtrl.text.replaceAll(',', '.')); // Lot weight in kg
+    double? C = double.tryParse(
+        _purityCCtrl.text.replaceAll(',', '.')); // Alkaloid content in %
 
     if (A == null || C == null || C < 0.1) {
       return;
@@ -476,7 +477,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
     // Total Weight Check against Batch Target
     double totalActual = 0;
     _materialsData.forEach((k, v) {
-      totalActual += double.tryParse(v['actual']?.replaceAll(',', '.') ?? '0') ?? 0;
+      totalActual +=
+          double.tryParse(v['actual']?.replaceAll(',', '.') ?? '0') ?? 0;
     });
 
     final target = (_batchInfo?['plannedQuantity'] as num?)?.toDouble() ?? 0.0;
@@ -627,7 +629,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
           Navigator.pop(context, true);
         } else if (resultStatus == 'Passed') {
           if (widget.orderId != null) {
-            await ApiService.updateOrderStatus(widget.orderId!, 'Pending Worker');
+            await ApiService.updateOrderStatus(
+                widget.orderId!, 'Pending Worker');
           }
           setState(() => _currentPhase = ExecutionPhase.completed);
           Navigator.pop(context, true);
@@ -651,7 +654,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
     String status = 'Running';
     if (_currentPhase == ExecutionPhase.verification) status = 'PendingQC';
     if (_currentPhase == ExecutionPhase.execution) status = 'Executing';
-    
+
     await _submit(status, null, isInternal: true);
     if (mounted) Navigator.pop(context);
   }
@@ -662,75 +665,79 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return PopScope(
-      canPop: false,
-      onPopInvoked: (didPop) async {
-        if (didPop) return;
-        await _exitAndSave();
-      },
-      child: Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: _exitAndSave,
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('CÂN - ${_currentPhase.label}',
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Text(
-                'Công đoạn: CÂN | Mẻ: ${_batchInfo?['batchNumber'] ?? "---"} | Lệnh: ${_batchInfo?['order']?['orderCode'] ?? "---"}',
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.normal)),
-            Text(
-                'Thuốc: ${_batchInfo?['order']?['recipe']?['material']?['materialName'] ?? "---"}',
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.normal)),
-          ],
-        ),
-        actions: [
-          IconButton(
-              onPressed: () {
-                debugPrint("--- MANUAL REFRESH ---");
-                _loadDataFromDB();
-              },
-              icon: const Icon(Icons.refresh)),
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Tự động cập nhật mỗi 5 giây khi chờ QC.')));
-            },
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4),
-          child:
-              LinearProgressIndicator(value: _currentPhase.indexNumber / 5.0),
-        ),
-      ),
-      body: Column(
-        children: [
-          _buildStatusHeader(),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
+        canPop: false,
+        onPopInvoked: (didPop) async {
+          if (didPop) return;
+          await _exitAndSave();
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: _exitAndSave,
+            ),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (_currentPhase == ExecutionPhase.precheck) _buildPhase1(),
-                if (_currentPhase == ExecutionPhase.input) _buildPhase2(),
-                if (_currentPhase == ExecutionPhase.verification)
-                  _buildPhase3(),
-                if (_currentPhase == ExecutionPhase.execution) _buildPhase4(),
-                if (_currentPhase == ExecutionPhase.completed) _buildPhase5(),
-                const SizedBox(height: 150),
+                Text('CÂN - ${_currentPhase.label}',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                    'Công đoạn: CÂN | Mẻ: ${_batchInfo?['batchNumber'] ?? "---"} | Lệnh: ${_batchInfo?['order']?['orderCode'] ?? "---"}',
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.normal)),
+                Text(
+                    'Thuốc: ${_batchInfo?['order']?['recipe']?['material']?['materialName'] ?? "---"}',
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.normal)),
               ],
             ),
+            actions: [
+              IconButton(
+                  onPressed: () {
+                    debugPrint("--- MANUAL REFRESH ---");
+                    _loadDataFromDB();
+                  },
+                  icon: const Icon(Icons.refresh)),
+              IconButton(
+                icon: const Icon(Icons.info_outline),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content:
+                          Text('Tự động cập nhật mỗi 5 giây khi chờ QC.')));
+                },
+              ),
+            ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(4),
+              child: LinearProgressIndicator(
+                  value: _currentPhase.indexNumber / 5.0),
+            ),
           ),
-        ],
-      ),
-      floatingActionButton: _buildContextualFAB(),
-    ));
+          body: Column(
+            children: [
+              _buildStatusHeader(),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    if (_currentPhase == ExecutionPhase.precheck)
+                      _buildPhase1(),
+                    if (_currentPhase == ExecutionPhase.input) _buildPhase2(),
+                    if (_currentPhase == ExecutionPhase.verification)
+                      _buildPhase3(),
+                    if (_currentPhase == ExecutionPhase.execution)
+                      _buildPhase4(),
+                    if (_currentPhase == ExecutionPhase.completed)
+                      _buildPhase5(),
+                    const SizedBox(height: 150),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          floatingActionButton: _buildContextualFAB(),
+        ));
   }
 
   Widget _buildStatusHeader() {
@@ -788,7 +795,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
   }
 
   Widget _buildPhase1() {
-    final bool isLocked = _currentPhase.index >= ExecutionPhase.input.index || widget.isViewer;
+    final bool isLocked =
+        _currentPhase.index >= ExecutionPhase.input.index || widget.isViewer;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const FormSectionHeader('PHẦN 1: KIỂM TRA GIÁ TRỊ ĐẦU VÀO'),
       SegmentedToggle(
@@ -871,7 +879,9 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
   }
 
   Widget _buildPhase2() {
-    final bool isLocked = _currentPhase.index >= ExecutionPhase.verification.index || widget.isViewer;
+    final bool isLocked =
+        _currentPhase.index >= ExecutionPhase.verification.index ||
+            widget.isViewer;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const FormSectionHeader('PHẦN 2: GHI NHẬN KHỐI LƯỢNG THỰC TẾ'),
       ExpansionTile(

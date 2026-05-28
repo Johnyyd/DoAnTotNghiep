@@ -131,18 +131,17 @@ class _HomeScreenState extends State<HomeScreen>
 
     for (var b in batches) {
       if (b['status'] == 'Completed') continue;
-      
+
       if (b['latestLogStatus'] != null) {
-        final logStatus = b['latestLogStatus'].toString().replaceAll(' ', '').toUpperCase();
+        final logStatus =
+            b['latestLogStatus'].toString().replaceAll(' ', '').toUpperCase();
         if (logStatus == 'PENDINGQC' || logStatus == 'PENDING_QC') {
           hasPendingQC = true;
         } else if (logStatus == 'APPROVED') {
           hasInProcess = true;
-<<<<<<< HEAD
-        } else if (logStatus == 'RUNNING' || logStatus == 'PASSED' || logStatus == 'EXECUTING') {
-=======
-        } else if (logStatus == 'RUNNING' || logStatus == 'PASSED') {
->>>>>>> pr/15
+        } else if (logStatus == 'RUNNING' ||
+            logStatus == 'PASSED' ||
+            logStatus == 'EXECUTING') {
           hasPendingWorker = true;
         } else if (logStatus == 'FAILED' || logStatus == 'REJECTED') {
           hasFailed = true;
@@ -160,10 +159,14 @@ class _HomeScreenState extends State<HomeScreen>
     if (hasInProcess) return 'In-Process';
 
     // Fallback based on order status
-    if (status == 'Draft' || status == 'Approved' || status == 'Pending Worker') {
+    if (status == 'Draft' ||
+        status == 'Approved' ||
+        status == 'Pending Worker') {
       return 'Pending Worker';
     }
-    if (status == 'In-Process' || status == 'InProcess' || status == 'Running') {
+    if (status == 'In-Process' ||
+        status == 'InProcess' ||
+        status == 'Running') {
       return 'In-Process';
     }
 
@@ -589,49 +592,51 @@ class _HomeScreenState extends State<HomeScreen>
       appBar: AppBar(
         title: const Text('Trang Chủ',
             style: TextStyle(fontWeight: FontWeight.bold)),
-        bottom: role == 'WarehouseStaff' 
-          ? null 
-          : PreferredSize(
-              preferredSize: const Size.fromHeight(100), // Height for chips + tabs
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(child: _buildCategoryChips()),
-                      if (role == 'Admin' || role == 'Manager')
-                        Padding(
-                          padding: const EdgeInsets.only(right: 16),
-                          child: IconButton.filledTonal(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const DispensingScreen()),
-                              );
-                            },
-                            icon: const Icon(Icons.inventory_2),
-                            tooltip: 'Cấp phát vật tư',
+        bottom: role == 'WarehouseStaff'
+            ? null
+            : PreferredSize(
+                preferredSize:
+                    const Size.fromHeight(100), // Height for chips + tabs
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: _buildCategoryChips()),
+                        if (role == 'Admin' || role == 'Manager')
+                          Padding(
+                            padding: const EdgeInsets.only(right: 16),
+                            child: IconButton.filledTonal(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                      builder: (_) => const DispensingScreen()),
+                                );
+                              },
+                              icon: const Icon(Icons.inventory_2),
+                              tooltip: 'Cấp phát vật tư',
+                            ),
                           ),
-                        ),
-                    ],
-                  ),
-                  TabBar(
-                    controller: _tabController,
-                    isScrollable: true,
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.white70,
-                    indicatorColor: Colors.white,
-                    indicatorWeight: 3,
-                    tabs: const [
-                      Tab(text: 'Đang sản xuất'),
-                      Tab(text: 'Chờ Công nhân'),
-                      Tab(text: 'Chờ QC xét duyệt'),
-                      Tab(text: 'Đang tạm dừng'),
-                      Tab(text: 'Đã hoàn tất'),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                    TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.white70,
+                      indicatorColor: Colors.white,
+                      indicatorWeight: 3,
+                      tabs: const [
+                        Tab(text: 'Đang sản xuất'),
+                        Tab(text: 'Chờ Công nhân'),
+                        Tab(text: 'Chờ QC xét duyệt'),
+                        Tab(text: 'Đang tạm dừng'),
+                        Tab(text: 'Đã hoàn tất'),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),

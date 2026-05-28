@@ -353,8 +353,10 @@ class _DryingStepScreenState extends State<DryingStepScreen>
       _currentPhase.index > ExecutionPhase.precheck.index || widget.isViewer;
   bool get _isMoistureMet =>
       widget.stepName.contains('NLC 3') &&
-      (double.tryParse(_inputMoistureCtrl.text.replaceAll(',', '.')) ?? 0) > 0 &&
-      (double.tryParse(_inputMoistureCtrl.text.replaceAll(',', '.')) ?? 0) <= 5.0;
+      (double.tryParse(_inputMoistureCtrl.text.replaceAll(',', '.')) ?? 0) >
+          0 &&
+      (double.tryParse(_inputMoistureCtrl.text.replaceAll(',', '.')) ?? 0) <=
+          5.0;
 
   bool get _isPhase2Locked =>
       _currentPhase.index > ExecutionPhase.input.index || widget.isViewer;
@@ -562,9 +564,8 @@ class _DryingStepScreenState extends State<DryingStepScreen>
   }
 
   Future<void> _verifyAndSubmit() async {
-<<<<<<< HEAD
-=======
-    final slTruoc = double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0;
+    final slTruoc =
+        double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0;
     final slSau = double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0;
     if (slSau >= slTruoc && slSau > 0) {
       if (mounted) {
@@ -575,7 +576,6 @@ class _DryingStepScreenState extends State<DryingStepScreen>
       return;
     }
 
->>>>>>> pr/15
     final pin = await showPinDialog();
     if (pin == null) return;
 
@@ -703,7 +703,8 @@ class _DryingStepScreenState extends State<DryingStepScreen>
 
     // Ràng buộc kiểm tra Khối lượng trước và sau sấy
     if (resultStatus == 'Passed' && _currentPhase == ExecutionPhase.execution) {
-      final truocVal = double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0;
+      final truocVal =
+          double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0;
       final sauVal = double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0;
 
       if (truocVal <= 0 || sauVal <= 0) {
@@ -781,11 +782,13 @@ class _DryingStepScreenState extends State<DryingStepScreen>
         'slTruocSay': _slTruocCtrl.text,
         'slSauSay': _slSauCtrl.text,
         'mauKiemTra': _mauKiemTra,
-        'netWeight': (double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0) -
+        'netWeight': (double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ??
+                0) -
             ((double.tryParse(_mauKiemTra.replaceAll(',', '.')) ?? 0) / 1000.0),
         'yieldLoss': _slTruocCtrl.text.isNotEmpty
             ? (((double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0) -
-                    (double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0)) /
+                    (double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ??
+                        0)) /
                 (double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 1) *
                 100)
             : 0,
@@ -908,7 +911,7 @@ class _DryingStepScreenState extends State<DryingStepScreen>
     String status = 'Running';
     if (_currentPhase == ExecutionPhase.verification) status = 'PendingQC';
     if (_currentPhase == ExecutionPhase.execution) status = 'Executing';
-    
+
     await _submit(status, null, isInternal: true);
     if (mounted) Navigator.pop(context);
   }
@@ -916,65 +919,68 @@ class _DryingStepScreenState extends State<DryingStepScreen>
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
-      onPopInvoked: (didPop) async {
-        if (didPop) return;
-        await _exitAndSave();
-      },
-      child: Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: _exitAndSave,
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('SẤY - ${_currentPhase.label}',
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Text(
-                'Công đoạn: ${widget.stepName} | Mẻ: ${_batchInfo?['batchNumber'] ?? "---"} | Lệnh: ${_batchInfo?['order']?['orderCode'] ?? "---"}',
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.normal)),
-            Text(
-                'Thuốc: ${_batchInfo?['order']?['recipe']?['material']?['materialName'] ?? "---"}',
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.normal)),
-          ],
-        ),
-        elevation: 0,
-        backgroundColor: Colors.blue.shade800,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4),
-          child: LinearProgressIndicator(
-            value: _currentPhase.indexNumber / 5.0,
-            backgroundColor: Colors.white24,
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-          ),
-        ),
-      ),
-      body: Column(
-        children: [
-          _buildStatusHeader(),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
+        canPop: false,
+        onPopInvoked: (didPop) async {
+          if (didPop) return;
+          await _exitAndSave();
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: _exitAndSave,
+            ),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (_currentPhase == ExecutionPhase.precheck) _buildPhase1(),
-                if (_currentPhase == ExecutionPhase.input) _buildPhase2(),
-                if (_currentPhase == ExecutionPhase.verification)
-                  _buildPhase3(),
-                if (_currentPhase == ExecutionPhase.execution) _buildPhase4(),
-                if (_currentPhase == ExecutionPhase.completed) _buildPhase5(),
-                const SizedBox(height: 150),
+                Text('SẤY - ${_currentPhase.label}',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                    'Công đoạn: ${widget.stepName} | Mẻ: ${_batchInfo?['batchNumber'] ?? "---"} | Lệnh: ${_batchInfo?['order']?['orderCode'] ?? "---"}',
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.normal)),
+                Text(
+                    'Thuốc: ${_batchInfo?['order']?['recipe']?['material']?['materialName'] ?? "---"}',
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.normal)),
               ],
             ),
+            elevation: 0,
+            backgroundColor: Colors.blue.shade800,
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(4),
+              child: LinearProgressIndicator(
+                value: _currentPhase.indexNumber / 5.0,
+                backgroundColor: Colors.white24,
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
           ),
-        ],
-      ),
-      floatingActionButton: _buildContextualFAB(),
-    ));
+          body: Column(
+            children: [
+              _buildStatusHeader(),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    if (_currentPhase == ExecutionPhase.precheck)
+                      _buildPhase1(),
+                    if (_currentPhase == ExecutionPhase.input) _buildPhase2(),
+                    if (_currentPhase == ExecutionPhase.verification)
+                      _buildPhase3(),
+                    if (_currentPhase == ExecutionPhase.execution)
+                      _buildPhase4(),
+                    if (_currentPhase == ExecutionPhase.completed)
+                      _buildPhase5(),
+                    const SizedBox(height: 150),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          floatingActionButton: _buildContextualFAB(),
+        ));
   }
 
   Widget _buildStatusHeader() {
@@ -1469,15 +1475,18 @@ class _DryingStepScreenState extends State<DryingStepScreen>
                     children: [
                       const Text('Hao hụt sau sấy:',
                           style: TextStyle(fontSize: 13)),
-                      Text(
-                          '${_slTruocCtrl.text.isNotEmpty ? (((double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0) - (double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0)) / (double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 1) * 100).toStringAsFixed(2) : 0}%',
+                      Text('${_slTruocCtrl.text.isNotEmpty ? (((double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0) - (double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0)) / (double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 1) * 100).toStringAsFixed(2) : 0}%',
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: _slTruocCtrl.text.isNotEmpty &&
-                                      (((double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ??
+                                      (((double.tryParse(_slTruocCtrl.text
+                                                          .replaceAll(
+                                                              ',', '.')) ??
                                                       0) -
-                                                  (double.tryParse(
-                                                          _slSauCtrl.text.replaceAll(',', '.')) ??
+                                                  (double.tryParse(_slSauCtrl
+                                                          .text
+                                                          .replaceAll(
+                                                              ',', '.')) ??
                                                       0)) /
                                               (double.tryParse(
                                                       _slTruocCtrl.text.replaceAll(',', '.')) ??
@@ -1497,7 +1506,9 @@ class _DryingStepScreenState extends State<DryingStepScreen>
           ElevatedButton.icon(
             onPressed: () async {
               // Kiểm tra độ ẩm trước khi cho phép Hoàn tất
-              final humidVal = double.tryParse(_humidAfterCtrl.text.replaceAll(',', '.')) ?? 0;
+              final humidVal =
+                  double.tryParse(_humidAfterCtrl.text.replaceAll(',', '.')) ??
+                      0;
 
               // Lấy tiêu chuẩn từ standardParams (nếu có)
               double maxAllowed = 5.0; // Mặc định 5% cho NLC
