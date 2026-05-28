@@ -361,16 +361,12 @@ export default function Materials() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowInput = tomorrow.toISOString().slice(0, 10);
 
-<<<<<<< HEAD
-  // Vietnamese number format: dot for thousands, comma for decimal
-  const fmtVN = (n: number) => n.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
-=======
+
   // Format number: space for thousands, dot for decimal
   const fmtVN = (n: number) => {
     const formatted = n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
     return formatted.replace(/,/g, ' ');
   };
->>>>>>> pr/15
   const convertDisplayQty = (value: number, unitRaw: string) => {
     const unit = (unitRaw || '').toLowerCase();
     if (unit === 'kg' || unit === 'g') {
@@ -554,7 +550,7 @@ export default function Materials() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-neutral-500">Ngày sản xuất</label>
-                  <input type="date" max={new Date().toISOString().slice(0,10)} className="input" value={importForm.manufactureDate} onChange={(e) => setImportForm({ ...importForm, manufactureDate: e.target.value })} />
+                  <input type="date" max={new Date().toISOString().slice(0, 10)} className="input" value={importForm.manufactureDate} onChange={(e) => setImportForm({ ...importForm, manufactureDate: e.target.value })} />
                 </div>
                 <div>
                   <label className="text-xs text-neutral-500">Hạn dùng</label>
@@ -590,7 +586,7 @@ export default function Materials() {
                 <table className="table">
                   <thead>
                     <tr>
-                       <th className="min-w-[140px]">Mã đợt</th>
+                      <th className="min-w-[140px]">Mã đợt</th>
                       <th>Số lượng</th>
                       <th>Ngày sản xuất</th>
                       <th>Hạn dùng</th>

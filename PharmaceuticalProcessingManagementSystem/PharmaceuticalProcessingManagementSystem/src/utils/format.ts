@@ -1,17 +1,10 @@
 export function formatNumber(value: number | undefined | null, decimals: number = 2): string {
   if (value === undefined || value === null || isNaN(value)) return "0";
-<<<<<<< HEAD
-  return new Intl.NumberFormat("vi-VN", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: decimals,
-  }).format(value);
-=======
   const str = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: decimals,
   }).format(value);
   return str.replace(/,/g, " ");
->>>>>>> pr/15
 }
 
 export function formatDate(date: string | Date | undefined | null): string {
@@ -29,15 +22,13 @@ export function formatDate(date: string | Date | undefined | null): string {
   } catch {
     return "-";
   }
-<<<<<<< HEAD
-=======
 }
 
 export function isRecipeLiquid(materialName: string = '', uomName: string = ''): boolean {
   const n = materialName.toLowerCase();
   const u = uomName.toLowerCase();
-  return n.includes('nước') || n.includes('dung dịch') || n.includes('siro') || n.includes('sirô') || 
-         u.includes('ml') || u.includes('l') || u.includes('chai') || u.includes('ống');
+  return n.includes('nước') || n.includes('dung dịch') || n.includes('siro') || n.includes('sirô') ||
+    u.includes('ml') || u.includes('l') || u.includes('chai') || u.includes('ống');
 }
 
 export function formatRecipeBatchSize(batchSize: number, isLiquid: boolean): string {
@@ -49,5 +40,4 @@ export function formatRecipeBatchSize(batchSize: number, isLiquid: boolean): str
     if (batchSize >= 1000 && batchSize % 1000 === 0) return `${formatNumber(batchSize / 1000)} g`;
     return `${formatNumber(batchSize)} mg`;
   }
->>>>>>> pr/15
 }
