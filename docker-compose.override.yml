@@ -114,6 +114,23 @@ services:
       - gmp-api
     restart: unless-stopped
 
+  # ---------------------------------------------------------------
+  # 5. CLOUDFLARE TUNNEL
+  # ---------------------------------------------------------------
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: gmp-cloudflared
+    networks:
+      - gmp-network
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:-PUT_TUNNEL_TOKEN_IN_ENV}
+    depends_on:
+      - gmp-frontend
+      - gmp-mobile
+      - gmp-api
+    restart: unless-stopped
+    profiles:
+      - tunnel
+
 networks:
   gmp-network:
     name: gmp-network
