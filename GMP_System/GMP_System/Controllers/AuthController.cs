@@ -49,7 +49,7 @@ namespace GMP_System.Controllers
             // Kiểm tra phân quyền truy cập nền tảng
             if (request.Platform?.Equals("Web", StringComparison.OrdinalIgnoreCase) == true)
             {
-                if (!user.Role!.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                if (!user.Role!.Equals("Admin", StringComparison.OrdinalIgnoreCase) && !user.Role!.Equals("ProductionManager", StringComparison.OrdinalIgnoreCase))
                 {
                     return Unauthorized(new { success = false, message = "Tài khoản này chỉ được phép đăng nhập trên ứng dụng Mobile." });
                 }
