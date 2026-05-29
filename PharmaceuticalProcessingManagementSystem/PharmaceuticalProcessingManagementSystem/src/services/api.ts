@@ -17,6 +17,7 @@ import type {
 // Use relative URL to leverage nginx proxy in production
 // In development, VITE_API_URL should be set to /api or http://localhost:5001
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const buildApiUrl = (path: string) => `${API_BASE_URL.replace(/\/$/, '')}${path}`;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -220,9 +221,9 @@ export const certificatesApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
-  getMaterialCertificateUrl: (materialCode: string) => `/api/certificates/material/${encodeURIComponent(materialCode)}`,
-  getFinishedCertificateUrl: (materialCode: string) => `/api/certificates/finished/${encodeURIComponent(materialCode)}`,
-  getLotCertificateUrl: (batchNumber: string) => `/api/certificates/lot/${encodeURIComponent(batchNumber)}`,
+  getMaterialCertificateUrl: (materialCode: string) => buildApiUrl(`/certificates/material/${encodeURIComponent(materialCode)}`),
+  getFinishedCertificateUrl: (materialCode: string) => buildApiUrl(`/certificates/finished/${encodeURIComponent(materialCode)}`),
+  getLotCertificateUrl: (batchNumber: string) => buildApiUrl(`/certificates/lot/${encodeURIComponent(batchNumber)}`),
   uploadBatchCertificate: (batchNumber: string, file: File) => {
     const formData = new FormData();
     formData.append('batchNumber', batchNumber);
@@ -231,7 +232,7 @@ export const certificatesApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
-  getBatchCertificateUrl: (batchNumber: string) => `/api/certificates/batch/${encodeURIComponent(batchNumber)}`,
+  getBatchCertificateUrl: (batchNumber: string) => buildApiUrl(`/certificates/batch/${encodeURIComponent(batchNumber)}`),
 };
 
 

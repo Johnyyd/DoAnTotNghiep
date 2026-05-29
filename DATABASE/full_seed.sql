@@ -182,7 +182,9 @@ GO
 SET IDENTITY_INSERT Recipes ON;
 INSERT INTO Recipes (RecipeId, MaterialId, VersionNumber, BatchSize, Status, ApprovedBy, ApprovedDate, CreatedAt, EffectiveDate, RecipeName, Note) VALUES
 (1, 15, 1, 540.00,  'Approved', 2, DATEADD(DAY,-30,GETDATE()), DATEADD(DAY,-45,GETDATE()), DATEADD(DAY,-25,GETDATE()), N'Viên nang', N'NLC 3 mẻ 540mg/viên.'),
-(2, 16, 2, 495.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Viên nén', N'Paracetamol 495mg/viên.');
+(2, 16, 2, 495.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Viên nén', N'Paracetamol 495mg/viên.'),
+(4, 17, 1, 2.00, 'Approved', 2, DATEADD(DAY,-18,GETDATE()), DATEADD(DAY,-28,GETDATE()), DATEADD(DAY,-12,GETDATE()), N'Thuốc ống Dipyridamole', N'Dung dịch tiêm 2ml/ống.'),
+(5, 16, 1, 500.00, 'Approved', 2, DATEADD(DAY,-15,GETDATE()), DATEADD(DAY,-25,GETDATE()), DATEADD(DAY,-10,GETDATE()), N'Viên nén Paracetamol', N'Paracetamol 500mg/viên.');
 SET IDENTITY_INSERT Recipes OFF;
 GO
 
@@ -271,10 +273,10 @@ GO
 -- 11. ProductionOrders
 SET IDENTITY_INSERT ProductionOrders ON;
 INSERT INTO ProductionOrders (OrderId, OrderCode, RecipeId, PlannedQuantity, ActualQuantity, StartDate, EndDate, Status, CreatedBy, CreatedAt, RecipeName, Note) VALUES
-(1,  'PO-26-001', 1, 100000.00, 100050.00, DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), 'Completed',  4, GETDATE(), N'Lệnh xong.'),
-(2,  'PO-26-002', 1, 300000.00, NULL,      DATEADD(DAY,-1,GETDATE()), DATEADD(DAY,3, GETDATE()), 'In-Process', 4, GETDATE(), N'Đang chạy.'),
-(4,  'PO-26-004', 2, 200000.00, NULL,      DATEADD(DAY,-2,GETDATE()), DATEADD(DAY,2, GETDATE()), 'In-Process', 4, GETDATE(), N'Para lô 1.'),
-(7,  'PO-26-007', 2, 200000.00, 197800.00, DATEADD(DAY,-10,GETDATE()),DATEADD(DAY,-7,GETDATE()), 'Completed',  4, GETDATE(), N'Lô cũ.');
+(1,  'PO-26-001', 1, 100000.00, 100050.00, DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), 'Completed',  4, GETDATE(), N'Viên nang Crila', N'Lệnh xong.'),
+(2,  'PO-26-002', 1, 300000.00, NULL,      DATEADD(DAY,-1,GETDATE()), DATEADD(DAY,3, GETDATE()), 'In-Process', 4, GETDATE(), N'Viên nang Crila', N'Đang chạy.'),
+(4,  'PO-26-004', 2, 200000.00, NULL,      DATEADD(DAY,-2,GETDATE()), DATEADD(DAY,2, GETDATE()), 'In-Process', 4, GETDATE(), N'Viên nén Paracetamol', N'Para lô 1.'),
+(7,  'PO-26-007', 2, 200000.00, 197800.00, DATEADD(DAY,-10,GETDATE()),DATEADD(DAY,-7,GETDATE()), 'Completed',  4, GETDATE(), N'Viên nén Paracetamol', N'Lô cũ.');
 SET IDENTITY_INSERT ProductionOrders OFF;
 GO
 
@@ -383,7 +385,7 @@ GO
 -- 16. KHÔI PHỤC RÀNG BUỘC VÀ TRIGGER
 -- =====================================================================
 PRINT 'Enabling Constraints and Triggers...';
-EXEC sp_msforeachtable 'ALTER TABLE ? CHECK CONSTRAINT ALL';
+EXEC sp_msforeachtable 'ALTER TABLE ? WITH CHECK CHECK CONSTRAINT ALL';
 EXEC sp_msforeachtable 'ALTER TABLE ? ENABLE TRIGGER ALL';
 GO
 

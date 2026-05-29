@@ -240,11 +240,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
           } else {
             stopPolling();
           }
-<<<<<<< HEAD
         } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED' || rawStatus == 'EXECUTING') {
-=======
-        } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED') {
->>>>>>> pr/15
           _currentPhase = ExecutionPhase.execution;
           stopPolling();
         } else if (rawStatus == 'RUNNING') {
