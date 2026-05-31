@@ -190,6 +190,7 @@ CREATE TABLE ProductionOrders (
     CreatedBy INT REFERENCES AppUsers(UserId),
     PlannedCartons INT,
     CreatedAt DATETIME2 DEFAULT GETDATE(),
+    RecipeName NVARCHAR(200) NULL,
     Note NVARCHAR(MAX)
 );
 GO

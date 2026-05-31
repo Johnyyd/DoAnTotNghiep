@@ -14,10 +14,12 @@
           "Microsoft.EntityFrameworkCore.Design": "8.0.10",
           "Microsoft.EntityFrameworkCore.SqlServer": "8.0.10",
           "Microsoft.EntityFrameworkCore.Tools": "8.0.10",
+          "Microsoft.IdentityModel.Tokens": "7.1.2",
           "Serilog.AspNetCore": "8.0.0",
           "Serilog.Sinks.Console": "6.1.1",
           "Serilog.Sinks.File": "5.0.0",
           "Swashbuckle.AspNetCore": "6.9.0",
+          "System.IdentityModel.Tokens.Jwt": "7.1.2",
           "prometheus-net.AspNetCore": "8.0.0"
         },
         "runtime": {

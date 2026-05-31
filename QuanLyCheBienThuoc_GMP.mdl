@@ -2243,7 +2243,6 @@
 	logical_presentations 	(list unit_reference_list
 	    (object UseCaseDiagram "Use Case Nghiep Vu"
 		quid       	"39C9261001B7"
-<<<<<<< HEAD
 		title      	"Main"
 		zoom       	100
 		max_height 	28350
@@ -3258,45 +3257,13 @@
 	    (object UseCaseDiagram "NghiepVu"
 		quid       	"5685E9AC0198"
 		title      	"NghiepVu"
-=======
-		title      	"Use Case Nghiep Vu"
->>>>>>> pr/15
 		zoom       	100
 		max_height 	28350
 		max_width  	21600
 		origin_x   	544
 		origin_y   	0
 		items      	(list diagram_item_list
-<<<<<<< HEAD
 		    (object ClassView "Class" "Use Case View::QC" @43
-=======
-		    (object UseCaseView "Use Case View::ThongKeThanhPham" @89
-			location   	(2680, 319)
-			font       	(object Font
-			    size       	10
-			    face       	"Arial"
-			    bold       	FALSE
-			    italics    	FALSE
-			    underline  	FALSE
-			    strike     	FALSE
-			    color      	0
-			    default_color 	TRUE)
-			label      	(object ItemLabel
-			    Parent_View 	@89
-			    location   	(2679, 494)
-			    anchor_loc 	1
-			    nlines     	2
-			    max_width  	879
-			    justify    	0
-			    label      	"ThongKeThanhPham")
-			icon       	"Business Use Case"
-			icon_style 	"Icon"
-			line_color 	3342489
-			fill_color 	13434879
-			quidu      	"69FD59560316"
-			width      	306)
-		    (object ClassView "Class" "Use Case View::QC" @90
->>>>>>> pr/15
 			ShowCompartmentStereotypes 	TRUE
 			SuppressAttribute 	TRUE
 			SuppressOperation 	TRUE
@@ -3313,11 +3280,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-<<<<<<< HEAD
 			    Parent_View 	@43
-=======
-			    Parent_View 	@90
->>>>>>> pr/15
 			    location   	(576, 2192)
 			    anchor_loc 	1
 			    nlines     	2
@@ -3332,7 +3295,6 @@
 			width      	202
 			annotation 	8
 			autoResize 	TRUE)
-<<<<<<< HEAD
 		    (object UseCaseView "Use Case View::ThongKeThanhPham" @44
 			location   	(2680, 319)
 			font       	(object Font
@@ -3359,9 +3321,6 @@
 			quidu      	"69FD59560316"
 			width      	306)
 		    (object UseCaseView "Use Case View::QuanLyLoThanhPham" @45
-=======
-		    (object UseCaseView "Use Case View::Nhap nguyen lieu moi" @91
->>>>>>> pr/15
 			location   	(1731, 319)
 			font       	(object Font
 			    size       	10
@@ -3373,11 +3332,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-<<<<<<< HEAD
 			    Parent_View 	@45
-=======
-			    Parent_View 	@91
->>>>>>> pr/15
 			    location   	(1730, 494)
 			    anchor_loc 	1
 			    nlines     	2
@@ -3390,12 +3345,8 @@
 			fill_color 	13434879
 			quidu      	"69FD59210043"
 			width      	306)
-<<<<<<< HEAD
 		    (object UseCaseView "Use Case View::QuanLyNguyenLieu" @46
 			location   	(1992, 622)
-=======
-		    (object DependencyView "" @92
->>>>>>> pr/15
 			font       	(object Font
 			    size       	10
 			    face       	"Arial"
@@ -3405,7 +3356,6 @@
 			    strike     	FALSE
 			    color      	0
 			    default_color 	TRUE)
-<<<<<<< HEAD
 			label      	(object ItemLabel
 			    Parent_View 	@46
 			    location   	(1991, 797)
@@ -4036,10 +3986,6 @@
 			    default_color 	TRUE)
 			stereotype 	(object SegLabel @86
 			    Parent_View 	@85
-=======
-			stereotype 	(object SegLabel @93
-			    Parent_View 	@92
->>>>>>> pr/15
 			    location   	(2247, 288)
 			    font       	(object Font
 				size       	10
@@ -4061,13 +4007,8 @@
 			    orientation 	1)
 			line_color 	3342489
 			quidu      	"6A068D5801E8"
-<<<<<<< HEAD
 			client     	@44
 			supplier   	@45
-=======
-			client     	@89
-			supplier   	@91
->>>>>>> pr/15
 			vertices   	(list Points
 			    (2527, 319)
 			    (1881, 319))

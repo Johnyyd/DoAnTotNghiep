@@ -15,54 +15,50 @@ namespace GMP_System.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IConfiguration _config;
+        private readonly IWebHostEnvironment _environment;
 
-        public AuthController(IUnitOfWork unitOfWork, IConfiguration config)
+        public AuthController(IUnitOfWork unitOfWork, IConfiguration config, IWebHostEnvironment environment)
         {
             _unitOfWork = unitOfWork;
             _config = config;
+            _environment = environment;
         }
 
         // POST: /api/auth/login
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequest? request)
         {
+            if (request == null)
+                return BadRequest(new { success = false, message = "Dữ liệu đăng nhập không hợp lệ." });
+
             if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
                 return BadRequest(new { success = false, message = "Vui lòng nhập tên đăng nhập và mật khẩu." });
 
-            Console.WriteLine($"[DEBUG] Login attempt: {request.Username} from {request.Platform}");
-
-            // Tìm user theo username
+            var username = request.Username.Trim();
             var users = await _unitOfWork.AppUsers.GetAllAsync();
             var user = users.FirstOrDefault(u =>
-                u.Username!.Equals(request.Username.Trim(), StringComparison.OrdinalIgnoreCase));
+                string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase));
 
             if (user == null)
-            {
-                Console.WriteLine($"[DEBUG] User {request.Username} not found.");
                 return Unauthorized(new { success = false, message = "Tên đăng nhập hoặc mật khẩu không đúng." });
-            }
 
             if (user.IsActive != true)
                 return Unauthorized(new { success = false, message = "Tài khoản đã bị khóa. Liên hệ quản trị viên." });
 
-            // Kiểm tra phân quyền truy cập nền tảng
-            if (request.Platform?.Equals("Web", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                if (!user.Role!.Equals("Admin", StringComparison.OrdinalIgnoreCase) && !user.Role!.Equals("ProductionManager", StringComparison.OrdinalIgnoreCase))
-                {
-                    return Unauthorized(new { success = false, message = "Tài khoản này chỉ được phép đăng nhập trên ứng dụng Mobile." });
-                }
-            }
+            if (request.Platform?.Equals("Web", StringComparison.OrdinalIgnoreCase) == true && !CanAccessWeb(user.Role))
+                return Unauthorized(new { success = false, message = "Tài khoản này chỉ được phép đăng nhập trên ứng dụng Mobile." });
 
-            // Kiểm tra password hash
-            bool isPasswordCorrect = !string.IsNullOrEmpty(user.PasswordHash) && BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
-            Console.WriteLine($"[DEBUG] User found: {user.Username}, Password correct: {isPasswordCorrect}");
+            bool isPasswordCorrect = !string.IsNullOrEmpty(user.PasswordHash)
+                && BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
 
             if (!isPasswordCorrect)
                 return Unauthorized(new { success = false, message = "Tên đăng nhập hoặc mật khẩu không đúng." });
 
-            // Tạo JWT token
+            user.LastLogin = DateTime.UtcNow;
+            _unitOfWork.AppUsers.Update(user);
+            await _unitOfWork.CompleteAsync();
+
             var token = GenerateJwtToken(user);
 
             return Ok(new
@@ -88,6 +84,9 @@ namespace GMP_System.Controllers
         [HttpGet("gen-hash/{password}")]
         public IActionResult GenHash(string password)
         {
+            if (!_environment.IsDevelopment())
+                return NotFound();
+
             return Ok(new { password = password, hash = BCrypt.Net.BCrypt.HashPassword(password) });
         }
 
@@ -96,7 +95,6 @@ namespace GMP_System.Controllers
         [HttpGet("me")]
         public async Task<IActionResult> Me()
         {
-            // Lấy UserId từ JWT Claims
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdClaim, out var userId))
                 return Unauthorized(new { success = false, message = "Token không hợp lệ." });
@@ -120,6 +118,12 @@ namespace GMP_System.Controllers
             });
         }
 
+        private static bool CanAccessWeb(string? role)
+        {
+            return string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role, "ProductionManager", StringComparison.OrdinalIgnoreCase);
+        }
+
         private string GenerateJwtToken(AppUser user)
         {
             var jwtKey = _config["Jwt:Key"] ?? "GMP_WHO_Default_Secret_Key_Minimum_32_Characters_Long_123456789";
@@ -133,8 +137,8 @@ namespace GMP_System.Controllers
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim("fullName", user.FullName),
+                new Claim(ClaimTypes.Name, user.Username ?? string.Empty),
+                new Claim("fullName", user.FullName ?? string.Empty),
                 new Claim(ClaimTypes.Role, user.Role ?? "Operator"),
             };
 
@@ -150,11 +154,10 @@ namespace GMP_System.Controllers
         }
     }
 
-    // Request DTO
     public class LoginRequest
     {
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public string? Platform { get; set; } // "Web" or "Mobile"
+        public string? Platform { get; set; }
     }
 }

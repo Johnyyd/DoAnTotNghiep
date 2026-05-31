@@ -1,17 +1,19 @@
 export function formatNumber(value: number | undefined | null, decimals: number = 2): string {
   if (value === undefined || value === null || isNaN(value)) return "0";
-  const str = new Intl.NumberFormat("en-US", {
+
+  return new Intl.NumberFormat("vi-VN", {
     minimumFractionDigits: 0,
     maximumFractionDigits: decimals,
   }).format(value);
-  return str.replace(/,/g, " ");
 }
 
 export function formatDate(date: string | Date | undefined | null): string {
   if (!date) return "-";
+
   try {
     const d = new Date(date);
     if (isNaN(d.getTime())) return "-";
+
     return new Intl.DateTimeFormat("vi-VN", {
       day: "2-digit",
       month: "2-digit",
@@ -24,20 +26,38 @@ export function formatDate(date: string | Date | undefined | null): string {
   }
 }
 
-export function isRecipeLiquid(materialName: string = '', uomName: string = ''): boolean {
-  const n = materialName.toLowerCase();
-  const u = uomName.toLowerCase();
-  return n.includes('nước') || n.includes('dung dịch') || n.includes('siro') || n.includes('sirô') ||
-    u.includes('ml') || u.includes('l') || u.includes('chai') || u.includes('ống');
+export function isRecipeLiquid(materialName: string = "", uomName: string = ""): boolean {
+  const normalizedMaterialName = normalizeText(materialName);
+  const normalizedUomName = normalizeText(uomName);
+
+  return (
+    normalizedMaterialName.includes("nuoc") ||
+    normalizedMaterialName.includes("dung dich") ||
+    normalizedMaterialName.includes("siro") ||
+    normalizedUomName.includes("ml") ||
+    normalizedUomName === "l" ||
+    normalizedUomName.includes("chai") ||
+    normalizedUomName.includes("ong")
+  );
 }
 
 export function formatRecipeBatchSize(batchSize: number, isLiquid: boolean): string {
   if (isLiquid) {
     if (batchSize >= 1000 && batchSize % 1000 === 0) return `${formatNumber(batchSize / 1000)} L`;
     return `${formatNumber(batchSize)} ml`;
-  } else {
-    if (batchSize >= 1000000 && batchSize % 1000000 === 0) return `${formatNumber(batchSize / 1000000)} kg`;
-    if (batchSize >= 1000 && batchSize % 1000 === 0) return `${formatNumber(batchSize / 1000)} g`;
-    return `${formatNumber(batchSize)} mg`;
   }
+
+  if (batchSize >= 1000000 && batchSize % 1000000 === 0) return `${formatNumber(batchSize / 1000000)} kg`;
+  if (batchSize >= 1000 && batchSize % 1000 === 0) return `${formatNumber(batchSize / 1000)} g`;
+  return `${formatNumber(batchSize)} mg`;
+}
+
+function normalizeText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase()
+    .trim();
 }
