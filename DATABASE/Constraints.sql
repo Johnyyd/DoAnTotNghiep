@@ -77,5 +77,105 @@ BEGIN
 END;
 GO
 
+-- 5. TRIGGER: BẢO TOÀN NHẬT KÝ HỆ THỐNG (IMMUTABILITY OF AUDIT LOGS)
+CREATE OR ALTER TRIGGER trg_Prevent_Delete_SystemAuditLog
+ON SystemAuditLog
+INSTEAD OF UPDATE, DELETE
+AS
+BEGIN
+    RAISERROR(N'LỖI GMP: Tuyệt đối không được sửa hoặc xóa nhật ký hệ thống (SystemAuditLog).', 16, 1);
+    ROLLBACK TRANSACTION;
+END;
+GO
+
+-- 6. TRIGGER: CHẶN CẤP PHÁT NGUYÊN LIỆU HẾT HẠN
+CREATE OR ALTER TRIGGER trg_Prevent_Expired_Material_Usage
+ON MaterialUsage
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (
+        SELECT 1 FROM inserted i
+        JOIN InventoryLots l ON i.InventoryLotId = l.LotId
+        WHERE l.ExpiryDate < GETDATE()
+    )
+    BEGIN
+        RAISERROR(N'LỖI GMP: Nguyên liệu này đã hết hạn sử dụng (Expired), không được phép cấp phát cho mẻ sản xuất.', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
+
+-- 7. TRIGGER: CHẶN SỬA ĐỔI CÔNG THỨC ĐÃ PHÊ DUYỆT
+CREATE OR ALTER TRIGGER trg_Prevent_Recipe_Modifications
+ON Recipes
+AFTER UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (
+        SELECT 1 FROM deleted d
+        WHERE d.Status = 'Approved'
+    )
+    BEGIN
+        RAISERROR(N'LỖI GMP: Không được phép sửa đổi hoặc xóa công thức (Recipe) đã được Phê duyệt (Approved). Vui lòng tạo phiên bản mới.', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
+
+-- 8. TRIGGER: BẢO TOÀN NGƯỜI DÙNG (CHUYỂN TRẠNG THÁI THAY VÌ XÓA)
+CREATE OR ALTER TRIGGER trg_Enforce_User_Deactivation
+ON AppUsers
+INSTEAD OF DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE AppUsers
+    SET IsActive = 0
+    WHERE UserId IN (SELECT UserId FROM deleted);
+    
+    PRINT 'GMP INFO: Nguoi dung da duoc vo hieu hoa (IsActive = 0) thay vi xoa de dam bao toan ven nhat ky.';
+END;
+GO
+
+-- 9. TRIGGER: CHẶN TỒN KHO ÂM
+CREATE OR ALTER TRIGGER trg_Prevent_Negative_Inventory
+ON InventoryLots
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (
+        SELECT 1 FROM inserted i
+        WHERE i.QuantityCurrent < 0
+    )
+    BEGIN
+        RAISERROR(N'LỖI GMP: Số lượng tồn kho không được phép nhỏ hơn 0. Giao dịch bị từ chối.', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
+
+-- 10. TRIGGER: CHẶN QUAY LÙI TRẠNG THÁI MẺ SẢN XUẤT ĐÃ HOÀN THÀNH
+CREATE OR ALTER TRIGGER trg_Validate_Batch_Status_Flow
+ON ProductionBatches
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (
+        SELECT 1 FROM inserted i
+        JOIN deleted d ON i.BatchId = d.BatchId
+        WHERE d.Status = 'Completed' AND i.Status != 'Completed'
+    )
+    BEGIN
+        RAISERROR(N'LỖI GMP: Mẻ sản xuất đã Hoàn thành (Completed) không thể quay ngược trạng thái.', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
+
 PRINT 'Da khoi tao cac rang buoc GMP thanh cong.';
 GO
