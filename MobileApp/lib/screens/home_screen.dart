@@ -25,17 +25,24 @@ class _HomeScreenState extends State<HomeScreen>
   bool _isLoading = true;
   String _selectedCategory = 'Tất cả';
   List<String> _categories = ['Tất cả'];
+  
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
+    _searchController.addListener(() {
+      _filterAndGroupOrders();
+    });
     _loadOrders();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -76,10 +83,28 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _filterAndGroupOrders() {
+    final query = _searchController.text.trim().toLowerCase();
     final filtered = _allOrdersRaw.where((o) {
-      if (_selectedCategory == 'Tất cả') return true;
-      final cat = _getCategoryFromName(o['productName']?.toString() ?? '');
-      return cat == _selectedCategory;
+      if (_selectedCategory != 'Tất cả') {
+        final cat = _getCategoryFromName(o['productName']?.toString() ?? '');
+        if (cat != _selectedCategory) return false;
+      }
+      if (query.isNotEmpty) {
+        final orderCode = o['orderCode']?.toString().toLowerCase() ?? '';
+        final productName = o['productName']?.toString().toLowerCase() ?? '';
+        bool matchesBatch = false;
+        final batches = o['productionBatches'] as List<dynamic>? ?? [];
+        for (var b in batches) {
+          if (b['batchNumber']?.toString().toLowerCase().contains(query) == true) {
+            matchesBatch = true;
+            break;
+          }
+        }
+        if (!orderCode.contains(query) && !productName.contains(query) && !matchesBatch) {
+          return false;
+        }
+      }
+      return true;
     }).toList();
 
     setState(() {
@@ -107,6 +132,21 @@ class _HomeScreenState extends State<HomeScreen>
       _completedOrders = filteredByRole
           .where((o) => _getOrderDisplayStatus(o) == 'Completed')
           .toList();
+          
+      if (query.isNotEmpty) {
+        if (_inProcessOrders.isNotEmpty) {
+          _tabController.animateTo(0);
+        } else if (_pendingWorkerOrders.isNotEmpty) {
+          _tabController.animateTo(1);
+        } else if (_pendingQCOrders.isNotEmpty) {
+          _tabController.animateTo(2);
+        } else if (_errorOrders.isNotEmpty) {
+          _tabController.animateTo(3);
+        } else if (_completedOrders.isNotEmpty) {
+          _tabController.animateTo(4);
+        }
+      }
+      
       _isLoading = false;
     });
   }
@@ -590,8 +630,21 @@ class _HomeScreenState extends State<HomeScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trang Chủ',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+                decoration: const InputDecoration(
+                  hintText: 'Nhập mã lệnh, mẻ...',
+                  hintStyle: TextStyle(color: Colors.white70, fontSize: 16),
+                  border: InputBorder.none,
+                  filled: false,
+                ),
+                cursorColor: Colors.white,
+              )
+            : const Text('Trang Chủ',
+                style: TextStyle(fontWeight: FontWeight.bold)),
         bottom: role == 'WarehouseStaff'
             ? null
             : PreferredSize(
@@ -638,58 +691,79 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.person, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    username,
-                    style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                  if (role.isNotEmpty) ...[
-                    const SizedBox(width: 4),
-                    Text('($role)',
-                        style: const TextStyle(
-                            fontSize: 11, color: Colors.white70)),
-                  ],
-                ],
-              ),
+          if (_isSearching)
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () {
+                setState(() {
+                  _isSearching = false;
+                  _searchController.clear();
+                });
+              },
+            )
+          else ...[
+            IconButton(
+              icon: const Icon(Icons.search),
+              tooltip: 'Tìm kiếm',
+              onPressed: () {
+                setState(() {
+                  _isSearching = true;
+                });
+              },
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Đăng xuất',
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Đăng xuất'),
-                  content: const Text('Bạn có chắc muốn đăng xuất?'),
-                  actions: [
-                    TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Hủy')),
-                    FilledButton(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        _logout();
-                      },
-                      child: const Text('Đồng ý'),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.person, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      username,
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600),
                     ),
+                    if (role.isNotEmpty) ...[
+                      const SizedBox(width: 4),
+                      Text('($role)',
+                          style: const TextStyle(
+                              fontSize: 11, color: Colors.white70)),
+                    ],
                   ],
                 ),
-              );
-            },
-          ),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.logout),
+              tooltip: 'Đăng xuất',
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Đăng xuất'),
+                    content: const Text('Bạn có chắc muốn đăng xuất?'),
+                    actions: [
+                      TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('Hủy')),
+                      FilledButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _logout();
+                        },
+                        child: const Text('Đồng ý'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ]
         ],
       ),
       floatingActionButton: const FloatingActionButton(
