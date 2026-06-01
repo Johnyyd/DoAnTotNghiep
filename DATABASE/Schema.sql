@@ -196,11 +196,29 @@ CREATE TABLE ProductionOrders (
 GO
 
 -- -------------------------------------------------------------------------
--- 9b. ProductionOrderBom
+-- 9b. ProductionBatches
+-- -------------------------------------------------------------------------
+CREATE TABLE ProductionBatches (
+    BatchId INT PRIMARY KEY IDENTITY(1,1),
+    OrderId INT REFERENCES ProductionOrders(OrderId),
+    BatchNumber VARCHAR(50) NOT NULL UNIQUE,
+    Status NVARCHAR(50) DEFAULT 'Draft',
+    ManufactureDate DATETIME2,
+    EndTime DATETIME2,
+    ExpiryDate DATETIME2,
+    CurrentStep INT DEFAULT 1,
+    PlannedQuantity DECIMAL(18, 4),
+    CreatedAt DATETIME2 DEFAULT GETDATE()
+);
+GO
+
+-- -------------------------------------------------------------------------
+-- 9c. ProductionOrderBom
 -- -------------------------------------------------------------------------
 CREATE TABLE ProductionOrderBom (
     OrderBomId INT PRIMARY KEY IDENTITY(1,1),
     OrderId INT REFERENCES ProductionOrders(OrderId),
+    BatchId INT REFERENCES ProductionBatches(BatchId),
     MaterialId INT REFERENCES Materials(MaterialId),
     RequiredQuantity DECIMAL(18, 4) NOT NULL,
     UomId INT REFERENCES UnitOfMeasure(UomId),
@@ -272,22 +290,6 @@ BEGIN
 END
 GO
 
--- -------------------------------------------------------------------------
--- 12. ProductionBatches
--- -------------------------------------------------------------------------
-CREATE TABLE ProductionBatches (
-    BatchId INT PRIMARY KEY IDENTITY(1,1),
-    OrderId INT REFERENCES ProductionOrders(OrderId),
-    BatchNumber VARCHAR(50) NOT NULL UNIQUE,
-    Status NVARCHAR(50) DEFAULT 'Draft',
-    ManufactureDate DATETIME2,
-    EndTime DATETIME2,
-    ExpiryDate DATETIME2,
-    CurrentStep INT DEFAULT 1,
-    PlannedQuantity DECIMAL(18, 4),
-    CreatedAt DATETIME2 DEFAULT GETDATE()
-);
-GO
 
 -- -------------------------------------------------------------------------
 -- 13. BatchProcessLogs

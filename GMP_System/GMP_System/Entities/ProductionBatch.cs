@@ -27,5 +27,7 @@ public partial class ProductionBatch
 
     public virtual ICollection<MaterialUsage> MaterialUsages { get; set; } = new List<MaterialUsage>();
 
+    public virtual ICollection<ProductionOrderBom> ProductionOrderBoms { get; set; } = new List<ProductionOrderBom>();
+
     public virtual ProductionOrder? Order { get; set; }
 }

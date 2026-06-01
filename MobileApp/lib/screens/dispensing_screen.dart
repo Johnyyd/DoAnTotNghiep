@@ -22,13 +22,9 @@ class _DispensingScreenState extends State<DispensingScreen> {
 
   Future<void> _loadOrders() async {
     setState(() => _isLoading = true);
-    final orders = await ApiService.getProductionOrders();
-    // Lọc các lệnh đã duyệt hoặc đang sản xuất VÀ chưa cấp phát xong
+    final batches = await ApiService.getBatchesForDispensing();
     setState(() {
-      _orders = orders.where((o) => 
-        (o['status'] == 'Approved' || o['status'] == 'InProcess' || o['status'] == 'In-Process' || o['status'] == 'Scheduled') && 
-        o['isFullyDispensed'] != true
-      ).toList();
+      _orders = batches;
       _isLoading = false;
     });
   }
@@ -67,8 +63,8 @@ class _DispensingScreenState extends State<DispensingScreen> {
                   padding: const EdgeInsets.all(16),
                   itemCount: _orders.length,
                   itemBuilder: (context, index) {
-                    final order = _orders[index];
-                    return _buildOrderCard(order);
+                    final batch = _orders[index];
+                    return _buildBatchCard(batch);
                   },
                 ),
     );
@@ -82,22 +78,22 @@ class _DispensingScreenState extends State<DispensingScreen> {
           Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
-            'Không có lệnh cần cấp phát',
+            'Không có mẻ cần cấp phát',
             style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text('Các lệnh sau khi được duyệt sẽ hiển thị ở đây'),
+          const Text('Các mẻ đang chờ sẽ hiển thị ở đây'),
         ],
       ),
     );
   }
 
-  Widget _buildOrderCard(dynamic order) {
-    // Xử lý linh hoạt cả camelCase và PascalCase từ Backend
-    final boms = order['productionOrderBoms'] ?? order['ProductionOrderBoms'] ?? [];
-    final recipeName = order['recipe']?['recipeName'] ?? order['Recipe']?['RecipeName'] ?? order['recipeName'] ?? 'Sản phẩm';
-    final orderCode = order['orderCode'] ?? order['OrderCode'] ?? 'N/A';
-    final status = order['status'] ?? order['Status'] ?? '';
+  Widget _buildBatchCard(dynamic batch) {
+    final boms = batch['productionOrderBoms'] ?? batch['ProductionOrderBoms'] ?? [];
+    final recipeName = batch['recipeName'] ?? batch['RecipeName'] ?? 'Sản phẩm';
+    final batchNumber = batch['batchNumber'] ?? batch['BatchNumber'] ?? 'N/A';
+    final orderCode = batch['orderCode'] ?? batch['OrderCode'] ?? 'N/A';
+    final status = batch['status'] ?? batch['Status'] ?? '';
     
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -120,7 +116,7 @@ class _DispensingScreenState extends State<DispensingScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        orderCode,
+                        '$orderCode - $batchNumber',
                         style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
                       ),
                       Text(
@@ -136,14 +132,14 @@ class _DispensingScreenState extends State<DispensingScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: (status == 'Approved' || status == 'InProcess' || status == 'In-Process') ? Colors.blue[100] : Colors.purple[100],
+                    color: Colors.blue[100],
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    (status == 'Approved') ? 'Đã duyệt' : 'Đang sản xuất',
+                    (status == 'In-Process' || status == 'InProcess') ? 'Đang sản xuất' : 'Chờ',
                     style: TextStyle(
                       fontSize: 12,
-                      color: (status == 'Approved') ? Colors.blue[800] : Colors.purple[800],
+                      color: Colors.blue[800],
                       fontWeight: FontWeight.bold,
                     ),
                   ),

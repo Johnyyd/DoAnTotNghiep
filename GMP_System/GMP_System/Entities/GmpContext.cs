@@ -305,6 +305,9 @@ public partial class GmpContext : DbContext
             entity.Property(e => e.RequiredQuantity).HasColumnType("decimal(18, 4)");
             entity.HasOne(d => d.Order).WithMany(p => p.ProductionOrderBoms)
                 .HasForeignKey(d => d.OrderId);
+            entity.HasOne(d => d.Batch).WithMany(p => p.ProductionOrderBoms)
+                .HasForeignKey(d => d.BatchId)
+                .HasConstraintName("FK_ProductionOrderBom_ProductionBatch");
             entity.HasOne(d => d.Material).WithMany()
                 .HasForeignKey(d => d.MaterialId);
             entity.HasOne(d => d.Uom).WithMany()

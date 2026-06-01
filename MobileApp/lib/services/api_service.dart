@@ -141,7 +141,7 @@ class ApiService {
 
   /// Xác nhận cấp phát nguyên liệu (Warehouse Staff)
   static Future<bool> dispenseBomItem(int bomId, int userId) async {
-    final url = Uri.parse('$baseUrl/production-orders/bom/$bomId/dispense');
+    final url = Uri.parse('$baseUrl/production-batches/bom/$bomId/dispense');
     try {
       final response = await http.post(
         url,
@@ -151,6 +151,22 @@ class ApiService {
       return response.statusCode >= 200 && response.statusCode < 300;
     } catch (e) {
       return false;
+    }
+  }
+
+  /// Lấy danh sách các mẻ đang chờ cấp phát
+  static Future<List<Map<String, dynamic>>> getBatchesForDispensing() async {
+    final url = Uri.parse('$baseUrl/production-batches/dispensing-pending');
+    try {
+      final response = await http.get(url, headers: await _headers());
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final data = body['data'] as List<dynamic>? ?? [];
+        return data.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      return [];
     }
   }
 

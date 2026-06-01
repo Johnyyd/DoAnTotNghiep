@@ -56,16 +56,23 @@ namespace GMP_System.Controllers
                         b.Status,
                         LatestLogStatus = b.BatchProcessLogs.OrderByDescending(l => l.LogId).Select(l => l.ResultStatus).FirstOrDefault()
                     }),
-                    ProductionOrderBoms = o.ProductionOrderBoms.Select(bom => new
-                    {
-                        bom.OrderBomId,
-                        bom.MaterialId,
-                        bom.RequiredQuantity,
-                        bom.DispensingStatus,
-                        MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
-                        MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
-                        UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
-                    }),
+                    ProductionOrderBoms = o.ProductionOrderBoms
+                        .GroupBy(bom => new { 
+                            bom.MaterialId, 
+                            MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
+                            MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
+                            UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
+                        })
+                        .Select(g => new
+                        {
+                            OrderBomId = g.FirstOrDefault() != null ? g.FirstOrDefault()!.OrderBomId : 0,
+                            MaterialId = g.Key.MaterialId,
+                            RequiredQuantity = g.Sum(x => x.RequiredQuantity),
+                            DispensingStatus = g.All(x => x.DispensingStatus == "Dispensed") ? "Dispensed" : "Pending",
+                            MaterialName = g.Key.MaterialName,
+                            MaterialCode = g.Key.MaterialCode,
+                            UomName = g.Key.UomName
+                        }),
                     IsFullyDispensed = o.ProductionOrderBoms.All(bom => bom.DispensingStatus == "Dispensed")
                 })
                 .AsNoTracking()
@@ -111,16 +118,23 @@ namespace GMP_System.Controllers
                         b.Status,
                         LatestLogStatus = b.BatchProcessLogs.OrderByDescending(l => l.LogId).Select(l => l.ResultStatus).FirstOrDefault()
                     }),
-                    ProductionOrderBoms = o.ProductionOrderBoms.Select(bom => new
-                    {
-                        bom.OrderBomId,
-                        bom.MaterialId,
-                        bom.RequiredQuantity,
-                        bom.DispensingStatus,
-                        MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
-                        MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
-                        UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
-                    }),
+                    ProductionOrderBoms = o.ProductionOrderBoms
+                        .GroupBy(bom => new { 
+                            bom.MaterialId, 
+                            MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
+                            MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
+                            UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
+                        })
+                        .Select(g => new
+                        {
+                            OrderBomId = g.FirstOrDefault() != null ? g.FirstOrDefault()!.OrderBomId : 0,
+                            MaterialId = g.Key.MaterialId,
+                            RequiredQuantity = g.Sum(x => x.RequiredQuantity),
+                            DispensingStatus = g.All(x => x.DispensingStatus == "Dispensed") ? "Dispensed" : "Pending",
+                            MaterialName = g.Key.MaterialName,
+                            MaterialCode = g.Key.MaterialCode,
+                            UomName = g.Key.UomName
+                        }),
                     IsFullyDispensed = o.ProductionOrderBoms.All(bom => bom.DispensingStatus == "Dispensed")
                 })
                 .AsNoTracking()
@@ -306,30 +320,71 @@ namespace GMP_System.Controllers
                 await _unitOfWork.ProductionOrders.AddAsync(order);
                 await _unitOfWork.CompleteAsync();
 
-                // [BOM SYNC] Generate unique BOM for this order based on Recipe and PlannedQuantity
+                // Auto-split into batches
+                var createdBatches = new List<ProductionBatch>();
+                if (order.RecipeId.HasValue && order.PlannedQuantity > 0)
+                {
+                    var recipes = await _unitOfWork.Recipes.Query().FirstOrDefaultAsync(r => r.RecipeId == order.RecipeId);
+                    decimal batchSize = recipes?.BatchSize ?? 0;
+                    
+                    int numBatches = 1;
+                    if (batchSize > 0)
+                    {
+                        // BatchSize is interpreted as mg/unit. 
+                        // Max capacity per batch is 50kg (50,000,000 mg).
+                        decimal totalWeightMg = order.PlannedQuantity * batchSize;
+                        decimal maxBatchWeightMg = 50000000m; // 50kg
+                        numBatches = (int)Math.Ceiling(totalWeightMg / maxBatchWeightMg);
+                        if (numBatches < 1) numBatches = 1;
+                    }
+
+                    // Distribute units equally across batches for "cleaner" numbers
+                    decimal unitsPerBatch = Math.Floor(order.PlannedQuantity / numBatches);
+                    decimal remainingUnits = order.PlannedQuantity;
+
+                    for (int i = 0; i < numBatches; i++)
+                    {
+                        decimal currentBatchUnits = (i == numBatches - 1) ? remainingUnits : unitsPerBatch;
+                        remainingUnits -= currentBatchUnits;
+
+                        string batchNumber = $"B{order.OrderCode.Substring(3)}-{(i + 1):D2}";
+                        var batch = new ProductionBatch
+                        {
+                            OrderId = order.OrderId,
+                            BatchNumber = batchNumber,
+                            PlannedQuantity = currentBatchUnits,
+                            Status = (i == 0 && order.Status == "In-Process") ? "In-Process" : "Scheduled",
+                            CurrentStep = (i == 0 && order.Status == "In-Process") ? 1 : 0,
+                            ManufactureDate = DateTime.Now
+                        };
+                        await _unitOfWork.ProductionBatches.AddAsync(batch);
+                        createdBatches.Add(batch);
+                    }
+                    await _unitOfWork.CompleteAsync();
+                }
+
+                // [BOM SYNC] Generate BOM for each batch
                 var recipeBoms = await _unitOfWork.RecipeBoms.Query()
                     .Where(b => b.RecipeId == order.RecipeId)
                     .ToListAsync();
 
-                foreach (var rb in recipeBoms)
+                foreach (var batch in createdBatches)
                 {
-                    // Skip packaging materials in BOM for weight/ratio calculation (though still needed in deduction)
-                    // Wait, the user said Packaging (Hard capsule shell) shouldn't be counted in ratio/mass.
-                    // But they still need to be in the order BOM for tracking/deduction purposes? 
-                    // Actually, the user says "không được tính trong tỉ lệ công thức và cũng không tính cho khối lượng luôn".
-                    // I will still include them in ProductionOrderBoms so we know they are needed, 
-                    // but I'll mark them or the frontend will handle the exclusion.
-                    
-                    var orderBom = new ProductionOrderBom
+                    foreach (var rb in recipeBoms)
                     {
-                        OrderId = order.OrderId,
-                        MaterialId = rb.MaterialId,
-                        UomId = rb.UomId ?? 1, 
-                        WastePercentage = rb.WastePercentage,
-                        RequiredQuantity = CalculateRequiredQuantity(order.PlannedQuantity, rb.Quantity, rb.UomId ?? 1, rb.WastePercentage),
-                        Note = rb.Note
-                    };
-                    await _unitOfWork.ProductionOrderBoms.AddAsync(orderBom);
+                        var batchBom = new ProductionOrderBom
+                        {
+                            OrderId = order.OrderId,
+                            BatchId = batch.BatchId,
+                            MaterialId = rb.MaterialId,
+                            UomId = rb.UomId ?? 1, 
+                            WastePercentage = rb.WastePercentage,
+                            RequiredQuantity = CalculateRequiredQuantity(batch.PlannedQuantity ?? 0m, rb.Quantity, rb.UomId ?? 1, rb.WastePercentage),
+                            Note = rb.Note,
+                            DispensingStatus = "Pending"
+                        };
+                        await _unitOfWork.ProductionOrderBoms.AddAsync(batchBom);
+                    }
                 }
                 await _unitOfWork.CompleteAsync();
 
@@ -404,50 +459,6 @@ namespace GMP_System.Controllers
                     _context.RecipeTechSpecs.Add(orderSpec);
                 }
                 await _context.SaveChangesAsync();
-
-                // Auto-split into batches if not already present
-                if (order.RecipeId.HasValue && order.PlannedQuantity > 0)
-                {
-                    var recipes = await _unitOfWork.Recipes.Query().FirstOrDefaultAsync(r => r.RecipeId == order.RecipeId);
-                    decimal batchSize = recipes?.BatchSize ?? 0;
-                    
-                    var existingBatches = await _unitOfWork.ProductionBatches.Query().AnyAsync(b => b.OrderId == order.OrderId);
-                    if (!existingBatches)
-                    {
-                        int numBatches = 1;
-                        if (batchSize > 0)
-                        {
-                            // BatchSize is interpreted as mg/unit. 
-                            // Max capacity per batch is 50kg (50,000,000 mg).
-                            decimal totalWeightMg = order.PlannedQuantity * batchSize;
-                            decimal maxBatchWeightMg = 50000000m; // 50kg
-                            numBatches = (int)Math.Ceiling(totalWeightMg / maxBatchWeightMg);
-                            if (numBatches < 1) numBatches = 1;
-                        }
-
-                        // Distribute units equally across batches for "cleaner" numbers
-                        decimal unitsPerBatch = Math.Floor(order.PlannedQuantity / numBatches);
-                        decimal remainingUnits = order.PlannedQuantity;
-
-                        for (int i = 0; i < numBatches; i++)
-                        {
-                            decimal currentBatchUnits = (i == numBatches - 1) ? remainingUnits : unitsPerBatch;
-                            remainingUnits -= currentBatchUnits;
-
-                            string batchNumber = $"B{order.OrderCode.Substring(3)}-{(i + 1):D2}";
-                            await _unitOfWork.ProductionBatches.AddAsync(new ProductionBatch
-                            {
-                                OrderId = order.OrderId,
-                                BatchNumber = batchNumber,
-                                PlannedQuantity = currentBatchUnits,
-                                Status = (i == 0 && order.Status == "In-Process") ? "In-Process" : "Scheduled",
-                                CurrentStep = (i == 0 && order.Status == "In-Process") ? 1 : 0,
-                                ManufactureDate = DateTime.Now
-                            });
-                        }
-                        await _unitOfWork.CompleteAsync();
-                    }
-                }
 
                 await transaction.CommitAsync();
             }

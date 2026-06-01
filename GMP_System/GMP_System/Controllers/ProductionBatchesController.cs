@@ -307,5 +307,62 @@ namespace GMP_System.Controllers
                 data = new { batchNumber = batch.BatchNumber, endTime = batch.EndTime }
             });
         }
+        [HttpGet("dispensing-pending")]
+        public async Task<IActionResult> GetBatchesForDispensing()
+        {
+            var batches = await _unitOfWork.ProductionBatches
+                .Query()
+                .Include(b => b.Order)
+                .Include(b => b.ProductionOrderBoms)
+                    .ThenInclude(bom => bom.Material)
+                .Include(b => b.ProductionOrderBoms)
+                    .ThenInclude(bom => bom.Uom)
+                .Where(b => (b.Status == "Scheduled" || b.Status == "In-Process") && b.ProductionOrderBoms.Any())
+                .Select(b => new
+                {
+                    b.BatchId,
+                    b.BatchNumber,
+                    b.OrderId,
+                    OrderCode = b.Order != null ? b.Order.OrderCode : "",
+                    RecipeName = b.Order != null && b.Order.Recipe != null ? b.Order.Recipe.RecipeName : "Sản phẩm",
+                    b.Status,
+                    ProductionOrderBoms = b.ProductionOrderBoms.Select(bom => new
+                    {
+                        bom.OrderBomId,
+                        bom.MaterialId,
+                        bom.RequiredQuantity,
+                        bom.DispensingStatus,
+                        MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
+                        MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
+                        UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
+                    }),
+                    IsFullyDispensed = b.ProductionOrderBoms.Any() && b.ProductionOrderBoms.All(bom => bom.DispensingStatus == "Dispensed")
+                })
+                .OrderBy(b => b.BatchId)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return Ok(new { data = batches, success = true, message = "Success" });
+        }
+
+        [HttpPost("bom/{bomId}/dispense")]
+        public async Task<IActionResult> DispenseBatchBomItem(int bomId, [FromBody] DispenseRequest request)
+        {
+            var bom = await _unitOfWork.ProductionOrderBoms.GetByIdAsync(bomId);
+            if (bom == null) return NotFound(new { success = false, message = "Không tìm thấy dòng BOM mẻ." });
+
+            bom.DispensingStatus = "Dispensed";
+            bom.DispensedAt = DateTime.Now;
+            bom.DispensedBy = request.UserId;
+            
+            _unitOfWork.ProductionOrderBoms.Update(bom);
+            await _unitOfWork.CompleteAsync();
+            return Ok(new { success = true, message = "Đã xác nhận cấp phát nguyên liệu cho mẻ." });
+        }
+
+        public class DispenseRequest
+        {
+            public int UserId { get; set; }
+        }
     }
 }

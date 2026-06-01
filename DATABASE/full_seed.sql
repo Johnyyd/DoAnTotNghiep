@@ -281,39 +281,8 @@ SET IDENTITY_INSERT ProductionOrders OFF;
 GO
 
 -- =====================================================================
--- 11.5. ProductionOrderBom (Dữ liệu BOM cho từng lệnh)
+-- 11.5. ProductionBatches
 -- =====================================================================
-INSERT INTO ProductionOrderBom (OrderId, MaterialId, UomId, RequiredQuantity, WastePercentage, DispensingStatus, Note) VALUES
--- PO-26-001 (OrderId 1, Recipe 1, 100k viên)
-(1, 1, 1, 25.0500, 0.20, 'Dispensed', N'Cao khô NLC3'),
-(1, 2, 1, 0.1622, 0.10, 'Dispensed', N'Aerosil'),
-(1, 3, 1, 2.9760, 0.20, 'Dispensed', N'SSG'),
-(1, 4, 1, 0.4054, 0.10, 'Dispensed', N'Talc'),
-(1, 5, 1, 0.4054, 0.10, 'Dispensed', N'Magnesi stearat'),
-(1, 6, 1, 25.1833, 0.50, 'Dispensed', N'Tinh bột'),
--- PO-26-002 (OrderId 2, Recipe 1, 300k viên)
-(2, 1, 1, 75.1500, 0.20, 'Dispensed', N'Cao khô NLC3'),
-(2, 2, 1, 0.4865, 0.10, 'Dispensed', N'Aerosil'),
-(2, 3, 1, 8.9280, 0.20, 'Dispensed', N'SSG'),
-(2, 4, 1, 1.2162, 0.10, 'Dispensed', N'Talc'),
-(2, 5, 1, 1.2162, 0.10, 'Dispensed', N'Magnesi stearat'),
-(2, 6, 1, 75.5499, 0.50, 'Dispensed', N'Tinh bột'),
--- PO-26-004 (OrderId 4, Recipe 2, 200k viên)
-(4, 9, 1, 50.1500, 0.30, 'Dispensed', N'Paracetamol'),
-(4, 6, 1, 30.3000, 1.00, 'Dispensed', N'Tinh bột ngô'),
-(4, 10, 1, 16.0800, 0.50, 'Dispensed', N'Lactose'),
-(4, 5, 1, 1.0010, 0.10, 'Dispensed', N'Magie stearat'),
-(4, 8, 1, 2.0040, 0.20, 'Dispensed', N'PVP K30'),
--- PO-26-007 (OrderId 7, Recipe 2, 200k viên)
-(7, 9, 1, 50.1500, 0.30, 'Dispensed', N'Paracetamol'),
-(7, 6, 1, 30.3000, 1.00, 'Dispensed', N'Tinh bột ngô'),
-(7, 10, 1, 16.0800, 0.50, 'Dispensed', N'Lactose'),
-(7, 5, 1, 1.0010, 0.10, 'Dispensed', N'Magie stearat'),
-(7, 8, 1, 2.0040, 0.20, 'Dispensed', N'PVP K30');
-GO
-
--- =====================================================================
--- 12. ProductionBatches
 SET IDENTITY_INSERT ProductionBatches ON;
 INSERT INTO ProductionBatches (BatchId, OrderId, BatchNumber, Status, ManufactureDate, EndTime, ExpiryDate, CurrentStep, CreatedAt) VALUES
 (1, 1, 'B26-001-01', 'Completed', DATEADD(DAY,-5,GETDATE()), DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
@@ -333,7 +302,38 @@ INSERT INTO ProductionBatches (BatchId, OrderId, BatchNumber, Status, Manufactur
 (15, 7, 'B26-007-03', 'Completed', DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-7,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE()),
 (16, 7, 'B26-007-04', 'Completed', DATEADD(DAY,-10,GETDATE()), DATEADD(DAY,-7,GETDATE()), DATEADD(YEAR,2,GETDATE()), 5, GETDATE());
 SET IDENTITY_INSERT ProductionBatches OFF;
+GO
 
+-- =====================================================================
+-- 12. ProductionOrderBom (Dữ liệu BOM cho từng lệnh)
+-- =====================================================================
+INSERT INTO ProductionOrderBom (OrderId, BatchId, MaterialId, UomId, RequiredQuantity, WastePercentage, DispensingStatus, Note) VALUES
+-- PO-26-001 (OrderId 1, Recipe 1, 100k viên) -> Seed into Batch 1
+(1, 1, 1, 1, 25.0500, 0.20, 'Dispensed', N'Cao khô NLC3'),
+(1, 1, 2, 1, 0.1622, 0.10, 'Dispensed', N'Aerosil'),
+(1, 1, 3, 1, 2.9760, 0.20, 'Dispensed', N'SSG'),
+(1, 1, 4, 1, 0.4054, 0.10, 'Dispensed', N'Talc'),
+(1, 1, 5, 1, 0.4054, 0.10, 'Dispensed', N'Magnesi stearat'),
+(1, 1, 6, 1, 25.1833, 0.50, 'Dispensed', N'Tinh bột'),
+-- PO-26-002 (OrderId 2, Recipe 1, 300k viên) -> Seed into Batch 2
+(2, 2, 1, 1, 75.1500, 0.20, 'Dispensed', N'Cao khô NLC3'),
+(2, 2, 2, 1, 0.4865, 0.10, 'Dispensed', N'Aerosil'),
+(2, 2, 3, 1, 8.9280, 0.20, 'Dispensed', N'SSG'),
+(2, 2, 4, 1, 1.2162, 0.10, 'Dispensed', N'Talc'),
+(2, 2, 5, 1, 1.2162, 0.10, 'Dispensed', N'Magnesi stearat'),
+(2, 2, 6, 1, 75.5499, 0.50, 'Dispensed', N'Tinh bột'),
+-- PO-26-004 (OrderId 4, Recipe 2, 200k viên) -> Seed into Batch 8
+(4, 8, 9, 1, 50.1500, 0.30, 'Dispensed', N'Paracetamol'),
+(4, 8, 6, 1, 30.3000, 1.00, 'Dispensed', N'Tinh bột ngô'),
+(4, 8, 10, 1, 16.0800, 0.50, 'Dispensed', N'Lactose'),
+(4, 8, 5, 1, 1.0010, 0.10, 'Dispensed', N'Magie stearat'),
+(4, 8, 8, 1, 2.0040, 0.20, 'Dispensed', N'PVP K30'),
+-- PO-26-007 (OrderId 7, Recipe 2, 200k viên) -> Seed into Batch 13
+(7, 13, 9, 1, 50.1500, 0.30, 'Dispensed', N'Paracetamol'),
+(7, 13, 6, 1, 30.3000, 1.00, 'Dispensed', N'Tinh bột ngô'),
+(7, 13, 10, 1, 16.0800, 0.50, 'Dispensed', N'Lactose'),
+(7, 13, 5, 1, 1.0010, 0.10, 'Dispensed', N'Magie stearat'),
+(7, 13, 8, 1, 2.0040, 0.20, 'Dispensed', N'PVP K30');
 GO
 -- =====================================================================
 -- 13. InventoryLotsHold
