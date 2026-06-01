@@ -1,0 +1,472 @@
+2026-06-01 20:09:21.993 +00:00 [WRN] No store type was specified for the decimal property 'PlannedQuantity' on entity type 'ProductionBatch'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-06-01 20:09:22.095 +00:00 [WRN] No store type was specified for the decimal property 'WastePercentage' on entity type 'ProductionOrderBom'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-06-01 20:09:22.096 +00:00 [WRN] No store type was specified for the decimal property 'SetPressure' on entity type 'RecipeRouting'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-06-01 20:09:22.097 +00:00 [WRN] No store type was specified for the decimal property 'SetTemperature' on entity type 'RecipeRouting'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-06-01 20:09:23.595 +00:00 [INF] Executed DbCommand (25ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-01 20:09:23.614 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-01 20:09:23.674 +00:00 [INF] Executed DbCommand (54ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+IF EXISTS
+    (SELECT *
+     FROM [sys].[objects] o
+     WHERE [o].[type] = 'U'
+     AND [o].[is_ms_shipped] = 0
+     AND NOT EXISTS (SELECT *
+         FROM [sys].[extended_properties] AS [ep]
+         WHERE [ep].[major_id] = [o].[object_id]
+             AND [ep].[minor_id] = 0
+             AND [ep].[class] = 1
+             AND [ep].[name] = N'microsoft_database_tools_support'
+    )
+)
+SELECT 1 ELSE SELECT 0
+2026-06-01 20:09:24.007 +00:00 [INF] Executed DbCommand (7ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [AppUsers] AS [a]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-06-01 20:09:24.310 +00:00 [WRN] Storing keys in a directory '/root/.aspnet/DataProtection-Keys' that may not be persisted outside of the container. Protected data will be unavailable when container is destroyed. For more information go to https://aka.ms/aspnet/dataprotectionwarning
+2026-06-01 20:09:24.312 +00:00 [INF] User profile is available. Using '/root/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-06-01 20:09:24.367 +00:00 [WRN] Overriding HTTP_PORTS '8080' and HTTPS_PORTS ''. Binding to values defined by URLS instead 'http://0.0.0.0:5000'.
+2026-06-01 20:09:24.628 +00:00 [INF] Now listening on: http://0.0.0.0:5000
+2026-06-01 20:09:24.629 +00:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-06-01 20:09:24.630 +00:00 [INF] Hosting environment: Development
+2026-06-01 20:09:24.633 +00:00 [INF] Content root path: /src
+2026-06-01 20:09:50.798 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-01 20:09:51.082 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:09:51.197 +00:00 [INF] Executed DbCommand (50ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-01 20:09:51.322 +00:00 [INF] Writing value of type '<>f__AnonymousType94`2' as Json.
+2026-06-01 20:09:51.367 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:09:51.422 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 630.2458ms
+2026-06-01 20:10:21.677 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-01 20:10:21.722 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:10:22.073 +00:00 [INF] Executed DbCommand (22ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-01 20:10:22.095 +00:00 [INF] Writing value of type '<>f__AnonymousType94`2' as Json.
+2026-06-01 20:10:22.102 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:10:22.111 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 434.4865ms
+2026-06-01 20:10:52.293 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-01 20:10:52.307 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:10:52.325 +00:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-01 20:10:52.327 +00:00 [INF] Writing value of type '<>f__AnonymousType94`2' as Json.
+2026-06-01 20:10:52.335 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:10:52.339 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 45.8152ms
+2026-06-01 20:11:22.595 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-01 20:11:22.606 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:11:22.651 +00:00 [INF] Executed DbCommand (8ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-01 20:11:22.688 +00:00 [INF] Writing value of type '<>f__AnonymousType94`2' as Json.
+2026-06-01 20:11:22.701 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:11:22.723 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 127.0648ms
+2026-06-01 20:11:53.065 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-01 20:11:53.093 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:11:53.115 +00:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-01 20:11:53.124 +00:00 [INF] Writing value of type '<>f__AnonymousType94`2' as Json.
+2026-06-01 20:11:53.134 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:11:53.160 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 95.5461ms
+2026-06-01 20:12:23.431 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-01 20:12:23.439 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:12:23.458 +00:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-01 20:12:23.470 +00:00 [INF] Writing value of type '<>f__AnonymousType94`2' as Json.
+2026-06-01 20:12:23.480 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:12:23.487 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 55.4321ms
+2026-06-01 20:12:53.631 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-01 20:12:53.632 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:12:53.637 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-01 20:12:53.639 +00:00 [INF] Writing value of type '<>f__AnonymousType94`2' as Json.
+2026-06-01 20:12:53.640 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:12:53.641 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 10.2432ms
+2026-06-01 20:13:09.108 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - null null
+2026-06-01 20:13:09.216 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-orders?page=1&pageSize=1000 - null null
+2026-06-01 20:13:09.271 +00:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '05/29/2026 10:42:21', Current time (UTC): '06/01/2026 20:13:09'.
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-06-01 20:13:09.268 +00:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '05/29/2026 10:42:21', Current time (UTC): '06/01/2026 20:13:09'.
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-06-01 20:13:09.321 +00:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '05/29/2026 10:42:21', Current time (UTC): '06/01/2026 20:13:09'.
+2026-06-01 20:13:09.322 +00:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '05/29/2026 10:42:21', Current time (UTC): '06/01/2026 20:13:09'.
+2026-06-01 20:13:09.325 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:09.342 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:09.350 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-batches - null null
+2026-06-01 20:13:09.357 +00:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '05/29/2026 10:42:21', Current time (UTC): '06/01/2026 20:13:09'.
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-06-01 20:13:09.361 +00:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '05/29/2026 10:42:21', Current time (UTC): '06/01/2026 20:13:09'.
+2026-06-01 20:13:09.369 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:09.370 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:09.376 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - 401 0 null 267.8439ms
+2026-06-01 20:13:09.393 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-06-01 20:13:09.393 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionBatches"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionBatchesController (GMP_System).
+2026-06-01 20:13:09.404 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:09.408 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:09.409 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:09.409 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:09.419 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:09.423 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:09.425 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:09.425 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:09.439 +00:00 [INF] Executed action GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System) in 29.6441ms
+2026-06-01 20:13:09.439 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System) in 34.3591ms
+2026-06-01 20:13:09.442 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:09.445 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:09.449 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-batches - 401 0 null 98.2069ms
+2026-06-01 20:13:09.454 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-orders?page=1&pageSize=1000 - 401 0 null 238.1387ms
+2026-06-01 20:13:14.235 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - null null
+2026-06-01 20:13:14.237 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:14.239 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:14.240 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - 401 0 null 4.1111ms
+2026-06-01 20:13:14.609 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-orders?page=1&pageSize=1000 - null null
+2026-06-01 20:13:14.612 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:14.618 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-06-01 20:13:14.619 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:14.620 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:14.622 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:14.624 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:14.627 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System) in 7.7646ms
+2026-06-01 20:13:14.629 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:14.632 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-orders?page=1&pageSize=1000 - 401 0 null 22.3285ms
+2026-06-01 20:13:14.680 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-batches - null null
+2026-06-01 20:13:14.683 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:14.685 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionBatches"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionBatchesController (GMP_System).
+2026-06-01 20:13:14.686 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:14.687 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:14.690 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:14.691 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:14.693 +00:00 [INF] Executed action GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System) in 6.8497ms
+2026-06-01 20:13:14.701 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:14.705 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-batches - 401 0 null 24.619ms
+2026-06-01 20:13:20.776 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/materials - null null
+2026-06-01 20:13:20.783 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.MaterialsController.GetAll (GMP_System)'
+2026-06-01 20:13:20.802 +00:00 [INF] Route matched with {action = "GetAll", controller = "Materials"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.MaterialsController (GMP_System).
+2026-06-01 20:13:20.802 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:20.807 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:20.809 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:20.810 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:20.811 +00:00 [INF] Executed action GMP_System.Controllers.MaterialsController.GetAll (GMP_System) in 8.702ms
+2026-06-01 20:13:20.814 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.MaterialsController.GetAll (GMP_System)'
+2026-06-01 20:13:20.818 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/materials - 401 0 null 41.4475ms
+2026-06-01 20:13:20.904 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - null null
+2026-06-01 20:13:20.906 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:20.908 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:20.909 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - 401 0 null 5.3121ms
+2026-06-01 20:13:22.067 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/materials - null null
+2026-06-01 20:13:22.069 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.MaterialsController.GetAll (GMP_System)'
+2026-06-01 20:13:22.070 +00:00 [INF] Route matched with {action = "GetAll", controller = "Materials"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.MaterialsController (GMP_System).
+2026-06-01 20:13:22.071 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:22.073 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:22.076 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:22.077 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:22.077 +00:00 [INF] Executed action GMP_System.Controllers.MaterialsController.GetAll (GMP_System) in 5.9908ms
+2026-06-01 20:13:22.079 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.MaterialsController.GetAll (GMP_System)'
+2026-06-01 20:13:22.081 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/materials - 401 0 null 13.9572ms
+2026-06-01 20:13:22.318 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - null null
+2026-06-01 20:13:22.321 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:22.322 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:22.325 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - 401 0 null 7.1093ms
+2026-06-01 20:13:23.872 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-01 20:13:23.877 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:13:23.884 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-01 20:13:23.886 +00:00 [INF] Writing value of type '<>f__AnonymousType94`2' as Json.
+2026-06-01 20:13:23.887 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:13:23.891 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 19.0327ms
+2026-06-01 20:13:25.888 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - null null
+2026-06-01 20:13:25.889 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:25.891 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:25.893 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - 401 0 null 4.5555ms
+2026-06-01 20:13:26.017 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-orders?page=1&pageSize=1000 - null null
+2026-06-01 20:13:26.025 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:26.028 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-06-01 20:13:26.032 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:26.037 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:26.038 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:26.039 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:26.047 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System) in 15.2792ms
+2026-06-01 20:13:26.055 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:26.061 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-orders?page=1&pageSize=1000 - 401 0 null 44.0978ms
+2026-06-01 20:13:26.118 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-batches - null null
+2026-06-01 20:13:26.120 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:26.122 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionBatches"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionBatchesController (GMP_System).
+2026-06-01 20:13:26.124 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:26.135 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:26.143 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:26.159 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:26.170 +00:00 [INF] Executed action GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System) in 45.8504ms
+2026-06-01 20:13:26.187 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:26.204 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-batches - 401 0 null 86.0505ms
+2026-06-01 20:13:26.641 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/materials - null null
+2026-06-01 20:13:26.642 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.MaterialsController.GetAll (GMP_System)'
+2026-06-01 20:13:26.643 +00:00 [INF] Route matched with {action = "GetAll", controller = "Materials"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.MaterialsController (GMP_System).
+2026-06-01 20:13:26.644 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:26.645 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:26.645 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:26.647 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:26.648 +00:00 [INF] Executed action GMP_System.Controllers.MaterialsController.GetAll (GMP_System) in 3.5126ms
+2026-06-01 20:13:26.649 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.MaterialsController.GetAll (GMP_System)'
+2026-06-01 20:13:26.650 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/materials - 401 0 null 8.7063ms
+2026-06-01 20:13:26.944 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - null null
+2026-06-01 20:13:26.947 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:26.949 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:26.952 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - 401 0 null 7.3059ms
+2026-06-01 20:13:27.440 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-orders - null null
+2026-06-01 20:13:27.447 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:27.452 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-06-01 20:13:27.454 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:27.455 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:27.456 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:27.457 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:27.458 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System) in 4.462ms
+2026-06-01 20:13:27.459 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:27.464 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-orders - 401 0 null 23.8621ms
+2026-06-01 20:13:27.526 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/recipes - null null
+2026-06-01 20:13:27.530 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.RecipesController.GetAll (GMP_System)'
+2026-06-01 20:13:27.538 +00:00 [INF] Route matched with {action = "GetAll", controller = "Recipes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.RecipesController (GMP_System).
+2026-06-01 20:13:27.546 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:27.551 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:27.552 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:27.554 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:27.555 +00:00 [INF] Executed action GMP_System.Controllers.RecipesController.GetAll (GMP_System) in 8.5868ms
+2026-06-01 20:13:27.557 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.RecipesController.GetAll (GMP_System)'
+2026-06-01 20:13:27.559 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/recipes - 401 0 null 32.1883ms
+2026-06-01 20:13:28.104 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - null null
+2026-06-01 20:13:28.113 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:28.122 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:28.125 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - 401 0 null 20.6864ms
+2026-06-01 20:13:28.577 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-batches - null null
+2026-06-01 20:13:28.584 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:28.586 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionBatches"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionBatchesController (GMP_System).
+2026-06-01 20:13:28.589 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:28.590 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:28.592 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:28.604 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:28.607 +00:00 [INF] Executed action GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System) in 18.9184ms
+2026-06-01 20:13:28.608 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:28.609 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-batches - 401 0 null 32.6733ms
+2026-06-01 20:13:28.789 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-orders - null null
+2026-06-01 20:13:28.791 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:28.793 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-06-01 20:13:28.797 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:28.799 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:28.801 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:28.803 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:28.807 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System) in 9.9818ms
+2026-06-01 20:13:28.808 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:28.811 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-orders - 401 0 null 21.979ms
+2026-06-01 20:13:29.743 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-batches - null null
+2026-06-01 20:13:29.744 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:29.751 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionBatches"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionBatchesController (GMP_System).
+2026-06-01 20:13:29.758 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:29.762 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:29.765 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:29.767 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:29.768 +00:00 [INF] Executed action GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System) in 10.7012ms
+2026-06-01 20:13:29.770 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:29.773 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-batches - 401 0 null 30.105ms
+2026-06-01 20:13:31.970 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/recipes - null null
+2026-06-01 20:13:31.973 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.RecipesController.GetAll (GMP_System)'
+2026-06-01 20:13:31.975 +00:00 [INF] Route matched with {action = "GetAll", controller = "Recipes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.RecipesController (GMP_System).
+2026-06-01 20:13:31.977 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:31.978 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:31.980 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:31.982 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:31.983 +00:00 [INF] Executed action GMP_System.Controllers.RecipesController.GetAll (GMP_System) in 6.5639ms
+2026-06-01 20:13:31.984 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.RecipesController.GetAll (GMP_System)'
+2026-06-01 20:13:31.985 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/recipes - 401 0 null 14.4934ms
+2026-06-01 20:13:32.010 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-orders - null null
+2026-06-01 20:13:32.011 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:32.015 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-06-01 20:13:32.016 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:32.018 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:32.018 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:32.019 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:32.021 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System) in 4.6258ms
+2026-06-01 20:13:32.022 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:32.023 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-orders - 401 0 null 12.3735ms
+2026-06-01 20:13:32.068 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-batches - null null
+2026-06-01 20:13:32.070 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:32.070 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionBatches"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionBatchesController (GMP_System).
+2026-06-01 20:13:32.071 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:32.073 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:32.074 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:32.075 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:32.076 +00:00 [INF] Executed action GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System) in 4.8495ms
+2026-06-01 20:13:32.077 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:32.081 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-batches - 401 0 null 12.4517ms
+2026-06-01 20:13:33.016 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/recipes - null null
+2026-06-01 20:13:33.017 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.RecipesController.GetAll (GMP_System)'
+2026-06-01 20:13:33.018 +00:00 [INF] Route matched with {action = "GetAll", controller = "Recipes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.RecipesController (GMP_System).
+2026-06-01 20:13:33.019 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:33.019 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:33.020 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:33.021 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:33.021 +00:00 [INF] Executed action GMP_System.Controllers.RecipesController.GetAll (GMP_System) in 2.4563ms
+2026-06-01 20:13:33.022 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.RecipesController.GetAll (GMP_System)'
+2026-06-01 20:13:33.022 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/recipes - 401 0 null 5.843ms
+2026-06-01 20:13:33.357 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-orders - null null
+2026-06-01 20:13:33.359 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:33.361 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-06-01 20:13:33.362 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:33.364 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:33.365 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:33.366 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:33.366 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System) in 4.5781ms
+2026-06-01 20:13:33.367 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:33.368 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-orders - 401 0 null 10.839ms
+2026-06-01 20:13:33.463 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-batches - null null
+2026-06-01 20:13:33.466 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:33.468 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionBatches"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionBatchesController (GMP_System).
+2026-06-01 20:13:33.471 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:33.478 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:33.486 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:33.488 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:33.489 +00:00 [INF] Executed action GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System) in 18.6324ms
+2026-06-01 20:13:33.490 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:33.491 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-batches - 401 0 null 28.1854ms
+2026-06-01 20:13:34.006 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/equipments - null null
+2026-06-01 20:13:34.010 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.EquipmentsController.GetAll (GMP_System)'
+2026-06-01 20:13:34.016 +00:00 [INF] Route matched with {action = "GetAll", controller = "Equipments"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.EquipmentsController (GMP_System).
+2026-06-01 20:13:34.018 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:34.019 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:34.023 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:34.027 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:34.028 +00:00 [INF] Executed action GMP_System.Controllers.EquipmentsController.GetAll (GMP_System) in 9.9253ms
+2026-06-01 20:13:34.032 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.EquipmentsController.GetAll (GMP_System)'
+2026-06-01 20:13:34.038 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/equipments - 401 0 null 32.0124ms
+2026-06-01 20:13:34.279 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/areas - null null
+2026-06-01 20:13:34.280 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionAreasController.GetAll (GMP_System)'
+2026-06-01 20:13:34.290 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionAreas"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionAreasController (GMP_System).
+2026-06-01 20:13:34.292 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:34.299 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:34.302 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:34.303 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:34.303 +00:00 [INF] Executed action GMP_System.Controllers.ProductionAreasController.GetAll (GMP_System) in 11.7926ms
+2026-06-01 20:13:34.305 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionAreasController.GetAll (GMP_System)'
+2026-06-01 20:13:34.306 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/areas - 401 0 null 27.047ms
+2026-06-01 20:13:35.391 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/equipments - null null
+2026-06-01 20:13:35.393 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.EquipmentsController.GetAll (GMP_System)'
+2026-06-01 20:13:35.394 +00:00 [INF] Route matched with {action = "GetAll", controller = "Equipments"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.EquipmentsController (GMP_System).
+2026-06-01 20:13:35.396 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:35.398 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:35.400 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:35.400 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:35.401 +00:00 [INF] Executed action GMP_System.Controllers.EquipmentsController.GetAll (GMP_System) in 5.2985ms
+2026-06-01 20:13:35.403 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.EquipmentsController.GetAll (GMP_System)'
+2026-06-01 20:13:35.405 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/equipments - 401 0 null 14.3405ms
+2026-06-01 20:13:35.659 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/areas - null null
+2026-06-01 20:13:35.660 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionAreasController.GetAll (GMP_System)'
+2026-06-01 20:13:35.661 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionAreas"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionAreasController (GMP_System).
+2026-06-01 20:13:35.662 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:35.663 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:35.665 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:35.666 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:35.667 +00:00 [INF] Executed action GMP_System.Controllers.ProductionAreasController.GetAll (GMP_System) in 5.7182ms
+2026-06-01 20:13:35.669 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionAreasController.GetAll (GMP_System)'
+2026-06-01 20:13:35.671 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/areas - 401 0 null 12.1518ms
+2026-06-01 20:13:35.671 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - null null
+2026-06-01 20:13:35.677 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:35.678 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:35.679 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - 401 0 null 7.8971ms
+2026-06-01 20:13:35.856 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-orders?page=1&pageSize=1000 - null null
+2026-06-01 20:13:35.857 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:35.857 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-batches - null null
+2026-06-01 20:13:35.858 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-06-01 20:13:35.859 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:35.860 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:35.861 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionBatches"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionBatchesController (GMP_System).
+2026-06-01 20:13:35.863 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:35.865 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:35.866 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:35.867 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:35.869 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:35.868 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:35.869 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:35.870 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System) in 10.3529ms
+2026-06-01 20:13:35.871 +00:00 [INF] Executed action GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System) in 5.9859ms
+2026-06-01 20:13:35.872 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:35.872 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:35.873 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-orders?page=1&pageSize=1000 - 401 0 null 17.6009ms
+2026-06-01 20:13:35.874 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-batches - 401 0 null 16.8095ms
+2026-06-01 20:13:36.793 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - null null
+2026-06-01 20:13:36.795 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:36.796 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:36.797 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/inventory-lots - 401 0 null 4.2993ms
+2026-06-01 20:13:37.263 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-orders?page=1&pageSize=1000 - null null
+2026-06-01 20:13:37.266 +00:00 [INF] Request starting HTTP/1.1 GET http://gmp-api:5000/api/production-batches - null null
+2026-06-01 20:13:37.270 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:37.272 +00:00 [INF] Executing endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:37.273 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionOrders"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionOrdersController (GMP_System).
+2026-06-01 20:13:37.276 +00:00 [INF] Route matched with {action = "GetAll", controller = "ProductionBatches"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller GMP_System.Controllers.ProductionBatchesController (GMP_System).
+2026-06-01 20:13:37.279 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:37.280 +00:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-06-01 20:13:37.284 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:37.284 +00:00 [INF] Authorization failed for the request at filter 'Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter'.
+2026-06-01 20:13:37.285 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:37.291 +00:00 [INF] Executing ChallengeResult with authentication schemes ([]).
+2026-06-01 20:13:37.293 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:37.295 +00:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-06-01 20:13:37.296 +00:00 [INF] Executed action GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System) in 17.3252ms
+2026-06-01 20:13:37.297 +00:00 [INF] Executed action GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System) in 17.069ms
+2026-06-01 20:13:37.302 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionOrdersController.GetAll (GMP_System)'
+2026-06-01 20:13:37.303 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.ProductionBatchesController.GetAll (GMP_System)'
+2026-06-01 20:13:37.304 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-orders?page=1&pageSize=1000 - 401 0 null 41.2235ms
+2026-06-01 20:13:37.305 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/production-batches - 401 0 null 39.6705ms
+2026-06-01 20:13:54.127 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-01 20:13:54.137 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:13:54.151 +00:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-01 20:13:54.153 +00:00 [INF] Writing value of type '<>f__AnonymousType94`2' as Json.
+2026-06-01 20:13:54.159 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-01 20:13:54.161 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 33.9298ms
