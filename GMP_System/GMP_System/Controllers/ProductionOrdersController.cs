@@ -377,7 +377,7 @@ namespace GMP_System.Controllers
                             OrderId = order.OrderId,
                             BatchId = batch.BatchId,
                             MaterialId = rb.MaterialId,
-                            UomId = rb.UomId ?? 1, 
+                            UomId = (rb.UomId == 4 || rb.UomId == 8) ? rb.UomId.Value : 1, 
                             WastePercentage = rb.WastePercentage,
                             RequiredQuantity = CalculateRequiredQuantity(batch.PlannedQuantity ?? 0m, rb.Quantity, rb.UomId ?? 1, rb.WastePercentage),
                             Note = rb.Note,

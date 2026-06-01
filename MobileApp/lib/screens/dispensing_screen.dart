@@ -29,17 +29,42 @@ class _DispensingScreenState extends State<DispensingScreen> {
     });
   }
 
-  Future<void> _handleDispense(int bomId) async {
+  Future<void> _handleDispense(int bomId, String materialName, String quantityStr) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xác nhận cấp phát'),
+        content: Text('Bạn có chắc chắn muốn cấp phát $quantityStr $materialName cho mẻ này?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue, foregroundColor: Colors.white),
+            child: const Text('Xác nhận'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     final success = await ApiService.dispenseBomItem(bomId, AuthService.currentUser?['userId'] ?? 0);
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã xác nhận cấp phát nguyên liệu')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã xác nhận cấp phát nguyên liệu')),
+        );
+      }
       _loadOrders();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lỗi khi cấp phát nguyên liệu')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Lỗi khi cấp phát nguyên liệu')),
+        );
+      }
     }
   }
 
@@ -179,7 +204,7 @@ class _DispensingScreenState extends State<DispensingScreen> {
                   trailing: isDispensed
                       ? const Text('Đã xong', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))
                       : ElevatedButton(
-                          onPressed: () => _handleDispense(orderBomId),
+                          onPressed: () => _handleDispense(orderBomId, materialName, '$requiredQuantity $uomName'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.primaryBlue,
                             foregroundColor: Colors.white,
