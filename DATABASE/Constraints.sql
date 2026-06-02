@@ -16,7 +16,7 @@ IF EXISTS (SELECT * FROM sys.triggers WHERE name = 'trg_Validate_Drying_Limit')
 GO
 
 CREATE TRIGGER trg_Validate_Drying_Limit
-ON BatchProcessParameterValues
+ON BatchProcessParameterValue
 AFTER INSERT, UPDATE
 AS
 BEGIN

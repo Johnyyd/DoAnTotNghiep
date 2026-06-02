@@ -3,6 +3,8 @@
    Schema Cơ sở dữ liệu cơ bản - v3.5 (Robust Build)
    ========================================================================= */
 
+CREATE DATABASE PharmaceuticalProcessingManagementSystem;
+USE PharmaceuticalProcessingManagementSystem;
 --USE [PharmaceuticalProcessingManagementSystem];
 --GO
 
@@ -47,8 +49,7 @@ IF OBJECT_ID('UnitOfMeasure', 'U') IS NOT NULL DROP TABLE UnitOfMeasure;
 IF OBJECT_ID('RecipeTechSpecs', 'U') IS NOT NULL DROP TABLE RecipeTechSpecs;
 IF OBJECT_ID('AppUsers', 'U') IS NOT NULL DROP TABLE AppUsers;
 GO
---CREATE DATABASE PharmaceuticalProcessingManagementSystem;
---USE PharmaceuticalProcessingManagementSystem;
+
 -- -------------------------------------------------------------------------
 -- 1. AppUsers
 -- -------------------------------------------------------------------------
