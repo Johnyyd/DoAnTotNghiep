@@ -20,6 +20,7 @@ public partial class ProductionOrderBom
     public decimal? WastePercentage { get; set; }
 
     public string? Note { get; set; }
+    public int? SelectedLotId { get; set; }
     public string DispensingStatus { get; set; } = "Pending";
     public DateTime? DispensedAt { get; set; }
     public int? DispensedBy { get; set; }
@@ -30,4 +31,6 @@ public partial class ProductionOrderBom
     public virtual ProductionOrder? Order { get; set; }
 
     public virtual UnitOfMeasure? Uom { get; set; }
+
+    public virtual InventoryLot? SelectedLot { get; set; }
 }

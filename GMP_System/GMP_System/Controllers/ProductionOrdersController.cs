@@ -60,11 +60,19 @@ namespace GMP_System.Controllers
                     {
                         bom.OrderBomId,
                         bom.MaterialId,
+                        bom.SelectedLotId,
                         bom.RequiredQuantity,
                         bom.DispensingStatus,
                         MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
                         MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
-                        UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
+                        UomName = bom.Uom != null ? bom.Uom.UomName : "N/A",
+                        SelectedLot = bom.SelectedLot == null ? null : new
+                        {
+                            bom.SelectedLot.LotId,
+                            bom.SelectedLot.LotNumber,
+                            bom.SelectedLot.ExpiryDate,
+                            bom.SelectedLot.QuantityCurrent
+                        }
                     }),
                     IsFullyDispensed = o.ProductionOrderBoms.All(bom => bom.DispensingStatus == "Dispensed")
                 })
@@ -115,11 +123,19 @@ namespace GMP_System.Controllers
                     {
                         bom.OrderBomId,
                         bom.MaterialId,
+                        bom.SelectedLotId,
                         bom.RequiredQuantity,
                         bom.DispensingStatus,
                         MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
                         MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
-                        UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
+                        UomName = bom.Uom != null ? bom.Uom.UomName : "N/A",
+                        SelectedLot = bom.SelectedLot == null ? null : new
+                        {
+                            bom.SelectedLot.LotId,
+                            bom.SelectedLot.LotNumber,
+                            bom.SelectedLot.ExpiryDate,
+                            bom.SelectedLot.QuantityCurrent
+                        }
                     }),
                     IsFullyDispensed = o.ProductionOrderBoms.All(bom => bom.DispensingStatus == "Dispensed")
                 })
@@ -241,8 +257,19 @@ namespace GMP_System.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] ProductionOrder order)
+        public async Task<IActionResult> Create([FromBody] ProductionOrderCreateRequest request)
         {
+            var order = new ProductionOrder
+            {
+                OrderCode = request.OrderCode,
+                RecipeId = request.RecipeId,
+                PlannedQuantity = request.PlannedQuantity,
+                ActualQuantity = request.ActualQuantity,
+                StartDate = request.StartDate,
+                EndDate = request.EndDate,
+                Status = request.Status,
+                Note = request.Note
+            };
 
             if (order.RecipeId == null)
             {
@@ -291,7 +318,12 @@ namespace GMP_System.Controllers
             await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                var shortages = await DeductInventoryForOrderAsync(order.RecipeId.Value, order.PlannedQuantity);
+                var selectedLotByMaterial = request.SelectedLots
+                    .Where(item => item.MaterialId > 0 && item.LotId > 0)
+                    .GroupBy(item => item.MaterialId)
+                    .ToDictionary(group => group.Key, group => group.First().LotId);
+
+                var shortages = await DeductInventoryForOrderAsync(order.RecipeId.Value, order.PlannedQuantity, selectedLotByMaterial);
                 if (shortages.Count > 0)
                 {
                     await transaction.RollbackAsync();
@@ -327,6 +359,7 @@ namespace GMP_System.Controllers
                         UomId = rb.UomId ?? 1, 
                         WastePercentage = rb.WastePercentage,
                         RequiredQuantity = CalculateRequiredQuantity(order.PlannedQuantity, rb.Quantity, rb.UomId ?? 1, rb.WastePercentage),
+                        SelectedLotId = rb.MaterialId.HasValue && selectedLotByMaterial.TryGetValue(rb.MaterialId.Value, out var selectedLotId) ? selectedLotId : null,
                         Note = rb.Note
                     };
                     await _unitOfWork.ProductionOrderBoms.AddAsync(orderBom);
@@ -543,7 +576,7 @@ namespace GMP_System.Controllers
             public decimal AvailableKg { get; set; }
         }
 
-        private async Task<List<InventoryShortageDto>> DeductInventoryForOrderAsync(int recipeId, decimal plannedQuantity)
+        private async Task<List<InventoryShortageDto>> DeductInventoryForOrderAsync(int recipeId, decimal plannedQuantity, Dictionary<int, int> selectedLotByMaterial)
         {
             var bomItems = await _context.RecipeBoms
                 .Where(b => b.RecipeId == recipeId && b.MaterialId != null && b.Quantity > 0)
@@ -572,8 +605,23 @@ namespace GMP_System.Controllers
                     continue;
                 }
 
-                var lots = await _context.InventoryLots
-                    .Where(l => l.MaterialId == materialId && l.QuantityCurrent > 0)
+                var hasSelectedLot = selectedLotByMaterial.TryGetValue(materialId, out var selectedLotId);
+                var lotsQuery = _context.InventoryLots
+                    .Where(l => l.MaterialId == materialId
+                        && l.QuantityCurrent > 0
+                        && l.QcStatus == "Released"
+                        && l.ExpiryDate.Date >= DateTime.Today);
+
+                if (hasSelectedLot)
+                {
+                    lotsQuery = lotsQuery.Where(l => l.LotId == selectedLotId);
+                }
+                else
+                {
+                    lotsQuery = lotsQuery.Where(l => l.QuantityCurrent >= requiredKg);
+                }
+
+                var lots = await lotsQuery
                     .OrderBy(l => l.ExpiryDate)
                     .ThenBy(l => l.ManufactureDate)
                     .ThenBy(l => l.LotId)
@@ -593,18 +641,9 @@ namespace GMP_System.Controllers
                     continue;
                 }
 
-                var remaining = requiredKg;
-                foreach (var lot in lots)
-                {
-                    if (remaining <= 0)
-                    {
-                        break;
-                    }
-
-                    var deduct = Math.Min(lot.QuantityCurrent, remaining);
-                    lot.QuantityCurrent = decimal.Round(lot.QuantityCurrent - deduct, 4, MidpointRounding.AwayFromZero);
-                    remaining -= deduct;
-                }
+                var lot = lots[0];
+                selectedLotByMaterial[materialId] = lot.LotId;
+                lot.QuantityCurrent = decimal.Round(lot.QuantityCurrent - requiredKg, 4, MidpointRounding.AwayFromZero);
             }
 
             if (shortages.Count == 0)
@@ -806,6 +845,25 @@ namespace GMP_System.Controllers
     public class SignatureRequest
     {
         public string Signature { get; set; } = string.Empty;
+    }
+
+    public class ProductionOrderCreateRequest
+    {
+        public string? OrderCode { get; set; }
+        public int? RecipeId { get; set; }
+        public decimal PlannedQuantity { get; set; }
+        public decimal? ActualQuantity { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string? Status { get; set; }
+        public string? Note { get; set; }
+        public List<SelectedMaterialLotRequest> SelectedLots { get; set; } = new();
+    }
+
+    public class SelectedMaterialLotRequest
+    {
+        public int MaterialId { get; set; }
+        public int LotId { get; set; }
     }
 
     public class HoldRequest

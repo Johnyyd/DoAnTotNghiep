@@ -20,6 +20,7 @@ IF OBJECT_ID('RecipeBOM', 'U') IS NOT NULL DROP TABLE RecipeBOM;
 -- 5. Recipes & Inventory
 IF OBJECT_ID('Recipes', 'U') IS NOT NULL DROP TABLE Recipes;
 IF OBJECT_ID('InventoryLots', 'U') IS NOT NULL DROP TABLE InventoryLots;
+IF OBJECT_ID('StorageLocations', 'U') IS NOT NULL DROP TABLE StorageLocations;
 
 -- 6. Materials & Conversions
 IF OBJECT_ID('Materials', 'U') IS NOT NULL DROP TABLE Materials;

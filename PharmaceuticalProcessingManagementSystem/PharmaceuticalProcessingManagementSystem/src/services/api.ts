@@ -173,6 +173,8 @@ export const inventoryApi = {
     api.get<ApiResponse<any[]>>('/inventory-lots'),
   getLots: (params?: { materialId?: number; lotNumber?: string }) =>
     api.get<ApiResponse<any[]>>('/inventory-lots', { params }),
+  getStorageLocations: () =>
+    api.get<ApiResponse<any[]>>('/storage-locations'),
   receive: (data: any) =>
     api.post<ApiResponse<any>>('/inventory-lots', data),
   updateLot: (lotId: number, data: any) =>
@@ -187,6 +189,12 @@ export const inventoryApi = {
   // Traceability: track raw materials forward to finished goods
   traceForward: (rawMaterialBatchNumber: string) =>
     api.get<ApiResponse<any>>(`/traceability/forward/${rawMaterialBatchNumber}`),
+};
+
+export const storageLocationsApi = {
+  getAll: () => api.get<ApiResponse<any[]>>('/storage-locations'),
+  create: (data: any) => api.post<ApiResponse<any>>('/storage-locations', data),
+  update: (id: number, data: any) => api.put<ApiResponse<any>>(`/storage-locations/${id}`, data),
 };
 
 export const appUsersApi = {

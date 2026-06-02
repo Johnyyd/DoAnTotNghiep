@@ -35,9 +35,10 @@ const navigation = [
   { name: 'Mẻ Sản Xuất', href: '/batches', icon: Package, roles: ['Admin', 'Manager', 'Operator'] },
   { name: 'Truy Xuất', href: '/traceability', icon: Search, roles: ['Admin', 'Manager', 'QualityControl'] },
   { name: 'Theo Dõi Tiến Độ', href: '/manager-operations', icon: FileText, roles: ['Admin', 'Manager'] },
+  { name: 'Thống Kê', href: '/finished-goods-stats', icon: BarChart3, roles: ['Admin', 'Manager'] },
   { name: 'Thiết Bị', href: '/equipments', icon: Settings, roles: ['Admin', 'Manager'] },
   { name: 'Khu Sản Xuất', href: '/production-areas', icon: Factory, roles: ['Admin', 'Manager'] },
-  { name: 'Thống Kê', href: '/finished-goods-stats', icon: BarChart3, roles: ['Admin', 'Manager'] },
+  { name: 'Kho', href: '/storage-locations', icon: Warehouse, roles: ['Admin', 'Manager', 'WarehouseStaff', 'QualityControl'] },
   { name: 'Tài Khoản', href: '/users', icon: Users, roles: ['Admin'] },
 ];
 
@@ -99,32 +100,6 @@ export default function Layout() {
           </nav>
         </div>
 
-        <div className="p-4 border-t border-neutral-200 bg-surface">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center shrink-0">
-              <span className="text-white font-bold text-sm">
-                {user?.username?.charAt(0).toUpperCase() ?? 'U'}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-neutral-900 truncate">{user?.fullName ?? user?.username}</p>
-              <p className="text-xs text-neutral-500 truncate">{roleLabels[user?.role ?? ''] ?? user?.role}</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button className="flex items-center justify-center px-3 py-2 text-sm text-neutral-600 bg-neutral-100 rounded-lg hover:bg-neutral-200 transition-colors">
-              <Settings className="w-4 h-4 mr-2" />
-              Cài đặt
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center justify-center px-3 py-2 text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Đăng xuất
-            </button>
-          </div>
-        </div>
       </aside>
 
       <div className="flex-1 lg:ml-[236px] print:m-0 print:w-full">
@@ -138,6 +113,25 @@ export default function Layout() {
 
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-neutral-900">Công ty dược phẩm HUIT-Pharma</h2>
+          </div>
+
+          <div className="ml-4 flex items-center gap-3 rounded-xl border border-neutral-200 bg-surface px-3 py-2 shadow-sm">
+            <div className="w-9 h-9 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center shrink-0">
+              <span className="text-white font-bold text-sm">
+                {user?.username?.charAt(0).toUpperCase() ?? 'U'}
+              </span>
+            </div>
+            <div className="hidden sm:block min-w-0">
+              <p className="text-sm font-medium text-neutral-900 truncate max-w-[180px]">{user?.fullName ?? user?.username}</p>
+              <p className="text-xs text-neutral-500 truncate max-w-[180px]">{roleLabels[user?.role ?? ''] ?? user?.role}</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center justify-center px-3 py-2 text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+            >
+              <LogOut className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Đăng xuất</span>
+            </button>
           </div>
         </header>
 

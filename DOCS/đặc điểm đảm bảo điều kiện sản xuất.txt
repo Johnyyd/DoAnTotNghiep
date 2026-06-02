@@ -1,0 +1,8 @@
+đặc điểm đảm bảo điều kiện sản xuất tốt theo tiêu chuẩn GMP-WHO
+
+admin phân quyền 
+
+Diễn giải database từ tiếng anh sang tiếng việt
+
+Dạng của nguyên liệu (lỏng, nước, hạt, bột,...), đựng ở thùng hay chai nào, chất lượng kho nguyên liệu, đơn vị tính, tự động tính hạn sử dụng, thêm tuỳ chọn tiêu chuẩn, nguồn gốc nguồn nước.
+

@@ -35,6 +35,7 @@ IF OBJECT_ID('BatchProcessLogs', 'U') IS NOT NULL DROP TABLE BatchProcessLogs;
 IF OBJECT_ID('ProductionBatches', 'U') IS NOT NULL DROP TABLE ProductionBatches;
 IF OBJECT_ID('ProductionOrders', 'U') IS NOT NULL DROP TABLE ProductionOrders;
 IF OBJECT_ID('InventoryLots', 'U') IS NOT NULL DROP TABLE InventoryLots;
+IF OBJECT_ID('StorageLocations', 'U') IS NOT NULL DROP TABLE StorageLocations;
 IF OBJECT_ID('RecipeBom', 'U') IS NOT NULL DROP TABLE RecipeBom;
 IF OBJECT_ID('StepParameters', 'U') IS NOT NULL DROP TABLE StepParameters;
 IF OBJECT_ID('RecipeRouting', 'U') IS NOT NULL DROP TABLE RecipeRouting;
@@ -114,6 +115,24 @@ CREATE TABLE ProductionAreas (
 GO
 
 -- -------------------------------------------------------------------------
+-- 4b. StorageLocations
+-- -------------------------------------------------------------------------
+CREATE TABLE StorageLocations (
+    LocationId INT PRIMARY KEY IDENTITY(1,1),
+    LocationCode VARCHAR(50) NOT NULL UNIQUE,
+    LocationName NVARCHAR(200) NOT NULL,
+    LocationType NVARCHAR(50),
+    TemperatureMin DECIMAL(6, 2),
+    TemperatureMax DECIMAL(6, 2),
+    HumidityMin DECIMAL(6, 2),
+    HumidityMax DECIMAL(6, 2),
+    CleanlinessStatus NVARCHAR(100),
+    IsQualified BIT DEFAULT 1,
+    Note NVARCHAR(500)
+);
+GO
+
+-- -------------------------------------------------------------------------
 -- 5. Equipments
 -- -------------------------------------------------------------------------
 CREATE TABLE Equipments (
@@ -137,6 +156,15 @@ CREATE TABLE Materials (
     BaseUomId INT,
     IsActive BIT DEFAULT 1,
     TechnicalSpecification NVARCHAR(MAX),
+    PhysicalForm NVARCHAR(50),
+    StorageCondition NVARCHAR(200),
+    MinStorageTemperature DECIMAL(6, 2),
+    MaxStorageTemperature DECIMAL(6, 2),
+    MinStorageHumidity DECIMAL(6, 2),
+    MaxStorageHumidity DECIMAL(6, 2),
+    MinPh DECIMAL(6, 2),
+    MaxPh DECIMAL(6, 2),
+    StorageNotes NVARCHAR(500),
     CreatedAt DATETIME2 DEFAULT GETDATE(),
     UpdatedAt DATETIME2
 );
@@ -206,6 +234,7 @@ CREATE TABLE ProductionOrderBom (
     UomId INT REFERENCES UnitOfMeasure(UomId),
     WastePercentage DECIMAL(5, 2) DEFAULT 0,
     Note NVARCHAR(500),
+    SelectedLotId INT,
     DispensingStatus NVARCHAR(20) DEFAULT 'Pending',
     DispensedAt DATETIME,
     DispensedBy INT REFERENCES AppUsers(UserId)
@@ -333,9 +362,23 @@ CREATE TABLE InventoryLots (
     QuantityCurrent DECIMAL(18, 4) NOT NULL,
     ManufactureDate DATETIME2,
     ExpiryDate DATETIME2 NOT NULL,
+    SupplierLotNumber NVARCHAR(100),
     SupplierName NVARCHAR(200),
+    ContainerType NVARCHAR(100),
+    ContainerCount INT,
+    QcStatus NVARCHAR(50) DEFAULT 'PendingQC',
+    CoaFilePath NVARCHAR(500),
+    ReleasedBy INT REFERENCES AppUsers(UserId),
+    ReleasedAt DATETIME2,
+    RejectedReason NVARCHAR(500),
+    LocationId INT REFERENCES StorageLocations(LocationId),
     CreatedAt DATETIME2 DEFAULT GETDATE()
 );
+GO
+
+ALTER TABLE ProductionOrderBom
+ADD CONSTRAINT FK_ProductionOrderBom_SelectedLot
+FOREIGN KEY (SelectedLotId) REFERENCES InventoryLots(LotId);
 GO
 
 -- -------------------------------------------------------------------------

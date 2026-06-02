@@ -71,6 +71,10 @@
               "target": "Package",
               "version": "[8.0.10, )"
             },
+            "Microsoft.IdentityModel.Tokens": {
+              "target": "Package",
+              "version": "[7.1.2, )"
+            },
             "Serilog.AspNetCore": {
               "target": "Package",
               "version": "[8.0.0, )"
@@ -86,6 +90,10 @@
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[6.9.0, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[7.1.2, )"
             },
             "prometheus-net.AspNetCore": {
               "target": "Package",

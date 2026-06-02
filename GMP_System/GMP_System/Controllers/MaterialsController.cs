@@ -82,8 +82,18 @@ namespace GMP_System.Controllers
             existing.MaterialName = material.MaterialName;
             existing.Type = material.Type;
             existing.TechnicalSpecification = material.TechnicalSpecification;
+            existing.PhysicalForm = material.PhysicalForm;
+            existing.StorageCondition = material.StorageCondition;
+            existing.MinStorageTemperature = material.MinStorageTemperature;
+            existing.MaxStorageTemperature = material.MaxStorageTemperature;
+            existing.MinStorageHumidity = material.MinStorageHumidity;
+            existing.MaxStorageHumidity = material.MaxStorageHumidity;
+            existing.MinPh = material.MinPh;
+            existing.MaxPh = material.MaxPh;
+            existing.StorageNotes = material.StorageNotes;
             existing.BaseUomId = material.BaseUomId;
             existing.IsActive = material.IsActive;
+            existing.UpdatedAt = DateTime.Now;
 
             _unitOfWork.Materials.Update(existing);
             await _unitOfWork.CompleteAsync();
