@@ -4,7 +4,7 @@ export interface User {
   userId: number;
   username: string;
   fullName: string;
-  role: 'Admin' | 'QualityControl' | 'Operator' | 'Manager';
+  role: 'Admin' | 'QualityControl' | 'Operator' | 'ProductionManager' | 'WarehouseStaff';
   isActive: boolean;
   createdAt?: string;
 }

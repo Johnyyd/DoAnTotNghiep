@@ -25,6 +25,7 @@ public partial class ProductionOrder
     public int? CreatedBy { get; set; }
     public int? PlannedCartons { get; set; }
     public DateTime? CreatedAt { get; set; }
+    [NotMapped]
     public string? RecipeName { get; set; }
     public string? Note { get; set; }
 

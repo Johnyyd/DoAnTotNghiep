@@ -11,6 +11,8 @@ public partial class ProductionOrderBom
 
     public int? OrderId { get; set; }
 
+    public int? BatchId { get; set; }
+
     public int? MaterialId { get; set; }
 
     public decimal RequiredQuantity { get; set; }
@@ -29,6 +31,9 @@ public partial class ProductionOrderBom
 
     [JsonIgnore]
     public virtual ProductionOrder? Order { get; set; }
+
+    [JsonIgnore]
+    public virtual ProductionBatch? Batch { get; set; }
 
     public virtual UnitOfMeasure? Uom { get; set; }
 

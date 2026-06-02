@@ -257,7 +257,9 @@ class _MixingStepScreenState extends State<MixingStepScreen>
           } else {
             stopPolling();
           }
-        } else if (rawStatus == 'APPROVED' || rawStatus == 'PASSED' || rawStatus == 'EXECUTING') {
+        } else if (rawStatus == 'APPROVED' ||
+            rawStatus == 'PASSED' ||
+            rawStatus == 'EXECUTING') {
           _currentPhase = ExecutionPhase.execution;
           stopPolling();
         } else if (rawStatus == 'RUNNING') {
@@ -578,7 +580,8 @@ class _MixingStepScreenState extends State<MixingStepScreen>
           Navigator.pop(ctx, true);
         } else if (resultStatus == 'Passed') {
           if (widget.orderId != null) {
-            await ApiService.updateOrderStatus(widget.orderId!, 'Pending Worker');
+            await ApiService.updateOrderStatus(
+                widget.orderId!, 'Pending Worker');
           }
           Navigator.pop(ctx, true);
         }
@@ -629,7 +632,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
     String status = 'Running';
     if (_currentPhase == ExecutionPhase.verification) status = 'PendingQC';
     if (_currentPhase == ExecutionPhase.execution) status = 'Executing';
-    
+
     await _submit(status, null, isInternal: true);
     if (mounted) Navigator.pop(context);
   }
@@ -641,70 +644,73 @@ class _MixingStepScreenState extends State<MixingStepScreen>
     }
 
     return PopScope(
-      canPop: false,
-      onPopInvoked: (didPop) async {
-        if (didPop) return;
-        await _exitAndSave();
-      },
-      child: Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: _exitAndSave,
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('TRỘN - ${_currentPhase.label}',
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Text(
-                'Công đoạn: TRỘN | Mẻ: ${_batchInfo?['batchNumber'] ?? "---"} | Lệnh: ${_batchInfo?['order']?['orderCode'] ?? "---"}',
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.normal)),
-            Text(
-                'Thuốc: ${_batchInfo?['order']?['recipe']?['material']?['materialName'] ?? "---"}',
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.normal)),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadDataFromDB,
-            tooltip: 'Làm mới dữ liệu',
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4),
-          child: LinearProgressIndicator(
-            value: _currentPhase.indexNumber / 4.0,
-            backgroundColor: Colors.white24,
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-          ),
-        ),
-      ),
-      body: Column(
-        children: [
-          _buildStatusHeader(),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
+        canPop: false,
+        onPopInvoked: (didPop) async {
+          if (didPop) return;
+          await _exitAndSave();
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: _exitAndSave,
+            ),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (_currentPhase == ExecutionPhase.precheck) _buildPhase1(),
-                if (_currentPhase == ExecutionPhase.input) _buildPhase2(),
-                if (_currentPhase == ExecutionPhase.verification)
-                  _buildPhase3(),
-                if (_currentPhase == ExecutionPhase.execution) _buildPhase4(),
-                if (_currentPhase == ExecutionPhase.completed) _buildPhase5(),
-                const SizedBox(height: 150),
+                Text('TRỘN - ${_currentPhase.label}',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                    'Công đoạn: TRỘN | Mẻ: ${_batchInfo?['batchNumber'] ?? "---"} | Lệnh: ${_batchInfo?['order']?['orderCode'] ?? "---"}',
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.normal)),
+                Text(
+                    'Thuốc: ${_batchInfo?['order']?['recipe']?['material']?['materialName'] ?? "---"}',
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.normal)),
               ],
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: _loadDataFromDB,
+                tooltip: 'Làm mới dữ liệu',
+              ),
+            ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(4),
+              child: LinearProgressIndicator(
+                value: _currentPhase.indexNumber / 4.0,
+                backgroundColor: Colors.white24,
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
           ),
-        ],
-      ),
-      floatingActionButton: _buildContextualFAB(),
-    ));
+          body: Column(
+            children: [
+              _buildStatusHeader(),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    if (_currentPhase == ExecutionPhase.precheck)
+                      _buildPhase1(),
+                    if (_currentPhase == ExecutionPhase.input) _buildPhase2(),
+                    if (_currentPhase == ExecutionPhase.verification)
+                      _buildPhase3(),
+                    if (_currentPhase == ExecutionPhase.execution)
+                      _buildPhase4(),
+                    if (_currentPhase == ExecutionPhase.completed)
+                      _buildPhase5(),
+                    const SizedBox(height: 150),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          floatingActionButton: _buildContextualFAB(),
+        ));
   }
 
   Widget _buildStatusHeader() {
@@ -956,11 +962,10 @@ class _MixingStepScreenState extends State<MixingStepScreen>
         _buildPhase2(),
         const SizedBox(height: 40),
         _buildCenteredStatus(
-          Icons.hourglass_empty,
-          Colors.orange,
-          'ĐANG ĐỢI QC XÁC NHẬN',
-          'Dữ liệu đã được khóa. Vui lòng báo QC ký xác nhận.'
-        ),
+            Icons.hourglass_empty,
+            Colors.orange,
+            'ĐANG ĐỢI QC XÁC NHẬN',
+            'Dữ liệu đã được khóa. Vui lòng báo QC ký xác nhận.'),
       ],
     );
   }

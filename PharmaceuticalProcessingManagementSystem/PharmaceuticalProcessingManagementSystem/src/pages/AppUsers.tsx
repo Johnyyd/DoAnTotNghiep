@@ -36,7 +36,7 @@ export default function AppUsers() {
         return { label: 'Quản trị viên', classes: 'bg-red-100 text-red-700' };
       case 'QualityControl':
         return { label: 'Kiểm soát chất lượng (QC)', classes: 'bg-purple-100 text-purple-700' };
-      case 'Manager':
+      case 'ProductionManager':
         return { label: 'Quản lý', classes: 'bg-blue-100 text-blue-700' };
       case 'Operator':
         return { label: 'Nhân viên vận hành', classes: 'bg-neutral-100 text-neutral-700' };
