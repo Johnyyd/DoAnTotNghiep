@@ -1872,3 +1872,94 @@ WHERE [b].[EquipmentID] IS NOT NULL AND [b].[EquipmentID] IN (
 2026-06-02 01:40:44.301 +00:00 [INF] Executed action GMP_System.Controllers.EquipmentsController.GetAll (GMP_System) in 146.6603ms
 2026-06-02 01:40:44.302 +00:00 [INF] Executed endpoint 'GMP_System.Controllers.EquipmentsController.GetAll (GMP_System)'
 2026-06-02 01:40:44.303 +00:00 [INF] Request finished HTTP/1.1 GET http://gmp-api:5000/api/equipments - 200 null application/json; charset=utf-8 169.8652ms
+2026-06-02 01:41:09.177 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-02 01:41:09.178 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:41:09.180 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-02 01:41:09.180 +00:00 [INF] Writing value of type '<>f__AnonymousType96`2' as Json.
+2026-06-02 01:41:09.180 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:41:09.181 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.8847ms
+2026-06-02 01:41:37.570 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-02 01:41:37.571 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:41:37.573 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-02 01:41:37.573 +00:00 [INF] Writing value of type '<>f__AnonymousType96`2' as Json.
+2026-06-02 01:41:37.573 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:41:37.574 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.5577ms
+2026-06-02 01:42:05.933 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-02 01:42:05.934 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:42:05.936 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-02 01:42:05.936 +00:00 [INF] Writing value of type '<>f__AnonymousType96`2' as Json.
+2026-06-02 01:42:05.937 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:42:05.937 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.8355ms
+2026-06-02 01:42:34.328 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-02 01:42:34.329 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:42:34.331 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-02 01:42:34.331 +00:00 [INF] Writing value of type '<>f__AnonymousType96`2' as Json.
+2026-06-02 01:42:34.331 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:42:34.332 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.3471ms
+2026-06-02 01:43:02.691 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-02 01:43:02.692 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:43:02.695 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-02 01:43:02.695 +00:00 [INF] Writing value of type '<>f__AnonymousType96`2' as Json.
+2026-06-02 01:43:02.695 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:43:02.695 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.2148ms
+2026-06-02 01:43:31.078 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-02 01:43:31.079 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:43:31.081 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-02 01:43:31.082 +00:00 [INF] Writing value of type '<>f__AnonymousType96`2' as Json.
+2026-06-02 01:43:31.082 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:43:31.082 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.2709ms
+2026-06-02 01:43:59.440 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-02 01:43:59.440 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:43:59.443 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-02 01:43:59.443 +00:00 [INF] Writing value of type '<>f__AnonymousType96`2' as Json.
+2026-06-02 01:43:59.444 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:43:59.444 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.0692ms
+2026-06-02 01:44:27.829 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-02 01:44:27.830 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:44:27.833 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-02 01:44:27.833 +00:00 [INF] Writing value of type '<>f__AnonymousType96`2' as Json.
+2026-06-02 01:44:27.834 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:44:27.834 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.4441ms
+2026-06-02 01:44:56.164 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-02 01:44:56.164 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:44:56.166 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-02 01:44:56.166 +00:00 [INF] Writing value of type '<>f__AnonymousType96`2' as Json.
+2026-06-02 01:44:56.167 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:44:56.167 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.6523ms
+2026-06-02 01:45:24.549 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-02 01:45:24.550 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:45:24.552 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-02 01:45:24.553 +00:00 [INF] Writing value of type '<>f__AnonymousType96`2' as Json.
+2026-06-02 01:45:24.553 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:45:24.553 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.2178ms
+2026-06-02 01:45:52.916 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-02 01:45:52.916 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:45:52.918 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-02 01:45:52.919 +00:00 [INF] Writing value of type '<>f__AnonymousType96`2' as Json.
+2026-06-02 01:45:52.919 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:45:52.919 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.7278ms
+2026-06-02 01:46:22.277 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-02 01:46:22.278 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:46:22.281 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-02 01:46:22.281 +00:00 [INF] Writing value of type '<>f__AnonymousType96`2' as Json.
+2026-06-02 01:46:22.281 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:46:22.282 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 4.2788ms
+2026-06-02 01:46:49.705 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-02 01:46:49.706 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:46:49.708 +00:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-02 01:46:49.708 +00:00 [INF] Writing value of type '<>f__AnonymousType96`2' as Json.
+2026-06-02 01:46:49.709 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-02 01:46:49.709 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 3.9088ms
