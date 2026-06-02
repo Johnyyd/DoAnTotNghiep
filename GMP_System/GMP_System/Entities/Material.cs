@@ -20,6 +20,24 @@ public partial class Material
 
     public string? TechnicalSpecification { get; set; }
 
+    public string? PhysicalForm { get; set; }
+
+    public string? StorageCondition { get; set; }
+
+    public decimal? MinStorageTemperature { get; set; }
+
+    public decimal? MaxStorageTemperature { get; set; }
+
+    public decimal? MinStorageHumidity { get; set; }
+
+    public decimal? MaxStorageHumidity { get; set; }
+
+    public decimal? MinPh { get; set; }
+
+    public decimal? MaxPh { get; set; }
+
+    public string? StorageNotes { get; set; }
+
     public DateTime? CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }

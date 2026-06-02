@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { certificatesApi, productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
+import { certificatesApi, inventoryApi, productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
 import { Calculator, CheckCircle2, ClipboardList, FileCheck2, Layers, Pencil, Search, Trash2, Upload, X } from 'lucide-react';
 import { formatNumber, formatDate, formatRecipeBatchSize, isRecipeLiquid } from '@/utils/format';
 
@@ -60,6 +60,7 @@ export default function ProductionOrders() {
   const [batchPopupOrderId, setBatchPopupOrderId] = useState<number | null>(null);
   const [batchPopupLabel, setBatchPopupLabel] = useState('');
   const [uploadingForBatch, setUploadingForBatch] = useState<string | null>(null);
+  const [selectedLotByMaterial, setSelectedLotByMaterial] = useState<Record<number, number>>({});
   const uploadInputRef = useRef<HTMLInputElement>(null);
 
   const [orderForm, setOrderForm] = useState({
@@ -104,7 +105,7 @@ export default function ProductionOrders() {
     enabled: planForm.recipeId > 0,
   });
 
-  const { data: inventoryRaw } = useQuery({ queryKey: ['inventoryLots'], queryFn: () => (import('@/services/api').then(m => m.inventoryApi.getAll())) });
+  const { data: inventoryRaw } = useQuery({ queryKey: ['inventoryLots'], queryFn: () => inventoryApi.getAll() });
 
   const bomItems = useMemo(() => toRows<any>(bomRaw).map((item: any) => ({
     materialId: Number(item.materialId ?? item.MaterialId ?? 0),
@@ -114,15 +115,40 @@ export default function ProductionOrders() {
     wastePercentage: Number(item.wastePercentage ?? item.WastePercentage ?? 0),
   })), [bomRaw]);
 
-  const stockByMaterial = useMemo(() => {
-    const map = new Map<number, number>();
+  const availableLotsByMaterial = useMemo(() => {
+    const todayValue = new Date();
+    todayValue.setHours(0, 0, 0, 0);
+    const map = new Map<number, any[]>();
     toRows<any>(inventoryRaw).forEach((lot: any) => {
-      const mid = Number(lot.materialId ?? 0);
-      const qty = Number(lot.quantityCurrent ?? 0);
-      map.set(mid, (map.get(mid) ?? 0) + qty);
+      const materialId = Number(lot.materialId ?? lot.MaterialId ?? 0);
+      const quantityCurrent = Number(lot.quantityCurrent ?? lot.QuantityCurrent ?? 0);
+      const qcStatus = lot.qcStatus ?? lot.QcStatus ?? 'PendingQC';
+      const expiryDate = lot.expiryDate ?? lot.ExpiryDate;
+      const expiry = expiryDate ? new Date(expiryDate) : null;
+      if (materialId <= 0 || quantityCurrent <= 0 || qcStatus !== 'Released' || !expiry || expiry < todayValue) return;
+      const normalizedLot = {
+        lotId: Number(lot.lotId ?? lot.LotId ?? 0),
+        lotNumber: lot.lotNumber ?? lot.LotNumber ?? '',
+        quantityCurrent,
+        expiryDate,
+        supplierLotNumber: lot.supplierLotNumber ?? lot.SupplierLotNumber ?? '',
+        locationCode: lot.location?.locationCode ?? lot.Location?.LocationCode ?? lot.locationCode ?? '',
+      };
+      const current = map.get(materialId) ?? [];
+      current.push(normalizedLot);
+      map.set(materialId, current);
     });
+    map.forEach((items) => items.sort((first, second) => new Date(first.expiryDate).getTime() - new Date(second.expiryDate).getTime()));
     return map;
   }, [inventoryRaw]);
+
+  const stockByMaterial = useMemo(() => {
+    const map = new Map<number, number>();
+    availableLotsByMaterial.forEach((lotsForMaterial, materialId) => {
+      map.set(materialId, lotsForMaterial.reduce((sum, lot) => sum + lot.quantityCurrent, 0));
+    });
+    return map;
+  }, [availableLotsByMaterial]);
 
   const totalTablets = useMemo(() => {
     const packed = Math.max(planForm.cartons, 0) * Math.max(planForm.bottlesPerCarton, 0) * Math.max(planForm.tabletsPerBottle, 0);
@@ -154,12 +180,17 @@ export default function ProductionOrders() {
         requiredValue = (baseRequired * wasteFactor) / 1_000_000;
       }
         
+      const availableLots = availableLotsByMaterial.get(item.materialId) ?? [];
+      const selectedLotId = selectedLotByMaterial[item.materialId] ?? availableLots[0]?.lotId ?? 0;
+      const selectedLot = availableLots.find((lot) => lot.lotId === selectedLotId);
       const available = stockByMaterial.get(item.materialId) ?? 0;
-      return { ...item, requiredKg: requiredValue, available, enough: available >= requiredValue, isPackaging };
+      const selectedLotEnough = selectedLot ? selectedLot.quantityCurrent >= requiredValue : false;
+      return { ...item, requiredKg: requiredValue, available, enough: selectedLotEnough, isPackaging, availableLots, selectedLotId, selectedLot };
     });
-  }, [bomItems, totalTablets, stockByMaterial]);
+  }, [bomItems, totalTablets, stockByMaterial, availableLotsByMaterial, selectedLotByMaterial]);
 
   const insufficientMaterials = useMemo(() => requiredMaterials.filter((m) => !m.enough), [requiredMaterials]);
+  const missingLotSelections = useMemo(() => requiredMaterials.filter((m) => m.enough && !m.selectedLotId), [requiredMaterials]);
 
   const totalMassMgExclPackaging = useMemo(() => {
     return requiredMaterials
@@ -248,6 +279,10 @@ export default function ProductionOrders() {
         startDate: now.toISOString(),
         endDate: end.toISOString(),
         status: 'Approved',
+        selectedLots: requiredMaterials.map((material) => ({
+          materialId: material.materialId,
+          lotId: material.selectedLotId,
+        })),
       } as any);
     },
     onSuccess: async () => {
@@ -405,17 +440,31 @@ export default function ProductionOrders() {
         {requiredMaterials.length > 0 && (
           <div className="table-container bg-white rounded-lg border border-primary-200">
             <table className="table">
-              <thead><tr><th>Nguyên liệu</th><th>Định mức</th><th>Số lượng cần</th><th>Tồn hiện tại</th><th>Tình trạng</th></tr></thead>
+              <thead><tr><th>Nguyên liệu</th><th>Định mức</th><th>Số lượng cần</th><th>Lô đã duyệt còn hạn</th><th>Tồn khả dụng</th><th>Tình trạng</th></tr></thead>
               <tbody>
                 {requiredMaterials.map((item, idx) => (
                   <tr key={`${item.materialId}-${idx}`}>
                     <td>{item.materialName} {item.isPackaging && <span className="text-[10px] bg-neutral-100 px-1 rounded text-neutral-500">Packaging</span>}</td>
                     <td>{item.isPackaging ? "-" : formatNumber(item.mgPerTablet)}</td>
                     <td>{formatNumber(item.requiredKg, item.isPackaging ? 0 : 4)}</td>
+                    <td>
+                      <select
+                        className="input min-w-[260px]"
+                        value={item.selectedLotId || 0}
+                        onChange={(event) => setSelectedLotByMaterial((current) => ({ ...current, [item.materialId]: Number(event.target.value) }))}
+                      >
+                        <option value={0}>Chọn lô đã duyệt còn hạn</option>
+                        {item.availableLots.map((lot: any) => (
+                          <option key={lot.lotId} value={lot.lotId}>
+                            {lot.lotNumber} - còn {formatNumber(lot.quantityCurrent, item.isPackaging ? 0 : 4)} - HSD {formatDate(lot.expiryDate)}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
                     <td>{formatNumber(item.available, item.isPackaging ? 0 : 4)}</td>
                     <td>
                       <span className={`px-2 py-1 rounded-full text-xs ${item.enough ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                        {item.enough ? 'Đủ' : 'Thiếu'}
+                        {item.enough ? (item.selectedLotId ? 'Đủ và còn hạn' : 'Chưa chọn lô') : 'Thiếu'}
                       </span>
                     </td>
                   </tr>
@@ -426,7 +475,7 @@ export default function ProductionOrders() {
         )}
 
         <div className="flex justify-end">
-          <button className="btn-primary" disabled={planForm.recipeId <= 0 || totalTablets <= 0 || insufficientMaterials.length > 0 || createOrderFromPlanMutation.isPending} onClick={() => createOrderFromPlanMutation.mutate()}>
+          <button className="btn-primary" disabled={planForm.recipeId <= 0 || totalTablets <= 0 || insufficientMaterials.length > 0 || missingLotSelections.length > 0 || createOrderFromPlanMutation.isPending} onClick={() => createOrderFromPlanMutation.mutate()}>
             Tạo lệnh sản xuất theo kế hoạch
           </button>
         </div>

@@ -56,7 +56,7 @@ export default function Login() {
           <div className="text-center mb-8">
             <img src="/icon.png" alt="Logo" className="w-16 h-16 object-contain mb-4 mx-auto" />
             <h1 className="text-2xl font-bold text-neutral-900">eBMR</h1>
-            <p className="text-sm text-neutral-500 mt-1">Hệ thống quản lý sản xuất dược phẩm</p>
+            <p className="text-sm text-neutral-500 mt-1">Hệ thống quản lý sản xuất dược phẩm HUIT Pharma</p>
           </div>
 
           {/* Error message */}

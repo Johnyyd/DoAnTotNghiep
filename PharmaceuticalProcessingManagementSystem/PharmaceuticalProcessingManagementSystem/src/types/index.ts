@@ -17,6 +17,15 @@ export interface Material {
   baseUomId: number;
   baseUomName?: string;
   description?: string;
+  physicalForm?: string;
+  storageCondition?: string;
+  minStorageTemperature?: number;
+  maxStorageTemperature?: number;
+  minStorageHumidity?: number;
+  maxStorageHumidity?: number;
+  minPh?: number;
+  maxPh?: number;
+  storageNotes?: string;
   isActive: boolean;
   createdAt: string;
 }

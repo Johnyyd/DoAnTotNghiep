@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { appUsersApi } from '@/services/api';
-import { Search, Users, Filter, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Search, Users, Edit2, Trash2 } from 'lucide-react';
 
 export default function AppUsers() {
   const [search, setSearch] = useState('');
@@ -54,10 +54,6 @@ export default function AppUsers() {
             Quản lý danh sách nhân viên, tài khoản hệ thống và phân quyền.
           </p>
         </div>
-        <button className="btn-primary w-full sm:w-auto">
-          <Plus className="w-5 h-5 mr-2" />
-          Thêm người dùng mới
-        </button>
       </div>
 
       <div className="bg-surface border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
@@ -71,12 +67,6 @@ export default function AppUsers() {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow"
             />
-          </div>
-          <div className="flex gap-2">
-            <button className="btn-secondary">
-              <Filter className="w-4 h-4 mr-2" />
-              Lọc kết quả
-            </button>
           </div>
         </div>
 

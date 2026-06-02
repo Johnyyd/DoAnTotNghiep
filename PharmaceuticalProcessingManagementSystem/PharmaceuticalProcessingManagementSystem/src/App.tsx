@@ -19,6 +19,7 @@ import Equipments from '@/pages/Equipments';
 import ManagerOperations from '@/pages/ManagerOperations';
 import FinishedGoodsStats from '@/pages/FinishedGoodsStats';
 import ProductionAreas from '@/pages/ProductionAreas';
+import StorageLocations from '@/pages/StorageLocations';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -61,6 +62,7 @@ function App() {
               <Route path="manager-operations" element={<ManagerOperations />} />
               <Route path="finished-goods-stats" element={<FinishedGoodsStats />} />
               <Route path="production-areas" element={<ProductionAreas />} />
+              <Route path="storage-locations" element={<StorageLocations />} />
             </Route>
 
             {/* Fallback */}

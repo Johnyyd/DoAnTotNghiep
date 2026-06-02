@@ -13,10 +13,12 @@ namespace GMP_System.Controllers
     public class InventoryLotsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly GmpContext _context;
 
-        public InventoryLotsController(IUnitOfWork unitOfWork)
+        public InventoryLotsController(IUnitOfWork unitOfWork, GmpContext context)
         {
             _unitOfWork = unitOfWork;
+            _context = context;
         }
 
         [HttpGet]
@@ -34,14 +36,32 @@ namespace GMP_System.Controllers
                 query = query.Where(l => l.LotNumber.Contains(lotNumber));
             }
 
-            var lots = await query.Include(l => l.Material).ThenInclude(m => m!.BaseUom).ToListAsync();
+            var lots = await query
+                .Include(l => l.Material).ThenInclude(m => m!.BaseUom)
+                .Include(l => l.Location)
+                .Include(l => l.ReleasedByNavigation)
+                .ToListAsync();
             return Ok(new { success = true, data = lots });
+        }
+
+        [HttpGet("storage-locations")]
+        public async Task<IActionResult> GetStorageLocations()
+        {
+            var locations = await _context.StorageLocations
+                .OrderBy(l => l.LocationCode)
+                .ToListAsync();
+
+            return Ok(new { success = true, data = locations });
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetLot(int id)
         {
-            var lot = await _unitOfWork.InventoryLots.GetByIdWithIncludeAsync(id, l => l.Material);
+            var lot = await _unitOfWork.InventoryLots.Query()
+                .Include(l => l.Material).ThenInclude(m => m!.BaseUom)
+                .Include(l => l.Location)
+                .Include(l => l.ReleasedByNavigation)
+                .FirstOrDefaultAsync(l => l.LotId == id);
             if (lot == null)
             {
                 return NotFound(new { success = false, message = "Không tìm thấy lô hàng." });
@@ -75,6 +95,8 @@ namespace GMP_System.Controllers
             }
 
 
+            lot.QcStatus = NormalizeQcStatus(lot.QcStatus);
+            ApplyReleaseMetadata(lot);
             lot.CreatedAt = DateTime.Now;
             await _unitOfWork.InventoryLots.AddAsync(lot);
             await _unitOfWork.CompleteAsync();
@@ -105,6 +127,17 @@ namespace GMP_System.Controllers
             lot.QuantityCurrent = request.QuantityCurrent;
             lot.ManufactureDate = request.ManufactureDate;
             lot.ExpiryDate = request.ExpiryDate;
+            lot.SupplierLotNumber = request.SupplierLotNumber;
+            lot.SupplierName = request.SupplierName;
+            lot.ContainerType = request.ContainerType;
+            lot.ContainerCount = request.ContainerCount;
+            lot.QcStatus = NormalizeQcStatus(request.QcStatus);
+            lot.CoaFilePath = request.CoaFilePath;
+            lot.ReleasedBy = request.ReleasedBy;
+            lot.ReleasedAt = request.ReleasedAt;
+            lot.RejectedReason = request.RejectedReason;
+            lot.LocationId = request.LocationId;
+            ApplyReleaseMetadata(lot);
 
 
             _unitOfWork.InventoryLots.Update(lot);
@@ -139,6 +172,7 @@ namespace GMP_System.Controllers
             var lots = await _unitOfWork.InventoryLots.Query()
                 .Where(l => l.QuantityCurrent > 0)
                 .Include(l => l.Material)
+                .Include(l => l.Location)
                 .OrderByDescending(l => l.LotId)
                 .ToListAsync();
 
@@ -170,6 +204,31 @@ namespace GMP_System.Controllers
             }
 
             return null;
+        }
+
+        private static string NormalizeQcStatus(string? status)
+        {
+            return status switch
+            {
+                "Released" or "Approved" or "Passed" => "Released",
+                "Rejected" or "Failed" => "Rejected",
+                "OnHold" or "Hold" => "OnHold",
+                "Sampling" => "Sampling",
+                _ => "PendingQC"
+            };
+        }
+
+        private static void ApplyReleaseMetadata(InventoryLot lot)
+        {
+            if (lot.QcStatus == "Released" && lot.ReleasedAt == null)
+            {
+                lot.ReleasedAt = DateTime.Now;
+            }
+
+            if (lot.QcStatus != "Rejected")
+            {
+                lot.RejectedReason = null;
+            }
         }
     }
 

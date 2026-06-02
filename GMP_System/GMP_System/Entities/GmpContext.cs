@@ -51,6 +51,8 @@ public partial class GmpContext : DbContext
 
     public virtual DbSet<RecipeTechSpec> RecipeTechSpecs { get; set; } = null!;
 
+    public virtual DbSet<StorageLocation> StorageLocations { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AppUser>(entity =>
@@ -182,6 +184,12 @@ public partial class GmpContext : DbContext
             // Tôi sẽ bỏ QCNumber mapping nếu DB không có để tránh lỗi 207.
             
             entity.Property(e => e.MaterialId).HasColumnName("MaterialId");
+            entity.Property(e => e.SupplierLotNumber).HasMaxLength(100);
+            entity.Property(e => e.SupplierName).HasMaxLength(200);
+            entity.Property(e => e.ContainerType).HasMaxLength(100);
+            entity.Property(e => e.QcStatus).HasMaxLength(50).HasDefaultValue("PendingQC");
+            entity.Property(e => e.CoaFilePath).HasMaxLength(500);
+            entity.Property(e => e.RejectedReason).HasMaxLength(500);
 
             entity.Property(e => e.QuantityCurrent)
                 .HasColumnName("QuantityCurrent")
@@ -190,6 +198,12 @@ public partial class GmpContext : DbContext
 
             entity.HasOne(d => d.Material).WithMany(p => p.InventoryLots)
                 .HasForeignKey(d => d.MaterialId);
+
+            entity.HasOne(d => d.Location).WithMany(p => p.InventoryLots)
+                .HasForeignKey(d => d.LocationId);
+
+            entity.HasOne(d => d.ReleasedByNavigation).WithMany()
+                .HasForeignKey(d => d.ReleasedBy);
         });
 
         modelBuilder.Entity<Material>(entity =>
@@ -212,10 +226,35 @@ public partial class GmpContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.MaterialName).HasMaxLength(200);
             entity.Property(e => e.Type).HasMaxLength(50);
+            entity.Property(e => e.PhysicalForm).HasMaxLength(50);
+            entity.Property(e => e.StorageCondition).HasMaxLength(200);
+            entity.Property(e => e.MinStorageTemperature).HasColumnType("decimal(6, 2)");
+            entity.Property(e => e.MaxStorageTemperature).HasColumnType("decimal(6, 2)");
+            entity.Property(e => e.MinStorageHumidity).HasColumnType("decimal(6, 2)");
+            entity.Property(e => e.MaxStorageHumidity).HasColumnType("decimal(6, 2)");
+            entity.Property(e => e.MinPh).HasColumnType("decimal(6, 2)");
+            entity.Property(e => e.MaxPh).HasColumnType("decimal(6, 2)");
+            entity.Property(e => e.StorageNotes).HasMaxLength(500);
 
             entity.HasOne(d => d.BaseUom).WithMany(p => p.Materials)
                 .HasForeignKey(d => d.BaseUomId)
                 .HasConstraintName("FK__Materials__BaseU__4E88ABD4");
+        });
+
+        modelBuilder.Entity<StorageLocation>(entity =>
+        {
+            entity.HasKey(e => e.LocationId);
+            entity.HasIndex(e => e.LocationCode).IsUnique();
+            entity.Property(e => e.LocationCode).HasMaxLength(50).IsUnicode(false);
+            entity.Property(e => e.LocationName).HasMaxLength(200);
+            entity.Property(e => e.LocationType).HasMaxLength(50);
+            entity.Property(e => e.TemperatureMin).HasColumnType("decimal(6, 2)");
+            entity.Property(e => e.TemperatureMax).HasColumnType("decimal(6, 2)");
+            entity.Property(e => e.HumidityMin).HasColumnType("decimal(6, 2)");
+            entity.Property(e => e.HumidityMax).HasColumnType("decimal(6, 2)");
+            entity.Property(e => e.CleanlinessStatus).HasMaxLength(100);
+            entity.Property(e => e.IsQualified).HasDefaultValue(true);
+            entity.Property(e => e.Note).HasMaxLength(500);
         });
 
         modelBuilder.Entity<MaterialUsage>(entity =>
@@ -312,6 +351,8 @@ public partial class GmpContext : DbContext
                 .HasForeignKey(d => d.MaterialId);
             entity.HasOne(d => d.Uom).WithMany()
                 .HasForeignKey(d => d.UomId);
+            entity.HasOne(d => d.SelectedLot).WithMany()
+                .HasForeignKey(d => d.SelectedLotId);
         });
 
         modelBuilder.Entity<Recipe>(entity =>
