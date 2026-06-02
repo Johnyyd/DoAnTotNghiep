@@ -14,6 +14,8 @@ public partial class Recipe
 
     public decimal BatchSize { get; set; }
 
+    public int? BatchUomId { get; set; }
+
     public string? Status { get; set; }
 
     public int? ApprovedBy { get; set; }
@@ -31,6 +33,8 @@ public partial class Recipe
     public virtual AppUser? ApprovedByNavigation { get; set; }
 
     public virtual Material? Material { get; set; }
+
+    public virtual UnitOfMeasure? BatchUom { get; set; }
 
     [JsonIgnore]
     public virtual ICollection<ProductionOrder> ProductionOrders { get; set; } = new List<ProductionOrder>();

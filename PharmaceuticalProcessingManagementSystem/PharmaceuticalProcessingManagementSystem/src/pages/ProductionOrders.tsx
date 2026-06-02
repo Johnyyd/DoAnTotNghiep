@@ -12,6 +12,7 @@ interface UiProductionOrder {
   recipeId: number;
   recipeName?: string;
   uomName?: string;
+  batchUomName?: string;
   plannedQuantity: number;
   status: OrderStatus;
   plannedStartDate?: string;
@@ -47,6 +48,59 @@ function getStatusLabel(status: string) {
   if (status === 'Scheduled') return 'Đã lên lịch';
   if (status === 'Completed') return 'Hoàn thành';
   return status;
+}
+
+function isWholeNumberUnit(unitName: string) {
+  const normalized = (unitName || '').toLowerCase();
+  return ['viên', 'chai', 'lọ', 'ống', 'hộp', 'thùng', 'cái', 'bao', 'vỉ'].some((unit) =>
+    normalized.includes(unit),
+  );
+}
+
+function formatQuantityWithUnit(value: number, unitName: string, decimals?: number) {
+  const displayUnit = unitName || '-';
+  const precision = decimals ?? (isWholeNumberUnit(displayUnit) ? 0 : 4);
+  return `${formatNumber(value, precision)} ${displayUnit}`;
+}
+
+function normalizeUnitName(unitName: string) {
+  const normalized = (unitName || '').trim().toLowerCase();
+  if (normalized === 'kilogram') return 'kg';
+  if (normalized === 'gram') return 'g';
+  if (normalized === 'milligram') return 'mg';
+  if (normalized === 'lít' || normalized === 'lit' || normalized === 'liter') return 'l';
+  if (normalized === 'milliliter') return 'ml';
+  return normalized;
+}
+
+function convertQuantityBetweenUnits(value: number, fromUnitName: string, toUnitName: string) {
+  const fromUnit = normalizeUnitName(fromUnitName);
+  const toUnit = normalizeUnitName(toUnitName);
+  if (!fromUnit || !toUnit || fromUnit === toUnit) return value;
+
+  const massFactors: Record<string, number> = { kg: 1_000_000, g: 1_000, mg: 1 };
+  if (massFactors[fromUnit] && massFactors[toUnit]) {
+    return (value * massFactors[fromUnit]) / massFactors[toUnit];
+  }
+
+  const volumeFactors: Record<string, number> = { l: 1_000, ml: 1 };
+  if (volumeFactors[fromUnit] && volumeFactors[toUnit]) {
+    return (value * volumeFactors[fromUnit]) / volumeFactors[toUnit];
+  }
+
+  const packageFactors: Record<string, number> = { 'viên': 1, 'vỉ': 10, 'hộp': 100, 'thùng': 1_200 };
+  if (packageFactors[fromUnit] && packageFactors[toUnit]) {
+    return (value * packageFactors[fromUnit]) / packageFactors[toUnit];
+  }
+
+  return value;
+}
+
+function getQuantityDecimals(unitName: string) {
+  const unit = normalizeUnitName(unitName);
+  if (isWholeNumberUnit(unit)) return 0;
+  if (unit === 'kg' || unit === 'l') return 4;
+  return 2;
 }
 
 type MassUnit = 'kg' | 'g' | 'vien' | 'L' | 'ml' | 'chai';
@@ -91,7 +145,9 @@ export default function ProductionOrders() {
       recipeId: Number(r.recipeId ?? r.RecipeId ?? 0),
       recipeName: rName ? `${rName} ${mName}` : mName,
       batchSize: Number(r.batchSize ?? r.BatchSize ?? 0),
-      uomName: r.material?.baseUom?.uomName ?? r.Material?.BaseUom?.UomName ?? 'viên',
+      batchUomId: Number(r.batchUomId ?? r.BatchUomId ?? 0) || undefined,
+      batchUomName: r.batchUom?.uomName ?? r.BatchUom?.UomName,
+      uomName: r.material?.baseUom?.uomName ?? r.Material?.BaseUom?.UomName ?? r.material?.unitOfMeasure?.uomName ?? r.Material?.UnitOfMeasure?.UomName ?? 'viên',
       materialName: mName,
       status: r.status ?? r.Status ?? 'Draft',
     };
@@ -111,7 +167,11 @@ export default function ProductionOrders() {
     materialId: Number(item.materialId ?? item.MaterialId ?? 0),
     materialCode: item.material?.materialCode ?? item.Material?.MaterialCode ?? '',
     materialName: item.material?.materialName ?? item.Material?.MaterialName ?? 'Nguyên liệu',
+    materialType: item.material?.type ?? item.Material?.Type ?? '',
+    materialBaseUomName: item.material?.baseUom?.uomName ?? item.Material?.BaseUom?.UomName ?? '',
     mgPerTablet: Number(item.quantity ?? item.Quantity ?? 0),
+    uomId: Number(item.uomId ?? item.UomId ?? 0),
+    uomName: item.uom?.uomName ?? item.Uom?.UomName ?? item.uomName ?? item.UomName ?? 'mg',
     wastePercentage: Number(item.wastePercentage ?? item.WastePercentage ?? 0),
   })), [bomRaw]);
 
@@ -156,36 +216,43 @@ export default function ProductionOrders() {
   }, [planForm]);
 
   const oneTabletMg = selectedPlanRecipe?.batchSize ?? 0;
+  const selectedRecipeBatchUnit = selectedPlanRecipe?.batchUomName
+    ?? (isRecipeLiquid(selectedPlanRecipe?.materialName ?? '', selectedPlanRecipe?.uomName ?? '') ? 'ml' : 'mg');
 
 
   const requiredMaterials = useMemo(() => {
     return bomItems.map((item) => {
       // Robust packaging detection
       const nameLower = item.materialName.toLowerCase();
-      const isPackaging = nameLower.includes('vỏ nang') || 
-                          nameLower.includes('vỏ') || 
-                          nameLower.includes('ống') || 
-                          nameLower.includes('màng') || 
+      const isPackaging = item.materialType === 'Packaging' ||
+                          nameLower.includes('vỏ nang') ||
+                          nameLower.includes('vỏ') ||
+                          nameLower.includes('ống') ||
+                          nameLower.includes('màng') ||
                           nameLower.includes('pvc');
-      
+
       const baseRequired = (totalTablets * item.mgPerTablet);
-      
-      let requiredValue: number;
-      if (isPackaging) {
-        // No waste for packaging (UOM 4 - pieces)
-        requiredValue = baseRequired;
-      } else {
-        // Apply waste and convert mg to kg
-        const wasteFactor = 1 + (item.wastePercentage / 100);
-        requiredValue = (baseRequired * wasteFactor) / 1_000_000;
-      }
-        
+      const requirementUnit = item.materialBaseUomName || item.uomName;
+      const requiredInBaseUom = convertQuantityBetweenUnits(baseRequired, item.uomName, requirementUnit);
+      const wasteFactor = isPackaging ? 1 : 1 + (item.wastePercentage / 100);
+      const requiredValue = requiredInBaseUom * wasteFactor;
+
       const availableLots = availableLotsByMaterial.get(item.materialId) ?? [];
       const selectedLotId = selectedLotByMaterial[item.materialId] ?? availableLots[0]?.lotId ?? 0;
       const selectedLot = availableLots.find((lot) => lot.lotId === selectedLotId);
       const available = stockByMaterial.get(item.materialId) ?? 0;
       const selectedLotEnough = selectedLot ? selectedLot.quantityCurrent >= requiredValue : false;
-      return { ...item, requiredKg: requiredValue, available, enough: selectedLotEnough, isPackaging, availableLots, selectedLotId, selectedLot };
+      return {
+        ...item,
+        requiredKg: requiredValue,
+        available,
+        enough: selectedLotEnough,
+        isPackaging,
+        availableLots,
+        selectedLotId,
+        selectedLot,
+        requirementUnit,
+      };
     });
   }, [bomItems, totalTablets, stockByMaterial, availableLotsByMaterial, selectedLotByMaterial]);
 
@@ -195,7 +262,7 @@ export default function ProductionOrders() {
   const totalMassMgExclPackaging = useMemo(() => {
     return requiredMaterials
       .filter(m => !m.isPackaging)
-      .reduce((acc, m) => acc + (totalTablets * m.mgPerTablet), 0);
+      .reduce((acc, m) => acc + convertQuantityBetweenUnits(totalTablets * m.mgPerTablet, m.uomName, 'mg'), 0);
   }, [requiredMaterials, totalTablets]);
 
   const isLiquid = useMemo(() => {
@@ -205,7 +272,7 @@ export default function ProductionOrders() {
   }, [selectedPlanRecipe]);
 
   const productUnit = isLiquid ? 'chai' : 'viên';
-  const baseMassUnit = isLiquid ? 'ml' : 'mg';
+  const baseMassUnit = selectedRecipeBatchUnit;
 
   const displayFinishedMass = useMemo(() => {
     if (planForm.massUnit === 'g') return `${formatNumber(totalMassMgExclPackaging / 1000)} g`;
@@ -218,9 +285,9 @@ export default function ProductionOrders() {
 
   const orders = useMemo<UiProductionOrder[]>(() => toRows<any>(ordersRaw).map((o) => {
     const recipe = recipes.find((r) => r.recipeId === Number(o.recipeId ?? o.RecipeId));
-    
+
     // format as recipeName + " " + materialName if not already formatted
-    const recipeName = recipe?.recipeName 
+    const recipeName = recipe?.recipeName
       || (o.recipe?.recipeName ? `${o.recipe.recipeName} ${o.recipe.material?.materialName ?? ''}` : (o.recipe?.material?.materialName ?? ''));
 
     return {
@@ -228,7 +295,8 @@ export default function ProductionOrders() {
       orderCode: o.orderCode ?? o.OrderCode ?? '',
       recipeId: Number(o.recipeId ?? o.RecipeId ?? 0),
       recipeName: recipeName || `Công thức #${o.recipeId ?? o.RecipeId}`,
-      uomName: o.recipe?.material?.baseUom?.uomName ?? recipe?.uomName ?? 'viên',
+      uomName: o.recipe?.material?.baseUom?.uomName ?? o.recipe?.material?.unitOfMeasure?.uomName ?? recipe?.uomName ?? 'viên',
+      batchUomName: o.recipe?.batchUom?.uomName ?? recipe?.batchUomName,
       plannedQuantity: Number(o.plannedQuantity ?? o.PlannedQuantity ?? 0),
       status: (o.status ?? o.Status ?? 'Draft') as OrderStatus,
       plannedStartDate: o.startDate ?? o.StartDate,
@@ -431,7 +499,7 @@ export default function ProductionOrders() {
             <p className="font-semibold mb-1">Không đủ nguyên liệu tồn kho:</p>
             {insufficientMaterials.map((m) => (
               <p key={m.materialId}>
-                - {m.materialName}: cần {formatNumber(m.requiredKg, 4)} {m.isPackaging ? 'viên' : 'kg'}, hiện có {formatNumber(m.available, 4)} {m.isPackaging ? 'viên' : 'kg'}
+                - {m.materialName}: cần {formatQuantityWithUnit(m.requiredKg, m.requirementUnit)}, hiện có {formatQuantityWithUnit(m.available, m.requirementUnit)}
               </p>
             ))}
           </div>
@@ -440,31 +508,31 @@ export default function ProductionOrders() {
         {requiredMaterials.length > 0 && (
           <div className="table-container bg-white rounded-lg border border-primary-200">
             <table className="table">
-              <thead><tr><th>Nguyên liệu</th><th>Định mức</th><th>Số lượng cần</th><th>Lô đã duyệt còn hạn</th><th>Tồn khả dụng</th><th>Tình trạng</th></tr></thead>
+              <thead><tr><th>Nguyên liệu</th><th>Định mức</th><th>Số lượng cần</th><th>Lô nguyên liệu</th><th>Tồn khả dụng</th><th>Tình trạng</th></tr></thead>
               <tbody>
                 {requiredMaterials.map((item, idx) => (
                   <tr key={`${item.materialId}-${idx}`}>
                     <td>{item.materialName} {item.isPackaging && <span className="text-[10px] bg-neutral-100 px-1 rounded text-neutral-500">Packaging</span>}</td>
-                    <td>{item.isPackaging ? "-" : formatNumber(item.mgPerTablet)}</td>
-                    <td>{formatNumber(item.requiredKg, item.isPackaging ? 0 : 4)}</td>
+                    <td>{formatQuantityWithUnit(item.mgPerTablet, item.uomName, getQuantityDecimals(item.uomName))}</td>
+                    <td>{formatQuantityWithUnit(item.requiredKg, item.requirementUnit)}</td>
                     <td>
                       <select
                         className="input min-w-[260px]"
                         value={item.selectedLotId || 0}
                         onChange={(event) => setSelectedLotByMaterial((current) => ({ ...current, [item.materialId]: Number(event.target.value) }))}
                       >
-                        <option value={0}>Chọn lô đã duyệt còn hạn</option>
+                        <option value={0}>Chọn lô nguyên liệu</option>
                         {item.availableLots.map((lot: any) => (
                           <option key={lot.lotId} value={lot.lotId}>
-                            {lot.lotNumber} - còn {formatNumber(lot.quantityCurrent, item.isPackaging ? 0 : 4)} - HSD {formatDate(lot.expiryDate)}
+                            {lot.lotNumber} - còn {formatQuantityWithUnit(lot.quantityCurrent, item.requirementUnit)} - HSD {formatDate(lot.expiryDate)}
                           </option>
                         ))}
                       </select>
                     </td>
-                    <td>{formatNumber(item.available, item.isPackaging ? 0 : 4)}</td>
+                    <td>{formatQuantityWithUnit(item.available, item.requirementUnit)}</td>
                     <td>
                       <span className={`px-2 py-1 rounded-full text-xs ${item.enough ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                        {item.enough ? (item.selectedLotId ? 'Đủ và còn hạn' : 'Chưa chọn lô') : 'Thiếu'}
+                        {item.enough ? (item.selectedLotId ? 'Đủ' : 'Thiếu') : 'Thiếu'}
                       </span>
                     </td>
                   </tr>
@@ -538,14 +606,14 @@ export default function ProductionOrders() {
                           <button onClick={() => resumeOrderMutation.mutate(order.orderId)} className="btn-ghost text-sm text-blue-600">Tiếp tục</button>
                         )}
                         {(order.status === 'Draft' || order.status === 'Hold') && (
-                          <button onClick={() => openEditOrder(order)} className="btn-ghost text-sm"><Pencil className="w-4 h-4 mr-1" />Sửa</button>
+                          <button onClick={() => openEditOrder(order)} className="btn-ghost text-sm"><Pencil className="w-4 h-4 mr-1" />Sá»­a</button>
                         )}
-                        <button onClick={() => { 
+                        <button onClick={() => {
                           if (order.status === 'Completed') {
                             alert('Lệnh này đã hoàn thành, không thể xoá!');
                             return;
                           }
-                          if (confirm('Xóa lệnh sản xuất này?')) deleteOrderMutation.mutate(order.orderId); 
+                          if (confirm('Xóa lệnh sản xuất này?')) deleteOrderMutation.mutate(order.orderId);
                         }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xóa</button>
                       </div>
                     </td>
@@ -569,7 +637,7 @@ export default function ProductionOrders() {
               <div><label className="text-xs text-neutral-500">Công thức</label>
                 <select className="input" value={orderForm.recipeId} onChange={(e) => setOrderForm({ ...orderForm, recipeId: Number(e.target.value) })}>
                   <option value={0}>Chọn công thức</option>
-                  {recipes.filter(r => r.status === 'Approved' || r.recipeId === orderForm.recipeId).map((recipe) => <option key={recipe.recipeId} value={recipe.recipeId}>#{recipe.recipeId} - {recipe.recipeName} ({formatRecipeBatchSize(recipe.batchSize, isRecipeLiquid(recipe.materialName, recipe.uomName))})</option>)}
+                  {recipes.filter(r => r.status === 'Approved' || r.recipeId === orderForm.recipeId).map((recipe) => <option key={recipe.recipeId} value={recipe.recipeId}>#{recipe.recipeId} - {recipe.recipeName} ({formatRecipeBatchSize(recipe.batchSize, isRecipeLiquid(recipe.materialName, recipe.uomName), recipe.batchUomName)})</option>)}
                 </select>
               </div>
               <div><label className="text-xs text-neutral-500">Số lượng kế hoạch</label>
@@ -620,7 +688,7 @@ export default function ProductionOrders() {
               </div>
             )}
             <div className="flex justify-end gap-2">
-              <button onClick={() => { setShowOrderModal(false); setEditingOrder(null); }} className="btn-ghost">Hủy</button>
+              <button onClick={() => { setShowOrderModal(false); setEditingOrder(null); }} className="btn-ghost">Há»§y</button>
               <button onClick={() => (editingOrder ? updateOrderMutation.mutate() : createOrderMutation.mutate())} className="btn-primary">{editingOrder ? 'Lưu cập nhật' : 'Tạo mới'}</button>
             </div>
           </div>

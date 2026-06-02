@@ -127,6 +127,7 @@ BEGIN
     DECLARE @BackupPath NVARCHAR(4000) = CONCAT(@BackupDirectory, N'/', @FileName);
     DECLARE @BackupLogId BIGINT;
     DECLARE @Sql NVARCHAR(MAX);
+    DECLARE @BackupName NVARCHAR(300) = CONCAT(@DatabaseName, N' ', @NormalizedBackupType, N' ', @Timestamp);
 
     INSERT INTO dbo.DatabaseBackupLog (BackupType, BackupPath)
     VALUES (@NormalizedBackupType, @BackupPath);
@@ -145,7 +146,7 @@ RESTORE VERIFYONLY FROM DISK = @BackupPath WITH CHECKSUM;';
             @Sql,
             N'@BackupPath NVARCHAR(4000), @BackupName NVARCHAR(300)',
             @BackupPath = @BackupPath,
-            @BackupName = CONCAT(@DatabaseName, N' ', @NormalizedBackupType, N' ', @Timestamp);
+            @BackupName = @BackupName;
 
         UPDATE dbo.DatabaseBackupLog
         SET FinishedAt = SYSDATETIME(),
@@ -171,6 +172,12 @@ DECLARE @DatabaseName SYSNAME = N'PharmaceuticalProcessingManagementSystem';
 DECLARE @BackupDirectory NVARCHAR(4000) = N'/var/opt/mssql/backups';
 DECLARE @FullJobName SYSNAME = N'GMP - Weekly Full Database Backup';
 DECLARE @DiffJobName SYSNAME = N'GMP - Tuesday Thursday Differential Database Backup';
+DECLARE @FullBackupCommand NVARCHAR(MAX) =
+    N'EXEC dbo.usp_BackupGmpDatabase @BackupType = N''FULL'', @BackupDirectory = N'''
+    + REPLACE(@BackupDirectory, N'''', N'''''') + N''';';
+DECLARE @DifferentialBackupCommand NVARCHAR(MAX) =
+    N'EXEC dbo.usp_BackupGmpDatabase @BackupType = N''DIFFERENTIAL'', @BackupDirectory = N'''
+    + REPLACE(@BackupDirectory, N'''', N'''''') + N''';';
 
 IF EXISTS (SELECT 1 FROM msdb.dbo.sysjobs WHERE name = @FullJobName)
 BEGIN
@@ -203,7 +210,7 @@ EXEC msdb.dbo.sp_add_jobstep
     @step_name = N'Run full backup',
     @subsystem = N'TSQL',
     @database_name = @DatabaseName,
-    @command = N'EXEC dbo.usp_BackupGmpDatabase @BackupType = N''FULL'', @BackupDirectory = N''' + @BackupDirectory + N''';',
+    @command = @FullBackupCommand,
     @retry_attempts = 2,
     @retry_interval = 5;
 
@@ -233,7 +240,7 @@ EXEC msdb.dbo.sp_add_jobstep
     @step_name = N'Run differential backup',
     @subsystem = N'TSQL',
     @database_name = @DatabaseName,
-    @command = N'EXEC dbo.usp_BackupGmpDatabase @BackupType = N''DIFFERENTIAL'', @BackupDirectory = N''' + @BackupDirectory + N''';',
+    @command = @DifferentialBackupCommand,
     @retry_attempts = 2,
     @retry_interval = 5;
 

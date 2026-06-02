@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { certificatesApi, inventoryApi, materialsApi } from '@/services/api';
-import { FileCheck2, Plus, Search } from 'lucide-react';
+import { FileCheck2, Info, Plus, Search } from 'lucide-react';
 import FinishedGoodsStats from './FinishedGoodsStats';
+import axios from 'axios';
+import { formatNumber } from '@/utils/format';
 
 function normalizeMaterial(raw: any) {
   return {
@@ -27,11 +29,26 @@ export default function FinishedProducts() {
   const [tab, setTab] = useState<'completed' | 'target'>('completed');
   const [showAddModal, setShowAddModal] = useState(false);
   const [addForm, setAddForm] = useState({ materialCode: '', materialName: '' });
+  const [traceInput, setTraceInput] = useState('');
+  const [traceBatch, setTraceBatch] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
 
   const { data: materialsRaw, isLoading } = useQuery({ queryKey: ['materials'], queryFn: () => materialsApi.getAll() });
   const { data: lotsRaw } = useQuery({ queryKey: ['inventoryLots'], queryFn: () => inventoryApi.getAll() });
+  const { data: traceData, isLoading: traceLoading, isError: traceError, error: traceErrorData } = useQuery({
+    queryKey: ['traceability', traceBatch],
+    queryFn: async () => {
+      try {
+        return await inventoryApi.traceBackward(traceBatch!);
+      } catch (err) {
+        if (axios.isAxiosError(err) && err.response?.status === 404) return null;
+        throw err;
+      }
+    },
+    enabled: !!traceBatch,
+    retry: false,
+  });
 
   const addMaterialMutation = useMutation({
     mutationFn: () => materialsApi.create({ ...addForm, type: 'FinishedGood', baseUomId: 1, categoryId: 1 } as any),
@@ -94,6 +111,12 @@ export default function FinishedProducts() {
     });
   }, [materials, grouped, tab, search]);
 
+  const traceResult: any = (traceData as any)?.data || traceData;
+  const submitTrace = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (traceInput.trim()) setTraceBatch(traceInput.trim());
+  };
+
   if (isLoading) {
     return <div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>;
   }
@@ -115,7 +138,58 @@ export default function FinishedProducts() {
           )}
         </div>
         <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" /><input value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-9" placeholder="Tìm mã hoặc tên thành phẩm..." /></div>
+        <form onSubmit={submitTrace} className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 border-t border-neutral-100 pt-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+            <input value={traceInput} onChange={(e) => setTraceInput(e.target.value)} className="input pl-9" placeholder="Tra cứu lô thành phẩm, ví dụ: B26-007-02" />
+          </div>
+          <button type="submit" disabled={traceLoading} className="btn-primary">{traceLoading ? 'Đang truy xuất...' : 'Truy xuất nguồn gốc'}</button>
+        </form>
       </div>
+
+      {traceError && (
+        <div className="card border-red-200 bg-red-50 text-red-700">
+          {(traceErrorData as Error).message || 'Không thể truy xuất dữ liệu.'}
+        </div>
+      )}
+
+      {!traceLoading && !traceError && traceBatch && !traceResult && (
+        <div className="card text-center py-8">
+          <Info className="w-10 h-10 text-neutral-300 mx-auto mb-3" />
+          <p className="text-neutral-500">Không tìm thấy dữ liệu cho mã lô <strong>{traceBatch}</strong>.</p>
+        </div>
+      )}
+
+      {!traceLoading && !traceError && traceResult && (
+        <div className="card space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-neutral-900">Lô thành phẩm: {traceResult.finishedGoodBatchNumber}</h2>
+            <span className="text-sm text-neutral-500">Sản phẩm: {traceResult.productName || '-'}</span>
+          </div>
+          <div className="table-container">
+            <table className="table">
+              <thead><tr><th>Mã nguyên liệu</th><th>Tên nguyên liệu</th><th>Lô nguyên liệu</th><th>Khối lượng đã dùng</th><th>Số lượng lô</th><th>Tỉ lệ (%)</th><th>Giấy kiểm nghiệm</th></tr></thead>
+              <tbody>
+                {(traceResult.rawMaterials ?? []).length === 0 ? (
+                  <tr><td colSpan={7} className="text-center py-4 text-neutral-500">Không có dữ liệu nguyên liệu cho lô này.</td></tr>
+                ) : (
+                  (traceResult.rawMaterials ?? []).map((mat: any, idx: number) => (
+                    <tr key={`${mat.materialCode}-${idx}`}>
+                      <td><code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">{mat.materialCode}</code></td>
+                      <td>{mat.materialName}</td>
+                      <td>{mat.inventoryLotNumber}</td>
+                      <td>{formatNumber(Number(mat.quantityUsed ?? 0), 4)} {mat.uom ?? ''}</td>
+                      <td>{mat.lotQuantityCurrent == null ? '-' : `${formatNumber(Number(mat.lotQuantityCurrent), 4)} ${mat.uom ?? ''}`}</td>
+                      <td>{formatNumber(Number(mat.ratioPercent ?? 0), 2)}</td>
+                      <td><a className="text-primary-600 hover:underline inline-flex items-center" href={certificatesApi.getMaterialCertificateUrl(mat.materialCode)} target="_blank" rel="noreferrer"><FileCheck2 className="w-4 h-4 mr-1" /> Xem</a></td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {tab === 'completed' && (
         <div className="card">
@@ -140,7 +214,7 @@ export default function FinishedProducts() {
                 {filtered.map((m) => {
                   const g = grouped.get(m.materialId);
                   const qty = tab === 'completed' ? (g?.completedQty ?? 0) : null;
-                  const displayQty = qty !== null ? `${qty.toLocaleString()} ` : 'N/A';
+                  const displayQty = qty !== null ? `${formatNumber(qty, 4)} ` : 'N/A';
                   const unit = displayQty !== 'N/A' ? viUnit(g?.unit || m.baseUomName || '') : '';
                   return (
                     <tr key={m.materialId}>

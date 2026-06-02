@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { inventoryApi } from '@/services/api';
 import { PackageOpen, Search, ShieldCheck } from 'lucide-react';
+import { formatNumber } from '@/utils/format';
 
 export default function Inventory() {
   const [search, setSearch] = useState('');
@@ -103,7 +104,7 @@ export default function Inventory() {
                     <td className="py-3 px-4 text-sm text-neutral-700">{row.lotCount}</td>
                     <td className="py-3 px-4 text-sm text-neutral-700">{row.released} đã duyệt / {row.pending} chờ duyệt</td>
                     <td className="py-3 px-4 text-sm text-neutral-700">{row.locationText}</td>
-                    <td className="py-3 px-4 text-sm text-neutral-900 text-right font-mono">{row.total.toLocaleString('vi-VN', { maximumFractionDigits: 4 })} {row.uom}</td>
+                    <td className="py-3 px-4 text-sm text-neutral-900 text-right font-mono">{formatNumber(row.total, 4)} {row.uom}</td>
                   </tr>
                 ))
               )}

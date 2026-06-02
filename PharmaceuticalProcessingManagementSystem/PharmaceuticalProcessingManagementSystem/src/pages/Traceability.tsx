@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { type FormEvent, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { certificatesApi, inventoryApi } from '@/services/api';
 import { Search, Info, FileCheck2 } from 'lucide-react';
 import axios from 'axios';
+import { formatNumber } from '@/utils/format';
 
 export default function Traceability() {
   const [batchNumberInput, setBatchNumberInput] = useState('');
@@ -24,7 +25,7 @@ export default function Traceability() {
     retry: false,
   });
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: FormEvent) => {
     e.preventDefault();
     if (batchNumberInput.trim()) {
       setSearchBatch(batchNumberInput.trim());
@@ -80,7 +81,7 @@ export default function Traceability() {
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
             <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200"><p className="text-neutral-500">Mã lệnh sản xuất</p><p className="font-semibold text-neutral-900">{result.productionOrderId ?? '-'}</p></div>
-            <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200"><p className="text-neutral-500">Số lượng thành phẩm</p><p className="font-semibold text-neutral-900">{result.quantityProduced?.toLocaleString?.() ?? result.quantityProduced ?? '-'}</p></div>
+            <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200"><p className="text-neutral-500">Số lượng thành phẩm</p><p className="font-semibold text-neutral-900">{result.quantityProduced == null ? '-' : formatNumber(Number(result.quantityProduced), 4)}</p></div>
             <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200"><p className="text-neutral-500">Số nguyên liệu</p><p className="font-semibold text-neutral-900">{result.rawMaterials?.length ?? 0}</p></div>
             <div className="p-3 rounded-lg bg-neutral-50 border border-neutral-200">
               <p className="text-neutral-500">Giấy kiểm nghiệm lô thành phẩm</p>
@@ -112,8 +113,8 @@ export default function Traceability() {
                       <td><code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-primary-600">{mat.materialCode}</code></td>
                       <td>{mat.materialName}</td>
                       <td>{mat.inventoryLotNumber}</td>
-                      <td>{Number(mat.quantityUsed ?? 0).toLocaleString()} {mat.uom ?? ''}</td>
-                      <td>{mat.lotQuantityCurrent == null ? '-' : `${Number(mat.lotQuantityCurrent).toLocaleString()} ${mat.uom ?? ''}`}</td>
+                      <td>{formatNumber(Number(mat.quantityUsed ?? 0), 4)} {mat.uom ?? ''}</td>
+                      <td>{mat.lotQuantityCurrent == null ? '-' : `${formatNumber(Number(mat.lotQuantityCurrent), 4)} ${mat.uom ?? ''}`}</td>
                       <td>{Number(mat.ratioPercent ?? 0).toFixed(2)}</td>
                       <td>
                         <a className="text-primary-600 hover:underline inline-flex items-center" href={certificatesApi.getMaterialCertificateUrl(mat.materialCode)} target="_blank" rel="noreferrer">

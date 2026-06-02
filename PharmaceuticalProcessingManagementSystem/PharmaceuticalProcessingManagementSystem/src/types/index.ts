@@ -58,6 +58,8 @@ export interface Recipe {
   version: string;
   versionNumber?: number; // Added from API
   batchSize?: number; // Added from API
+  batchUomId?: number;
+  batchUom?: UnitOfMeasure;
   status: 'Draft' | 'Approved' | 'InProcess' | 'Hold' | 'Completed' | 'Deprecated';
   approvedBy?: number;
   approvedDate?: string;

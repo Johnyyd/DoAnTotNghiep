@@ -43,9 +43,12 @@ namespace GMP_System.Controllers
                         o.Recipe.RecipeId,
                         RecipeName = o.Recipe.RecipeName ?? (o.Recipe.Material != null ? o.Recipe.Material.MaterialName : "Unknown Recipe"),
                         o.Recipe.BatchSize,
+                        o.Recipe.BatchUomId,
+                        BatchUom = o.Recipe.BatchUom == null ? null : new { o.Recipe.BatchUom.UomId, o.Recipe.BatchUom.UomName },
                         Material = o.Recipe.Material == null ? null : new
                         {
                             o.Recipe.Material.MaterialName,
+                            BaseUom = o.Recipe.Material.BaseUom == null ? null : new { o.Recipe.Material.BaseUom.UomName },
                             UnitOfMeasure = o.Recipe.Material.BaseUom == null ? null : new { o.Recipe.Material.BaseUom.UomName }
                         }
                     },
@@ -105,10 +108,13 @@ namespace GMP_System.Controllers
                         o.Recipe.RecipeId,
                         RecipeName = o.Recipe.RecipeName ?? (o.Recipe.Material != null ? o.Recipe.Material.MaterialName : "Unknown Recipe"),
                         o.Recipe.BatchSize,
+                        o.Recipe.BatchUomId,
+                        BatchUom = o.Recipe.BatchUom == null ? null : new { o.Recipe.BatchUom.UomId, o.Recipe.BatchUom.UomName },
                         o.Recipe.Note,
                         Material = o.Recipe.Material == null ? null : new
                         {
                             o.Recipe.Material.MaterialName,
+                            BaseUom = o.Recipe.Material.BaseUom == null ? null : new { o.Recipe.Material.BaseUom.UomName },
                             UnitOfMeasure = o.Recipe.Material.BaseUom == null ? null : new { o.Recipe.Material.BaseUom.UomName }
                         }
                     },
@@ -341,6 +347,7 @@ namespace GMP_System.Controllers
                 // [BOM SYNC] Generate unique BOM for this order based on Recipe and PlannedQuantity
                 var recipeBoms = await _unitOfWork.RecipeBoms.Query()
                     .Where(b => b.RecipeId == order.RecipeId)
+                    .Include(b => b.Material).ThenInclude(m => m!.BaseUom)
                     .ToListAsync();
 
                 foreach (var rb in recipeBoms)
@@ -356,9 +363,14 @@ namespace GMP_System.Controllers
                     {
                         OrderId = order.OrderId,
                         MaterialId = rb.MaterialId,
-                        UomId = rb.UomId ?? 1, 
+                        UomId = rb.Material?.BaseUomId ?? rb.UomId ?? 1,
                         WastePercentage = rb.WastePercentage,
-                        RequiredQuantity = CalculateRequiredQuantity(order.PlannedQuantity, rb.Quantity, rb.UomId ?? 1, rb.WastePercentage),
+                        RequiredQuantity = CalculateRequiredQuantity(
+                            order.PlannedQuantity,
+                            rb.Quantity,
+                            rb.UomId ?? rb.Material?.BaseUomId ?? 1,
+                            rb.Material?.BaseUomId ?? rb.UomId ?? 1,
+                            rb.WastePercentage),
                         SelectedLotId = rb.MaterialId.HasValue && selectedLotByMaterial.TryGetValue(rb.MaterialId.Value, out var selectedLotId) ? selectedLotId : null,
                         Note = rb.Note
                     };
@@ -574,13 +586,16 @@ namespace GMP_System.Controllers
             public string MaterialName { get; set; } = string.Empty;
             public decimal RequiredKg { get; set; }
             public decimal AvailableKg { get; set; }
+            public decimal RequiredQuantity { get; set; }
+            public decimal AvailableQuantity { get; set; }
+            public string UomName { get; set; } = string.Empty;
         }
 
         private async Task<List<InventoryShortageDto>> DeductInventoryForOrderAsync(int recipeId, decimal plannedQuantity, Dictionary<int, int> selectedLotByMaterial)
         {
             var bomItems = await _context.RecipeBoms
                 .Where(b => b.RecipeId == recipeId && b.MaterialId != null && b.Quantity > 0)
-                .Include(b => b.Material)
+                .Include(b => b.Material).ThenInclude(m => m!.BaseUom)
                 .Where(b => b.Material!.Type != "Packaging") // Exclude packaging from inventory deduction/calculation if required? 
                 // Wait, if it's packaging, it might still need to be deducted from inventory. 
                 // The user said "không tính trong tỉ lệ công thức và cũng không tính cho khối lượng".
@@ -599,8 +614,9 @@ namespace GMP_System.Controllers
             foreach (var bom in bomItems)
             {
                 var materialId = bom.MaterialId!.Value;
-                var requiredKg = CalculateRequiredQuantity(plannedQuantity, bom.Quantity, bom.UomId ?? 1, bom.WastePercentage);
-                if (requiredKg <= 0)
+                var materialBaseUomId = bom.Material?.BaseUomId ?? bom.UomId ?? 1;
+                var requiredQuantity = CalculateRequiredQuantity(plannedQuantity, bom.Quantity, bom.UomId ?? materialBaseUomId, materialBaseUomId, bom.WastePercentage);
+                if (requiredQuantity <= 0)
                 {
                     continue;
                 }
@@ -618,7 +634,7 @@ namespace GMP_System.Controllers
                 }
                 else
                 {
-                    lotsQuery = lotsQuery.Where(l => l.QuantityCurrent >= requiredKg);
+                    lotsQuery = lotsQuery.Where(l => l.QuantityCurrent >= requiredQuantity);
                 }
 
                 var lots = await lotsQuery
@@ -628,22 +644,27 @@ namespace GMP_System.Controllers
                     .ToListAsync();
 
                 var availableKg = lots.Sum(l => l.QuantityCurrent);
-                if (availableKg < requiredKg)
+                if (availableKg < requiredQuantity)
                 {
+                    var roundedRequired = decimal.Round(requiredQuantity, 4, MidpointRounding.AwayFromZero);
+                    var roundedAvailable = decimal.Round(availableKg, 4, MidpointRounding.AwayFromZero);
                     shortages.Add(new InventoryShortageDto
                     {
                         MaterialId = materialId,
                         MaterialCode = bom.Material?.MaterialCode ?? string.Empty,
                         MaterialName = bom.Material?.MaterialName ?? string.Empty,
-                        RequiredKg = decimal.Round(requiredKg, 4, MidpointRounding.AwayFromZero),
-                        AvailableKg = decimal.Round(availableKg, 4, MidpointRounding.AwayFromZero)
+                        RequiredKg = roundedRequired,
+                        AvailableKg = roundedAvailable,
+                        RequiredQuantity = roundedRequired,
+                        AvailableQuantity = roundedAvailable,
+                        UomName = bom.Material?.BaseUom?.UomName ?? string.Empty
                     });
                     continue;
                 }
 
                 var lot = lots[0];
                 selectedLotByMaterial[materialId] = lot.LotId;
-                lot.QuantityCurrent = decimal.Round(lot.QuantityCurrent - requiredKg, 4, MidpointRounding.AwayFromZero);
+                lot.QuantityCurrent = decimal.Round(lot.QuantityCurrent - requiredQuantity, 4, MidpointRounding.AwayFromZero);
             }
 
             if (shortages.Count == 0)
@@ -654,19 +675,54 @@ namespace GMP_System.Controllers
             return shortages;
         }
 
-        private decimal CalculateRequiredQuantity(decimal plannedQuantity, decimal recipeQuantity, int uomId, decimal? wastePercentage)
+        private decimal CalculateRequiredQuantity(decimal plannedQuantity, decimal recipeQuantity, int recipeUomId, int materialBaseUomId, decimal? wastePercentage)
         {
-            decimal baseQty;
-            if (uomId == 4) // Count-based (e.g. Viên)
-            {
-                baseQty = plannedQuantity * recipeQuantity;
-                return decimal.Round(baseQty, 6, MidpointRounding.AwayFromZero);
-            }
-            
-            // Mass-based (mg/unit to kg)
-            baseQty = (plannedQuantity * recipeQuantity) / 1_000_000m;
+            var baseQty = ConvertQuantity(plannedQuantity * recipeQuantity, recipeUomId, materialBaseUomId);
             var wasteFactor = 1m + ((wastePercentage ?? 0m) / 100m);
             return decimal.Round(baseQty * wasteFactor, 6, MidpointRounding.AwayFromZero);
+        }
+
+        private decimal ConvertQuantity(decimal quantity, int fromUomId, int toUomId)
+        {
+            if (fromUomId == toUomId)
+            {
+                return quantity;
+            }
+
+            var massFactors = new Dictionary<int, decimal>
+            {
+                [1] = 1_000_000m,
+                [2] = 1_000m,
+                [9] = 1m
+            };
+            if (massFactors.ContainsKey(fromUomId) && massFactors.ContainsKey(toUomId))
+            {
+                return quantity * massFactors[fromUomId] / massFactors[toUomId];
+            }
+
+            var volumeFactors = new Dictionary<int, decimal>
+            {
+                [3] = 1_000m,
+                [10] = 1m
+            };
+            if (volumeFactors.ContainsKey(fromUomId) && volumeFactors.ContainsKey(toUomId))
+            {
+                return quantity * volumeFactors[fromUomId] / volumeFactors[toUomId];
+            }
+
+            var packageFactors = new Dictionary<int, decimal>
+            {
+                [4] = 1m,
+                [5] = 10m,
+                [6] = 100m,
+                [7] = 1_200m
+            };
+            if (packageFactors.ContainsKey(fromUomId) && packageFactors.ContainsKey(toUomId))
+            {
+                return quantity * packageFactors[fromUomId] / packageFactors[toUomId];
+            }
+
+            return quantity;
         }
 
         [HttpPut("{id}")]

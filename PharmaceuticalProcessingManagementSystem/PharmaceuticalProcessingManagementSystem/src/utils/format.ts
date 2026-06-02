@@ -1,7 +1,8 @@
 export function formatNumber(value: number | undefined | null, decimals: number = 2): string {
   if (value === undefined || value === null || isNaN(value)) return "0";
 
-  return new Intl.NumberFormat("vi-VN", {
+  return new Intl.NumberFormat("en-US", {
+    useGrouping: false,
     minimumFractionDigits: 0,
     maximumFractionDigits: decimals,
   }).format(value);
@@ -41,7 +42,9 @@ export function isRecipeLiquid(materialName: string = "", uomName: string = ""):
   );
 }
 
-export function formatRecipeBatchSize(batchSize: number, isLiquid: boolean): string {
+export function formatRecipeBatchSize(batchSize: number, isLiquid: boolean, unitName?: string): string {
+  if (unitName) return `${formatNumber(batchSize)} ${unitName}`;
+
   if (isLiquid) {
     if (batchSize >= 1000 && batchSize % 1000 === 0) return `${formatNumber(batchSize / 1000)} L`;
     return `${formatNumber(batchSize)} ml`;
