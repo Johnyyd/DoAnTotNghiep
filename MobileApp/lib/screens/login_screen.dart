@@ -174,33 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Default credentials hint
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Tài khoản mặc định',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade800,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text('op01 / Op@123456',
-                            style: TextStyle(fontSize: 12, color: Colors.blue.shade700)),
-                        Text('qc01 / Qc@123456',
-                            style: TextStyle(fontSize: 12, color: Colors.blue.shade700)),
-                      ],
-                    ),
-                  ),
+
                 ],
               ),
             ),

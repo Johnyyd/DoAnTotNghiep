@@ -1,0 +1,7 @@
+2026-06-03 00:00:15.465 +00:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - null null
+2026-06-03 00:00:15.590 +00:00 [INF] Executing endpoint 'HTTP: GET /healthcheck'
+2026-06-03 00:00:15.595 +00:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-06-03 00:00:15.596 +00:00 [INF] Writing value of type '<>f__AnonymousType98`2' as Json.
+2026-06-03 00:00:15.597 +00:00 [INF] Executed endpoint 'HTTP: GET /healthcheck'
+2026-06-03 00:00:15.598 +00:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/healthcheck - 200 null application/json; charset=utf-8 133.8693ms
