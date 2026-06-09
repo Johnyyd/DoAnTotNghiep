@@ -560,6 +560,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
     }
 
     if (_currentPhase == ExecutionPhase.precheck) {
+      stopTimeUpdateFor(_checkTimeCtrl);
       setState(() => _currentPhase = ExecutionPhase.input);
       await _submit('Running', null, isInternal: true);
     } else if (_currentPhase == ExecutionPhase.input) {

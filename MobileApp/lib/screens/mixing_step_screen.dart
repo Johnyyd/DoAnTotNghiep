@@ -491,8 +491,13 @@ class _MixingStepScreenState extends State<MixingStepScreen>
             "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
         _autoCalcTimeEnd();
       }
+      // Dừng auto-update giờ kiểm tra, bắt đầu auto-update giờ bắt đầu
+      stopTimeUpdateFor(_timeCtrl);
+      startTimeUpdates([_timeStartCtrl]);
       await _submit('Running', null, isInternal: true);
     } else if (_currentPhase == ExecutionPhase.input) {
+      // Dừng auto-update giờ bắt đầu khi đã bắt đầu trộn
+      stopTimeUpdateFor(_timeStartCtrl);
       await _verifyAndSubmit();
     } else if (_currentPhase == ExecutionPhase.execution) {
       // GMP Validation: Silicagel and Packaging must be validated BEFORE finishing

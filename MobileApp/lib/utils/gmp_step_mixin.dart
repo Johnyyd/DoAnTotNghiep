@@ -184,16 +184,25 @@ mixin GmpStepMixin<T extends StatefulWidget> on State<T> {
   final List<TextEditingController> _autoTimeControllers = [];
 
   /// Bắt đầu cập nhật thời gian thực cho danh sách các controllers.
-  /// Các controller này sẽ được cập nhật mỗi phút.
+  /// Các controller này sẽ được cập nhật mỗi giây.
   void startTimeUpdates(List<TextEditingController> controllers) {
-    if (_realtimeTimer != null) return;
-    _autoTimeControllers.addAll(controllers);
+    bool hasNew = false;
+    for (var ctrl in controllers) {
+      if (!_autoTimeControllers.contains(ctrl)) {
+        _autoTimeControllers.add(ctrl);
+        hasNew = true;
+      }
+    }
     
-    // Cập nhật ngay lập tức lần đầu
-    _updateTimeFields();
+    // Cập nhật ngay lập tức lần đầu cho các trường mới
+    if (hasNew) {
+      _updateTimeFields();
+    }
 
-    // Thiết lập timer chạy mỗi 30 giây để đảm bảo không lỡ phút mới
-    _realtimeTimer = Timer.periodic(const Duration(seconds: 30), (_) => _updateTimeFields());
+    if (_realtimeTimer != null) return;
+
+    // Thiết lập timer chạy mỗi 1 giây để cập nhật liên tục (bắt trúng từng giây)
+    _realtimeTimer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTimeFields());
   }
 
   void _updateTimeFields() {
@@ -210,13 +219,20 @@ mixin GmpStepMixin<T extends StatefulWidget> on State<T> {
     }
     
     if (changed && mounted) {
-      // Trigger rebuild if needed, though TextEditingController updates UI automatically
-      // but some screens might use the value for calculations.
+      // Lắng nghe thay đổi UI
       setState(() {}); 
     }
   }
 
-  /// Dừng cập nhật thời gian thực
+  /// Dừng cập nhật thời gian thực cho 1 trường cụ thể (khi chốt phase)
+  void stopTimeUpdateFor(TextEditingController ctrl) {
+    _autoTimeControllers.remove(ctrl);
+    if (_autoTimeControllers.isEmpty) {
+      stopTimeUpdates();
+    }
+  }
+
+  /// Dừng toàn bộ cập nhật thời gian thực
   void stopTimeUpdates() {
     _realtimeTimer?.cancel();
     _realtimeTimer = null;

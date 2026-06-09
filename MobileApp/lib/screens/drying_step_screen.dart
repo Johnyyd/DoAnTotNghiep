@@ -647,9 +647,14 @@ class _DryingStepScreenState extends State<DryingStepScreen>
         _autoCalcTimeEnd();
       }
       setState(() => _currentPhase = ExecutionPhase.input);
+      // Dừng auto-update giờ kiểm tra, bắt đầu auto-update giờ bắt đầu
+      stopTimeUpdateFor(_timeCtrl);
+      startTimeUpdates([_timeStartCtrl]);
       // Giữ status Running khi nhập liệu
       await _submit('Running', null, isInternal: true);
     } else if (_currentPhase == ExecutionPhase.input) {
+      // Dừng auto-update giờ bắt đầu khi đã bắt đầu sấy
+      stopTimeUpdateFor(_timeStartCtrl);
       // Chuyển sang giai đoạn Đợi QC (PendingQC)
       await _verifyAndSubmit();
     } else if (_currentPhase == ExecutionPhase.execution) {
