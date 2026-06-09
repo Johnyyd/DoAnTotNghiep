@@ -132,15 +132,6 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Footer hint */}
-          <div className="mt-6 p-3 bg-neutral-50 border border-neutral-200 rounded-lg">
-            <p className="text-xs text-neutral-500 text-center font-medium mb-1">Tài khoản mặc định</p>
-            <div className="grid grid-cols-3 gap-1 text-xs text-neutral-600 text-center">
-              <span className="font-mono bg-white rounded px-1 py-0.5 border">admin / Admin@123</span>
-              <span className="font-mono bg-white rounded px-1 py-0.5 border">qc01 / Qc@123456</span>
-              <span className="font-mono bg-white rounded px-1 py-0.5 border">op01 / Op@123456</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>

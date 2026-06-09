@@ -3,10 +3,10 @@
    Schema Cơ sở dữ liệu cơ bản - v3.5 (Robust Build)
    ========================================================================= */
 
---CREATE DATABASE PharmaceuticalProcessingManagementSystem;
---USE PharmaceuticalProcessingManagementSystem;
+CREATE DATABASE PharmaceuticalProcessingManagementSystem;
+USE PharmaceuticalProcessingManagementSystem;
 --USE [PharmaceuticalProcessingManagementSystem];
---GO
+GO
 
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
