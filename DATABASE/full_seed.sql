@@ -1,4 +1,4 @@
-﻿/* =========================================================================
+/* =========================================================================
    HỆ THỐNG QUẢN LÝ SẢN XUẤT DƯỢC PHẨM (GMP-WHO)
    FULL SEED DATA v3.2 - Fully Synchronized with Schema.sql
    ========================================================================= */
@@ -258,8 +258,7 @@ INSERT INTO StepParameters (ParameterId, RoutingId, ParameterName, Unit, MinValu
 (4, 1, N'Nhiệt độ sấy',  '°C', 73, 77, 1, NULL),
 (20, 1, N'Thời gian sấy', 'phút', 170, 190, 1, NULL),
 (24, 2, N'Nhiệt độ sấy',  '°C', 73, 77, 1, NULL),
-(7, 4, N'Tốc độ trộn',   'v/p', 14, 16, 1, NULL),
-(50, 18, N'Nhiệt độ sấy', '°C', 60, 70, 1, NULL);
+(7, 4, N'Tốc độ trộn',   'v/p', 14, 16, 1, NULL);
 SET IDENTITY_INSERT StepParameters OFF;
 GO
 -- -------------------------------------------------------------------------
