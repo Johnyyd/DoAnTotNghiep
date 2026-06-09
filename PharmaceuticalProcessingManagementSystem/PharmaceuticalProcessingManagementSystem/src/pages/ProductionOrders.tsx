@@ -397,7 +397,11 @@ export default function ProductionOrders() {
 
   const deleteOrderMutation = useMutation({
     mutationFn: (id: number) => productionOrdersApi.delete(id),
-    onSuccess: async () => queryClient.invalidateQueries({ queryKey: ['productionOrders'] }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['productionOrders'] });
+      alert('Đã xóa lệnh sản xuất thành công.');
+    },
+    onError: (err: any) => alert(err?.response?.data?.message ?? err?.message ?? 'Không thể xóa lệnh sản xuất.'),
   });
 
   const uploadBatchCertMutation = useMutation({

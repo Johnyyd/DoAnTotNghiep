@@ -867,29 +867,59 @@ namespace GMP_System.Controllers
                 return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
             }
 
-            // Clean up related data if order is in Draft status
-            if (order.Status == "Draft")
+            if (order.Status == "In-Process" || order.Status == "Completed")
             {
-                // Remove Boms
-                if (order.ProductionOrderBoms.Any())
-                    _unitOfWork.ProductionOrderBoms.RemoveRange(order.ProductionOrderBoms);
-
-                // Remove Routings (those specific to this order)
-                if (order.RecipeRoutings.Any())
-                    _unitOfWork.RecipeRoutings.RemoveRange(order.RecipeRoutings);
-                
-                // If there are batches (shouldn't be in Draft usually, but safety first)
-                if (order.ProductionBatches.Any())
-                    _unitOfWork.ProductionBatches.RemoveRange(order.ProductionBatches);
+                return BadRequest(new { success = false, message = $"Không thể xóa lệnh sản xuất đang chạy hoặc đã hoàn thành." });
             }
-            else
+
+            bool hasDispensed = order.ProductionOrderBoms.Any(bom => bom.DispensingStatus == "Dispensed");
+            if (hasDispensed)
             {
-                return BadRequest(new { success = false, message = "Chỉ có thể xóa lệnh sản xuất ở trạng thái Draft." });
+                return BadRequest(new { success = false, message = "Không thể xóa lệnh sản xuất vì đã có nguyên liệu được nhân viên kho cấp phát." });
+            }
+
+            // Restore inventory
+            var bomsWithLots = order.ProductionOrderBoms.Where(b => b.SelectedLotId.HasValue).ToList();
+            if (bomsWithLots.Any())
+            {
+                var lotUpdates = bomsWithLots
+                    .GroupBy(b => b.SelectedLotId!.Value)
+                    .Select(g => new { LotId = g.Key, TotalRestoreQty = g.Sum(b => b.RequiredQuantity) });
+
+                foreach (var update in lotUpdates)
+                {
+                    var lot = await _context.InventoryLots.FindAsync(update.LotId);
+                    if (lot != null)
+                    {
+                        lot.QuantityCurrent += update.TotalRestoreQty;
+                        _context.InventoryLots.Update(lot);
+                    }
+                }
+            }
+
+            // Remove Boms
+            if (order.ProductionOrderBoms.Any())
+                _unitOfWork.ProductionOrderBoms.RemoveRange(order.ProductionOrderBoms);
+
+            // Remove Routings
+            if (order.RecipeRoutings.Any())
+                _unitOfWork.RecipeRoutings.RemoveRange(order.RecipeRoutings);
+            
+            // Remove Batches
+            if (order.ProductionBatches.Any())
+                _unitOfWork.ProductionBatches.RemoveRange(order.ProductionBatches);
+                
+            // Remove Tech Specs
+            var techSpecs = await _context.RecipeTechSpecs.Where(s => s.OrderId == id).ToListAsync();
+            if (techSpecs.Any())
+            {
+                _context.RecipeTechSpecs.RemoveRange(techSpecs);
             }
 
             _unitOfWork.ProductionOrders.Remove(order);
-            await _unitOfWork.CompleteAsync();
-            return Ok(new { success = true, message = "Đã xóa lệnh sản xuất." });
+            await _unitOfWork.CompleteAsync(); // This also saves _context changes for InventoryLots and RecipeTechSpecs
+
+            return Ok(new { success = true, message = "Đã xóa lệnh sản xuất và hoàn trả tồn kho." });
         }
 
     }
