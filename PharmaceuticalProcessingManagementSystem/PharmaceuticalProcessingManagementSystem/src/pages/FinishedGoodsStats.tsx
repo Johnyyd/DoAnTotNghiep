@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
 import { BarChart3, PackageCheck, Factory, Clock3 } from 'lucide-react';
+import { formatNumber } from '@/utils/format';
 
 interface OrderStatSource {
   orderId: number;
@@ -174,7 +175,7 @@ export default function FinishedGoodsStats() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-neutral-500">Số lượng kế hoạch</p>
-              <p className="text-2xl font-bold text-neutral-900">{totalPlannedQty.toLocaleString()} <span className="text-sm font-normal text-neutral-500">đơn vị</span></p>
+              <p className="text-2xl font-bold text-neutral-900">{formatNumber(totalPlannedQty, 0)} <span className="text-sm font-normal text-neutral-500">đơn vị</span></p>
             </div>
             <BarChart3 className="w-7 h-7 text-primary-600" />
           </div>
@@ -208,7 +209,7 @@ export default function FinishedGoodsStats() {
                   <td>{row.completedBatches}</td>
                   <td>{row.inProgressBatches}</td>
                   <td>{row.holdBatches}</td>
-                  <td>{row.totalPlannedQty.toLocaleString()} {row.unit}</td>
+                  <td>{formatNumber(row.totalPlannedQty, 0)} {row.unit}</td>
                 </tr>
               ))
             )}

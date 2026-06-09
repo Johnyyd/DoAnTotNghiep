@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Package, ClipboardList, Warehouse, TrendingUp, Activity, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { inventoryApi, productionOrdersApi, productionBatchesApi } from '@/services/api';
+import { formatNumber } from '@/utils/format';
 
 export default function Dashboard() {
   const { data: lotsData } = useQuery({
@@ -12,7 +13,7 @@ export default function Dashboard() {
   const { data: ordersRes } = useQuery({
     queryKey: ['production-orders'],
     // Fetch all for dashboard aggregation
-    queryFn: () => productionOrdersApi.getAll({ page: 1, pageSize: 1000 }), 
+    queryFn: () => productionOrdersApi.getAll({ page: 1, pageSize: 1000 }),
   });
 
   const { data: batchesRes } = useQuery({
@@ -73,17 +74,17 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
+
         {/* Card 1: Inventory (Carousel) */}
         <div className="card group relative overflow-hidden">
           <div className="flex items-start justify-between">
             <div className="flex-1 w-full overflow-hidden">
               <p className="text-sm font-medium text-neutral-500 mb-1">Nguyên liệu còn tồn kho</p>
-              
+
               <div className="relative w-full h-[4.5rem]">
                 {inventorySummary.length > 0 ? (
-                  <div 
-                    className="absolute top-0 left-0 flex w-full h-full transition-transform duration-500 ease-in-out" 
+                  <div
+                    className="absolute top-0 left-0 flex w-full h-full transition-transform duration-500 ease-in-out"
                     style={{ transform: `translateX(-${currentInvIdx * 100}%)` }}
                   >
                     {inventorySummary.map((inv) => (
@@ -93,7 +94,7 @@ export default function Dashboard() {
                         </p>
                         <div className="w-max inline-flex items-center text-xs font-semibold text-primary-700 bg-primary-50 px-2 py-1 rounded-lg">
                           <Package className="w-3 h-3 mr-1" />
-                          {inv.total.toLocaleString('vi-VN')} {inv.uom}
+                          {formatNumber(inv.total, 4)} {inv.uom}
                         </div>
                       </div>
                     ))}
@@ -109,7 +110,7 @@ export default function Dashboard() {
 
 
           </div>
-          
+
           {inventorySummary.length > 1 && (
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-1 z-10">
               {inventorySummary.map((_, idx) => (
@@ -166,7 +167,7 @@ export default function Dashboard() {
             { name: 'Tạo Lệnh Sản Xuất', icon: ClipboardList, href: '/production-orders', action: 'create' },
             { name: 'Quản Lý Nguyên Liệu', icon: Package, href: '/materials', action: 'manage' },
             { name: 'Công Thức', icon: ClipboardList, href: '/recipes', action: 'view' },
-            { name: 'Truy Xuất Nguồn Gốc', icon: Search, href: '/traceability', action: 'track' },
+            { name: 'Truy Xuất Thành Phẩm', icon: Search, href: '/finished-products', action: 'track' },
           ].map((action) => (
             <a
               key={action.name}

@@ -53,6 +53,8 @@ public partial class GmpContext : DbContext
 
     public virtual DbSet<StorageLocation> StorageLocations { get; set; } = null!;
 
+    public virtual DbSet<SystemAuditLog> SystemAuditLogs { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AppUser>(entity =>
@@ -326,6 +328,7 @@ public partial class GmpContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.PlannedQuantity).HasColumnType("decimal(18, 4)");
             entity.Property(e => e.RecipeId).HasColumnName("RecipeID");
+            entity.Property(e => e.RecipeName).HasMaxLength(200);
             entity.Property(e => e.Status).HasMaxLength(50);
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.ProductionOrders)
@@ -355,6 +358,18 @@ public partial class GmpContext : DbContext
                 .HasForeignKey(d => d.SelectedLotId);
         });
 
+        modelBuilder.Entity<SystemAuditLog>(entity =>
+        {
+            entity.HasKey(e => e.AuditId);
+            entity.ToTable("SystemAuditLog");
+            entity.Property(e => e.Action).HasMaxLength(50);
+            entity.Property(e => e.ChangedDate).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.RecordId).HasMaxLength(100);
+            entity.Property(e => e.TableName).HasMaxLength(100);
+            entity.HasOne(d => d.ChangedByNavigation).WithMany()
+                .HasForeignKey(d => d.ChangedBy);
+        });
+
         modelBuilder.Entity<Recipe>(entity =>
         {
             entity.HasKey(e => e.RecipeId).HasName("PK__Recipes__FDD988D03D4E35FD");
@@ -368,6 +383,7 @@ public partial class GmpContext : DbContext
             entity.HasIndex(e => new { e.MaterialId, e.VersionNumber }, "UQ_Recipe_Version").IsUnique();
 
             entity.Property(e => e.RecipeId).HasColumnName("RecipeID");
+            entity.Property(e => e.BatchUomId).HasColumnName("BatchUomID");
             entity.Property(e => e.BatchSize).HasColumnType("decimal(18, 4)");
             entity.Property(e => e.MaterialId).HasColumnName("MaterialID");
             entity.Property(e => e.Status).HasMaxLength(50);
@@ -379,6 +395,10 @@ public partial class GmpContext : DbContext
             entity.HasOne(d => d.Material).WithMany(p => p.Recipes)
                 .HasForeignKey(d => d.MaterialId)
                 .HasConstraintName("FK__Recipes__Materia__628FA481");
+
+            entity.HasOne(d => d.BatchUom).WithMany(p => p.BatchSizeRecipes)
+                .HasForeignKey(d => d.BatchUomId)
+                .HasConstraintName("FK_Recipes_BatchUom");
         });
 
         modelBuilder.Entity<RecipeBom>(entity =>

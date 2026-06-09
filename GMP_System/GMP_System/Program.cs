@@ -130,6 +130,75 @@ using (var scope = app.Services.CreateScope())
             
             Console.WriteLine("[BACKEND] Running EnsureCreated...");
             bool isNewlyCreated = db.Database.EnsureCreated();
+            db.Database.ExecuteSqlRaw(@"
+IF OBJECT_ID(N'dbo.SystemAuditLog', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.SystemAuditLog
+    (
+        AuditId BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT PK_SystemAuditLog PRIMARY KEY,
+        TableName NVARCHAR(100) NOT NULL,
+        RecordId NVARCHAR(100) NOT NULL,
+        Action NVARCHAR(50) NOT NULL,
+        OldValue NVARCHAR(MAX) NULL,
+        NewValue NVARCHAR(MAX) NULL,
+        ChangedBy INT NULL,
+        ChangedDate DATETIME2 NOT NULL CONSTRAINT DF_SystemAuditLog_ChangedDate DEFAULT GETDATE()
+    );
+END;
+
+IF COL_LENGTH(N'dbo.ProductionOrders', N'RecipeName') IS NULL
+BEGIN
+    ALTER TABLE dbo.ProductionOrders ADD RecipeName NVARCHAR(200) NULL;
+END;
+
+IF COL_LENGTH(N'dbo.Recipes', N'BatchUomId') IS NULL
+BEGIN
+    ALTER TABLE dbo.Recipes ADD BatchUomId INT NULL;
+END;
+
+IF OBJECT_ID(N'dbo.Recipes', N'U') IS NOT NULL
+   AND OBJECT_ID(N'dbo.UnitOfMeasure', N'U') IS NOT NULL
+   AND NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_Recipes_BatchUom')
+BEGIN
+    EXEC(N'ALTER TABLE dbo.Recipes
+    ADD CONSTRAINT FK_Recipes_BatchUom FOREIGN KEY (BatchUomId) REFERENCES dbo.UnitOfMeasure(UomId)');
+END;
+
+IF OBJECT_ID(N'dbo.Recipes', N'U') IS NOT NULL
+   AND OBJECT_ID(N'dbo.UnitOfMeasure', N'U') IS NOT NULL
+BEGIN
+    EXEC(N'UPDATE r
+    SET BatchUomId = CASE
+        WHEN m.BaseUomID IN (3, 10) THEN 10
+        ELSE 9
+    END
+    FROM dbo.Recipes r
+    LEFT JOIN dbo.Materials m ON r.MaterialID = m.MaterialID
+    WHERE r.BatchUomId IS NULL');
+
+    EXEC(N'UPDATE dbo.Recipes
+    SET BatchUomId = 10
+    WHERE (RecipeName LIKE N''%ống%'' OR Note LIKE N''%ml/%'')');
+END;
+
+IF COL_LENGTH(N'dbo.ProductionOrderBom', N'SelectedLotId') IS NULL
+BEGIN
+    ALTER TABLE dbo.ProductionOrderBom ADD SelectedLotId INT NULL;
+END;
+
+IF COL_LENGTH(N'dbo.InventoryLots', N'RetestDate') IS NOT NULL
+BEGIN
+    ALTER TABLE dbo.InventoryLots DROP COLUMN RetestDate;
+END;
+
+IF OBJECT_ID(N'dbo.InventoryLots', N'U') IS NOT NULL
+   AND OBJECT_ID(N'dbo.ProductionOrderBom', N'U') IS NOT NULL
+   AND NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_ProductionOrderBom_SelectedLot')
+BEGIN
+    ALTER TABLE dbo.ProductionOrderBom
+    ADD CONSTRAINT FK_ProductionOrderBom_SelectedLot FOREIGN KEY (SelectedLotId) REFERENCES dbo.InventoryLots(LotId);
+END;
+");
             
             // Check if AppUsers table is empty to determine if we need to seed
             bool needsSeeding = isNewlyCreated || !db.AppUsers.Any();
@@ -147,7 +216,7 @@ using (var scope = app.Services.CreateScope())
                     
                     string baseDir = possiblePaths.FirstOrDefault(Directory.Exists) ?? "";
 
-                    var scripts = new[] { "Schema.sql", "SystemAudit.sql", "full_seed.sql", "hotfix.sql" };
+                    var scripts = new[] { "SystemAudit.sql", "full_seed.sql", "BackupRestoreJobs.sql" };
                     foreach (var script in scripts)
                     {
                         var path = Path.Combine(baseDir, script);
@@ -167,13 +236,6 @@ using (var scope = app.Services.CreateScope())
                                 var trimmedBatch = batch.Trim();
                                 if (!string.IsNullOrWhiteSpace(trimmedBatch))
                                 {
-                                    // Remove USE statements as they are not needed/supported in this context
-                                    if (trimmedBatch.StartsWith("USE [", StringComparison.OrdinalIgnoreCase) || 
-                                        trimmedBatch.StartsWith("USE master", StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        continue;
-                                    }
-                                    
                                     using (var command = db.Database.GetDbConnection().CreateCommand())
                                     {
                                         command.CommandText = trimmedBatch;

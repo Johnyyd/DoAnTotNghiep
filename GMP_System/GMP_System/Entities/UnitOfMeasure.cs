@@ -19,6 +19,9 @@ public partial class UnitOfMeasure
     public virtual ICollection<RecipeBom> RecipeBoms { get; set; } = new List<RecipeBom>();
 
     [JsonIgnore]
+    public virtual ICollection<Recipe> BatchSizeRecipes { get; set; } = new List<Recipe>();
+
+    [JsonIgnore]
     public virtual ICollection<UomConversion> UomConversionFromUoms { get; set; } = new List<UomConversion>();
 
     [JsonIgnore]

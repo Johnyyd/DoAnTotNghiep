@@ -2,9 +2,11 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { certificatesApi, inventoryApi, materialsApi } from '@/services/api';
 import { Eye, FileCheck2, PackageCheck, Pencil, Plus, Search, ShieldCheck, Trash2, Upload } from 'lucide-react';
+import { formatNumber } from '@/utils/format';
 
 type QcStatus = 'PendingQC' | 'Sampling' | 'Released' | 'Rejected' | 'OnHold';
-type MaterialType = 'RawMaterial' | 'Packaging' | 'FinishedGood' | 'Intermediate';
+type MaterialType = 'RawMaterial' | 'Packaging' | 'FinishedGood';
+type QuantityDisplayMode = 'auto' | 'large' | 'small';
 
 interface MaterialForm {
   materialCode: string;
@@ -50,7 +52,7 @@ interface LotForm {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-const physicalForms = ['Bột', 'Hạt', 'Lỏng', 'Gel', 'Viên', 'Vỏ nang', 'Bao bì', 'Cuộn màng', 'Khác'];
+const physicalForms = ['Bột', 'Hạt', 'Lỏng', 'Gel', 'Viên', 'Vỏ nang', 'Bao bì', 'Bao bì thuỷ tinh', 'Cuộn màng', 'Khác'];
 const containerTypes = ['Thùng carton', 'Thùng lót PE', 'Bao PE', 'Can nhựa', 'Chai', 'Tủ chuyên dụng', 'Cuộn trong thùng', 'Pallet', 'Khác'];
 const qcStatuses: { value: QcStatus; label: string; className: string }[] = [
   { value: 'PendingQC', label: 'Chờ duyệt', className: 'bg-amber-100 text-amber-700' },
@@ -198,6 +200,7 @@ export default function Materials() {
   const [editingLot, setEditingLot] = useState<LotForm | null>(null);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [importCertFile, setImportCertFile] = useState<File | null>(null);
+  const [quantityDisplayMode, setQuantityDisplayMode] = useState<QuantityDisplayMode>('auto');
   const [form, setForm] = useState<MaterialForm>(makeDefaultForm());
   const [importForm, setImportForm] = useState<Omit<MaterialForm, 'materialCode' | 'materialName' | 'type' | 'baseUomId' | 'physicalForm' | 'technicalSpecification' | 'storageCondition' | 'minStorageTemperature' | 'maxStorageTemperature' | 'minStorageHumidity' | 'maxStorageHumidity' | 'minPh' | 'maxPh' | 'storageNotes'>>(makeDefaultForm());
 
@@ -350,7 +353,33 @@ export default function Materials() {
   });
 
   const getMaterialLots = (materialId: number) => lots.filter((lot) => lot.materialId === materialId);
-  const formatQty = (value: number, unit: string) => `${value.toLocaleString('vi-VN', { maximumFractionDigits: 4 })} ${unit}`;
+  const formatQty = (value: number, unit: string) => {
+    const normalizedUnit = (unit || '').trim().toLowerCase();
+    let displayValue = value;
+    let displayUnit = unit;
+
+    if (quantityDisplayMode === 'large') {
+      if (normalizedUnit === 'g') {
+        displayValue = value / 1000;
+        displayUnit = 'kg';
+      } else if (normalizedUnit === 'ml') {
+        displayValue = value / 1000;
+        displayUnit = 'L';
+      }
+    }
+
+    if (quantityDisplayMode === 'small') {
+      if (normalizedUnit === 'kg') {
+        displayValue = value * 1000;
+        displayUnit = 'g';
+      } else if (normalizedUnit === 'l') {
+        displayValue = value * 1000;
+        displayUnit = 'ml';
+      }
+    }
+
+    return `${formatNumber(displayValue, 4)} ${displayUnit}`;
+  };
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowInput = tomorrow.toISOString().slice(0, 10);
@@ -385,11 +414,16 @@ export default function Materials() {
         </div>
       </div>
 
-      <div className="card">
+      <div className="card grid grid-cols-1 md:grid-cols-[1fr_220px] gap-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
           <input value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-9" placeholder="Tìm mã, tên, dạng hoặc điều kiện bảo quản..." />
         </div>
+        <select className="input" value={quantityDisplayMode} onChange={(e) => setQuantityDisplayMode(e.target.value as QuantityDisplayMode)}>
+          <option value="auto">Đơn vị gốc</option>
+          <option value="large">Hiển thị kg / L</option>
+          <option value="small">Hiển thị g / ml</option>
+        </select>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -427,9 +461,9 @@ export default function Materials() {
                 <th>Mã</th>
                 <th>Tên nguyên liệu</th>
                 <th>Dạng</th>
-                <th>Bảo quản</th>
+                <th>Ghi chú</th>
                 <th>Tồn kho</th>
-                <th>Trạng thái duyệt lô</th>
+                <th>Trạng thái lô</th>
                 <th className="text-right">Thao tác</th>
               </tr>
             </thead>
@@ -470,7 +504,6 @@ export default function Materials() {
               <Field label="Loại nguyên liệu"><select className="input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as MaterialType })}>
                 <option value="RawMaterial">Nguyên liệu</option>
                 <option value="Packaging">Bao bì</option>
-                <option value="Intermediate">Bán thành phẩm</option>
               </select></Field>
               <Field label="Dạng nguyên liệu"><select className="input" value={form.physicalForm} onChange={(e) => setForm({ ...form, physicalForm: e.target.value })}><option value="">Chọn dạng nguyên liệu</option>{physicalForms.map((item) => <option key={item}>{item}</option>)}</select></Field>
               <Field label="Đơn vị tính"><select className="input" value={form.baseUomId} onChange={(e) => setForm({ ...form, baseUomId: Number(e.target.value) })}>

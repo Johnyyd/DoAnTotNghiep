@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FlaskConical, Search } from 'lucide-react';
 import { productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
-import { formatRecipeBatchSize, isRecipeLiquid } from '@/utils/format';
+import { formatNumber, formatRecipeBatchSize, isRecipeLiquid } from '@/utils/format';
 
 type NormalizedRecipe = {
   recipeId: number;
@@ -14,12 +14,14 @@ type NormalizedRecipe = {
   approvedDate?: string;
   materialName?: string;
   uomName?: string;
+  batchUomName?: string;
 };
 type NormalizedRouting = {
   routingId: number;
   stepNumber: number;
   stepName: string;
   equipmentName: string;
+  equipmentCode: string;
   areaName: string;
   estimatedTimeMinutes: number;
   description?: string;
@@ -103,6 +105,7 @@ export default function ManagerOperations() {
       approvedDate: item.approvedDate ?? item.ApprovedDate,
       materialName: item.material?.materialName ?? item.Material?.MaterialName,
       uomName: item.material?.baseUom?.uomName ?? item.Material?.BaseUom?.UomName,
+      batchUomName: item.batchUom?.uomName ?? item.BatchUom?.UomName,
     }));
   }, [recipesRaw]);
 
@@ -114,10 +117,11 @@ export default function ManagerOperations() {
       const mName = item.recipe?.material?.materialName ?? item.recipe?.Material?.MaterialName ?? recipe?.materialName ?? '';
       const bSize = recipe?.batchSize ?? item.recipe?.batchSize ?? item.recipe?.BatchSize ?? 0;
       const uom = recipe?.uomName ?? item.recipe?.material?.baseUom?.uomName ?? item.recipe?.Material?.BaseUom?.UomName ?? 'viên';
-      const formattedBatchSize = formatRecipeBatchSize(bSize, isRecipeLiquid(mName, uom));
-      
-      const recipeName = rName 
-        ? `${rName} ${mName} (${formattedBatchSize})` 
+      const batchUom = recipe?.batchUomName ?? item.recipe?.batchUom?.uomName ?? item.recipe?.BatchUom?.UomName;
+      const formattedBatchSize = formatRecipeBatchSize(bSize, isRecipeLiquid(mName, uom), batchUom);
+
+      const recipeName = rName
+        ? `${rName} ${mName} (${formattedBatchSize})`
         : `${mName} (${formattedBatchSize})`;
 
       return {
@@ -203,6 +207,13 @@ export default function ManagerOperations() {
         ?? item.DefaultEquipment?.EquipmentName
         ?? item.equipmentName
         ?? 'Chưa gán thiết bị',
+      equipmentCode: item.equipment?.equipmentCode
+        ?? item.Equipment?.EquipmentCode
+        ?? item.defaultEquipment?.equipmentCode
+        ?? item.DefaultEquipment?.EquipmentCode
+        ?? item.equipmentCode
+        ?? item.EquipmentCode
+        ?? '',
       areaName: item.area?.areaName
         ?? item.Area?.AreaName
         ?? item.defaultEquipment?.area?.areaName
@@ -260,6 +271,14 @@ export default function ManagerOperations() {
     return 'waiting';
   };
 
+  const getStepAggregateStatus = (stepNumber: number) => {
+    const done = orderBatches.filter((batch, batchIndex) => getPipelineState(batchIndex, stepNumber, batch) === "done").length;
+    const active = orderBatches.some((batch, batchIndex) => getPipelineState(batchIndex, stepNumber, batch) === "active");
+    if (active) return "InProcess";
+    if (done === orderBatches.length && orderBatches.length > 0) return "Completed";
+    return "Hold";
+  };
+
   const getStatusClass = (status: string) => {
     const normalized = normalizeStatus(status);
     if (normalized === 'Approved') return 'bg-blue-100 text-blue-700 border border-blue-200';
@@ -295,7 +314,7 @@ export default function ManagerOperations() {
               {orders.map((order) => (
                 <option key={order.orderId} value={order.orderId}>
                   {order.orderCode} - ({order.recipeName}) - {getStatusLabel(order.status)} - {" "}
-                  {order.plannedQuantity.toLocaleString('en-US').replace(/,/g, ' ')} đơn vị
+                  {formatNumber(order.plannedQuantity, 0)} đơn vị
                 </option>
               ))}
             </select>
@@ -318,7 +337,7 @@ export default function ManagerOperations() {
               <th className="w-16">Bước</th>
               <th>Công đoạn</th>
               <th>Thiết bị được sử dụng</th>
-              <th className="w-px whitespace-nowrap">Khu vực</th>
+              <th className="w-px whitespace-nowrap">Khu vá»±c</th>
               <th className="w-px whitespace-nowrap">Thời gian</th>
               <th className="w-px whitespace-nowrap">Mô tả</th>
             </tr>
@@ -331,22 +350,25 @@ export default function ManagerOperations() {
                 </td>
               </tr>
             )}
-            {routingSteps.map((step) => (
+            {routingSteps.map((step) => {
+              const aggregateStatus = getStepAggregateStatus(step.stepNumber);
+              return (
               <tr key={step.routingId}>
                 <td className="relative">
                   <div className="font-bold">{step.stepNumber}</div>
-                  <div className="mt-1 text-[11px] text-neutral-600">
-                    {(() => {
-                      const done = orderBatches.filter((batch, bIdx) => getPipelineState(bIdx, step.stepNumber, batch) === "done").length;
-                      const active = orderBatches.filter((batch, bIdx) => getPipelineState(bIdx, step.stepNumber, batch) === "active").length;
-                      if (active > 0) return `Đang chạy`;
-                      if (done === orderBatches.length && orderBatches.length > 0) return "Hoàn thành";
-                      return "Chờ";
-                    })()}
-                  </div>
+                  <span className={`mt-1 inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold ${getStatusClass(aggregateStatus)}`}>
+                    {getStatusLabel(aggregateStatus)}
+                  </span>
                 </td>
                 <td className="font-medium text-neutral-900">{step.stepName}</td>
-                <td>{step.equipmentName}</td>
+                <td>
+                  <span>{step.equipmentName}</span>
+                  {step.equipmentCode ? (
+                    <span className="ml-2 inline-flex rounded bg-neutral-100 px-2 py-0.5 font-mono text-xs text-neutral-600">
+                      {step.equipmentCode}
+                    </span>
+                  ) : null}
+                </td>
                 <td className="whitespace-nowrap">{step.areaName}</td>
                 <td className="whitespace-nowrap">
                   {step.estimatedTimeMinutes
@@ -370,7 +392,7 @@ export default function ManagerOperations() {
                   )}
                 </td>
               </tr>
-            ))}
+            )})}
           </tbody>
         </table>
 

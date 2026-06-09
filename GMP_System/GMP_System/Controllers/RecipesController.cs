@@ -27,6 +27,7 @@ namespace GMP_System.Controllers
                     r.MaterialId,
                     r.VersionNumber,
                     r.BatchSize,
+                    r.BatchUomId,
                     r.Status,
                     r.ApprovedBy,
                     r.ApprovedDate,
@@ -41,7 +42,8 @@ namespace GMP_System.Controllers
                         BaseUom = r.Material.BaseUom == null ? null : new {
                             r.Material.BaseUom.UomName
                         }
-                    }
+                    },
+                    BatchUom = r.BatchUom == null ? null : new { r.BatchUom.UomId, r.BatchUom.UomName }
                 })
                 .OrderBy(r => r.RecipeId)
                 .ToListAsync();
@@ -59,6 +61,7 @@ namespace GMP_System.Controllers
                     r.MaterialId,
                     r.VersionNumber,
                     r.BatchSize,
+                    r.BatchUomId,
                     r.Status,
                     r.ApprovedBy,
                     r.ApprovedDate,
@@ -73,7 +76,8 @@ namespace GMP_System.Controllers
                         BaseUom = r.Material.BaseUom == null ? null : new {
                             r.Material.BaseUom.UomName
                         }
-                    }
+                    },
+                    BatchUom = r.BatchUom == null ? null : new { r.BatchUom.UomId, r.BatchUom.UomName }
                 })
                 .FirstOrDefaultAsync();
 
@@ -98,12 +102,48 @@ namespace GMP_System.Controllers
                 return BadRequest(new { success = false, message = "Khối lượng một viên phải lớn hơn 0." });
             }
 
+            if (!recipe.BatchUomId.HasValue || recipe.BatchUomId <= 0)
+            {
+                return BadRequest(new { success = false, message = "Vui lòng chọn đơn vị khối lượng cho công thức." });
+            }
+
+            var materialId = recipe.MaterialId.Value;
+            var materialExists = await _context.Materials
+                .AnyAsync(m => m.MaterialId == materialId && m.Type == "FinishedGood");
+            if (!materialExists)
+            {
+                return BadRequest(new { success = false, message = "Thành phẩm không tồn tại hoặc không hợp lệ." });
+            }
+
+            var uomExists = await _context.UnitOfMeasures.AnyAsync(u => u.UomId == recipe.BatchUomId.Value);
+            if (!uomExists)
+            {
+                return BadRequest(new { success = false, message = "Đơn vị khối lượng công thức không hợp lệ." });
+            }
+
+            var maxVersion = await _context.Recipes
+                .Where(r => r.MaterialId == materialId)
+                .MaxAsync(r => (int?)r.VersionNumber) ?? 0;
+            var requestedVersion = recipe.VersionNumber;
+            var versionExists = requestedVersion > 0 && await _context.Recipes
+                .AnyAsync(r => r.MaterialId == materialId && r.VersionNumber == requestedVersion);
+
             recipe.Status = "Draft";
-            recipe.VersionNumber = recipe.VersionNumber <= 0 ? 1 : recipe.VersionNumber;
+            recipe.VersionNumber = requestedVersion <= 0 || versionExists ? maxVersion + 1 : requestedVersion;
+            recipe.RecipeName = string.IsNullOrWhiteSpace(recipe.RecipeName)
+                ? $"Công thức phiên bản {recipe.VersionNumber}"
+                : recipe.RecipeName.Trim();
             recipe.CreatedAt = DateTime.Now;
 
-            await _unitOfWork.Recipes.AddAsync(recipe);
-            await _unitOfWork.CompleteAsync();
+            try
+            {
+                await _unitOfWork.Recipes.AddAsync(recipe);
+                await _unitOfWork.CompleteAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                return BadRequest(new { success = false, message = $"Không thể tạo công thức: {ex.GetBaseException().Message}" });
+            }
 
             return Ok(new { success = true, data = recipe, message = "Tạo công thức thành công." });
         }
@@ -119,6 +159,7 @@ namespace GMP_System.Controllers
 
             existing.MaterialId = recipe.MaterialId;
             existing.BatchSize = recipe.BatchSize;
+            existing.BatchUomId = recipe.BatchUomId ?? existing.BatchUomId;
             existing.RecipeName = recipe.RecipeName;
             existing.Note = recipe.Note;
             existing.EffectiveDate = recipe.EffectiveDate;
@@ -203,7 +244,7 @@ namespace GMP_System.Controllers
 
             var items = await _context.RecipeBoms
                 .Where(b => b.RecipeId == id)
-                .Include(b => b.Material)
+                .Include(b => b.Material).ThenInclude(m => m!.BaseUom)
                 .Include(b => b.Uom)
                 .OrderBy(b => b.BomId)
                 .Select(b => new
@@ -216,7 +257,15 @@ namespace GMP_System.Controllers
                     b.WastePercentage,
                     b.Note,
                     TechnicalStandard = b.Material != null ? b.Material.TechnicalSpecification : null,
-                    Material = b.Material == null ? null : new { b.Material.MaterialId, b.Material.MaterialCode, b.Material.MaterialName },
+                    Material = b.Material == null ? null : new
+                    {
+                        b.Material.MaterialId,
+                        b.Material.MaterialCode,
+                        b.Material.MaterialName,
+                        b.Material.Type,
+                        b.Material.BaseUomId,
+                        BaseUom = b.Material.BaseUom == null ? null : new { b.Material.BaseUom.UomId, b.Material.BaseUom.UomName }
+                    },
                     Uom = b.Uom == null ? null : new { b.Uom.UomId, b.Uom.UomName }
                 })
                 .ToListAsync();

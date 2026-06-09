@@ -23,6 +23,8 @@ type MaterialOption = {
   materialCode: string;
   materialName: string;
   type: string;
+  baseUomId?: number;
+  baseUomName?: string;
 };
 type AreaOption = { areaId: number; areaCode: string; areaName: string };
 type EquipmentOption = {
@@ -39,6 +41,8 @@ type UiRecipe = {
   materialId: number;
   materialName?: string;
   batchSize: number;
+  batchUomId?: number;
+  batchUomName?: string;
   status: string;
   versionNumber: number;
   uomName?: string;
@@ -80,7 +84,7 @@ type RecipeCreateForm = {
   materialId: number;
   batchSize: number;
 };
-type RecipeCreateUnit = "mg" | "g" | "kg" | "ml" | "l";
+type RecipeCreateUnit = "mg" | "g" | "ml" ;
 type BomDraftRow = {
   materialId: number;
   technicalStandard: string;
@@ -149,6 +153,66 @@ function dedupeBy<T>(items: T[], keyFn: (item: T) => string): T[] {
   return result;
 }
 
+const recipeUnitOptions: { value: RecipeCreateUnit; uomId: number; label: string }[] = [
+  { value: "mg", uomId: 9, label: "mg" },
+  { value: "g", uomId: 2, label: "g" },
+  { value: "ml", uomId: 10, label: "ml" },
+];
+
+function getRecipeUnitByValue(value: RecipeCreateUnit) {
+  return recipeUnitOptions.find((unit) => unit.value === value) ?? recipeUnitOptions[0];
+}
+
+function getRecipeUnitById(uomId?: number) {
+  return recipeUnitOptions.find((unit) => unit.uomId === uomId) ?? recipeUnitOptions[0];
+}
+
+function normalizeUnitName(unitName: string = "") {
+  return unitName.trim().toLowerCase();
+}
+
+function getBomBaseUnit(recipe?: UiRecipe | null) {
+  const recipeUnit = normalizeUnitName(recipe?.batchUomName ?? getRecipeUnitById(recipe?.batchUomId).label);
+  const isLiquidUnit = recipeUnit === "ml" || recipeUnit === "l";
+  const isLiquidRecipe = isRecipeLiquid(recipe?.materialName ?? "", recipe?.uomName ?? "");
+  return isLiquidUnit || isLiquidRecipe
+    ? { uomId: 10, label: "ml" }
+    : { uomId: 9, label: "mg" };
+}
+
+function convertRecipeBatchSizeToBomUnit(batchSize: number, recipeUnitName: string, bomUnitName: string) {
+  const recipeUnit = normalizeUnitName(recipeUnitName);
+  const bomUnit = normalizeUnitName(bomUnitName);
+  if (bomUnit === "ml") {
+    if (recipeUnit === "l") return batchSize * 1000;
+    return batchSize;
+  }
+  if (recipeUnit === "kg") return batchSize * 1_000_000;
+  if (recipeUnit === "g") return batchSize * 1000;
+  return batchSize;
+}
+
+function getUomLabelById(uomId?: number) {
+  const labels: Record<number, string> = {
+    1: "kg",
+    2: "g",
+    3: "L",
+    4: "Viên",
+    5: "Vỉ",
+    6: "Hộp",
+    7: "Thùng",
+    8: "Cái",
+    9: "mg",
+    10: "ml",
+  };
+  return uomId ? labels[uomId] : undefined;
+}
+
+function getBomQuantityUnit(item: { uomId?: number; uomName?: string }, isPackaging: boolean, bomBaseUnit: { label: string }) {
+  if (isPackaging) return item.uomName ?? getUomLabelById(item.uomId) ?? "Cái";
+  return bomBaseUnit.label;
+}
+
 function normalizeRecipe(item: any): UiRecipe {
   return {
     recipeId: Number(item.recipeId ?? item.RecipeId ?? 0),
@@ -156,6 +220,8 @@ function normalizeRecipe(item: any): UiRecipe {
     materialId: Number(item.materialId ?? item.MaterialId ?? 0),
     materialName: item.material?.materialName ?? item.Material?.MaterialName,
     batchSize: Number(item.batchSize ?? item.BatchSize ?? 0),
+    batchUomId: Number(item.batchUomId ?? item.BatchUomId ?? 0) || undefined,
+    batchUomName: item.batchUom?.uomName ?? item.BatchUom?.UomName,
     status: item.status ?? item.Status ?? "Draft",
     versionNumber: Number(item.versionNumber ?? item.VersionNumber ?? 1),
     uomName: item.material?.baseUom?.uomName ?? item.Material?.BaseUom?.UomName,
@@ -265,7 +331,7 @@ export default function Recipes() {
       technicalStandard: "",
       ratioPercent: 0,
       quantity: 0,
-      uomId: 2,
+      uomId: 9,
     },
   ]);
   const [editingBomRows, setEditingBomRows] = useState<
@@ -331,6 +397,8 @@ export default function Recipes() {
         materialCode: m.materialCode ?? m.MaterialCode ?? "",
         materialName: m.materialName ?? m.MaterialName ?? "",
         type: m.type ?? m.Type ?? "",
+        baseUomId: Number(m.baseUomId ?? m.BaseUomId ?? 0) || undefined,
+        baseUomName: m.baseUom?.uomName ?? m.BaseUom?.UomName ?? m.baseUomName ?? m.BaseUomName,
       })),
     [materialsRaw],
   );
@@ -390,6 +458,23 @@ export default function Recipes() {
     () => recipes.find((r) => r.recipeId === selectedRecipeId) ?? null,
     [recipes, selectedRecipeId],
   );
+  const selectedRecipeUnit = useMemo(
+    () => getRecipeUnitById(selectedRecipe?.batchUomId),
+    [selectedRecipe?.batchUomId],
+  );
+  const selectedBomUnit = useMemo(
+    () => getBomBaseUnit(selectedRecipe),
+    [selectedRecipe],
+  );
+  const selectedRecipeBatchSizeInBomUnit = useMemo(
+    () =>
+      convertRecipeBatchSizeToBomUnit(
+        selectedRecipe?.batchSize ?? createForm.batchSize,
+        selectedRecipe?.batchUomName ?? selectedRecipeUnit.label,
+        selectedBomUnit.label,
+      ),
+    [createForm.batchSize, selectedBomUnit.label, selectedRecipe?.batchSize, selectedRecipe?.batchUomName, selectedRecipeUnit.label],
+  );
 
   const { data: bomRaw } = useQuery({
     queryKey: ["recipeBom", selectedRecipeId],
@@ -432,16 +517,6 @@ export default function Recipes() {
   const routingSelectableMaterials = useMemo(
     () => inputMaterials.filter((m) => selectedMaterialIds.has(m.materialId)),
     [inputMaterials, selectedMaterialIds],
-  );
-
-  const totalPerTabletMg = useMemo(
-    () =>
-      bomItems
-        .filter(
-          (item) => !isPackagingMaterial(allMaterialById.get(item.materialId)),
-        )
-        .reduce((sum, item) => sum + item.quantity, 0),
-    [bomItems, allMaterialById],
   );
 
   // Tech specs
@@ -529,20 +604,14 @@ export default function Recipes() {
 
   const createRecipeMutation = useMutation({
     mutationFn: () => {
-      const toMg = (value: number, unit: RecipeCreateUnit): number => {
-        if (unit === "mg") return value;
-        if (unit === "g") return value * 1000;
-        if (unit === "kg") return value * 1000000;
-        if (unit === "ml") return value;
-        if (unit === "l") return value * 1000;
-        return value;
-      };
+      const selectedUnit = getRecipeUnitByValue(createUnit);
       return recipesApi.create({
         recipeName: createForm.recipeName,
         materialId: createForm.materialId,
-        batchSize: toMg(createForm.batchSize, createUnit),
+        batchSize: createForm.batchSize,
+        batchUomId: selectedUnit.uomId,
         status: "Draft",
-        versionNumber: 1,
+        versionNumber: 0,
       });
     },
     onSuccess: async (response: any) => {
@@ -556,6 +625,12 @@ export default function Recipes() {
       setCreateForm({ recipeName: "", materialId: 0, batchSize: 0 });
       setCreateUnit("mg");
     },
+    onError: (err: any) =>
+      alert(
+        err?.response?.data?.message ??
+          err?.message ??
+          "Không thể tạo công thức",
+      ),
   });
 
   const approveRecipeMutation = useMutation({
@@ -579,16 +654,19 @@ export default function Recipes() {
   });
 
   const addBomMutation = useMutation({
-    mutationFn: (row: BomDraftRow) =>
-      recipesApi.addBOMItem(
+    mutationFn: (row: BomDraftRow) => {
+      const material = materialById.get(row.materialId);
+      const isPackaging = isPackagingMaterial(material);
+      return recipesApi.addBOMItem(
         selectedRecipeId as number,
         {
           materialId: row.materialId,
           quantity: row.quantity,
-          uomId: row.uomId,
+          uomId: isPackaging ? row.uomId : selectedBomUnit.uomId,
           technicalStandard: row.technicalStandard,
         } as any,
-      ),
+      );
+    },
     onSuccess: async () =>
       queryClient.invalidateQueries({
         queryKey: ["recipeBom", selectedRecipeId],
@@ -608,13 +686,14 @@ export default function Recipes() {
     mutationFn: async (row: BomEditRow) => {
       const material = materialById.get(row.materialId);
       const isPackaging = isPackagingMaterial(material);
-      if (!isPackaging && row.ratioPercent > 0 && selectedRecipe?.batchSize) {
-        row.quantity = (selectedRecipe.batchSize * row.ratioPercent) / 100;
-      }
+      const quantity =
+        !isPackaging && row.ratioPercent > 0 && selectedRecipeBatchSizeInBomUnit
+          ? (selectedRecipeBatchSizeInBomUnit * row.ratioPercent) / 100
+          : row.quantity;
       await recipesApi.updateBOMItem(selectedRecipeId as number, row.bomId, {
         materialId: row.materialId,
-        quantity: row.quantity,
-        uomId: row.uomId,
+        quantity,
+        uomId: isPackaging ? row.uomId : selectedBomUnit.uomId,
       } as any);
 
       if (material?.materialId && row.technicalStandard !== undefined) {
@@ -737,7 +816,7 @@ export default function Recipes() {
   });
 
   const recalcMgFromRatio = (ratioPercent: number) => {
-    const oneTablet = selectedRecipe?.batchSize ?? createForm.batchSize;
+    const oneTablet = selectedRecipeBatchSizeInBomUnit;
     return (oneTablet * Math.max(ratioPercent, 0)) / 100;
   };
 
@@ -749,7 +828,7 @@ export default function Recipes() {
         technicalStandard: "",
         ratioPercent: 0,
         quantity: 0,
-        uomId: 2,
+        uomId: selectedBomUnit.uomId,
       },
     ]);
   const removeDraftRow = (idx: number) =>
@@ -760,7 +839,7 @@ export default function Recipes() {
     const isPackaging = isPackagingMaterial(material);
     const ratioPercent =
       !isPackaging && selectedRecipe?.batchSize
-        ? (item.quantity / selectedRecipe.batchSize) * 100
+        ? (item.quantity / selectedRecipeBatchSizeInBomUnit) * 100
         : 0;
     setEditingBomRows((prev) => ({
       ...prev,
@@ -770,7 +849,7 @@ export default function Recipes() {
         technicalStandard: item.technicalStandard ?? "",
         ratioPercent,
         quantity: item.quantity,
-        uomId: item.uomId ?? (isPackaging ? 4 : 2),
+        uomId: item.uomId ?? (isPackaging ? material?.baseUomId ?? 8 : selectedBomUnit.uomId),
       },
     }));
   };
@@ -825,7 +904,7 @@ export default function Recipes() {
         technicalStandard: "",
         ratioPercent: 0,
         quantity: 0,
-        uomId: 2,
+        uomId: selectedBomUnit.uomId,
       },
     ]);
     await queryClient.invalidateQueries({ queryKey: ["materials"] });
@@ -978,11 +1057,11 @@ export default function Recipes() {
                   setCreateUnit(e.target.value as RecipeCreateUnit)
                 }
               >
-                <option value="mg">mg</option>
-                <option value="g">g</option>
-                <option value="kg">kg</option>
-                <option value="ml">ml</option>
-                <option value="l">L</option>
+                {recipeUnitOptions.map((unit) => (
+                  <option key={unit.value} value={unit.value}>
+                    {unit.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -1033,7 +1112,7 @@ export default function Recipes() {
                   <p className="font-semibold text-neutral-900 truncate">
                     #{recipe.recipeId} -{" "}
                     {recipe.recipeName ? `${recipe.recipeName} ` : ""}
-                    {recipe.materialName ?? "-"} ({formatRecipeBatchSize(recipe.batchSize, isRecipeLiquid(recipe.materialName, recipe.uomName))})
+                    {recipe.materialName ?? "-"} ({formatRecipeBatchSize(recipe.batchSize, isRecipeLiquid(recipe.materialName, recipe.uomName), recipe.batchUomName ?? getRecipeUnitById(recipe.batchUomId).label)})
                   </p>
                   <p className="text-xs mt-1">
                     {recipe.status === "Draft" && (
@@ -1069,7 +1148,7 @@ export default function Recipes() {
                 </h2>
                 <p className="text-sm text-neutral-600">
                   Khối lượng 1 đơn vị:{" "}
-                  <strong>{formatRecipeBatchSize(selectedRecipe.batchSize, isRecipeLiquid(selectedRecipe.materialName, selectedRecipe.uomName))}</strong>
+                  <strong>{formatRecipeBatchSize(selectedRecipe.batchSize, isRecipeLiquid(selectedRecipe.materialName, selectedRecipe.uomName), selectedRecipe.batchUomName ?? getRecipeUnitById(selectedRecipe.batchUomId).label)}</strong>
                 </p>
               </div>
               <div className="flex gap-2">
@@ -1136,18 +1215,19 @@ export default function Recipes() {
                       <th>Nguyên liệu</th>
                       <th>Tiêu chuẩn kỹ thuật</th>
                       <th>Tỉ lệ công thức (%)</th>
-                      <th>Khối lượng cho 1 viên (mg)</th>
-                      <th className="text-right">Thao tác</th>
+                      <th>Khối lượng cho 1 viên</th>
+                      <th className="text-right w-16">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
                     {bomItems.map((item, idx) => {
                       const material = materialById.get(item.materialId);
                       const isPackaging = isPackagingMaterial(material);
+                      const quantityUnit = getBomQuantityUnit(item, isPackaging, selectedBomUnit);
                       const editing = editingBomRows[item.bomId];
                       const ratio =
-                        totalPerTabletMg > 0
-                          ? (item.quantity / totalPerTabletMg) * 100
+                        selectedRecipeBatchSizeInBomUnit > 0
+                          ? (item.quantity / selectedRecipeBatchSizeInBomUnit) * 100
                           : 0;
                       return (
                         <tr key={`bom-${item.bomId}`}>
@@ -1168,7 +1248,9 @@ export default function Recipes() {
                                     [item.bomId]: {
                                       ...prev[item.bomId],
                                       materialId,
-                                      uomId: nextPackaging ? 4 : 2,
+                                      uomId: nextPackaging
+                                        ? nextMaterial?.baseUomId ?? 8
+                                        : selectedBomUnit.uomId,
                                       ratioPercent: nextPackaging
                                         ? 0
                                         : prev[item.bomId].ratioPercent,
@@ -1253,43 +1335,56 @@ export default function Recipes() {
                           </td>
                           <td>
                             {editing ? (
-                              <input
-                                type="number"
-                                step={
-                                  isPackagingMaterial(
-                                    materialById.get(editing.materialId),
-                                  )
-                                    ? 1
-                                    : 0.01
-                                }
-                                className="input"
-                                value={editing.quantity}
-                                onChange={(e) => {
-                                  const currentPackaging = isPackagingMaterial(
-                                    materialById.get(editing.materialId),
-                                  );
-                                  const quantityInput = Number(e.target.value);
-                                  const quantity = currentPackaging
-                                    ? Math.max(1, Math.round(quantityInput))
-                                    : quantityInput;
-                                  const ratioPercent = currentPackaging
-                                    ? 0
-                                    : selectedRecipe?.batchSize
-                                      ? (quantity / selectedRecipe.batchSize) *
-                                        100
-                                      : 0;
-                                  setEditingBomRows((prev) => ({
-                                    ...prev,
-                                    [item.bomId]: {
-                                      ...prev[item.bomId],
-                                      quantity,
-                                      ratioPercent,
+                              <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+                                <input
+                                  type="number"
+                                  step={
+                                    isPackagingMaterial(
+                                      materialById.get(editing.materialId),
+                                    )
+                                      ? 1
+                                      : 0.01
+                                  }
+                                  className="input"
+                                  value={editing.quantity}
+                                  onChange={(e) => {
+                                    const currentPackaging = isPackagingMaterial(
+                                      materialById.get(editing.materialId),
+                                    );
+                                    const quantityInput = Number(e.target.value);
+                                    const quantity = currentPackaging
+                                      ? Math.max(1, Math.round(quantityInput))
+                                      : quantityInput;
+                                    const ratioPercent = currentPackaging
+                                      ? 0
+                                      : selectedRecipeBatchSizeInBomUnit
+                                        ? (quantity / selectedRecipeBatchSizeInBomUnit) * 100
+                                        : 0;
+                                    setEditingBomRows((prev) => ({
+                                      ...prev,
+                                      [item.bomId]: {
+                                        ...prev[item.bomId],
+                                        quantity,
+                                        ratioPercent,
+                                      },
+                                    }));
+                                  }}
+                                />
+                                <span className="text-sm text-neutral-500">
+                                  {getBomQuantityUnit(
+                                    {
+                                      uomId: editing.uomId,
+                                      uomName:
+                                        materialById.get(editing.materialId)?.baseUomName ??
+                                        item.uomName,
                                     },
-                                  }));
-                                }}
-                              />
+                                    isPackagingMaterial(materialById.get(editing.materialId)),
+                                    selectedBomUnit,
+                                  )}
+                                </span>
+                              </div>
                             ) : (
-                              formatNumber(item.quantity)
+                              `${formatNumber(item.quantity)} ${quantityUnit}`
                             )}
                           </td>
                           <td className="text-right">
@@ -1362,7 +1457,9 @@ export default function Recipes() {
                                               Math.round(x.quantity || 1),
                                             )
                                           : x.quantity,
-                                        uomId: isPackaging ? 4 : 2,
+                                        uomId: isPackaging
+                                          ? material?.baseUomId ?? 8
+                                          : selectedBomUnit.uomId,
                                       }
                                     : x,
                                 ),
@@ -1428,39 +1525,51 @@ export default function Recipes() {
                           />
                         </td>
                         <td>
-                          <input
-                            type="number"
-                            step={
-                              isPackagingMaterial(
-                                materialById.get(row.materialId),
-                              )
-                                ? 1
-                                : 0.01
-                            }
-                            className="input"
-                            value={row.quantity}
-                            onChange={(e) => {
-                              const isPackaging = isPackagingMaterial(
-                                materialById.get(row.materialId),
-                              );
-                              const quantityInput = Number(e.target.value);
-                              const quantity = isPackaging
-                                ? Math.max(1, Math.round(quantityInput))
-                                : quantityInput;
-                              const ratioPercent = isPackaging
-                                ? 0
-                                : selectedRecipe?.batchSize
-                                  ? (quantity / selectedRecipe.batchSize) * 100
-                                  : 0;
-                              setBomDraftRows((prev) =>
-                                prev.map((x, i) =>
-                                  i === idx
-                                    ? { ...x, quantity, ratioPercent }
-                                    : x,
-                                ),
-                              );
-                            }}
-                          />
+                          <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+                            <input
+                              type="number"
+                              step={
+                                isPackagingMaterial(
+                                  materialById.get(row.materialId),
+                                )
+                                  ? 1
+                                  : 0.01
+                              }
+                              className="input"
+                              value={row.quantity}
+                              onChange={(e) => {
+                                const isPackaging = isPackagingMaterial(
+                                  materialById.get(row.materialId),
+                                );
+                                const quantityInput = Number(e.target.value);
+                                const quantity = isPackaging
+                                  ? Math.max(1, Math.round(quantityInput))
+                                  : quantityInput;
+                                const ratioPercent = isPackaging
+                                  ? 0
+                                  : selectedRecipeBatchSizeInBomUnit
+                                    ? (quantity / selectedRecipeBatchSizeInBomUnit) * 100
+                                    : 0;
+                                setBomDraftRows((prev) =>
+                                  prev.map((x, i) =>
+                                    i === idx
+                                      ? { ...x, quantity, ratioPercent }
+                                      : x,
+                                  ),
+                                );
+                              }}
+                            />
+                            <span className="text-sm text-neutral-500">
+                              {getBomQuantityUnit(
+                                {
+                                  uomId: row.uomId,
+                                  uomName: materialById.get(row.materialId)?.baseUomName,
+                                },
+                                isPackagingMaterial(materialById.get(row.materialId)),
+                                selectedBomUnit,
+                              )}
+                            </span>
+                          </div>
                         </td>
                         <td className="text-right">
                           <button
@@ -1503,25 +1612,25 @@ export default function Recipes() {
                 <table className="table">
                     <thead>
                       <tr>
-                        <th className="w-12 text-center text-[10px] uppercase">
+                        <th className="w-12 text-center text-[10px]">
                           Bước
                         </th>
-                        <th className="w-px whitespace-nowrap uppercase">
+                        <th className="w-px whitespace-nowrap">
                           Tên công đoạn
                         </th>
-                        <th className="uppercase">
+                        <th>
                           Nguyên liệu
                         </th>
-                        <th className="w-px whitespace-nowrap uppercase">
+                        <th className="w-px whitespace-nowrap">
                           Phòng sản xuất
                         </th>
-                        <th className="w-px whitespace-nowrap uppercase">
+                        <th className="w-px whitespace-nowrap">
                           Thiết bị
                         </th>
-                        <th className="w-px whitespace-nowrap uppercase">
+                        <th className="w-px whitespace-nowrap">
                           Điều kiện
                         </th>
-                        <th className="text-right w-20 uppercase">Thao tác</th>
+                        <th className="text-right w-16">Thao tác</th>
                       </tr>
                     </thead>
                   <tbody>

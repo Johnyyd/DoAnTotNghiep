@@ -3,11 +3,6 @@
    Schema Cơ sở dữ liệu cơ bản - v3.5 (Robust Build)
    ========================================================================= */
 
-CREATE DATABASE PharmaceuticalProcessingManagementSystem;
-USE PharmaceuticalProcessingManagementSystem;
---USE [PharmaceuticalProcessingManagementSystem];
-GO
-
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO
@@ -179,6 +174,7 @@ CREATE TABLE Recipes (
     MaterialId INT REFERENCES Materials(MaterialId),
     VersionNumber INT DEFAULT 1,
     BatchSize DECIMAL(18, 2) NOT NULL,
+    BatchUomId INT NULL REFERENCES UnitOfMeasure(UomId),
     Status NVARCHAR(50) DEFAULT 'Draft',
     ApprovedBy INT REFERENCES AppUsers(UserId),
     ApprovedDate DATETIME2,

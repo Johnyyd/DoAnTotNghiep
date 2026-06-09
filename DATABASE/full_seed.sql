@@ -25,7 +25,6 @@ PRINT 'Deleting existing data...';
 IF OBJECT_ID('ProductionOrderBom', 'U') IS NOT NULL DELETE FROM ProductionOrderBom;
 IF OBJECT_ID('BatchProcessParameterValue', 'U') IS NOT NULL DELETE FROM BatchProcessParameterValue;
 IF OBJECT_ID('StepParameters', 'U') IS NOT NULL DELETE FROM StepParameters;
-IF OBJECT_ID('QualityTests', 'U') IS NOT NULL DELETE FROM QualityTests;
 IF OBJECT_ID('SystemAuditLog', 'U') IS NOT NULL DELETE FROM SystemAuditLog;
 IF OBJECT_ID('MaterialUsage', 'U') IS NOT NULL DELETE FROM MaterialUsage;
 IF OBJECT_ID('BatchProcessLogs', 'U') IS NOT NULL DELETE FROM BatchProcessLogs;
@@ -125,7 +124,7 @@ BEGIN
     INSERT INTO StorageLocations (LocationId, LocationCode, LocationName, LocationType, TemperatureMin, TemperatureMax, HumidityMin, HumidityMax, CleanlinessStatus, IsQualified, Note)
     VALUES
     (1, 'KHO-NL-THUONG', N'Kho nguyên liệu điều kiện thường', N'Kho thường', 15, 30, 35, 75, N'Đạt vệ sinh kho GMP', 1, N'Dành cho bột, hạt, tá dược ổn định'),
-    (2, 'KHO-NL-MAT', N'Kho mát nguyên liệu nhạy nhiệt', N'Kho mát', 2, 8, 35, 65, N'Đạt vệ sinh kho GMP', 1, N'Dành cho nguyên liệu cần bảo quản lạnh/mát'),
+    (2, 'KHO-NL-MAT', N'Kho nguyên liệu lạnh', N'Kho mát', 2, 8, 35, 65, N'Đạt vệ sinh kho GMP', 1, N'Dành cho nguyên liệu cần bảo quản lạnh/mát'),
     (3, 'TU-HOA-CHAT', N'Tủ hóa chất và dung môi', N'Tủ chuyên dụng', 15, 25, 30, 60, N'Đạt, có kiểm soát an toàn', 1, N'Dành cho dung môi, chất dễ bay hơi hoặc cần cách ly'),
     (4, 'KHO-BAO-BI', N'Kho bao bì', N'Kho bao bì', 15, 30, 35, 75, N'Đạt vệ sinh kho GMP', 1, N'Dành cho chai, màng nhôm, PVC, vỏ nang');
     SET IDENTITY_INSERT StorageLocations OFF;
@@ -174,23 +173,23 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT Materials ON;
 INSERT INTO Materials (MaterialId, MaterialCode, MaterialName, Type, BaseUomId, IsActive, TechnicalSpecification, PhysicalForm, StorageCondition, MinStorageTemperature, MaxStorageTemperature, MinStorageHumidity, MaxStorageHumidity, MinPh, MaxPh, StorageNotes, CreatedAt) VALUES
-(1,  'NLC-3',   N'Cao khô Trinh nữ',                   'RawMaterial',  1, 1, N'TCCS', N'Bột cao khô', N'Bảo quản kín, khô, tránh ánh sáng', 15, 30, 35, 65, NULL, NULL, N'Đựng trong thùng/bao PE kín, kiểm soát hút ẩm', GETDATE()),
-(2,  'TD-1',    N'Aerosil',                            'RawMaterial',  2, 1, N'USP 30', N'Bột mịn', N'Bảo quản kín, khô', 15, 30, 35, 65, NULL, NULL, N'Rất nhẹ, cần tránh phát tán bụi', GETDATE()),
-(3,  'TD-3',    N'Sodium starch glycolate',            'RawMaterial',  1, 1, N'USP 30', N'Bột/hạt', N'Bảo quản kín, khô', 15, 30, 35, 65, NULL, NULL, N'Kiểm soát ẩm để tránh vón', GETDATE()),
-(4,  'TD-4',    N'Talc',                               'RawMaterial',  2, 1, N'DĐVN V', N'Bột', N'Bảo quản kín, khô', 15, 30, 35, 65, NULL, NULL, N'Tránh nhiễm chéo bụi', GETDATE()),
-(5,  'TD-5',    N'Magie Stearat',                      'RawMaterial',  2, 1, N'DĐVN V', N'Bột', N'Bảo quản kín, khô', 15, 30, 35, 65, NULL, NULL, N'Kiểm soát vón cục và tạp nhiễm', GETDATE()),
-(6,  'TD-8',    N'Tinh bột ngô',                       'RawMaterial',  1, 1, N'DĐVN V', N'Bột', N'Bảo quản kín, khô', 15, 30, 35, 65, NULL, NULL, N'Dễ hút ẩm, cần pallet cách nền', GETDATE()),
-(7,  'NLP-6',   N'Vỏ nang cứng',                       'RawMaterial',  4, 1, N'DĐVN V', N'Vỏ nang', N'Bảo quản mát, tránh ẩm', 15, 25, 35, 55, NULL, NULL, N'Tránh giòn/vỡ do độ ẩm quá thấp hoặc quá cao', GETDATE()),
-(8,  'PVP',     N'PVP K30',                            'RawMaterial',  1, 1, N'USP 30', N'Bột', N'Bảo quản kín, khô', 15, 30, 35, 65, NULL, NULL, N'Đóng kín ngay sau khi sử dụng', GETDATE()),
-(9,  'PARA',    N'Bột Paracetamol tinh khiết',         'RawMaterial',  1, 1, N'USP 30', N'Bột API', N'Bảo quản kín, khô, tránh ánh sáng', 15, 30, 35, 65, NULL, NULL, N'API cần khu biệt và nhãn trạng thái rõ', GETDATE()),
-(10, 'LAC',     N'Lactose kết dính',                   'RawMaterial',  1, 1, N'USP 30', N'Bột', N'Bảo quản kín, khô', 15, 30, 35, 65, NULL, NULL, N'Kiểm soát ẩm', GETDATE()),
-(11, 'WATER',   N'Nước cất pha tiêm',                  'RawMaterial',  3, 1, N'DĐVN V', N'Lỏng', N'Bảo quản trong bao bì kín, sạch', 15, 30, NULL, NULL, 5.0, 7.0, N'Theo dõi pH và vi sinh nếu áp dụng', GETDATE()),
-(12, 'AMP',     N'Ống thủy tinh 2ml',                  'Packaging',    8, 1, N'USP 30', N'Bao bì thủy tinh', N'Bảo quản sạch, khô', 15, 30, 35, 75, NULL, NULL, N'Tránh vỡ, bụi và tạp nhiễm', GETDATE()),
-(13, 'ALU',     N'Màng nhôm ép vỉ',                    'Packaging',    1, 1, N'DĐVN V', N'Cuộn màng', N'Bảo quản sạch, khô', 15, 30, 35, 75, NULL, NULL, N'Bảo quản nguyên cuộn, chống trầy xước', GETDATE()),
-(14, 'PVC',     N'Màng PVC trong suốt',                'Packaging',    1, 1, N'DĐVN V', N'Cuộn màng', N'Bảo quản sạch, khô', 15, 30, 35, 75, NULL, NULL, N'Tránh nhiệt cao làm biến dạng', GETDATE()),
-(15, 'TP-CRILA',N'Crila',                              'FinishedGood', 4, 1, N'DĐVN V', N'Viên nang', N'Bảo quản thành phẩm theo nhãn', 15, 30, 35, 75, NULL, NULL, N'Theo tiêu chuẩn thành phẩm', GETDATE()),
-(16, 'TP-PARA', N'Paracetamol',                        'FinishedGood', 4, 1, N'DĐVN V', N'Viên nén', N'Bảo quản thành phẩm theo nhãn', 15, 30, 35, 75, NULL, NULL, N'Theo tiêu chuẩn thành phẩm', GETDATE()),
-(17, 'TP-DIPY', N'Dipyridamole',                       'FinishedGood', 4, 1, N'DĐVN V', N'Dung dịch tiêm', N'Bảo quản thành phẩm theo nhãn', 15, 30, NULL, NULL, 5.0, 7.0, N'Theo tiêu chuẩn thành phẩm', GETDATE());
+(1,  'NLC-3',   N'Cao khô Trinh nữ',                   'RawMaterial',  1, 1, N'TCCS',   N'Bột', N'Bảo quản kín, khô, tránh ánh sáng', 15, 30, 35, 65, 5.5, 8.0, N'Đựng trong thùng/bao PE kín, kiểm soát hút ẩm', GETDATE()),
+(2,  'TD-1',    N'Aerosil',                            'RawMaterial',  2, 1, N'USP 30', N'Bột', N'Bảo quản kín, khô', 15, 30, 35, 65, 5.5, 8.0, N'Rất nhẹ, cần tránh phát tán bụi', GETDATE()),
+(3,  'TD-3',    N'Sodium starch glycolate',            'RawMaterial',  1, 1, N'USP 30', N'Bột', N'Bảo quản kín, khô', 15, 30, 35, 65, 5.5, 8.0, N'Kiểm soát ẩm để tránh vón', GETDATE()),
+(4,  'TD-4',    N'Talc',                               'RawMaterial',  2, 1, N'DĐVN V', N'Bột', N'Bảo quản kín, khô', 15, 30, 35, 65, 5.5, 8.0, N'Tránh nhiễm chéo bụi', GETDATE()),
+(5,  'TD-5',    N'Magie Stearat',                      'RawMaterial',  2, 1, N'DĐVN V', N'Bột', N'Bảo quản kín, khô', 15, 30, 35, 65, 5.5, 8.0, N'Kiểm soát vón cục và tạp nhiễm', GETDATE()),
+(6,  'TD-8',    N'Tinh bột ngô',                       'RawMaterial',  1, 1, N'DĐVN V', N'Bột', N'Bảo quản kín, khô', 15, 30, 35, 65, 5.5, 8.0, N'Dễ hút ẩm, cần pallet cách nền', GETDATE()),
+(7,  'NLP-6',   N'Vỏ nang cứng',                       'RawMaterial',  4, 1, N'DĐVN V', N'Vỏ nang', N'Bảo quản mát, tránh ẩm', 15, 25, 35, 55, 5.5, 8.0, N'Tránh giòn/vỡ do độ ẩm quá thấp hoặc quá cao', GETDATE()),
+(8,  'PVP',     N'PVP K30',                            'RawMaterial',  1, 1, N'USP 30', N'Bột', N'Bảo quản kín, khô', 15, 30, 35, 65, 5.5, 8.0, N'Đóng kín ngay sau khi sử dụng', GETDATE()),
+(9,  'PARA',    N'Bột Paracetamol tinh khiết',         'RawMaterial',  1, 1, N'USP 30', N'Bột', N'Bảo quản kín, khô, tránh ánh sáng', 15, 30, 35, 65, 5.5, 8.0, N'', GETDATE()),
+(10, 'LAC',     N'Lactose kết dính',                   'RawMaterial',  1, 1, N'USP 30', N'Bột', N'Bảo quản kín, khô', 15, 30, 35, 65, 5.5, 8.0, N'Kiểm soát ẩm', GETDATE()),
+(11, 'WATER',   N'Nước cất pha tiêm',                  'RawMaterial',  3, 1, N'DĐVN V', N'Lỏng', N'Bảo quản trong bao bì kín, sạch', 15, 30, NULL, NULL, 5.5, 7.0, N'Theo dõi pH và vi sinh nếu áp dụng', GETDATE()),
+(12, 'AMP',     N'Ống thủy tinh 2ml',                  'Packaging',    8, 1, N'USP 30', N'Bao bì thủy tinh', N'Bảo quản sạch, khô', 15, 30, 35, 75, 6.0, 8.0, N'Tránh vỡ, bụi và tạp nhiễm', GETDATE()),
+(13, 'ALU',     N'Màng nhôm ép vỉ',                    'Packaging',    1, 1, N'DĐVN V', N'Cuộn màng', N'Bảo quản sạch, khô', 15, 30, 35, 75, 6.0, 8.0, N'Bảo quản nguyên cuộn, chống trầy xước', GETDATE()),
+(14, 'PVC',     N'Màng PVC trong suốt',                'Packaging',    1, 1, N'DĐVN V', N'Cuộn màng', N'Bảo quản sạch, khô', 15, 30, 35, 75, 6.0, 8.0, N'Tránh nhiệt cao làm biến dạng', GETDATE()),
+(15, 'TP-CRILA',N'Crila',                              'FinishedGood', 4, 1, N'DĐVN V', N'Viên nang', N'Bảo quản thành phẩm theo nhãn', 15, 30, 35, 75, 5.5, 8.0, N'Theo tiêu chuẩn thành phẩm', GETDATE()),
+(16, 'TP-PARA', N'Paracetamol',                        'FinishedGood', 4, 1, N'DĐVN V', N'Viên nén', N'Bảo quản thành phẩm theo nhãn', 15, 30, 35, 75, 5.5, 8.0, N'Theo tiêu chuẩn thành phẩm', GETDATE()),
+(17, 'TP-DIPY', N'Dipyridamole',                       'FinishedGood', 4, 1, N'DĐVN V', N'Dung dịch tiêm', N'Bảo quản thành phẩm theo nhãn', 15, 30, NULL, NULL, 5.5, 7.0, N'Theo tiêu chuẩn thành phẩm', GETDATE());
 SET IDENTITY_INSERT Materials OFF;
 GO
 
@@ -198,11 +197,10 @@ GO
 -- 7. Recipes
 -- =====================================================================
 SET IDENTITY_INSERT Recipes ON;
-INSERT INTO Recipes (RecipeId, MaterialId, VersionNumber, BatchSize, Status, ApprovedBy, ApprovedDate, CreatedAt, EffectiveDate, RecipeName, Note) VALUES
-(1, 15, 1, 540.00,  'Approved', 2, DATEADD(DAY,-30,GETDATE()), DATEADD(DAY,-45,GETDATE()), DATEADD(DAY,-25,GETDATE()), N'Viên nang', N'NLC 3 mẻ 540mg/viên.'),
-(2, 16, 2, 495.00, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Viên nén', N'Paracetamol 495mg/viên.'),
-(4, 17, 1, 2.00, 'Approved', 2, DATEADD(DAY,-18,GETDATE()), DATEADD(DAY,-28,GETDATE()), DATEADD(DAY,-12,GETDATE()), N'Thuốc ống Dipyridamole', N'Dung dịch tiêm 2ml/ống.'),
-(5, 16, 1, 500.00, 'Approved', 2, DATEADD(DAY,-15,GETDATE()), DATEADD(DAY,-25,GETDATE()), DATEADD(DAY,-10,GETDATE()), N'Viên nén Paracetamol', N'Paracetamol 500mg/viên.');
+INSERT INTO Recipes (RecipeId, MaterialId, VersionNumber, BatchSize, BatchUomId, Status, ApprovedBy, ApprovedDate, CreatedAt, EffectiveDate, RecipeName, Note) VALUES
+(1, 15, 1, 540.00, 9, 'Approved', 2, DATEADD(DAY,-30,GETDATE()), DATEADD(DAY,-45,GETDATE()), DATEADD(DAY,-25,GETDATE()), N'Viên nang', N'NLC 3 mẻ 540mg/viên.'),
+(2, 16, 2, 495.00, 9, 'Approved', 2, DATEADD(DAY,-20,GETDATE()), DATEADD(DAY,-35,GETDATE()), DATEADD(DAY,-15,GETDATE()), N'Viên nén', N'Paracetamol 495mg/viên.'),
+(4, 17, 1, 2.00, 10, 'Approved', 2, DATEADD(DAY,-18,GETDATE()), DATEADD(DAY,-28,GETDATE()), DATEADD(DAY,-12,GETDATE()), N'Thuốc ống Dipyridamole', N'Dung dịch tiêm 2ml/ống.');
 SET IDENTITY_INSERT Recipes OFF;
 GO
 
@@ -211,19 +209,19 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT RecipeBOM ON;
 INSERT INTO RecipeBOM (BomId, RecipeId, MaterialId, Quantity, UomId, WastePercentage, Note) VALUES
-(1,  1, 1,  250.00, 2, 0.20, N'NLC 3'),
+(1,  1, 1,  250.00, 9, 0.20, N'NLC 3'),
 
-(2,  1, 2,    1.62,  2, 0.10, N'Aerosil'),
-(3,  1, 3,   29.70,  2, 0.20, N'SSG'),
-(4,  1, 4,    4.05,  2, 0.10, N'Talc'),
-(5,  1, 5,    4.05,  2, 0.10, N'Magnesi stearat'),
-(6,  1, 6,  250.58, 2, 0.50, N'Tinh bột'),
+(2,  1, 2,    1.62,  9, 0.10, N'Aerosil'),
+(3,  1, 3,   29.70,  9, 0.20, N'SSG'),
+(4,  1, 4,    4.05,  9, 0.10, N'Talc'),
+(5,  1, 5,    4.05,  9, 0.10, N'Magnesi stearat'),
+(6,  1, 6,  250.58, 9, 0.50, N'Tinh bột'),
 (7,  1, 7,    1.00, 4, 0.00,   N'Vỏ nang'),
-(8,  2, 9,  250.00, 2, 0.30, N'Paracetamol'),
-(9,  2, 6,  150.00, 2, 1.00, N'Tinh bột ngô'),
-(10, 2, 10,  80.00, 2, 0.50,  N'Lactose'),
-(11, 2, 5,    5.00, 2, 0.10,  N'Magie stearat'),
-(12, 2, 8,   10.00, 2, 0.20,  N'PVP K30');
+(8,  2, 9,  250.00, 9, 0.30, N'Paracetamol'),
+(9,  2, 6,  150.00, 9, 1.00, N'Tinh bột ngô'),
+(10, 2, 10,  80.00, 9, 0.50,  N'Lactose'),
+(11, 2, 5,    5.00, 9, 0.10,  N'Magie stearat'),
+(12, 2, 8,   10.00, 9, 0.20,  N'PVP K30');
 SET IDENTITY_INSERT RecipeBOM OFF;
 GO
 
@@ -246,14 +244,7 @@ INSERT INTO RecipeRouting (RoutingId, RecipeId, OrderId, StepNumber, StepName, D
 (11, 4, NULL, 2, N'Lọc vô trùng', NULL, 45, N'Lọc qua màng lọc 0.22 micron.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (12, 4, NULL, 3, N'Đóng ống - Hàn ống', NULL, 120, N'Đóng 2ml/ống, hàn kín bằng ngọn lửa.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (13, 4, NULL, 4, N'Tiệt trùng', NULL, 90, N'Tiệt trùng bằng hơi nước (Autoclave) 121°C.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(14, 4, NULL, 5, N'Soi kiểm tra', NULL, 180, N'Kiểm tra độ trong và các vật thể lạ bằng mắt.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
--- Recipe 5: Viên nén Paracetamol (New)
-(15, 5, NULL, 1, N'Cân nguyên liệu', 1, 90, N'Cân Paracetamol và tá dược.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(16, 5, NULL, 2, N'Trộn khô', 3, 15, N'Trộn đều bột Paracetamol và tá dược độn.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(17, 5, NULL, 3, N'Tạo hạt ướt', NULL, 60, N'Thêm dung dịch PVP K30 tạo khối ẩm.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(18, 5, NULL, 4, N'Sấy hạt tầng sôi', 2, 120, N'Sấy hạt đến khi độ ẩm đạt < 5%. CÓ THỂ LẶP LẠI NẾU CẦN.', 2, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(19, 5, NULL, 5, N'Sửa hạt', NULL, 60, N'Rây hạt qua lưới rây chuẩn.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(20, 5, NULL, 6, N'Dập viên', 4, 180, N'Dập viên nén 500mg.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+(14, 4, NULL, 5, N'Soi kiểm tra', NULL, 180, N'Kiểm tra độ trong và các vật thể lạ bằng mắt.', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 SET IDENTITY_INSERT RecipeRouting OFF;
 GO
 
@@ -304,29 +295,29 @@ GO
 INSERT INTO ProductionOrderBom (OrderId, MaterialId, UomId, RequiredQuantity, WastePercentage, DispensingStatus, Note) VALUES
 -- PO-26-001 (OrderId 1, Recipe 1, 100k viên)
 (1, 1, 1, 25.0500, 0.20, 'Dispensed', N'Cao khô NLC3'),
-(1, 2, 1, 0.1622, 0.10, 'Dispensed', N'Aerosil'),
+(1, 2, 2, 162.1620, 0.10, 'Dispensed', N'Aerosil'),
 (1, 3, 1, 2.9760, 0.20, 'Dispensed', N'SSG'),
-(1, 4, 1, 0.4054, 0.10, 'Dispensed', N'Talc'),
-(1, 5, 1, 0.4054, 0.10, 'Dispensed', N'Magnesi stearat'),
+(1, 4, 2, 405.4050, 0.10, 'Dispensed', N'Talc'),
+(1, 5, 2, 405.4050, 0.10, 'Dispensed', N'Magnesi stearat'),
 (1, 6, 1, 25.1833, 0.50, 'Dispensed', N'Tinh bột'),
 -- PO-26-002 (OrderId 2, Recipe 1, 300k viên)
 (2, 1, 1, 75.1500, 0.20, 'Pending', N'Cao khô NLC3'),
-(2, 2, 1, 0.4865, 0.10, 'Pending', N'Aerosil'),
+(2, 2, 2, 486.4860, 0.10, 'Pending', N'Aerosil'),
 (2, 3, 1, 8.9280, 0.20, 'Pending', N'SSG'),
-(2, 4, 1, 1.2162, 0.10, 'Pending', N'Talc'),
-(2, 5, 1, 1.2162, 0.10, 'Pending', N'Magnesi stearat'),
+(2, 4, 2, 1216.2150, 0.10, 'Pending', N'Talc'),
+(2, 5, 2, 1216.2150, 0.10, 'Pending', N'Magnesi stearat'),
 (2, 6, 1, 75.5499, 0.50, 'Pending', N'Tinh bột'),
 -- PO-26-004 (OrderId 4, Recipe 2, 200k viên)
 (4, 9, 1, 50.1500, 0.30, 'Pending', N'Paracetamol'),
 (4, 6, 1, 30.3000, 1.00, 'Pending', N'Tinh bột ngô'),
 (4, 10, 1, 16.0800, 0.50, 'Pending', N'Lactose'),
-(4, 5, 1, 1.0010, 0.10, 'Pending', N'Magie stearat'),
+(4, 5, 2, 1001.0000, 0.10, 'Pending', N'Magie stearat'),
 (4, 8, 1, 2.0040, 0.20, 'Pending', N'PVP K30'),
 -- PO-26-007 (OrderId 7, Recipe 2, 200k viên)
 (7, 9, 1, 50.1500, 0.30, 'Dispensed', N'Paracetamol'),
 (7, 6, 1, 30.3000, 1.00, 'Dispensed', N'Tinh bột ngô'),
 (7, 10, 1, 16.0800, 0.50, 'Dispensed', N'Lactose'),
-(7, 5, 1, 1.0010, 0.10, 'Dispensed', N'Magie stearat'),
+(7, 5, 2, 1001.0000, 0.10, 'Dispensed', N'Magie stearat'),
 (7, 8, 1, 2.0040, 0.20, 'Dispensed', N'PVP K30');
 GO
 
@@ -358,20 +349,20 @@ GO
 -- =====================================================================
 SET IDENTITY_INSERT InventoryLots ON;
 INSERT INTO InventoryLots (LotId, MaterialId, LotNumber, QuantityCurrent, ManufactureDate, ExpiryDate, SupplierLotNumber, SupplierName, ContainerType, ContainerCount, QcStatus, CoaFilePath, ReleasedBy, ReleasedAt, LocationId, CreatedAt) VALUES
-(1, 1, 'L-NLC3-01', 2.00, DATEADD(DAY,-60,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-NLC3-2026-01', N'Dược liệu TW', N'Thùng carton lót PE', 2, 'Released', N'/certificates/materials/NLC-3.png', 2, DATEADD(DAY,-55,GETDATE()), 1, GETDATE()),
-(2, 2, 'L-AEROSIL-01', 5.00, DATEADD(DAY,-55,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-AER-2026-01', N'Nhà cung cấp A', N'Thùng kín', 1, 'Released', N'/certificates/materials/TD-1.png', 2, DATEADD(DAY,-50,GETDATE()), 1, GETDATE()),
+(1, 1, 'L-NLC3-01', 20.00, DATEADD(DAY,-60,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-NLC3-2026-01', N'Dược liệu TW', N'Thùng carton lót PE', 2, 'Released', N'/certificates/materials/NLC-3.png', 2, DATEADD(DAY,-55,GETDATE()), 1, GETDATE()),
+(2, 2, 'L-AEROSIL-01', 500.00, DATEADD(DAY,-55,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-AER-2026-01', N'Nhà cung cấp A', N'Thùng kín', 1, 'Released', N'/certificates/materials/TD-1.png', 2, DATEADD(DAY,-50,GETDATE()), 1, GETDATE()),
 (3, 3, 'L-SSG-01', 3.00, DATEADD(DAY,-50,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-SSG-2026-01', N'Nhà cung cấp B', N'Bao PE trong thùng', 2, 'Released', N'/certificates/materials/TD-3.png', 2, DATEADD(DAY,-45,GETDATE()), 1, GETDATE()),
-(4, 4, 'L-TALC-01', 5.00, DATEADD(DAY,-45,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-TALC-2026-01', N'Nhà cung cấp C', N'Thùng kín', 1, 'Released', N'/certificates/materials/TD-4.png', 5, DATEADD(DAY,-40,GETDATE()), 1, GETDATE()),
-(5, 5, 'L-MAGIE-01', 3.00, DATEADD(DAY,-40,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-MAG-2026-01', N'Nhà cung cấp D', N'Thùng kín', 1, 'Released', N'/certificates/materials/TD-5.png', 5, DATEADD(DAY,-35,GETDATE()), 1, GETDATE()),
+(4, 4, 'L-TALC-01', 5000.00, DATEADD(DAY,-45,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-TALC-2026-01', N'Nhà cung cấp C', N'Thùng kín', 1, 'Released', N'/certificates/materials/TD-4.png', 5, DATEADD(DAY,-40,GETDATE()), 1, GETDATE()),
+(5, 5, 'L-MAGIE-01', 3000.00, DATEADD(DAY,-40,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-MAG-2026-01', N'Nhà cung cấp D', N'Thùng kín', 1, 'Released', N'/certificates/materials/TD-5.png', 5, DATEADD(DAY,-35,GETDATE()), 1, GETDATE()),
 (6, 6, 'L-STR-01', 2.00, DATEADD(DAY,-45,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'SUP-STR-2026-01', N'Đồng Nai', N'Bao giấy Kraft lót PE', 2, 'Released', N'/certificates/materials/TD-8.png', 2, DATEADD(DAY,-40,GETDATE()), 1, GETDATE()),
 (7, 7, 'L-NANG-01', 10000.00, DATEADD(DAY,-35,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-CAP-2026-01', N'Nhà cung cấp E', N'Thùng carton kín', 5, 'Released', N'/certificates/materials/NLP-6.png', 2, DATEADD(DAY,-30,GETDATE()), 2, GETDATE()),
 (8, 8, 'L-PVP-01', 10.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-PVP-2026-01', N'Nhà cung cấp F', N'Thùng kín', 2, 'Released', N'/certificates/materials/PVP.png', 5, DATEADD(DAY,-28,GETDATE()), 1, GETDATE()),
-(9, 9, 'L-PARA-01', 3.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'SUP-PARA-2026-01', N'Ấn Độ', N'Thùng API niêm phong', 1, 'PendingQC', N'/certificates/materials/PARA.png', NULL, NULL, 1, GETDATE()),
+(9, 9, 'L-PARA-01', 300.00, DATEADD(DAY,-30,GETDATE()), DATEADD(YEAR,2,GETDATE()), 'SUP-PARA-2026-01', N'Ấn Độ', N'Thùng API niêm phong', 1, 'PendingQC', N'/certificates/materials/PARA.png', NULL, NULL, 1, GETDATE()),
 (10, 10, 'L-LAC-01', 15.00, DATEADD(DAY,-25,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-LAC-2026-01', N'Nhà cung cấp G', N'Bao PE trong thùng', 3, 'Released', N'/certificates/materials/LAC.png', 2, DATEADD(DAY,-20,GETDATE()), 1, GETDATE()),
 (11, 13, 'L-ALU-01', 20.00, DATEADD(DAY,-20,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-ALU-2026-01', N'Nhà cung cấp H', N'Cuộn trong thùng', 4, 'Released', N'/certificates/materials/ALU.png', 5, DATEADD(DAY,-18,GETDATE()), 4, GETDATE()),
 (12, 14, 'L-PVC-01', 20.00, DATEADD(DAY,-15,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-PVC-2026-01', N'Nhà cung cấp I', N'Cuộn trong thùng', 4, 'Released', N'/certificates/materials/PVC.png', 5, DATEADD(DAY,-12,GETDATE()), 4, GETDATE()),
-(15, 11, 'L-WATER-01', 100.00, DATEADD(DAY,-5,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-WFI-2026-01', N'Nhà cung cấp J', N'Can nhựa vô trùng', 10, 'Released', N'/certificates/materials/WATER.png', 2, DATEADD(DAY,-4,GETDATE()), 3, GETDATE()),
-(16, 12, 'L-AMP-01', 50.00, DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-AMP-2026-01', N'Nhà cung cấp K', N'Thùng carton chống vỡ', 8, 'Released', N'/certificates/materials/AMP.png', 5, DATEADD(DAY,-1,GETDATE()), 4, GETDATE()),
+(15, 11, 'L-WATER-01', 10.00, DATEADD(DAY,-5,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-WFI-2026-01', N'Nhà cung cấp J', N'Can nhựa vô trùng', 10, 'Released', N'/certificates/materials/WATER.png', 2, DATEADD(DAY,-4,GETDATE()), 3, GETDATE()),
+(16, 12, 'L-AMP-01', 5000.00, DATEADD(DAY,-2,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-AMP-2026-01', N'Nhà cung cấp K', N'Thùng carton chống vỡ', 8, 'Released', N'/certificates/materials/AMP.png', 5, DATEADD(DAY,-1,GETDATE()), 4, GETDATE()),
 (17, 13, 'L-ALU-02', 12.00, DATEADD(DAY,-1,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-ALU-2026-02', N'Nhà cung cấp H2', N'Cuộn trong thùng', 2, 'PendingQC', N'/certificates/materials/ALU.png', NULL, NULL, 4, GETDATE()),
 (18, 14, 'L-PVC-02', 14.00, DATEADD(DAY,-1,GETDATE()), DATEADD(YEAR,3,GETDATE()), 'SUP-PVC-2026-02', N'Nhà cung cấp I2', N'Cuộn trong thùng', 2, 'PendingQC', N'/certificates/materials/PVC.png', NULL, NULL, 4, GETDATE());
 SET IDENTITY_INSERT InventoryLots OFF;
@@ -455,12 +446,12 @@ UPDATE Materials SET BaseUomId = @UomCaiId WHERE MaterialCode = 'AMP' AND @UomCa
 
 -- Ensure ALU/PVC materials exist
 IF NOT EXISTS (SELECT 1 FROM Materials WHERE MaterialCode = 'ALU')
-    INSERT INTO Materials (MaterialCode, MaterialName, Type, BaseUomId, IsActive, TechnicalSpecification, CreatedAt)
-    VALUES ('ALU', N'Màng nhôm ép vỉ', 'Packaging', 1, 1, N'ĐĐVN V', GETDATE());
+    INSERT INTO Materials (MaterialCode, MaterialName, Type, BaseUomId, IsActive, TechnicalSpecification, MinPh, MaxPh, CreatedAt)
+    VALUES ('ALU', N'Màng nhôm ép vỉ', 'Packaging', 1, 1, N'ĐĐVN V', 6.0, 8.0, GETDATE());
 
 IF NOT EXISTS (SELECT 1 FROM Materials WHERE MaterialCode = 'PVC')
-    INSERT INTO Materials (MaterialCode, MaterialName, Type, BaseUomId, IsActive, TechnicalSpecification, CreatedAt)
-    VALUES ('PVC', N'Màng PVC trong suốt', 'Packaging', 1, 1, N'ĐĐVN V', GETDATE());
+    INSERT INTO Materials (MaterialCode, MaterialName, Type, BaseUomId, IsActive, TechnicalSpecification, MinPh, MaxPh, CreatedAt)
+    VALUES ('PVC', N'Màng PVC trong suốt', 'Packaging', 1, 1, N'ĐĐVN V', 6.0, 8.0, GETDATE());
 
 -- Ensure ALU/PVC have inventory lots
 DECLARE @MatAluId INT = (SELECT TOP 1 MaterialId FROM Materials WHERE MaterialCode = 'ALU');
