@@ -275,15 +275,29 @@ class _DryingStepScreenState extends State<DryingStepScreen>
             }
             _tempCtrl.text = params['nhietDo'] ?? '';
             _humidCtrl.text = params['doAm'] ?? '';
-            _timeCtrl.text = params['thoiGianKiemTra'] ?? '';
+            
+            final loadedCheckTime = params['thoiGianCheck'] ?? params['thoiGianKiemTra'];
+            if (loadedCheckTime != null && loadedCheckTime.toString().isNotEmpty) {
+              _timeCtrl.text = loadedCheckTime.toString();
+            }
+            
             _pressCtrl.text = params['apLuc'] ?? '';
             if (params['mayKhongTai'] != null) {
               _mayKhongTai = params['mayKhongTai'];
             }
             _tempInCtrl.text = params['nhietDoKhiVao'] ?? '';
             _tempOutCtrl.text = params['nhietDoKhiRa'] ?? '';
-            _timeStartCtrl.text = params['batDauSay'] ?? '';
-            _timeEndCtrl.text = params['ketThucSay'] ?? '';
+            
+            final loadedStartTime = params['batDauSay'];
+            if (loadedStartTime != null && loadedStartTime.toString().isNotEmpty) {
+              _timeStartCtrl.text = loadedStartTime.toString();
+            }
+            
+            final loadedEndTime = params['ketThucSay'];
+            if (loadedEndTime != null && loadedEndTime.toString().isNotEmpty) {
+              _timeEndCtrl.text = loadedEndTime.toString();
+            }
+            
             _humidAfterCtrl.text = params['doAmSauSay'] ?? '';
             _slTruocCtrl.text = params['slTruocSay'] ?? '';
             _slSauCtrl.text = params['slSauSay'] ?? '';

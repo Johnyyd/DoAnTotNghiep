@@ -92,34 +92,52 @@ mixin GmpStepMixin<T extends StatefulWidget> on State<T> {
 
     String status = 'none';
 
+    double? min;
+    double? max;
+    
     if (sp != null) {
-      final min = sp['minValue'] != null ? (sp['minValue'] as num).toDouble() : null;
-      final max = sp['maxValue'] != null ? (sp['maxValue'] as num).toDouble() : null;
+      min = sp['minValue'] != null ? double.tryParse(sp['minValue'].toString()) : null;
+      max = sp['maxValue'] != null ? double.tryParse(sp['maxValue'].toString()) : null;
+      
+      if (min == null && max == null && sp['standardValue'] != null) {
+         final sv = sp['standardValue'].toString();
+         final rangeMatch = RegExp(r'(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)').firstMatch(sv);
+         if (rangeMatch != null) {
+           min = double.tryParse(rangeMatch.group(1)!);
+           max = double.tryParse(rangeMatch.group(2)!);
+         } else {
+           final gteMatch = RegExp(r'>=\s*(\d+(?:\.\d+)?)').firstMatch(sv);
+           if (gteMatch != null) min = double.tryParse(gteMatch.group(1)!);
+           
+           final lteMatch = RegExp(r'<=\s*(\d+(?:\.\d+)?)').firstMatch(sv);
+           if (lteMatch != null) max = double.tryParse(lteMatch.group(1)!);
+         }
+      }
+    }
 
-      if (min != null && val < min) status = 'error';
-      if (max != null && val > max) status = 'error';
-    } else {
-      // 2. Logic dự phòng: Nếu không có tham số trong DB, áp dụng quy tắc mặc định (Giống Sấy TD 8)
-      // Chỉ áp dụng cho thông số PHÒNG/MÔI TRƯỜNG, không áp dụng cho NGUYÊN LIỆU (sau sấy, thực tế...)
+    if (min == null && max == null) {
       final isRoom = lookupName.contains('phòng') || lookupName.contains('room') || lookupName.contains('môi trường');
       final isMaterial = lookupName.contains('sau sấy') || lookupName.contains('thực tế') || lookupName.contains('nguyên liệu') || lookupName.contains('thành phẩm');
 
       if (isRoom && !isMaterial) {
         if (lookupName.contains('áp lực') || lookupName.contains('pressure')) {
-          if (val < 10) status = 'error';
-          else status = 'valid';
+          min = 10;
         } else if (lookupName.contains('nhiệt độ') || lookupName.contains('temperature')) {
-          if (val < 21 || val > 25) status = 'error';
-          else status = 'valid';
+          min = 21; max = 25;
         } else if (lookupName.contains('độ ẩm') || lookupName.contains('humidity')) {
-          if (val < 45 || val > 70) status = 'error';
-          else status = 'valid';
+          min = 45; max = 70;
         }
       } else if (lookupName.contains('áp lực') || lookupName.contains('pressure')) {
-        // Áp lực phòng đọc (kể cả không ghi chữ phòng) vẫn mặc định >= 10 Pa
-        if (val < 10) status = 'error';
-        else status = 'valid';
+        min = 10;
       }
+    }
+
+    if (min != null && val < min) {
+      status = 'error';
+    } else if (max != null && val > max) {
+      status = 'error';
+    } else if (min != null || max != null) {
+      status = 'valid';
     }
     
     debugPrint("Validation [$fieldKey]: val=$val, status=$status (Matched: ${sp?['parameterName'] ?? 'Default'})");

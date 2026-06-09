@@ -216,10 +216,23 @@ class _MixingStepScreenState extends State<MixingStepScreen>
           if (params['veSinhDungCu'] != null) _dungCu = params['veSinhDungCu'];
           _tempCtrl.text = params['nhietDo'] ?? '';
           _humidCtrl.text = params['doAm'] ?? '';
-          _timeCtrl.text = params['thoiGianKiemTra'] ?? '';
+          
+          final loadedCheckTime = params['thoiGianCheck'] ?? params['thoiGianKiemTra'];
+          if (loadedCheckTime != null && loadedCheckTime.toString().isNotEmpty) {
+            _timeCtrl.text = loadedCheckTime.toString();
+          }
+          
           _pressCtrl.text = params['apLuc'] ?? '';
-          _timeStartCtrl.text = params['tgBatDau'] ?? '';
-          _timeEndCtrl.text = params['tgKetThuc'] ?? '';
+          
+          final loadedStartTime = params['tgBatDau'];
+          if (loadedStartTime != null && loadedStartTime.toString().isNotEmpty) {
+            _timeStartCtrl.text = loadedStartTime.toString();
+          }
+          
+          final loadedEndTime = params['tgKetThuc'];
+          if (loadedEndTime != null && loadedEndTime.toString().isNotEmpty) {
+            _timeEndCtrl.text = loadedEndTime.toString();
+          }
           _tgCaiDatCtrl.text = params['tgCaiDat'] ?? '';
           _tocDoCaiDatCtrl.text = params['tocDoCaiDat'] ?? '';
           _tgThucTeCtrl.text = params['tgThucTe'] ?? '';

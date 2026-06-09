@@ -151,10 +151,14 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
           _tempCtrl.text = params['temperature'] ?? '';
           _humidCtrl.text = params['humidity'] ?? '';
           _pressCtrl.text = params['pressure'] ?? '';
+
+          final loadedCheckTime = params['checkTime'];
+          if (loadedCheckTime != null && loadedCheckTime.toString().isNotEmpty) {
+            _checkTimeCtrl.text = loadedCheckTime.toString();
+          }
+
           if (params['phongPhaChe'] != null)
             _phongPhaChe = params['phongPhaChe'];
-          if (params['checkTime'] != null)
-            _checkTimeCtrl.text = params['checkTime'];
           if (params['canIW2'] != null) _canIW2 = params['canIW2'];
           if (params['canPMA'] != null) _canPMA = params['canPMA'];
           if (params['dungCuCan'] != null) _dungCuCan = params['dungCuCan'];
