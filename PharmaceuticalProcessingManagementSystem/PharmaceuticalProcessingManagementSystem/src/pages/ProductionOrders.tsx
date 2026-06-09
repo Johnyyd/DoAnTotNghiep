@@ -4,7 +4,7 @@ import { certificatesApi, inventoryApi, productionBatchesApi, productionOrdersAp
 import { Calculator, CheckCircle2, ClipboardList, FileCheck2, Layers, Pencil, Search, Trash2, Upload, X } from 'lucide-react';
 import { formatNumber, formatDate, formatRecipeBatchSize, isRecipeLiquid } from '@/utils/format';
 
-type OrderStatus = 'Draft' | 'Approved' | 'InProcess' | 'Hold' | 'Completed';
+type OrderStatus = 'Draft' | 'Approved' | 'In-Process' | 'Pending Worker' | 'Hold' | 'Completed';
 
 interface UiProductionOrder {
   orderId: number;
@@ -438,12 +438,12 @@ export default function ProductionOrders() {
     setShowOrderModal(true);
   };
 
+  const allStatuses: OrderStatus[] = ['Draft', 'Approved', 'Pending Worker', 'In-Process', 'Hold', 'Completed'];
+
   const openBatchPopup = (order: UiProductionOrder) => {
     setBatchPopupOrderId(order.orderId);
     setBatchPopupLabel(`${order.orderCode} — ${order.recipeName ?? ''}`);
   };
-
-  const allStatuses: OrderStatus[] = ['Draft', 'Approved', 'InProcess', 'Hold', 'Completed'];
 
   return (
     <div className="space-y-6">
@@ -613,8 +613,8 @@ export default function ProductionOrders() {
                           <button onClick={() => openEditOrder(order)} className="btn-ghost text-sm"><Pencil className="w-4 h-4 mr-1" />Sá»­a</button>
                         )}
                         <button onClick={() => {
-                          if (order.status === 'Completed') {
-                            alert('Lệnh này đã hoàn thành, không thể xoá!');
+                          if (order.status === 'Completed' || order.status === 'In-Process') {
+                            alert('Lệnh này đang chạy hoặc đã hoàn thành, không thể xoá!');
                             return;
                           }
                           if (confirm('Xóa lệnh sản xuất này?')) deleteOrderMutation.mutate(order.orderId);

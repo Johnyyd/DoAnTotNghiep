@@ -425,6 +425,8 @@ class _DryingStepScreenState extends State<DryingStepScreen>
         matchName: 'Áp lực phòng');
     validateInput('nhietDoKhiVao', _tempInCtrl.text, _standardParams,
         matchName: 'Nhiệt độ sấy');
+    validateInput('nhietDoKhiRa', _tempOutCtrl.text, _standardParams,
+        matchName: 'Nhiệt độ khí ra');
     validateInput('tgSayCaiDat', _tgSayCaiDatCtrl.text, _standardParams,
         matchName: 'Thời gian sấy');
     validateInput('doAmSauSay', _humidAfterCtrl.text, _standardParams,
@@ -782,16 +784,18 @@ class _DryingStepScreenState extends State<DryingStepScreen>
         'slTruocSay': _slTruocCtrl.text,
         'slSauSay': _slSauCtrl.text,
         'mauKiemTra': _mauKiemTra,
-        'netWeight': (double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ??
-                0) -
-            ((double.tryParse(_mauKiemTra.replaceAll(',', '.')) ?? 0) / 1000.0),
-        'yieldLoss': _slTruocCtrl.text.isNotEmpty
-            ? (((double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0) -
-                    (double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ??
-                        0)) /
-                (double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 1) *
-                100)
-            : 0,
+        'netWeight': (() {
+          var w = (double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0) -
+              ((double.tryParse(_mauKiemTra.replaceAll(',', '.')) ?? 0) / 1000.0);
+          return (w.isNaN || w.isInfinite) ? 0.0 : w;
+        })(),
+        'yieldLoss': (() {
+          var truoc = double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0.0;
+          var sau = double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0.0;
+          if (truoc == 0.0) return 0.0;
+          var loss = ((truoc - sau) / truoc) * 100.0;
+          return (loss.isNaN || loss.isInfinite) ? 0.0 : loss;
+        })(),
         'viTriCuaGio': _cuaGioCtrl.text,
         'doAmDauVao': _inputMoistureCtrl.text,
         'doAmSauSay': _humidAfterCtrl.text,
@@ -1406,10 +1410,15 @@ class _DryingStepScreenState extends State<DryingStepScreen>
               controller: _tempOutCtrl,
               readOnly: _isPhase4Locked || _secondsRemaining > 0,
               keyboardType: TextInputType.number,
+              status: inputStatuses['nhietDoKhiRa'] ?? 'none',
+              standardText: getStandardText('Nhiệt độ khí ra', _standardParams),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
               ],
-              onChanged: (v) => setState(() {}),
+              onChanged: (v) {
+                validateInput('nhietDoKhiRa', v, _standardParams, matchName: 'Nhiệt độ khí ra');
+                setState(() {});
+              },
             )),
           ],
         ),

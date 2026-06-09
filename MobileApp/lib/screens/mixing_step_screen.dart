@@ -376,10 +376,18 @@ class _MixingStepScreenState extends State<MixingStepScreen>
         matchName: 'Độ ẩm phòng');
     validateInput('apLuc', _pressCtrl.text, _standardParams,
         matchName: 'Áp lực phòng');
+    validateInput('tgCaiDat', _tgCaiDatCtrl.text, _standardParams,
+        matchName: 'Thời gian trộn');
+    validateInput('tocDoCaiDat', _tocDoCaiDatCtrl.text, _standardParams,
+        matchName: 'Tốc độ trộn');
     validateInput('tocDoThucTe', _tocDoThucTeCtrl.text, _standardParams,
         matchName: 'Tốc độ trộn');
     validateInput('tgThucTe', _tgThucTeCtrl.text, _standardParams,
         matchName: 'Thời gian trộn');
+    validateInput('tyTrong', _tyTrongCtrl.text, _standardParams,
+        matchName: 'Tỷ trọng gõ');
+    validateInput('silicagel', _silicagelCtrl.text, _standardParams,
+        matchName: 'Số lượng Silicagel');
   }
 
   Future<void> _approveByQC(String status) async {
@@ -919,7 +927,10 @@ class _MixingStepScreenState extends State<MixingStepScreen>
             Expanded(
                 child: StandardInputField(
                     label: 'Thời gian trộn cài đặt (phút)',
-                    controller: _tgThucTeCtrl,
+                    controller: _tgCaiDatCtrl,
+                    status: inputStatuses['tgCaiDat'] ?? 'none',
+                    standardText: getStandardText('Thời gian trộn', _standardParams),
+                    onChanged: (v) => validateInput('tgCaiDat', v, _standardParams, matchName: 'Thời gian trộn'),
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
                     ],
@@ -928,7 +939,10 @@ class _MixingStepScreenState extends State<MixingStepScreen>
             Expanded(
                 child: StandardInputField(
                     label: 'Tốc độ cài đặt (vòng/phút)',
-                    controller: _tocDoThucTeCtrl,
+                    controller: _tocDoCaiDatCtrl,
+                    status: inputStatuses['tocDoCaiDat'] ?? 'none',
+                    standardText: getStandardText('Tốc độ trộn', _standardParams),
+                    onChanged: (v) => validateInput('tocDoCaiDat', v, _standardParams, matchName: 'Tốc độ trộn'),
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
                     ],
@@ -1023,9 +1037,11 @@ class _MixingStepScreenState extends State<MixingStepScreen>
                   FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
                 ],
                 keyboardType: TextInputType.number,
-                status: _tgThucTeCtrl.text != _tgCaiDatCtrl.text
-                    ? 'warning'
-                    : 'none',
+                standardText: getStandardText('Thời gian trộn', _standardParams),
+                onChanged: (v) => validateInput('tgThucTe', v, _standardParams, matchName: 'Thời gian trộn'),
+                status: inputStatuses['tgThucTe'] == 'error' 
+                    ? 'error' 
+                    : (_tgThucTeCtrl.text != _tgCaiDatCtrl.text ? 'warning' : 'none'),
               ),
             ),
             const SizedBox(width: 16),
@@ -1037,9 +1053,11 @@ class _MixingStepScreenState extends State<MixingStepScreen>
                   FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
                 ],
                 keyboardType: TextInputType.number,
-                status: _tocDoThucTeCtrl.text != _tocDoCaiDatCtrl.text
-                    ? 'warning'
-                    : 'none',
+                standardText: getStandardText('Tốc độ trộn', _standardParams),
+                onChanged: (v) => validateInput('tocDoThucTe', v, _standardParams, matchName: 'Tốc độ trộn'),
+                status: inputStatuses['tocDoThucTe'] == 'error'
+                    ? 'error'
+                    : (_tocDoThucTeCtrl.text != _tocDoCaiDatCtrl.text ? 'warning' : 'none'),
               ),
             ),
           ],
@@ -1061,6 +1079,9 @@ class _MixingStepScreenState extends State<MixingStepScreen>
               child: StandardInputField(
                 label: 'Tỷ trọng gõ của hạt khô',
                 controller: _tyTrongCtrl,
+                status: inputStatuses['tyTrong'] ?? 'none',
+                standardText: getStandardText('Tỷ trọng gõ', _standardParams),
+                onChanged: (v) => validateInput('tyTrong', v, _standardParams, matchName: 'Tỷ trọng gõ'),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
                 ],
@@ -1093,6 +1114,9 @@ class _MixingStepScreenState extends State<MixingStepScreen>
           label: 'Số lượng Silicagel đã thêm (viên)',
           controller: _silicagelCtrl,
           hint: 'Chuẩn: 5 viên/thùng',
+          status: inputStatuses['silicagel'] ?? 'none',
+          standardText: getStandardText('Số lượng Silicagel', _standardParams),
+          onChanged: (v) => validateInput('silicagel', v, _standardParams, matchName: 'Số lượng Silicagel'),
           inputFormatters: [
             FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
           ],

@@ -860,6 +860,7 @@ namespace GMP_System.Controllers
                 .Include(o => o.ProductionOrderBoms)
                 .Include(o => o.RecipeRoutings)
                 .Include(o => o.ProductionBatches)
+                    .ThenInclude(b => b.BatchProcessLogs)
                 .FirstOrDefaultAsync(o => o.OrderId == id);
 
             if (order == null)
@@ -870,6 +871,12 @@ namespace GMP_System.Controllers
             if (order.Status == "In-Process" || order.Status == "Completed")
             {
                 return BadRequest(new { success = false, message = $"Không thể xóa lệnh sản xuất đang chạy hoặc đã hoàn thành." });
+            }
+
+            bool hasStartedLog = order.ProductionBatches.Any(b => b.BatchProcessLogs != null && b.BatchProcessLogs.Any(log => log.ResultStatus != "Pending" && log.ResultStatus != "PENDING"));
+            if (hasStartedLog)
+            {
+                return BadRequest(new { success = false, message = "Không thể xóa lệnh sản xuất đang chạy (đã có công đoạn được ghi nhận)." });
             }
 
             bool hasDispensed = order.ProductionOrderBoms.Any(bom => bom.DispensingStatus == "Dispensed");
