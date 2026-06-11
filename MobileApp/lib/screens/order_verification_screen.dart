@@ -272,7 +272,9 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
             if (_workerData?['materials'] != null)
               ...( _workerData?['materials'] as Map<String, dynamic>).entries.map((e) {
                 final val = e.value as Map<String, dynamic>;
-                return _buildReadOnlyParam(e.key, '${val['actual'] ?? '--'} kg (Phiếu KN: ${val['phieuKN'] ?? 'N/A'})');
+                final isCapsule = e.key.toLowerCase().contains('nang') || e.key.toLowerCase().contains('viên');
+                final unit = isCapsule ? 'viên' : 'kg';
+                return _buildReadOnlyParam(e.key, '${val['actual'] ?? '--'} $unit (Phiếu KN: ${val['phieuKN'] ?? 'N/A'})');
               })
             else
               const Text('Chưa có dữ liệu nguyên liệu.', style: TextStyle(color: Colors.grey, fontSize: 12)),
@@ -296,7 +298,9 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
             const SizedBox(height: 8),
             if (_workerData?['khoiLuongThucTe'] != null)
               ...( _workerData?['khoiLuongThucTe'] as Map<String, dynamic>).entries.map((e) {
-                return _buildReadOnlyParam(e.key, '${e.value ?? '--'} kg');
+                final isCapsule = e.key.toLowerCase().contains('nang') || e.key.toLowerCase().contains('viên');
+                final unit = isCapsule ? 'viên' : 'kg';
+                return _buildReadOnlyParam(e.key, '${e.value ?? '--'} $unit');
               })
             else
               const Text('Chưa có dữ liệu khối lượng trộn.', style: TextStyle(color: Colors.grey, fontSize: 12)),

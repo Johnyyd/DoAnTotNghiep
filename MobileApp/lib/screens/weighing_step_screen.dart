@@ -502,6 +502,16 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
       final name = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
       final code = mat['materialCode'] ?? 'N/A';
       double requiredQty = (item['quantity'] as num?)?.toDouble() ?? 0.0;
+      
+      final uomName = (mat['uomName'] ?? mat['UomName'] ?? item['uomName'] ?? item['UomName'] ?? '').toString().toLowerCase();
+      if (uomName == 'g' || uomName == 'gam' || uomName == 'gram' || uomName == 'mg') {
+         if (uomName == 'mg') requiredQty = requiredQty / 1000000.0;
+         else requiredQty = requiredQty / 1000.0;
+      } else if (!_isCalculated) {
+         final uomId = mat['baseUomId'] ?? mat['uomId'] ?? item['uomId'] ?? item['UomId'] ?? 1;
+         if (uomId == 2 || (uomId != 4 && requiredQty > 5.0)) requiredQty = requiredQty / 1000.0;
+      }
+
       if (_isCalculated && _dynamicTargets.containsKey(code)) {
         requiredQty = _dynamicTargets[code]!;
       }
@@ -605,7 +615,8 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
       "dungCuCan": _dungCuCan,
       "materials": _materialsData,
       "dynamicYield": _targetYieldQ,
-      "isCalculated": _isCalculated
+      "isCalculated": _isCalculated,
+      "dynamicTargets": _dynamicTargets
     };
 
     final finalNotes = devNotes != null
@@ -926,6 +937,16 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
         final code = mat['materialCode'] ?? 'N/A';
 
         double target = (item['quantity'] ?? item['Quantity'] ?? 0.0) as double;
+        
+        final uomName = (mat['uomName'] ?? mat['UomName'] ?? item['uomName'] ?? item['UomName'] ?? '').toString().toLowerCase();
+        if (uomName == 'g' || uomName == 'gam' || uomName == 'gram' || uomName == 'mg') {
+           if (uomName == 'mg') target = target / 1000000.0;
+           else target = target / 1000.0;
+        } else if (!_isCalculated) {
+           final uomId = mat['baseUomId'] ?? mat['uomId'] ?? item['uomId'] ?? item['UomId'] ?? 1;
+           if (uomId == 2 || (uomId != 4 && target > 5.0)) target = target / 1000.0;
+        }
+
         if (_isCalculated && _dynamicTargets.containsKey(code)) {
           target = _dynamicTargets[code]!;
         }
