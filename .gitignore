@@ -49,7 +49,6 @@ dist/c
 .dotnet/
 GMP_System/GMP_System/obj/Debug/net8.0/GMP_System.csproj.CoreCompileInputs.cache
 
-*.md~
 
 # SQL Server backup files
 DATABASE/backups/*.bak
