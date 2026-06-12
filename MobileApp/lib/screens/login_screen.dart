@@ -173,8 +173,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         : const Text('Đăng nhập', style: TextStyle(fontSize: 16)),
                   ),
                   const SizedBox(height: 24),
-
-
                 ],
               ),
             ),

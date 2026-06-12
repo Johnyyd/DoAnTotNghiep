@@ -121,7 +121,7 @@ export interface ProductionOrder {
   plannedEndDate: string;
   actualStartDate?: string;
   actualEndDate?: string;
-  status: 'Draft' | 'Approved' | 'In-Process' | 'Pending Worker' | 'Hold' | 'Completed';
+  status: 'Draft' | 'Approved' | 'InProcess' | 'Hold' | 'Completed';
   recipeId: number;
   recipeCode?: string;
   recipeName?: string;
@@ -203,8 +203,7 @@ export interface PaginatedResponse<T> {
 export const ProductionOrderStates = [
   'Draft',
   'Approved',
-  'Pending Worker',
-  'In-Process',
+  'InProcess',
   'Hold',
   'Completed'
 ] as const;

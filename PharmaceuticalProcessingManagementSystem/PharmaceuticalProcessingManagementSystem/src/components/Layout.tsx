@@ -20,23 +20,23 @@ import { useAuth } from '@/context/AuthContext';
 const roleLabels: Record<string, string> = {
   Admin: 'Quản trị viên',
   QualityControl: 'Kiểm soát chất lượng',
-  ProductionManager: 'Quản lý',
+  Manager: 'Trưởng phòng',
   Operator: 'Nhân viên vận hành',
   WarehouseStaff: 'Nhân viên kho',
 };
 
 const navigation = [
-  { name: 'Bảng Điều Khiển', href: '/dashboard', icon: LayoutDashboard, roles: ['Admin', 'ProductionManager', 'QualityControl', 'Operator', 'WarehouseStaff'] },
-  { name: 'Nguyên Liệu', href: '/materials', icon: Pill, roles: ['Admin', 'ProductionManager', 'QualityControl'] },
-  { name: 'Thành Phẩm', href: '/finished-products', icon: Package, roles: ['Admin', 'ProductionManager', 'QualityControl'] },
-  { name: 'Công Thức', href: '/recipes', icon: ClipboardList, roles: ['Admin', 'ProductionManager'] },
-  { name: 'Lệnh Sản Xuất', href: '/production-orders', icon: Warehouse, roles: ['Admin', 'ProductionManager'] },
-  { name: 'Mẻ Sản Xuất', href: '/batches', icon: Package, roles: ['Admin', 'ProductionManager', 'Operator'] },
-  { name: 'Theo Dõi Tiến Độ', href: '/manager-operations', icon: FileText, roles: ['Admin', 'ProductionManager'] },
-  { name: 'Thống Kê', href: '/finished-goods-stats', icon: BarChart3, roles: ['Admin', 'ProductionManager'] },
-  { name: 'Thiết Bị', href: '/equipments', icon: Settings, roles: ['Admin', 'ProductionManager'] },
-  { name: 'Khu Sản Xuất', href: '/production-areas', icon: Factory, roles: ['Admin', 'ProductionManager'] },
-  { name: 'Kho', href: '/storage-locations', icon: Warehouse, roles: ['Admin', 'ProductionManager', 'WarehouseStaff', 'QualityControl'] },
+  { name: 'Bảng Điều Khiển', href: '/dashboard', icon: LayoutDashboard, roles: ['Admin', 'Manager', 'QualityControl', 'Operator', 'WarehouseStaff'] },
+  { name: 'Nguyên Liệu', href: '/materials', icon: Pill, roles: ['Admin', 'Manager', 'QualityControl'] },
+  { name: 'Thành Phẩm', href: '/finished-products', icon: Package, roles: ['Admin', 'Manager', 'QualityControl'] },
+  { name: 'Công Thức', href: '/recipes', icon: ClipboardList, roles: ['Admin', 'Manager'] },
+  { name: 'Lệnh Sản Xuất', href: '/production-orders', icon: Warehouse, roles: ['Admin', 'Manager'] },
+  { name: 'Mẻ Sản Xuất', href: '/batches', icon: Package, roles: ['Admin', 'Manager', 'Operator'] },
+  { name: 'Theo Dõi Tiến Độ', href: '/manager-operations', icon: FileText, roles: ['Admin', 'Manager'] },
+  { name: 'Thống Kê', href: '/finished-goods-stats', icon: BarChart3, roles: ['Admin', 'Manager'] },
+  { name: 'Thiết Bị', href: '/equipments', icon: Settings, roles: ['Admin', 'Manager'] },
+  { name: 'Khu Sản Xuất', href: '/production-areas', icon: Factory, roles: ['Admin', 'Manager'] },
+  { name: 'Kho', href: '/storage-locations', icon: Warehouse, roles: ['Admin', 'Manager', 'WarehouseStaff', 'QualityControl'] },
   { name: 'Tài Khoản', href: '/users', icon: Users, roles: ['Admin'] },
 ];
 
@@ -60,8 +60,9 @@ export default function Layout() {
       )}
 
       <aside
-        className={`print:hidden fixed inset-y-0 left-0 z-50 w-[236px] bg-surface border-r border-neutral-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
+        className={`print:hidden fixed inset-y-0 left-0 z-50 w-[236px] bg-surface border-r border-neutral-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-neutral-200">
           <div className="flex items-center space-x-3">

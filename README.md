@@ -53,17 +53,95 @@ Draft → Approved → In-Process → Hold → Completed
 
 ---
 
-## 🔧 Yêu Cầu Kỹ Thuật
+## 🔧 Tech Stack Hiện Tại
 
-### Ngôn Ngữ & Nền Tảng
+### Tổng Quan
 
-- **Frontend:** React, TypeScript
-- **Backend:** C# (.NET Core / .NET 8)
-- **Mobile:** Flutter (Dart) - Hỗ trợ Web Tablet và App Android/iOS
+| Thành phần | Công nghệ đang dùng | Vai trò trong hệ thống |
+| --- | --- | --- |
+| Frontend Web Admin | React 18, TypeScript, Vite | Giao diện quản lý cho Admin/Trưởng phòng/QC |
+| UI/CSS | Tailwind CSS, PostCSS, Autoprefixer, Lucide React | Xây dựng giao diện dashboard, form, bảng dữ liệu và icon |
+| State & Data Fetching | TanStack React Query, Axios | Gọi REST API, cache dữ liệu, tự reload danh sách nghiệp vụ |
+| Routing Web | React Router DOM | Điều hướng các trang: nguyên liệu, công thức, lệnh sản xuất, truy xuất, thiết bị |
+| Table/Interaction | TanStack React Table, dnd-kit | Hiển thị bảng dữ liệu và kéo thả/thay đổi thứ tự công đoạn |
+| Backend/API | ASP.NET Core Web API trên .NET 8 | Cung cấp REST API cho Web Admin và Mobile App |
+| ORM/Database Access | Entity Framework Core 8, EF Core SQL Server | Mapping entity, truy vấn và cập nhật SQL Server |
+| Authentication | JWT Bearer, BCrypt.Net-Next | Đăng nhập, xác thực token, mã hóa mật khẩu |
+| API Documentation | Swagger/OpenAPI, Swashbuckle.AspNetCore | Kiểm thử và mô tả endpoint API |
+| Logging/Audit | Serilog, SystemAuditLog, AuditLogInterceptor | Ghi log hệ thống và lịch sử thao tác theo yêu cầu GMP |
+| Monitoring | prometheus-net.AspNetCore | Expose metric/health cho backend |
+| Mobile App | Flutter, Dart | Giao diện cho nhân viên sản xuất thao tác trên tablet/mobile |
+| Mobile Storage/API | http, flutter_secure_storage, shared_preferences, flutter_dotenv | Gọi API, lưu token/cấu hình và trạng thái đăng nhập |
+| Database | Microsoft SQL Server 2022 | Lưu dữ liệu master, công thức, lệnh sản xuất, mẻ, tồn kho, audit |
+| Database Scripts | SQL files trong thư mục `DATABASE` | Tạo schema, seed dữ liệu mẫu, trigger/ràng buộc và backup/restore |
+| Containerization | Docker, Docker Compose | Chạy đồng bộ SQL Server, backend API, frontend web, mobile web |
+| Web Server/Proxy | Nginx trong container frontend/mobile | Serve build frontend/mobile và proxy API khi chạy Docker |
+| Tunnel/Remote Demo | Cloudflare Tunnel, ngrok URL build arg | Hỗ trợ demo/tunnel ra ngoài mạng nội bộ khi cần |
 
-### Cơ Sở Dữ Liệu
+### Chi Tiết Theo Module
 
-- **SQL Server:** Cho dữ liệu quan hệ chặt chẽ (Master Data, Orders, Batches)
+#### Frontend Web Admin
+
+- **Thư mục:** `PharmaceuticalProcessingManagementSystem/PharmaceuticalProcessingManagementSystem`
+- **Framework:** React 18 + TypeScript
+- **Bundler/dev server:** Vite
+- **CSS:** Tailwind CSS, PostCSS, Autoprefixer
+- **API client:** Axios
+- **Server state:** TanStack React Query
+- **Routing:** React Router DOM
+- **Icon:** Lucide React
+- **Thông báo UI:** Sonner
+- **Drag/drop công đoạn:** `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`
+- **Bảng dữ liệu:** `@tanstack/react-table`
+- **Port khi chạy Docker:** `8080`
+
+#### Backend REST API
+
+- **Thư mục:** `GMP_System/GMP_System`
+- **Framework:** ASP.NET Core Web API
+- **Runtime:** .NET 8 (`net8.0`)
+- **Ngôn ngữ:** C#
+- **ORM:** Entity Framework Core 8
+- **Database provider:** Microsoft.EntityFrameworkCore.SqlServer
+- **Xác thực:** JWT Bearer
+- **Mã hóa mật khẩu:** BCrypt.Net-Next
+- **API docs:** Swagger/OpenAPI thông qua Swashbuckle.AspNetCore
+- **Logging:** Serilog console/file
+- **Monitoring:** prometheus-net.AspNetCore
+- **Kiến trúc code:** Controllers, Entities, Repositories, UnitOfWork, Interceptors
+- **Port khi chạy Docker:** `5001` mapping vào container port `5000`
+
+#### Mobile App
+
+- **Thư mục:** `MobileApp`
+- **Framework:** Flutter
+- **Ngôn ngữ:** Dart
+- **SDK:** Dart SDK `^3.0.0`
+- **HTTP client:** `http`
+- **Lưu token/cấu hình:** `flutter_secure_storage`, `shared_preferences`, `flutter_dotenv`
+- **UI:** Flutter Material
+- **Target:** Android/iOS/Web tablet cho nhân viên sản xuất
+- **Port Flutter Web khi chạy Docker:** `8081`
+
+#### Database
+
+- **Thư mục:** `DATABASE`
+- **Hệ quản trị:** Microsoft SQL Server 2022
+- **Port host:** `1435` mapping vào SQL Server container port `1433`
+- **Schema/seed chính:** `Schema.sql`, `full_seed.sql`, `init.sql`
+- **Ràng buộc nghiệp vụ:** `Constraints.sql`
+- **Audit/log:** `SystemAudit.sql`
+- **Backup/restore:** `BackupRestoreJobs.sql`, thư mục `DATABASE/backups`
+- **Dữ liệu media mẫu:** `DATABASE/materials`, `DATABASE/finished_goods`, `DATABASE/batches`
+
+#### DevOps & Runtime
+
+- **Container:** Docker Compose
+- **Services chính:** `gmp-sqlserver`, `gmp-api`, `gmp-frontend`, `gmp-mobile`
+- **Network:** `gmp-network`
+- **SQL volume:** `gmp-sqlserver-data`
+- **Environment:** `.env` chứa mật khẩu SQL Server, JWT/config và tunnel token nếu có
+- **Frontend/mobile server trong container:** Nginx hoặc Vite dev server tùy file compose đang dùng
 
 ### Kiến Trúc Hệ Thống
 
@@ -75,10 +153,10 @@ Draft → Approved → In-Process → Hold → Completed
 │                     MOBILE APP (Công nhân)                  │
 │              Flutter (Dart) (Port: 8081)                    │
 ├─────────────────────────────────────────────────────────────┤
-│                 BACKEND API (C# .NET)                       │
-│         Domain-Driven Design (DDD) + Clean Architecture     │
+│                 BACKEND API (ASP.NET Core / .NET 8)          │
+│              REST API + EF Core + JWT + Audit Trail          │
 ├─────────────────────────────────────────────────────────────┤
-│                     SQL Server (Port: 1435)                 │
+│              SQL Server 2022 (Host Port: 1435)               │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -164,49 +242,57 @@ Draft → Approved → In-Process → Hold → Completed
 
 ```
 DoAnTotNghiep/
-├── GMP_System/              # Backend C# .NET API
-│   ├── src/
-│   │   ├── Domain/         # Entities, Value Objects, Enums
-│   │   ├── Application/    # Use Cases, Services, Validators
-│   │   ├── Infrastructure/ # Repositories, DB Context, External APIs
-│   │   └── WebAPI/         # Controllers, Middleware, Filters
-│   ├── tests/
-│   └── Dockerfile
+├── GMP_System/
+│   └── GMP_System/         # Backend ASP.NET Core Web API (.NET 8)
+│       ├── Controllers/    # REST API endpoints
+│       ├── Entities/       # EF Core entities + GmpContext
+│       ├── Repositories/   # GenericRepository, UnitOfWork
+│       ├── Interceptors/   # AuditLogInterceptor
+│       ├── Dockerfile
+│       └── Program.cs
 │
-├── PharmaceuticalProcessingManagementSystem/  # Frontend Web Admin
-│   ├── src/
-│   │   ├── components/     # React/Vue components
-│   │   ├── pages/         # Admin pages
-│   │   ├── services/      # API clients
-│   │   └── store/         # State management (Redux/Vuex)
-│   ├── public/
-│   └── package.json
+├── PharmaceuticalProcessingManagementSystem/
+│   └── PharmaceuticalProcessingManagementSystem/  # Frontend Web Admin React + TypeScript
+│       ├── src/
+│       │   ├── components/ # Layout, ProtectedRoute, modal/log components
+│       │   ├── pages/      # Dashboard, Materials, Recipes, Orders, Traceability...
+│       │   ├── services/   # Axios API clients
+│       │   ├── context/    # AuthContext
+│       │   ├── types/      # Shared TypeScript types
+│       │   └── utils/      # Formatting helpers
+│       ├── public/
+│       ├── Dockerfile
+│       └── package.json
 │
-├── MobileApp/              # Tablet App (React Native/Flutter)
-│   ├── src/
-│   │   ├── screens/       # Worker screens
-│   │   ├── components/
-│   │   └── services/
-│   └── android/ios/
+├── MobileApp/              # Flutter app cho tablet/mobile/web
+│   ├── lib/
+│   │   ├── screens/       # Màn hình thao tác công đoạn
+│   │   ├── components/    # Component nhập liệu/checklist
+│   │   ├── services/      # API/auth service
+│   │   ├── models/
+│   │   └── theme/
+│   ├── android/
+│   ├── ios/
+│   ├── web/
+│   ├── Dockerfile
+│   └── pubspec.yaml
 │
-├── database/
-│   ├── scripts/
-│   │   ├── 01_init.sql
-│   │   ├── 02_tables.sql
-│   │   ├── 03_seeds.sql
-│   │   └── 04_constraints.sql
-│   └── ERD/
-│       └── diagram.md
+├── DATABASE/               # SQL Server schema, seed, constraints, backup/restore
+│   ├── Schema.sql
+│   ├── init.sql
+│   ├── full_seed.sql
+│   ├── Constraints.sql
+│   ├── SystemAudit.sql
+│   ├── BackupRestoreJobs.sql
+│   ├── materials/
+│   ├── finished_goods/
+│   └── backups/
 │
-├── docs/
-│   ├── API.md
-│   ├── DEPLOYMENT.md
-│   └── GMP_COMPLIANCE.md
+├── DOCS/                   # Tài liệu đề cương, CamScanner, use case, UML
 │
-├── tests/
-│   ├── integration/
-│   ├── e2e/
-│   └── fixtures/
+├── docker-compose.yml
+├── docker-compose.override.yml
+├── .env
 │
 └── README.md
 ```
@@ -263,12 +349,12 @@ DoAnTotNghiep/
 - Viết SQL scripts: init, tables, constraints, indexes
 - Seed data mẫu cho testing
 
-### Bước 2: Xây Dựng Backend (C# .NET)
+### Bước 2: Xây Dựng Backend (ASP.NET Core / .NET 8)
 
-- **Domain Layer:** Entities, Enums, Domain Events (OrderApproved, BatchCompleted)
-- **Application Layer:** Commands/Queries với MediatR, Validators với FluentValidation
-- **Infrastructure:** Entity Framework Core với Repository Pattern
-- **WebAPI:** RESTful endpoints, JWT authentication, middleware cho audit logging
+- **Entities/Data Layer:** EF Core entities, `GmpContext`, SQL Server mappings
+- **Repository Layer:** GenericRepository và UnitOfWork
+- **Web API Layer:** RESTful endpoints bằng ASP.NET Core Controllers
+- **Security/Compliance:** JWT authentication, BCrypt password hashing, audit logging interceptor
 
 **Key Services:**
 
@@ -277,7 +363,7 @@ DoAnTotNghiep/
 - `BatchTrackingService`: Theo dõi mẻ, log quá trình
 - `TraceabilityService:\*\* Truy xuất ngược từ finished goods → raw materials
 
-### Bước 3: Xây Dựng Frontend Web Admin (React/Vue)
+### Bước 3: Xây Dựng Frontend Web Admin (React + TypeScript)
 
 **Modules:**
 
@@ -285,8 +371,9 @@ DoAnTotNghiep/
 - Planning & Production Orders (tạo, duyệt, theo dõi)
 - Dashboard theo dõi tổng quan
 - Reports & Traceability (tìm kiếm lô thành phẩm)
+- API state management bằng TanStack React Query và Axios
 
-### Bước 4: Xây Dựng Mobile App (Tablet)
+### Bước 4: Xây Dựng Mobile App (Flutter Tablet/Web)
 
 **Worker-centric:**
 

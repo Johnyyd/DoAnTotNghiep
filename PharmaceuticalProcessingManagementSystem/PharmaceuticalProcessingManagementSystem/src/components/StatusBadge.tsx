@@ -13,26 +13,11 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
     Hold: 'bg-orange-100 text-orange-800',
     Completed: 'bg-green-100 text-green-800',
     Pending: 'bg-yellow-100 text-yellow-800',
-    'Pending Worker': 'bg-gray-100 text-gray-800 border border-gray-200',
     Passed: 'bg-green-100 text-green-800',
     Failed: 'bg-red-100 text-red-800',
   };
 
-  const labels: Record<string, string> = {
-    Draft: 'Bản nháp',
-    Approved: 'Đã duyệt',
-    InProcess: 'Đang sản xuất',
-    'Pending Worker': 'Chờ công nhân',
-    Hold: 'Tạm dừng',
-    Completed: 'Hoàn thành',
-    Pending: 'Chờ duyệt',
-    PendingQC: 'Chờ duyệt',
-    Passed: 'Đạt',
-    Failed: 'Không đạt',
-  };
-
   const defaultStyle = 'bg-gray-100 text-gray-800';
-  const displayLabel = labels[status] || status;
 
   return (
     <span
@@ -42,7 +27,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
         className
       )}
     >
-      {displayLabel}
+      {status}
     </span>
   );
 }

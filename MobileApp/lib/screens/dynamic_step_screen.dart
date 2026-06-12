@@ -59,24 +59,12 @@ class _DynamicStepScreenState extends State<DynamicStepScreen>
     if (log.isNotEmpty) {
       final String rawStatus = normalizeStatus(log['resultStatus']);
       final pList = log['routing']?['stepParameters'] as List<dynamic>? ?? [];
-      final Map<String, dynamic> savedData = log['parametersData'] ?? {};
 
       if (mounted) {
         setState(() {
+          // _stepData assignment removed
           _parameters = pList;
           _isLoading = false;
-
-          // Populate existing data
-          for (var p in _parameters) {
-            final pid = p['parameterId'] as int;
-            final name = p['parameterName'] as String;
-            if (!_controllers.containsKey(pid)) {
-              _controllers[pid] = TextEditingController();
-            }
-            if (savedData.containsKey(name) && savedData[name] != null) {
-              _controllers[pid]!.text = savedData[name].toString();
-            }
-          }
 
           // Cập nhật Phase dựa trên status
           if (rawStatus == 'PENDINGQC' || rawStatus == 'PENDING_QC') {
@@ -95,11 +83,11 @@ class _DynamicStepScreenState extends State<DynamicStepScreen>
             for (var p in _parameters) {
               final String name = (p['parameterName'] ?? '').toString().toLowerCase();
               final pid = p['parameterId'] as int;
-              if (name.contains('thời gian') || name.contains('time') || name.contains('giờ')) {
-                // Chỉ auto-update nếu chưa có dữ liệu lưu
-                if (_controllers[pid]!.text.isEmpty && _currentPhase.index < ExecutionPhase.input.index) {
-                  timeCtrls.add(_controllers[pid]!);
+              if (name.contains('thời gian') || name.contains('time')) {
+                if (!_controllers.containsKey(pid)) {
+                  _controllers[pid] = TextEditingController();
                 }
+                timeCtrls.add(_controllers[pid]!);
               }
             }
             if (timeCtrls.isNotEmpty) {
@@ -138,7 +126,6 @@ class _DynamicStepScreenState extends State<DynamicStepScreen>
 
   void _nextPhase() {
     if (_currentPhase == ExecutionPhase.precheck) {
-      stopTimeUpdates();
       _submitPhase('Running');
     } else if (_currentPhase == ExecutionPhase.input) {
       _submitPhase('PendingQC');

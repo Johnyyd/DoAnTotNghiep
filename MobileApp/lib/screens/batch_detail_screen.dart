@@ -308,18 +308,12 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                                 fontWeight: FontWeight.w600,
                                 color: isClickable ? Colors.black87 : Colors.grey
                               )),
-                          subtitle: () {
-                            if (status == 'Passed' || status == 'Failed') {
-                              return endTime != null ? Text('Hoàn thành: ${_formatDate(endTime)}', style: const TextStyle(fontSize: 12)) : null;
-                            } else if (status == 'PendingQC') {
-                              return endTime != null ? Text('Chờ QC duyệt: ${_formatDate(endTime)}', style: const TextStyle(fontSize: 12, color: Colors.orange)) : null;
-                            } else if (status == 'Running' || status == 'Approved') {
-                              final timeStr = log['startTime'] as String? ?? endTime;
-                              return timeStr != null ? Text('Bắt đầu lúc: ${_formatDate(timeStr)}', style: const TextStyle(fontSize: 12, color: Colors.blue)) : const Text('Đang thực hiện', style: TextStyle(fontSize: 12, color: Colors.blue));
-                            } else {
-                              return isClickable ? const Text('Sẵn sàng thực hiện', style: TextStyle(fontSize: 12, color: Colors.blue)) : null;
-                            }
-                          }(),
+                          subtitle: endTime != null
+                              ? Text(
+                                  'Hoàn thành: ${_formatDate(endTime)}',
+                                  style: const TextStyle(fontSize: 12),
+                                )
+                              : (isClickable ? const Text('Sẵn sàng thực hiện', style: TextStyle(fontSize: 12, color: Colors.blue)) : null),
                           trailing: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
