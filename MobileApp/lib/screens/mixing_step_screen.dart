@@ -382,6 +382,27 @@ class _MixingStepScreenState extends State<MixingStepScreen>
     }
   }
 
+  double _getPlannedQuantity() {
+    if (_batchInfo == null) return 0.0;
+    
+    // Default to 540mg if not available in API, matching the web UI
+    double productWeight = 540.0; 
+    if (_batchInfo!['order'] != null && _batchInfo!['order']['product'] != null) {
+      if (_batchInfo!['order']['product']['weight'] != null) {
+        productWeight = (_batchInfo!['order']['product']['weight'] as num).toDouble();
+      }
+    }
+
+    double qty = 0.0;
+    if (_batchInfo!['plannedQuantity'] != null) {
+      qty = (_batchInfo!['plannedQuantity'] as num).toDouble();
+    } else if (_batchInfo!['order'] != null && _batchInfo!['order']['plannedQuantity'] != null) {
+      qty = (_batchInfo!['order']['plannedQuantity'] as num).toDouble();
+    }
+    
+    return (qty * productWeight) / 1000000.0; // Returns weight in kg
+  }
+
   double _getTotalInputWeight() {
     double total = 0.0;
     for (var item in _bom) {
@@ -1064,6 +1085,12 @@ class _MixingStepScreenState extends State<MixingStepScreen>
   }
 
   Widget _buildPhase4() {
+    if (_tgThucTeCtrl.text.isEmpty && _tgCaiDatCtrl.text.isNotEmpty) {
+      _tgThucTeCtrl.text = _tgCaiDatCtrl.text;
+    }
+    if (_tocDoThucTeCtrl.text.isEmpty && _tocDoCaiDatCtrl.text.isNotEmpty) {
+      _tocDoThucTeCtrl.text = _tocDoCaiDatCtrl.text;
+    }
     return Column(
       children: [
         if (!_isMixing && _secondsRemaining == 15)
@@ -1112,6 +1139,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
               child: StandardInputField(
                 label: 'Thời gian thực tế (phút)',
                 controller: _tgThucTeCtrl,
+                readOnly: true,
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
                 ],
@@ -1128,6 +1156,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
               child: StandardInputField(
                 label: 'Tốc độ thực tế (v/p)',
                 controller: _tocDoThucTeCtrl,
+                readOnly: true,
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
                 ],
@@ -1231,10 +1260,10 @@ class _MixingStepScreenState extends State<MixingStepScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Khối lượng đóng gói (Output):',
+                  const Text('Khối lượng lệnh sản xuất (Planned):',
                       style: TextStyle(fontSize: 13)),
                   Text(
-                      '${double.tryParse(_slDongGoi.replaceAll(',', '.'))?.toStringAsFixed(4) ?? "0.0000"} kg',
+                      '${_getPlannedQuantity().toStringAsFixed(4)} kg',
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
@@ -1246,7 +1275,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
                       style: TextStyle(
                           fontWeight: FontWeight.bold, color: Colors.blue)),
                   Text(
-                    '${_getTotalInputWeight() > 0 ? (double.parse(_slDongGoi) / _getTotalInputWeight() * 100).toStringAsFixed(2) : "0.00"}%',
+                    '${_getPlannedQuantity() > 0 ? (_getTotalInputWeight() / _getPlannedQuantity() * 100).toStringAsFixed(2) : "0.00"}%',
                     style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
