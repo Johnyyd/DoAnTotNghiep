@@ -807,10 +807,20 @@ namespace GMP_System.Controllers
             if (existing.Status != "Hold")
                 return BadRequest(new { success = false, message = "Chỉ có thể tiếp tục lệnh đang ở trạng thái Hold." });
 
-            existing.Status = "Approved";
+            var batches = await _context.ProductionBatches.Where(b => b.OrderId == id).ToListAsync();
+            bool hasStarted = batches.Any(b => b.CurrentStep > 0 || b.Status == "In-Process");
+            existing.Status = hasStarted ? "In-Process" : "Scheduled";
+
+            var holdBatches = batches.Where(b => b.Status == "OnHold").ToList();
+            foreach (var b in holdBatches)
+            {
+                b.Status = b.CurrentStep > 0 ? "In-Process" : "Scheduled";
+                _context.ProductionBatches.Update(b);
+            }
+
             _unitOfWork.ProductionOrders.Update(existing);
             await _unitOfWork.CompleteAsync();
-            return Ok(new { success = true, message = "Đã chuyển lệnh về trạng thái Approved." });
+            return Ok(new { success = true, message = "Đã chuyển lệnh về trạng thái hoạt động." });
         }
 
         [HttpPost("{id}/complete")]
