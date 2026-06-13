@@ -82,6 +82,84 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
     }
   }
 
+  Future<void> _holdBatch() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xác nhận tạm dừng'),
+        content: Text('Bạn có chắc chắn muốn tạm dừng mẻ ${widget.batchNumber}?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Hủy')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text('Tạm dừng')),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      // 1. Chuyển trạng thái trước
+      final ok = await ApiService.holdBatch(widget.batchId, "");
+      if (mounted) {
+        if (!ok) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Không thể tạm dừng mẻ.'), backgroundColor: Colors.red),
+          );
+          return;
+        }
+
+        // Tải lại để cập nhật trạng thái OnHold ngay lập tức
+        await _load();
+
+        // 2. Nhập lý do (sau khi đã Hold)
+        String reason = "";
+        final reasonConfirm = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) {
+            final textController = TextEditingController();
+            return AlertDialog(
+              title: const Text('Lý do sự cố'),
+              content: TextField(
+                controller: textController,
+                decoration: const InputDecoration(
+                  hintText: 'Nhập lý do sự cố (Tùy chọn)',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+                onChanged: (val) => reason = val,
+              ),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('Bỏ qua')),
+                FilledButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text('Lưu ghi chú')),
+              ],
+            );
+          },
+        );
+
+        if (reasonConfirm == true && reason.trim().isNotEmpty) {
+           // Ghi nhận lý do bằng cách gọi lại hàm Hold với reason (API hỗ trợ append note)
+           final noteOk = await ApiService.holdBatch(widget.batchId, reason.trim());
+           if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(
+                 content: Text(noteOk ? 'Đã ghi chú sự cố!' : 'Không thể lưu ghi chú, nhưng mẻ đã tạm dừng.'),
+                 backgroundColor: noteOk ? Colors.green : Colors.orange,
+               ),
+             );
+           }
+        }
+      }
+    }
+  }
+
   Color _logStatusColor(String? status) {
     switch (status) {
       case 'Passed':
@@ -138,8 +216,9 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
     debugPrint('[_onStepTap] Index: $index, Step: $stepType, Status: $status, isBlocked: $isBlocked');
 
     Widget nextScreen;
-    // isViewer is true if the step is already finalized (Passed/Failed)
-    final bool isViewer = status == 'Passed' || status == 'Failed'; 
+    // isViewer is true if the step is already finalized or batch is on hold
+    final batchStatus = _batch?['status'] as String?;
+    final bool isViewer = status == 'Passed' || status == 'Failed' || batchStatus == 'OnHold';
 
     if (stepType.contains('cân') || stepType.contains('weigh')) {
       nextScreen = WeighingStepScreen(
@@ -189,6 +268,12 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
       appBar: AppBar(
         title: Text(widget.batchNumber),
         actions: [
+          if (batchStatus != 'Completed' && batchStatus != 'Cancelled' && batchStatus != 'OnHold')
+            TextButton.icon(
+              onPressed: _holdBatch,
+              icon: const Icon(Icons.pause_circle_outline, color: Colors.orangeAccent),
+              label: const Text('Tạm dừng', style: TextStyle(color: Colors.orangeAccent)),
+            ),
           if (batchStatus == 'In-Process' && _logs.isNotEmpty && _logs.every((l) => l['resultStatus'] == 'Passed'))
             TextButton.icon(
               onPressed: _finishBatch,
@@ -287,6 +372,9 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                         final prevStatus = _logs[i - 1]['resultStatus'];
                         if (prevStatus != 'Passed') isClickable = false;
                       }
+                      if (batchStatus == 'OnHold' && status != 'Passed' && status != 'Failed') {
+                        isClickable = false;
+                      }
 
                       return Card(
                         margin: const EdgeInsets.only(bottom: 10),
@@ -308,12 +396,18 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                                 fontWeight: FontWeight.w600,
                                 color: isClickable ? Colors.black87 : Colors.grey
                               )),
-                          subtitle: endTime != null
-                              ? Text(
-                                  'Hoàn thành: ${_formatDate(endTime)}',
-                                  style: const TextStyle(fontSize: 12),
-                                )
-                              : (isClickable ? const Text('Sẵn sàng thực hiện', style: TextStyle(fontSize: 12, color: Colors.blue)) : null),
+                          subtitle: () {
+                            if (status == 'Passed' || status == 'Failed') {
+                              return endTime != null ? Text('Hoàn thành: ${_formatDate(endTime)}', style: const TextStyle(fontSize: 12)) : null;
+                            } else if (status == 'PendingQC') {
+                              return endTime != null ? Text('Chờ QC duyệt: ${_formatDate(endTime)}', style: const TextStyle(fontSize: 12, color: Colors.orange)) : null;
+                            } else if (status == 'Running' || status == 'Approved') {
+                              final timeStr = log['startTime'] as String? ?? endTime;
+                              return timeStr != null ? Text('Bắt đầu lúc: ${_formatDate(timeStr)}', style: const TextStyle(fontSize: 12, color: Colors.blue)) : const Text('Đang thực hiện', style: TextStyle(fontSize: 12, color: Colors.blue));
+                            } else {
+                              return isClickable ? const Text('Sẵn sàng thực hiện', style: TextStyle(fontSize: 12, color: Colors.blue)) : null;
+                            }
+                          }(),
                           trailing: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),

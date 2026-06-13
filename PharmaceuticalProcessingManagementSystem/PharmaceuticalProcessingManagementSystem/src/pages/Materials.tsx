@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { certificatesApi, inventoryApi, materialsApi } from '@/services/api';
 import { Eye, FileCheck2, PackageCheck, Pencil, Plus, Search, ShieldCheck, Trash2, Upload } from 'lucide-react';
 import { formatNumber } from '@/utils/format';
+import { useAuth } from '@/context/AuthContext';
 
 type QcStatus = 'PendingQC' | 'Sampling' | 'Released' | 'Rejected' | 'OnHold';
 type MaterialType = 'RawMaterial' | 'Packaging' | 'FinishedGood';
@@ -203,6 +204,9 @@ export default function Materials() {
   const [quantityDisplayMode, setQuantityDisplayMode] = useState<QuantityDisplayMode>('auto');
   const [form, setForm] = useState<MaterialForm>(makeDefaultForm());
   const [importForm, setImportForm] = useState<Omit<MaterialForm, 'materialCode' | 'materialName' | 'type' | 'baseUomId' | 'physicalForm' | 'technicalSpecification' | 'storageCondition' | 'minStorageTemperature' | 'maxStorageTemperature' | 'minStorageHumidity' | 'maxStorageHumidity' | 'minPh' | 'maxPh' | 'storageNotes'>>(makeDefaultForm());
+
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'QualityControl' || user?.role === 'QA_QC' || user?.role === 'WarehouseStaff';
 
   const { data: materialsRaw, isLoading } = useQuery({ queryKey: ['materials'], queryFn: () => materialsApi.getAll() });
   const { data: lotsRaw } = useQuery({ queryKey: ['inventoryLots'], queryFn: () => inventoryApi.getAll() });
@@ -409,8 +413,12 @@ export default function Materials() {
           <p className="text-sm text-neutral-500 mt-1">Theo dõi dạng nguyên liệu, điều kiện bảo quản, lô nhập, trạng thái duyệt và vị trí kho.</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setShowImportModal(true)} className="btn-secondary flex items-center"><Plus className="w-4 h-4 mr-2" />Nhập lô</button>
-          <button onClick={() => setShowModal(true)} className="btn-primary flex items-center"><Plus className="w-4 h-4 mr-2" />Thêm nguyên liệu</button>
+          {!isReadOnly && (
+            <>
+              <button onClick={() => setShowImportModal(true)} className="btn-secondary flex items-center"><Plus className="w-4 h-4 mr-2" />Nhập lô</button>
+              <button onClick={() => setShowModal(true)} className="btn-primary flex items-center"><Plus className="w-4 h-4 mr-2" />Thêm nguyên liệu</button>
+            </>
+          )}
         </div>
       </div>
 
@@ -420,7 +428,7 @@ export default function Materials() {
           <input value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-9" placeholder="Tìm mã, tên, dạng hoặc điều kiện bảo quản..." />
         </div>
         <select className="input" value={quantityDisplayMode} onChange={(e) => setQuantityDisplayMode(e.target.value as QuantityDisplayMode)}>
-          <option value="auto">Hiển thị đơn vị</option>
+          <option value="auto">Đơn vị gốc</option>
           <option value="large">Hiển thị kg / L</option>
           <option value="small">Hiển thị g / ml</option>
         </select>
@@ -482,7 +490,9 @@ export default function Materials() {
                     <td className="text-right">
                       <div className="flex justify-end gap-2">
                         <button className="btn-ghost text-sm" onClick={() => setDetailMaterial(material)}><Eye className="w-4 h-4 mr-1" />Xem</button>
-                        <button className="btn-ghost text-sm text-red-600" onClick={() => confirm(`Xóa ${material.materialCode}?`) && deleteMaterialMutation.mutate(material.materialId)}><Trash2 className="w-4 h-4 mr-1" />Xóa</button>
+                        {!isReadOnly && (
+                          <button className="btn-ghost text-sm text-red-600" onClick={() => confirm(`Xóa ${material.materialCode}?`) && deleteMaterialMutation.mutate(material.materialId)}><Trash2 className="w-4 h-4 mr-1" />Xóa</button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -592,22 +602,26 @@ export default function Materials() {
                         <td>{formatDate(lot.expiryDate)}</td>
                         <td><a className="text-primary-600 hover:underline inline-flex items-center" href={certificatesApi.getMaterialCertificateUrl(detailMaterial.materialCode)} target="_blank" rel="noreferrer"><FileCheck2 className="w-4 h-4 mr-1" />Xem</a></td>
                         <td className="text-right">
-                          <button className="btn-ghost text-sm" onClick={() => setEditingLot({
-                            lotId: lot.lotId,
-                            lotNumber: lot.lotNumber,
-                            quantityCurrent: lot.quantityCurrent,
-                            manufactureDate: toInputDate(lot.manufactureDate),
-                            expiryDate: toInputDate(lot.expiryDate),
-                            supplierLotNumber: lot.supplierLotNumber,
-                            supplierName: lot.supplierName,
-                            containerType: lot.containerType,
-                            containerCount: lot.containerCount,
-                            qcStatus: lot.qcStatus,
-                            coaFilePath: lot.coaFilePath,
-                            rejectedReason: lot.rejectedReason,
-                            locationId: lot.locationId,
-                          })}><Pencil className="w-4 h-4 mr-1" />Sửa</button>
-                          <button className="btn-ghost text-sm text-red-600" onClick={() => confirm(`Xóa lô ${lot.lotNumber}?`) && deleteLotMutation.mutate(lot.lotId)}><Trash2 className="w-4 h-4 mr-1" />Xóa</button>
+                          {!isReadOnly && (
+                            <>
+                              <button className="btn-ghost text-sm" onClick={() => setEditingLot({
+                                lotId: lot.lotId,
+                                lotNumber: lot.lotNumber,
+                                quantityCurrent: lot.quantityCurrent,
+                                manufactureDate: toInputDate(lot.manufactureDate),
+                                expiryDate: toInputDate(lot.expiryDate),
+                                supplierLotNumber: lot.supplierLotNumber,
+                                supplierName: lot.supplierName,
+                                containerType: lot.containerType,
+                                containerCount: lot.containerCount,
+                                qcStatus: lot.qcStatus,
+                                coaFilePath: lot.coaFilePath,
+                                rejectedReason: lot.rejectedReason,
+                                locationId: lot.locationId,
+                              })}><Pencil className="w-4 h-4 mr-1" />Sửa</button>
+                              <button className="btn-ghost text-sm text-red-600" onClick={() => confirm(`Xóa lô ${lot.lotNumber}?`) && deleteLotMutation.mutate(lot.lotId)}><Trash2 className="w-4 h-4 mr-1" />Xóa</button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))}

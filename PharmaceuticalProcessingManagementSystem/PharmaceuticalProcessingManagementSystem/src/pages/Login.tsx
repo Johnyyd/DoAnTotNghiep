@@ -24,14 +24,19 @@ export default function Login() {
     try {
       const user: any = await login(username.trim(), password);
       
-      if (user?.role === 'WarehouseStaff' || user?.role === 'Operator') {
+      if (user?.role === 'Operator') {
         logout(); // Đăng xuất ngay lập tức
         setError('Tài khoản này chỉ được phép sử dụng trên Mobile App. Vui lòng không sử dụng giao diện Web.');
         return;
       }
 
       toast.success('Đăng nhập thành công! Chào mừng trở lại.');
-      navigate('/dashboard', { replace: true });
+      
+      if (user?.role === 'QualityControl' || user?.role === 'QA_QC' || user?.role === 'WarehouseStaff') {
+        navigate('/materials', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } catch (err: any) {
       const msg =
         err?.response?.data?.message ||
@@ -132,8 +137,6 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Footer hint */}
-          
         </div>
       </div>
     </div>

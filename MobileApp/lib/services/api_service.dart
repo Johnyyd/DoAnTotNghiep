@@ -225,6 +225,22 @@ class ApiService {
     }
   }
 
+  /// Tạm dừng mẻ sản xuất do sự cố
+  static Future<bool> holdBatch(int batchId, String reason) async {
+    final url = Uri.parse('$baseUrl/production-batches/$batchId/hold');
+    try {
+      final response = await http.post(
+        url,
+        headers: await _headers(),
+        body: jsonEncode({"reason": reason}),
+      );
+      return response.statusCode >= 200 && response.statusCode < 300;
+    } catch (e) {
+      return false;
+    }
+  }
+
+
   // ─── BATCH PROCESS LOGS ────────────────────────────────────
 
   /// Lấy nhật ký công đoạn của một mẻ (Virtual Workflow: Routing + Logs)

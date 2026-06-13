@@ -121,7 +121,10 @@ namespace GMP_System.Controllers
         private static bool CanAccessWeb(string? role)
         {
             return string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(role, "ProductionManager", StringComparison.OrdinalIgnoreCase);
+                || string.Equals(role, "ProductionManager", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role, "QA_QC", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role, "QualityControl", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role, "WarehouseStaff", StringComparison.OrdinalIgnoreCase);
         }
 
         private string GenerateJwtToken(AppUser user)

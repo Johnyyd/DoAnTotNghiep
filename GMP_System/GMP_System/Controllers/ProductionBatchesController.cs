@@ -317,7 +317,9 @@ namespace GMP_System.Controllers
                     .ThenInclude(bom => bom.Material)
                 .Include(b => b.ProductionOrderBoms)
                     .ThenInclude(bom => bom.Uom)
-                .Where(b => (b.Status == "Scheduled" || b.Status == "In-Process") && b.ProductionOrderBoms.Any())
+                .Include(b => b.ProductionOrderBoms)
+                    .ThenInclude(bom => bom.SelectedLot)
+                .Where(b => b.ProductionOrderBoms.Any() && b.Status != "Completed" && b.Status != "Cancelled")
                 .Select(b => new
                 {
                     b.BatchId,
@@ -334,7 +336,8 @@ namespace GMP_System.Controllers
                         bom.DispensingStatus,
                         MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
                         MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
-                        UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
+                        UomName = bom.Uom != null ? bom.Uom.UomName : "N/A",
+                        SelectedLotNumber = bom.SelectedLot != null ? bom.SelectedLot.LotNumber : "Chưa chỉ định"
                     }),
                     IsFullyDispensed = b.ProductionOrderBoms.Any() && b.ProductionOrderBoms.All(bom => bom.DispensingStatus == "Dispensed")
                 })
@@ -364,5 +367,44 @@ namespace GMP_System.Controllers
         {
             public int UserId { get; set; }
         }
+
+        [HttpPost("{id}/hold")]
+        public async Task<IActionResult> Hold(int id, [FromBody] HoldBatchRequest request)
+        {
+            var batch = await _unitOfWork.ProductionBatches.Query()
+                .Include(b => b.Order)
+                .FirstOrDefaultAsync(b => b.BatchId == id);
+            
+            if (batch == null)
+                return NotFound(new { success = false, message = "Không tìm thấy mẻ sản xuất." });
+
+            if (batch.Status == "Completed" || batch.Status == "Cancelled")
+                return BadRequest(new { success = false, message = "Không thể tạm dừng mẻ đã kết thúc hoặc hủy." });
+
+            batch.Status = "OnHold";
+            
+            if (batch.Order != null)
+            {
+                batch.Order.Status = "Hold";
+                if (!string.IsNullOrWhiteSpace(request.Reason))
+                {
+                    batch.Order.Note = string.IsNullOrWhiteSpace(batch.Order.Note) 
+                        ? $"[{DateTime.Now:dd/MM/yyyy HH:mm}] Sự cố mẻ {batch.BatchNumber}: {request.Reason}"
+                        : $"{batch.Order.Note}\n[{DateTime.Now:dd/MM/yyyy HH:mm}] Sự cố mẻ {batch.BatchNumber}: {request.Reason}";
+                }
+                _unitOfWork.ProductionOrders.Update(batch.Order);
+            }
+
+            _unitOfWork.ProductionBatches.Update(batch);
+            await _unitOfWork.CompleteAsync();
+
+            return Ok(new { success = true, message = "Đã tạm dừng mẻ và ghi nhận sự cố." });
+        }
+
+        public class HoldBatchRequest
+        {
+            public string Reason { get; set; } = string.Empty;
+        }
     }
 }
+

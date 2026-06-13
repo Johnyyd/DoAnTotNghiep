@@ -1,4 +1,4 @@
-﻿/* =========================================================================
+/* =========================================================================
    HỆ THỐNG QUẢN LÝ SẢN XUẤT DƯỢC PHẨM (GMP-WHO)
    FULL SEED DATA v3.2 - Fully Synchronized with Schema.sql
    ========================================================================= */
@@ -258,8 +258,7 @@ INSERT INTO StepParameters (ParameterId, RoutingId, ParameterName, Unit, MinValu
 (4, 1, N'Nhiệt độ sấy',  '°C', 73, 77, 1, NULL),
 (20, 1, N'Thời gian sấy', 'phút', 170, 190, 1, NULL),
 (24, 2, N'Nhiệt độ sấy',  '°C', 73, 77, 1, NULL),
-(7, 4, N'Tốc độ trộn',   'v/p', 14, 16, 1, NULL),
-(50, 18, N'Nhiệt độ sấy', '°C', 60, 70, 1, NULL);
+(7, 4, N'Tốc độ trộn',   'v/p', 14, 16, 1, NULL);
 SET IDENTITY_INSERT StepParameters OFF;
 GO
 -- -------------------------------------------------------------------------
@@ -470,22 +469,25 @@ IF @MatPvcId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM InventoryLots WHERE Mater
 -- =====================================================================
 PRINT 'Seeding RecipeTechSpecs...';
 
+DECLARE @CrilaRecipeId INT = (SELECT TOP 1 RecipeId FROM Recipes WHERE MaterialId IN (SELECT MaterialId FROM Materials WHERE MaterialCode = 'TP-CRILA'));
+
+IF @CrilaRecipeId IS NOT NULL
 BEGIN
     SET IDENTITY_INSERT RecipeTechSpecs ON;
 
     INSERT INTO RecipeTechSpecs (SpecId, RecipeId, OrderId, ParentId, SortOrder, Content, IsChecked) VALUES
-    (1, 1, NULL, NULL, 0, N'Viên nang số "0", bột thuốc trong nang màu vàng nhạt đến nâu đậm, có mùi thơm đặc trưng, vị đặc biệt', 0),
-    (2, 1, NULL, NULL, 1, N'Mất khối lượng do làm khô không quá 9,0 %', 0),
-    (3, 1, NULL, NULL, 2, N'Độ tan rã không quá 30 phút', 0),
-    (4, 1, NULL, NULL, 3, N'Độ đồng đều khối lượng: Khối lượng trung bình bột thuốc trong nang ± 7,5 %', 0),
-    (5, 1, NULL, NULL, 4, N'Định tính: Phải thể hiện phép định tính của cao khô Trinh nữ Crila', 0),
-    (6, 1, NULL, NULL, 5, N'Định lượng: Hàm lượng alcaloid toàn phần tính theo lycorin phải từ 1,125 - 1,375 mg/viên', 0),
-    (7, 1, NULL, NULL, 6, N'Độ nhiễm khuẩn', 0),
-    (8, 1, NULL, 7, 0, N'Tổng số vi khuẩn hiếu khí ≤ 10⁴ Khuẩn lạc/g', 0),
-    (9, 1, NULL, 7, 1, N'Tổng số bào tử nấm men – mốc ≤ 10² Khuẩn lạc/g', 0),
-    (10, 1, NULL, 7, 2, N'Tổng số vi khuẩn Gram âm dung nạp mật ≤ 10² Khuẩn lạc/g', 0),
-    (11, 1, NULL, 7, 3, N'Salmonella: Không được có (10g)', 0),
-    (12, 1, NULL, 7, 4, N'E.Coli, Pseudomonas aeruginosa, Staphylococcus aureus: Không được có (1g)', 0);
+    (1, @CrilaRecipeId, NULL, NULL, 0, N'Viên nang số "0", bột thuốc trong nang màu vàng nhạt đến nâu đậm, có mùi thơm đặc trưng, vị đặc biệt', 0),
+    (2, @CrilaRecipeId, NULL, NULL, 1, N'Mất khối lượng do làm khô không quá 9,0 %', 0),
+    (3, @CrilaRecipeId, NULL, NULL, 2, N'Độ tan rã không quá 30 phút', 0),
+    (4, @CrilaRecipeId, NULL, NULL, 3, N'Độ đồng đều khối lượng: Khối lượng trung bình bột thuốc trong nang ± 7,5 %', 0),
+    (5, @CrilaRecipeId, NULL, NULL, 4, N'Định tính: Phải thể hiện phép định tính của cao khô Trinh nữ Crila', 0),
+    (6, @CrilaRecipeId, NULL, NULL, 5, N'Định lượng: Hàm lượng alcaloid toàn phần tính theo lycorin phải từ 1,125 - 1,375 mg/viên', 0),
+    (7, @CrilaRecipeId, NULL, NULL, 6, N'Độ nhiễm khuẩn', 0),
+    (8, @CrilaRecipeId, NULL, 7, 0, N'Tổng số vi khuẩn hiếu khí ≤ 10⁴ Khuẩn lạc/g', 0),
+    (9, @CrilaRecipeId, NULL, 7, 1, N'Tổng số bào tử nấm men – mốc ≤ 10² Khuẩn lạc/g', 0),
+    (10, @CrilaRecipeId, NULL, 7, 2, N'Tổng số vi khuẩn Gram âm dung nạp mật ≤ 10² Khuẩn lạc/g', 0),
+    (11, @CrilaRecipeId, NULL, 7, 3, N'Salmonella: Không được có (10g)', 0),
+    (12, @CrilaRecipeId, NULL, 7, 4, N'E.Coli, Pseudomonas aeruginosa, Staphylococcus aureus: Không được có (1g)', 0);
 
     SET IDENTITY_INSERT RecipeTechSpecs OFF;
     PRINT 'RecipeTechSpecs seeded successfully.';

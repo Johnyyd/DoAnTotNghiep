@@ -34,6 +34,7 @@ export default function AppUsers() {
     switch (role) {
       case 'Admin':
         return { label: 'Quản trị viên', classes: 'bg-red-100 text-red-700' };
+      case 'QA_QC':
       case 'QualityControl':
         return { label: 'Kiểm soát chất lượng (QC)', classes: 'bg-purple-100 text-purple-700' };
       case 'ProductionManager':

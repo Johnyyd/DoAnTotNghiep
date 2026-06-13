@@ -275,15 +275,29 @@ class _DryingStepScreenState extends State<DryingStepScreen>
             }
             _tempCtrl.text = params['nhietDo'] ?? '';
             _humidCtrl.text = params['doAm'] ?? '';
-            _timeCtrl.text = params['thoiGianKiemTra'] ?? '';
+            
+            final loadedCheckTime = params['thoiGianCheck'] ?? params['thoiGianKiemTra'];
+            if (loadedCheckTime != null && loadedCheckTime.toString().isNotEmpty) {
+              _timeCtrl.text = loadedCheckTime.toString();
+            }
+            
             _pressCtrl.text = params['apLuc'] ?? '';
             if (params['mayKhongTai'] != null) {
               _mayKhongTai = params['mayKhongTai'];
             }
             _tempInCtrl.text = params['nhietDoKhiVao'] ?? '';
             _tempOutCtrl.text = params['nhietDoKhiRa'] ?? '';
-            _timeStartCtrl.text = params['batDauSay'] ?? '';
-            _timeEndCtrl.text = params['ketThucSay'] ?? '';
+            
+            final loadedStartTime = params['batDauSay'];
+            if (loadedStartTime != null && loadedStartTime.toString().isNotEmpty) {
+              _timeStartCtrl.text = loadedStartTime.toString();
+            }
+            
+            final loadedEndTime = params['ketThucSay'];
+            if (loadedEndTime != null && loadedEndTime.toString().isNotEmpty) {
+              _timeEndCtrl.text = loadedEndTime.toString();
+            }
+            
             _humidAfterCtrl.text = params['doAmSauSay'] ?? '';
             _slTruocCtrl.text = params['slTruocSay'] ?? '';
             _slSauCtrl.text = params['slSauSay'] ?? '';
@@ -425,6 +439,8 @@ class _DryingStepScreenState extends State<DryingStepScreen>
         matchName: 'Áp lực phòng');
     validateInput('nhietDoKhiVao', _tempInCtrl.text, _standardParams,
         matchName: 'Nhiệt độ sấy');
+    validateInput('nhietDoKhiRa', _tempOutCtrl.text, _standardParams,
+        matchName: 'Nhiệt độ khí ra');
     validateInput('tgSayCaiDat', _tgSayCaiDatCtrl.text, _standardParams,
         matchName: 'Thời gian sấy');
     validateInput('doAmSauSay', _humidAfterCtrl.text, _standardParams,
@@ -645,9 +661,14 @@ class _DryingStepScreenState extends State<DryingStepScreen>
         _autoCalcTimeEnd();
       }
       setState(() => _currentPhase = ExecutionPhase.input);
+      // Dừng auto-update giờ kiểm tra, bắt đầu auto-update giờ bắt đầu
+      stopTimeUpdateFor(_timeCtrl);
+      startTimeUpdates([_timeStartCtrl]);
       // Giữ status Running khi nhập liệu
       await _submit('Running', null, isInternal: true);
     } else if (_currentPhase == ExecutionPhase.input) {
+      // Dừng auto-update giờ bắt đầu khi đã bắt đầu sấy
+      stopTimeUpdateFor(_timeStartCtrl);
       // Chuyển sang giai đoạn Đợi QC (PendingQC)
       await _verifyAndSubmit();
     } else if (_currentPhase == ExecutionPhase.execution) {
@@ -782,16 +803,18 @@ class _DryingStepScreenState extends State<DryingStepScreen>
         'slTruocSay': _slTruocCtrl.text,
         'slSauSay': _slSauCtrl.text,
         'mauKiemTra': _mauKiemTra,
-        'netWeight': (double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ??
-                0) -
-            ((double.tryParse(_mauKiemTra.replaceAll(',', '.')) ?? 0) / 1000.0),
-        'yieldLoss': _slTruocCtrl.text.isNotEmpty
-            ? (((double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0) -
-                    (double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ??
-                        0)) /
-                (double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 1) *
-                100)
-            : 0,
+        'netWeight': (() {
+          var w = (double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0) -
+              ((double.tryParse(_mauKiemTra.replaceAll(',', '.')) ?? 0) / 1000.0);
+          return (w.isNaN || w.isInfinite) ? 0.0 : w;
+        })(),
+        'yieldLoss': (() {
+          var truoc = double.tryParse(_slTruocCtrl.text.replaceAll(',', '.')) ?? 0.0;
+          var sau = double.tryParse(_slSauCtrl.text.replaceAll(',', '.')) ?? 0.0;
+          if (truoc == 0.0) return 0.0;
+          var loss = ((truoc - sau) / truoc) * 100.0;
+          return (loss.isNaN || loss.isInfinite) ? 0.0 : loss;
+        })(),
         'viTriCuaGio': _cuaGioCtrl.text,
         'doAmDauVao': _inputMoistureCtrl.text,
         'doAmSauSay': _humidAfterCtrl.text,
@@ -1406,10 +1429,15 @@ class _DryingStepScreenState extends State<DryingStepScreen>
               controller: _tempOutCtrl,
               readOnly: _isPhase4Locked || _secondsRemaining > 0,
               keyboardType: TextInputType.number,
+              status: inputStatuses['nhietDoKhiRa'] ?? 'none',
+              standardText: getStandardText('Nhiệt độ khí ra', _standardParams),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
               ],
-              onChanged: (v) => setState(() {}),
+              onChanged: (v) {
+                validateInput('nhietDoKhiRa', v, _standardParams, matchName: 'Nhiệt độ khí ra');
+                setState(() {});
+              },
             )),
           ],
         ),

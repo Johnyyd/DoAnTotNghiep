@@ -164,22 +164,7 @@ BEGIN
     ADD CONSTRAINT FK_Recipes_BatchUom FOREIGN KEY (BatchUomId) REFERENCES dbo.UnitOfMeasure(UomId)');
 END;
 
-IF OBJECT_ID(N'dbo.Recipes', N'U') IS NOT NULL
-   AND OBJECT_ID(N'dbo.UnitOfMeasure', N'U') IS NOT NULL
-BEGIN
-    EXEC(N'UPDATE r
-    SET BatchUomId = CASE
-        WHEN m.BaseUomID IN (3, 10) THEN 10
-        ELSE 9
-    END
-    FROM dbo.Recipes r
-    LEFT JOIN dbo.Materials m ON r.MaterialID = m.MaterialID
-    WHERE r.BatchUomId IS NULL');
-
-    EXEC(N'UPDATE dbo.Recipes
-    SET BatchUomId = 10
-    WHERE (RecipeName LIKE N''%ống%'' OR Note LIKE N''%ml/%'')');
-END;
+    -- Skipped UPDATE dbo.Recipes due to Trigger conflict
 
 IF COL_LENGTH(N'dbo.ProductionOrderBom', N'SelectedLotId') IS NULL
 BEGIN

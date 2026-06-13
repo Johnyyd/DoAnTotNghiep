@@ -191,6 +191,7 @@ class _DispensingScreenState extends State<DispensingScreen> {
                 final requiredQuantity = bom['requiredQuantity'] ?? bom['RequiredQuantity'] ?? 0;
                 final uomName = bom['uomName'] ?? bom['UomName'] ?? 'kg';
                 final orderBomId = bom['orderBomId'] ?? bom['OrderBomId'] ?? 0;
+                final selectedLotNumber = bom['selectedLotNumber'] ?? bom['SelectedLotNumber'] ?? 'Chưa chỉ định';
                 
                 final isDispensed = dispensingStatus == 'Dispensed';
                 
@@ -200,7 +201,8 @@ class _DispensingScreenState extends State<DispensingScreen> {
                     color: isDispensed ? Colors.green : Colors.orange,
                   ),
                   title: Text(materialName),
-                  subtitle: Text('$requiredQuantity $uomName'),
+                  subtitle: Text('$requiredQuantity $uomName\nLô: $selectedLotNumber'),
+                  isThreeLine: true,
                   trailing: isDispensed
                       ? const Text('Đã xong', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))
                       : ElevatedButton(
