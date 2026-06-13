@@ -132,7 +132,6 @@ public partial class GmpContext : DbContext
         modelBuilder.Entity<BatchProcessParameterValue>(entity =>
         {
             entity.HasKey(e => e.ValueId);
-            entity.ToTable(tb => tb.HasTrigger("trg_Validate_Drying_Limit"));
             entity.Property(e => e.ValueId).HasColumnName("ValueId");
             entity.Property(e => e.LogId).HasColumnName("LogId");
             entity.Property(e => e.ParameterId).HasColumnName("ParameterId");
@@ -294,8 +293,6 @@ public partial class GmpContext : DbContext
         modelBuilder.Entity<ProductionBatch>(entity =>
         {
             entity.HasKey(e => e.BatchId).HasName("PK__Producti__5D55CE38408FD6AE");
-
-            entity.ToTable(tb => tb.HasTrigger("trg_Validate_Batch_Status_Flow"));
 
             entity.HasIndex(e => e.BatchNumber, "UQ__Producti__F869ED6D7BFC6457").IsUnique();
 

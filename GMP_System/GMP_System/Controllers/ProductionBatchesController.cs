@@ -317,9 +317,7 @@ namespace GMP_System.Controllers
                     .ThenInclude(bom => bom.Material)
                 .Include(b => b.ProductionOrderBoms)
                     .ThenInclude(bom => bom.Uom)
-                .Include(b => b.ProductionOrderBoms)
-                    .ThenInclude(bom => bom.SelectedLot)
-                .Where(b => b.ProductionOrderBoms.Any() && b.Status != "Completed" && b.Status != "Cancelled")
+                .Where(b => (b.Status == "Scheduled" || b.Status == "In-Process") && b.ProductionOrderBoms.Any())
                 .Select(b => new
                 {
                     b.BatchId,
@@ -336,8 +334,7 @@ namespace GMP_System.Controllers
                         bom.DispensingStatus,
                         MaterialName = bom.Material != null ? bom.Material.MaterialName : "Unknown",
                         MaterialCode = bom.Material != null ? bom.Material.MaterialCode : string.Empty,
-                        UomName = bom.Uom != null ? bom.Uom.UomName : "N/A",
-                        SelectedLotNumber = bom.SelectedLot != null ? bom.SelectedLot.LotNumber : "Chưa chỉ định"
+                        UomName = bom.Uom != null ? bom.Uom.UomName : "N/A"
                     }),
                     IsFullyDispensed = b.ProductionOrderBoms.Any() && b.ProductionOrderBoms.All(bom => bom.DispensingStatus == "Dispensed")
                 })
