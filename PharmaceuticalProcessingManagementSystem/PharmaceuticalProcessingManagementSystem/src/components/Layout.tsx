@@ -26,17 +26,17 @@ const roleLabels: Record<string, string> = {
 };
 
 const navigation = [
-  { name: 'Bảng Điều Khiển', href: '/dashboard', icon: LayoutDashboard, roles: ['Admin', 'ProductionManager', 'QualityControl', 'Operator', 'WarehouseStaff'] },
-  { name: 'Nguyên Liệu', href: '/materials', icon: Pill, roles: ['Admin', 'ProductionManager', 'QualityControl'] },
-  { name: 'Thành Phẩm', href: '/finished-products', icon: Package, roles: ['Admin', 'ProductionManager', 'QualityControl'] },
+  { name: 'Bảng Điều Khiển', href: '/dashboard', icon: LayoutDashboard, roles: ['Admin', 'ProductionManager', 'Operator'] },
+  { name: 'Nguyên Liệu', href: '/materials', icon: Pill, roles: ['Admin', 'ProductionManager', 'QualityControl', 'QA_QC', 'WarehouseStaff'] },
+  { name: 'Thành Phẩm', href: '/finished-products', icon: Package, roles: ['Admin', 'ProductionManager'] },
   { name: 'Công Thức', href: '/recipes', icon: ClipboardList, roles: ['Admin', 'ProductionManager'] },
-  { name: 'Lệnh Sản Xuất', href: '/production-orders', icon: Warehouse, roles: ['Admin', 'ProductionManager'] },
+  { name: 'Lệnh Sản Xuất', href: '/production-orders', icon: Warehouse, roles: ['Admin', 'ProductionManager', 'QualityControl', 'QA_QC'] },
   { name: 'Mẻ Sản Xuất', href: '/batches', icon: Package, roles: ['Admin', 'ProductionManager', 'Operator'] },
   { name: 'Theo Dõi Tiến Độ', href: '/manager-operations', icon: FileText, roles: ['Admin', 'ProductionManager'] },
   { name: 'Thống Kê', href: '/finished-goods-stats', icon: BarChart3, roles: ['Admin', 'ProductionManager'] },
   { name: 'Thiết Bị', href: '/equipments', icon: Settings, roles: ['Admin', 'ProductionManager'] },
   { name: 'Khu Sản Xuất', href: '/production-areas', icon: Factory, roles: ['Admin', 'ProductionManager'] },
-  { name: 'Kho', href: '/storage-locations', icon: Warehouse, roles: ['Admin', 'ProductionManager', 'WarehouseStaff', 'QualityControl'] },
+  { name: 'Kho', href: '/storage-locations', icon: Warehouse, roles: ['Admin', 'ProductionManager'] },
   { name: 'Tài Khoản', href: '/users', icon: Users, roles: ['Admin'] },
 ];
 

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { certificatesApi, inventoryApi, productionBatchesApi, productionOrdersApi, recipesApi } from '@/services/api';
 import { Calculator, CheckCircle2, ClipboardList, FileCheck2, Layers, Pencil, Search, Trash2, Upload, X } from 'lucide-react';
 import { formatNumber, formatDate, formatRecipeBatchSize, isRecipeLiquid } from '@/utils/format';
+import { useAuth } from '@/context/AuthContext';
 
 type OrderStatus = 'Draft' | 'Approved' | 'In-Process' | 'Pending Worker' | 'Hold' | 'Completed';
 
@@ -116,6 +117,9 @@ export default function ProductionOrders() {
   const [uploadingForBatch, setUploadingForBatch] = useState<string | null>(null);
   const [selectedLotByMaterial, setSelectedLotByMaterial] = useState<Record<number, number>>({});
   const uploadInputRef = useRef<HTMLInputElement>(null);
+
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'QualityControl' || user?.role === 'QA_QC';
 
   const [orderForm, setOrderForm] = useState({
     orderCode: '',
@@ -455,8 +459,9 @@ export default function ProductionOrders() {
       </div>
 
       {/* Planning Panel */}
-      <div className="rounded-xl border border-primary-200 bg-primary-50/40 p-4 space-y-4">
-        <div className="flex items-center gap-2"><Calculator className="w-5 h-5 text-primary-700" /><h3 className="text-lg font-semibold text-primary-900">Lập lệnh sản xuất</h3></div>
+      {!isReadOnly && (
+        <div className="rounded-xl border border-primary-200 bg-primary-50/40 p-4 space-y-4">
+          <div className="flex items-center gap-2"><Calculator className="w-5 h-5 text-primary-700" /><h3 className="text-lg font-semibold text-primary-900">Lập lệnh sản xuất</h3></div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
@@ -552,6 +557,7 @@ export default function ProductionOrders() {
           </button>
         </div>
       </div>
+      )}
 
       {/* Search */}
       <div className="card">
@@ -577,7 +583,7 @@ export default function ProductionOrders() {
                   <th>Số lượng kế hoạch</th>
                   <th>Trạng thái</th>
                   <th>Dự kiến bắt đầu</th>
-                  <th className="text-right">Thao tác</th>
+                  {!isReadOnly && <th className="text-right">Thao tác</th>}
                 </tr>
               </thead>
               <tbody>
@@ -601,26 +607,28 @@ export default function ProductionOrders() {
                       </span>
                     </td>
                     <td>{formatDate(order.plannedStartDate)}</td>
-                    <td className="text-right">
-                      <div className="flex justify-end gap-2">
-                        {order.status === 'Approved' && (
-                          <button onClick={() => holdOrderMutation.mutate(order.orderId)} className="btn-ghost text-sm text-orange-600">Tạm dừng</button>
-                        )}
-                        {order.status === 'Hold' && (
-                          <button onClick={() => resumeOrderMutation.mutate(order.orderId)} className="btn-ghost text-sm text-blue-600">Tiếp tục</button>
-                        )}
-                        {(order.status === 'Draft' || order.status === 'Hold') && (
-                          <button onClick={() => openEditOrder(order)} className="btn-ghost text-sm"><Pencil className="w-4 h-4 mr-1" />Sá»­a</button>
-                        )}
-                        <button onClick={() => {
-                          if (order.status === 'Completed' || order.status === 'In-Process') {
-                            alert('Lệnh này đang chạy hoặc đã hoàn thành, không thể xoá!');
-                            return;
-                          }
-                          if (confirm('Xóa lệnh sản xuất này?')) deleteOrderMutation.mutate(order.orderId);
-                        }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xóa</button>
-                      </div>
-                    </td>
+                    {!isReadOnly && (
+                      <td className="text-right">
+                        <div className="flex justify-end gap-2">
+                          {(order.status === 'Approved' || order.status === 'In-Process' || order.status === 'InProcess') && (
+                            <button onClick={() => holdOrderMutation.mutate(order.orderId)} className="btn-ghost text-sm text-orange-600">Tạm dừng</button>
+                          )}
+                          {order.status === 'Hold' && (
+                            <button onClick={() => resumeOrderMutation.mutate(order.orderId)} className="btn-ghost text-sm text-blue-600">Tiếp tục</button>
+                          )}
+                          {(order.status === 'Draft' || order.status === 'Hold') && (
+                            <button onClick={() => openEditOrder(order)} className="btn-ghost text-sm"><Pencil className="w-4 h-4 mr-1" />Sửa</button>
+                          )}
+                          <button onClick={() => {
+                            if (order.status === 'Completed' || order.status === 'In-Process') {
+                              alert('Lệnh này đang chạy hoặc đã hoàn thành, không thể xoá!');
+                              return;
+                            }
+                            if (confirm('Xóa lệnh sản xuất này?')) deleteOrderMutation.mutate(order.orderId);
+                          }} className="btn-ghost text-sm text-red-600"><Trash2 className="w-4 h-4 mr-1" />Xóa</button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
