@@ -344,40 +344,6 @@ namespace GMP_System.Controllers
                 await _unitOfWork.ProductionOrders.AddAsync(order);
                 await _unitOfWork.CompleteAsync();
 
-                // [BOM SYNC] Generate unique BOM for this order based on Recipe and PlannedQuantity
-                var recipeBoms = await _unitOfWork.RecipeBoms.Query()
-                    .Where(b => b.RecipeId == order.RecipeId)
-                    .Include(b => b.Material).ThenInclude(m => m!.BaseUom)
-                    .ToListAsync();
-
-                foreach (var rb in recipeBoms)
-                {
-                    // Skip packaging materials in BOM for weight/ratio calculation (though still needed in deduction)
-                    // Wait, the user said Packaging (Hard capsule shell) shouldn't be counted in ratio/mass.
-                    // But they still need to be in the order BOM for tracking/deduction purposes? 
-                    // Actually, the user says "không được tính trong tỉ lệ công thức và cũng không tính cho khối lượng luôn".
-                    // I will still include them in ProductionOrderBoms so we know they are needed, 
-                    // but I'll mark them or the frontend will handle the exclusion.
-                    
-                    var orderBom = new ProductionOrderBom
-                    {
-                        OrderId = order.OrderId,
-                        MaterialId = rb.MaterialId,
-                        UomId = rb.Material?.BaseUomId ?? rb.UomId ?? 1,
-                        WastePercentage = rb.WastePercentage,
-                        RequiredQuantity = CalculateRequiredQuantity(
-                            order.PlannedQuantity,
-                            rb.Quantity,
-                            rb.UomId ?? rb.Material?.BaseUomId ?? 1,
-                            rb.Material?.BaseUomId ?? rb.UomId ?? 1,
-                            rb.WastePercentage),
-                        SelectedLotId = rb.MaterialId.HasValue && selectedLotByMaterial.TryGetValue(rb.MaterialId.Value, out var selectedLotId) ? selectedLotId : null,
-                        Note = rb.Note
-                    };
-                    await _unitOfWork.ProductionOrderBoms.AddAsync(orderBom);
-                }
-                await _unitOfWork.CompleteAsync();
-
                 // [SNAPSHOT ROUTING] Copy all routing steps from recipe to order
                 var recipeRoutings = await _context.RecipeRoutings
                     .Where(r => r.RecipeId == order.RecipeId && r.OrderId == null)
@@ -450,6 +416,12 @@ namespace GMP_System.Controllers
                 }
                 await _context.SaveChangesAsync();
 
+                // Load Recipe BOMs for Batch BOM generation
+                var recipeBoms = await _unitOfWork.RecipeBoms.Query()
+                    .Where(b => b.RecipeId == order.RecipeId)
+                    .Include(b => b.Material).ThenInclude(m => m!.BaseUom)
+                    .ToListAsync();
+
                 // Auto-split into batches if not already present
                 if (order.RecipeId.HasValue && order.PlannedQuantity > 0)
                 {
@@ -480,7 +452,7 @@ namespace GMP_System.Controllers
                             remainingUnits -= currentBatchUnits;
 
                             string batchNumber = $"B{order.OrderCode.Substring(3)}-{(i + 1):D2}";
-                            await _unitOfWork.ProductionBatches.AddAsync(new ProductionBatch
+                            var newBatch = new ProductionBatch
                             {
                                 OrderId = order.OrderId,
                                 BatchNumber = batchNumber,
@@ -488,9 +460,33 @@ namespace GMP_System.Controllers
                                 Status = (i == 0 && order.Status == "In-Process") ? "In-Process" : "Scheduled",
                                 CurrentStep = (i == 0 && order.Status == "In-Process") ? 1 : 0,
                                 ManufactureDate = DateTime.Now
-                            });
+                            };
+                            await _unitOfWork.ProductionBatches.AddAsync(newBatch);
+                            await _unitOfWork.CompleteAsync(); // Save to get BatchId
+
+                            // Generate BOMs for this specific batch
+                            foreach (var rb in recipeBoms)
+                            {
+                                var batchBom = new ProductionOrderBom
+                                {
+                                    OrderId = order.OrderId,
+                                    BatchId = newBatch.BatchId,
+                                    MaterialId = rb.MaterialId,
+                                    UomId = rb.Material?.BaseUomId ?? rb.UomId ?? 1,
+                                    WastePercentage = rb.WastePercentage,
+                                    RequiredQuantity = CalculateRequiredQuantity(
+                                        currentBatchUnits, // Calculated based on BATCH units!
+                                        rb.Quantity,
+                                        rb.UomId ?? rb.Material?.BaseUomId ?? 1,
+                                        rb.Material?.BaseUomId ?? rb.UomId ?? 1,
+                                        rb.WastePercentage),
+                                    SelectedLotId = rb.MaterialId.HasValue && selectedLotByMaterial.TryGetValue(rb.MaterialId.Value, out var selectedLotId) ? selectedLotId : null,
+                                    Note = rb.Note
+                                };
+                                await _unitOfWork.ProductionOrderBoms.AddAsync(batchBom);
+                            }
+                            await _unitOfWork.CompleteAsync();
                         }
-                        await _unitOfWork.CompleteAsync();
                     }
                 }
 
@@ -874,6 +870,7 @@ namespace GMP_System.Controllers
                 .Include(o => o.ProductionOrderBoms)
                 .Include(o => o.RecipeRoutings)
                 .Include(o => o.ProductionBatches)
+                    .ThenInclude(b => b.BatchProcessLogs)
                 .FirstOrDefaultAsync(o => o.OrderId == id);
 
             if (order == null)
@@ -881,29 +878,65 @@ namespace GMP_System.Controllers
                 return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
             }
 
-            // Clean up related data if order is in Draft status
-            if (order.Status == "Draft")
+            if (order.Status == "In-Process" || order.Status == "Completed")
             {
-                // Remove Boms
-                if (order.ProductionOrderBoms.Any())
-                    _unitOfWork.ProductionOrderBoms.RemoveRange(order.ProductionOrderBoms);
-
-                // Remove Routings (those specific to this order)
-                if (order.RecipeRoutings.Any())
-                    _unitOfWork.RecipeRoutings.RemoveRange(order.RecipeRoutings);
-                
-                // If there are batches (shouldn't be in Draft usually, but safety first)
-                if (order.ProductionBatches.Any())
-                    _unitOfWork.ProductionBatches.RemoveRange(order.ProductionBatches);
+                return BadRequest(new { success = false, message = $"Không thể xóa lệnh sản xuất đang chạy hoặc đã hoàn thành." });
             }
-            else
+
+            bool hasStartedLog = order.ProductionBatches.Any(b => b.BatchProcessLogs != null && b.BatchProcessLogs.Any(log => log.ResultStatus != "Pending" && log.ResultStatus != "PENDING"));
+            if (hasStartedLog)
             {
-                return BadRequest(new { success = false, message = "Chỉ có thể xóa lệnh sản xuất ở trạng thái Draft." });
+                return BadRequest(new { success = false, message = "Không thể xóa lệnh sản xuất đang chạy (đã có công đoạn được ghi nhận)." });
+            }
+
+            bool hasDispensed = order.ProductionOrderBoms.Any(bom => bom.DispensingStatus == "Dispensed");
+            if (hasDispensed)
+            {
+                return BadRequest(new { success = false, message = "Không thể xóa lệnh sản xuất vì đã có nguyên liệu được nhân viên kho cấp phát." });
+            }
+
+            // Restore inventory
+            var bomsWithLots = order.ProductionOrderBoms.Where(b => b.SelectedLotId.HasValue).ToList();
+            if (bomsWithLots.Any())
+            {
+                var lotUpdates = bomsWithLots
+                    .GroupBy(b => b.SelectedLotId!.Value)
+                    .Select(g => new { LotId = g.Key, TotalRestoreQty = g.Sum(b => b.RequiredQuantity) });
+
+                foreach (var update in lotUpdates)
+                {
+                    var lot = await _context.InventoryLots.FindAsync(update.LotId);
+                    if (lot != null)
+                    {
+                        lot.QuantityCurrent += update.TotalRestoreQty;
+                        _context.InventoryLots.Update(lot);
+                    }
+                }
+            }
+
+            // Remove Boms
+            if (order.ProductionOrderBoms.Any())
+                _unitOfWork.ProductionOrderBoms.RemoveRange(order.ProductionOrderBoms);
+
+            // Remove Routings
+            if (order.RecipeRoutings.Any())
+                _unitOfWork.RecipeRoutings.RemoveRange(order.RecipeRoutings);
+            
+            // Remove Batches
+            if (order.ProductionBatches.Any())
+                _unitOfWork.ProductionBatches.RemoveRange(order.ProductionBatches);
+                
+            // Remove Tech Specs
+            var techSpecs = await _context.RecipeTechSpecs.Where(s => s.OrderId == id).ToListAsync();
+            if (techSpecs.Any())
+            {
+                _context.RecipeTechSpecs.RemoveRange(techSpecs);
             }
 
             _unitOfWork.ProductionOrders.Remove(order);
-            await _unitOfWork.CompleteAsync();
-            return Ok(new { success = true, message = "Đã xóa lệnh sản xuất." });
+            await _unitOfWork.CompleteAsync(); // This also saves _context changes for InventoryLots and RecipeTechSpecs
+
+            return Ok(new { success = true, message = "Đã xóa lệnh sản xuất và hoàn trả tồn kho." });
         }
 
     }

@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "D:\\codes\\Codex\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj": {}
+    "/src/GMP_System.csproj": {}
   },
   "projects": {
-    "D:\\codes\\Codex\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj": {
+    "/src/GMP_System.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\codes\\Codex\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
+        "projectUniqueName": "/src/GMP_System.csproj",
         "projectName": "GMP_System",
-        "projectPath": "D:\\codes\\Codex\\DoAnTotNghiep\\GMP_System\\GMP_System\\GMP_System.csproj",
-        "packagesPath": "C:\\Users\\GIGABYTE\\.nuget\\packages\\",
-        "outputPath": "D:\\codes\\Codex\\DoAnTotNghiep\\GMP_System\\GMP_System\\obj\\",
+        "projectPath": "/src/GMP_System.csproj",
+        "packagesPath": "/root/.nuget/packages/",
+        "outputPath": "/src/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\GIGABYTE\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/root/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -32,6 +32,11 @@
           "warnAsError": [
             "NU1605"
           ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
         }
       },
       "frameworks": {
@@ -114,7 +119,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.128/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.421/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

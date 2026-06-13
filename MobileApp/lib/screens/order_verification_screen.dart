@@ -28,47 +28,89 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
   Future<void> _loadWorkerData() async {
     setState(() => _isLoading = true);
     try {
-      // Chờ 500ms để CSDL kịp commit (Race Condition Prevention)
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // Lấy TẤT CẢ các mẻ của lệnh này
       final batches = await ApiService.getBatches(orderId: widget.orderData['orderId']);
-      
+      debugPrint('[OVS] orderId=${widget.orderData['orderId']}, batches=${batches.length}');
+
       Map<String, dynamic>? foundLog;
-      
+      String? foundBatchName;
+      String? foundStepName;
+
       for (var b in batches) {
         final bId = b['batchId'] ?? b['id'] as int?;
         if (bId == null) continue;
-        
+
         final logs = await ApiService.getProcessLogs(bId);
-        // Dò tìm log "Đang chờ QC" (Không phân biệt hoa thường/khoảng trắng)
-        final log = logs.firstWhere(
-          (l) {
-            final st = l['resultStatus']?.toString().replaceAll(' ', '').toUpperCase() ?? '';
-            return st == 'PENDINGQC' || st == 'PENDING_QC';
-          },
-          orElse: () => {},
-        );
-        
-        if (log.isNotEmpty) {
-          foundLog = log;
-          _currentBatchName = b['batchNumber'] ?? b['name'] ?? 'Mẻ $bId';
-          _currentStepName = log['step']?['stepName'] ?? 'Công đoạn ${log['stepId'] ?? ''}';
-          break; // Tìm thấy rồi thì thôi
+        debugPrint('[OVS] batchId=$bId → ${logs.length} step-logs');
+
+        // Ưu tiên 1: PendingQC có data
+        Map<String, dynamic>? best;
+        for (var l in logs) {
+          final st = l['resultStatus']?.toString().replaceAll(' ', '').toUpperCase() ?? '';
+          final raw = l['parametersData'];
+          final hasData = raw != null && raw.toString().isNotEmpty && raw.toString() != 'null';
+          debugPrint('[OVS]   step=${l['step']?['stepName']}, status=$st, hasData=$hasData');
+          if ((st == 'PENDINGQC' || st == 'PENDING_QC') && hasData) {
+            best = l;
+            break;
+          }
+        }
+        // Ưu tiên 2: Bất kỳ log nào có data
+        if (best == null) {
+          for (var l in logs) {
+            final raw = l['parametersData'];
+            final hasData = raw != null && raw.toString().isNotEmpty && raw.toString() != 'null';
+            if (hasData) { best = l; break; }
+          }
+        }
+
+        if (best != null) {
+          foundLog = best;
+          foundBatchName = b['batchNumber'] ?? b['name'] ?? 'Mẻ $bId';
+          foundStepName = best['step']?['stepName'] ?? 'Công đoạn ${best['stepId'] ?? ''}';
+          debugPrint('[OVS] Using log: step=$foundStepName, status=${best['resultStatus']}');
+          break;
         }
       }
 
       if (foundLog != null) {
-        final paramsStr = foundLog['parametersData'] as String?;
-        if (paramsStr != null) {
-          final Map<String, dynamic> params = jsonDecode(paramsStr);
-          setState(() {
-            _workerData = params['rawInputs'] ?? params;
-          });
+        setState(() {
+          _currentBatchName = foundBatchName;
+          _currentStepName = foundStepName;
+        });
+
+        final rawParams = foundLog['parametersData'];
+        debugPrint('[OVS] parametersData type=${rawParams.runtimeType}');
+
+        Map<String, dynamic> params = {};
+        if (rawParams is Map<String, dynamic>) {
+          params = rawParams;
+        } else if (rawParams is String && rawParams.isNotEmpty && rawParams != 'null') {
+          try {
+            final decoded = jsonDecode(rawParams);
+            if (decoded is Map<String, dynamic>) params = decoded;
+          } catch (e) {
+            debugPrint('[OVS] JSON decode error: $e');
+          }
         }
+
+        debugPrint('[OVS] params keys: ${params.keys.toList()}');
+
+        if (params.isNotEmpty) {
+          final rawInputs = params['rawInputs'];
+          setState(() {
+            _workerData = (rawInputs is Map<String, dynamic>) ? rawInputs : params;
+          });
+          debugPrint('[OVS] _workerData keys: ${_workerData?.keys.toList()}');
+        } else {
+          debugPrint('[OVS] params is EMPTY → _workerData stays null');
+        }
+      } else {
+        debugPrint('[OVS] No log with parametersData found for this order!');
       }
     } catch (e) {
-      debugPrint('Error loading worker data: $e');
+      debugPrint('[OVS] Error: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -230,7 +272,9 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
             if (_workerData?['materials'] != null)
               ...( _workerData?['materials'] as Map<String, dynamic>).entries.map((e) {
                 final val = e.value as Map<String, dynamic>;
-                return _buildReadOnlyParam(e.key, '${val['actual'] ?? '--'} kg (Phiếu KN: ${val['phieuKN'] ?? 'N/A'})');
+                final isCapsule = e.key.toLowerCase().contains('nang') || e.key.toLowerCase().contains('viên');
+                final unit = isCapsule ? 'viên' : 'kg';
+                return _buildReadOnlyParam(e.key, '${val['actual'] ?? '--'} $unit (Phiếu KN: ${val['phieuKN'] ?? 'N/A'})');
               })
             else
               const Text('Chưa có dữ liệu nguyên liệu.', style: TextStyle(color: Colors.grey, fontSize: 12)),
@@ -254,7 +298,9 @@ class _OrderVerificationScreenState extends State<OrderVerificationScreen> {
             const SizedBox(height: 8),
             if (_workerData?['khoiLuongThucTe'] != null)
               ...( _workerData?['khoiLuongThucTe'] as Map<String, dynamic>).entries.map((e) {
-                return _buildReadOnlyParam(e.key, '${e.value ?? '--'} kg');
+                final isCapsule = e.key.toLowerCase().contains('nang') || e.key.toLowerCase().contains('viên');
+                final unit = isCapsule ? 'viên' : 'kg';
+                return _buildReadOnlyParam(e.key, '${e.value ?? '--'} $unit');
               })
             else
               const Text('Chưa có dữ liệu khối lượng trộn.', style: TextStyle(color: Colors.grey, fontSize: 12)),

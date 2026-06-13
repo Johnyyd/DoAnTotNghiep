@@ -132,8 +132,6 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Footer hint */}
-          
         </div>
       </div>
     </div>

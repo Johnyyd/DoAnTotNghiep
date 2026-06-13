@@ -29,6 +29,7 @@ export default function FinishedProducts() {
   const [tab, setTab] = useState<'completed' | 'target'>('completed');
   const [showAddModal, setShowAddModal] = useState(false);
   const [addForm, setAddForm] = useState({ materialCode: '', materialName: '' });
+  const [traceInput, setTraceInput] = useState('');
   const [traceBatch, setTraceBatch] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
@@ -96,32 +97,11 @@ export default function FinishedProducts() {
     return map;
   }, [lots]);
 
-  const materialIdsByLotKeyword = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-    const ids = new Set<number>();
-    if (!keyword) return ids;
-
-    for (const lot of lots) {
-      const materialId = Number(lot.materialId ?? lot.MaterialId ?? 0);
-      const lotNumber = String(lot.lotNumber ?? lot.LotNumber ?? '').toLowerCase();
-      const batchNumber = String(lot.batchNumber ?? lot.BatchNumber ?? '').toLowerCase();
-      if (materialId > 0 && (lotNumber.includes(keyword) || batchNumber.includes(keyword))) {
-        ids.add(materialId);
-      }
-    }
-    return ids;
-  }, [lots, search]);
-
   const filtered = useMemo(() => {
     const keyword = search.trim().toLowerCase();
     let rows = materials;
     if (keyword) {
-      rows = rows.filter(
-        (m) =>
-          m.materialCode.toLowerCase().includes(keyword) ||
-          m.materialName.toLowerCase().includes(keyword) ||
-          materialIdsByLotKeyword.has(m.materialId),
-      );
+      rows = rows.filter((m) => m.materialCode.toLowerCase().includes(keyword) || m.materialName.toLowerCase().includes(keyword));
     }
 
     return rows.filter((m) => {
@@ -129,12 +109,12 @@ export default function FinishedProducts() {
       if (tab === 'completed') return (g?.completedQty ?? 0) > 0;
       return (g?.completedQty ?? 0) === 0;
     });
-  }, [materials, grouped, tab, search, materialIdsByLotKeyword]);
+  }, [materials, grouped, tab, search]);
 
   const traceResult: any = (traceData as any)?.data || traceData;
   const submitTrace = (event: React.FormEvent) => {
     event.preventDefault();
-    if (search.trim()) setTraceBatch(search.trim());
+    if (traceInput.trim()) setTraceBatch(traceInput.trim());
   };
 
   if (isLoading) {
@@ -157,12 +137,13 @@ export default function FinishedProducts() {
             </button>
           )}
         </div>
-        <form onSubmit={submitTrace} className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
+        <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" /><input value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-9" placeholder="Tìm mã hoặc tên thành phẩm..." /></div>
+        <form onSubmit={submitTrace} className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 border-t border-neutral-100 pt-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-9" placeholder="Tìm mã/tên thành phẩm hoặc tra cứu lô, ví dụ: B26-007-02" />
+            <input value={traceInput} onChange={(e) => setTraceInput(e.target.value)} className="input pl-9" placeholder="Tra cứu lô thành phẩm, ví dụ: B26-007-02" />
           </div>
-          <button type="submit" disabled={traceLoading || !search.trim()} className="btn-primary">{traceLoading ? 'Đang truy xuất...' : 'Truy xuất nguồn gốc'}</button>
+          <button type="submit" disabled={traceLoading} className="btn-primary">{traceLoading ? 'Đang truy xuất...' : 'Truy xuất nguồn gốc'}</button>
         </form>
       </div>
 

@@ -420,7 +420,7 @@ export default function Materials() {
           <input value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-9" placeholder="Tìm mã, tên, dạng hoặc điều kiện bảo quản..." />
         </div>
         <select className="input" value={quantityDisplayMode} onChange={(e) => setQuantityDisplayMode(e.target.value as QuantityDisplayMode)}>
-          <option value="auto">Hiển thị đơn vị</option>
+          <option value="auto">Đơn vị gốc</option>
           <option value="large">Hiển thị kg / L</option>
           <option value="small">Hiển thị g / ml</option>
         </select>

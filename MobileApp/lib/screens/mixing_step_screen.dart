@@ -65,6 +65,8 @@ class _MixingStepScreenState extends State<MixingStepScreen>
   bool _isMixing = false;
 
   final Map<String, String> _actualMaterials = {};
+  final Map<String, double> _dynamicTargets = {};
+  bool _isCalculated = false;
   bool _isLoading = true;
   List<dynamic> _bom = [];
 
@@ -82,6 +84,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
         startTimeUpdates([_timeCtrl, _timeStartCtrl]);
         _timeStartCtrl.addListener(_autoCalcTimeEnd);
         _tgThucTeCtrl.addListener(_autoCalcTimeEnd);
+        _tgCaiDatCtrl.addListener(_autoCalcTimeEnd);
       }
     });
   }
@@ -216,10 +219,23 @@ class _MixingStepScreenState extends State<MixingStepScreen>
           if (params['veSinhDungCu'] != null) _dungCu = params['veSinhDungCu'];
           _tempCtrl.text = params['nhietDo'] ?? '';
           _humidCtrl.text = params['doAm'] ?? '';
-          _timeCtrl.text = params['thoiGianKiemTra'] ?? '';
+          
+          final loadedCheckTime = params['thoiGianCheck'] ?? params['thoiGianKiemTra'];
+          if (loadedCheckTime != null && loadedCheckTime.toString().isNotEmpty) {
+            _timeCtrl.text = loadedCheckTime.toString();
+          }
+          
           _pressCtrl.text = params['apLuc'] ?? '';
-          _timeStartCtrl.text = params['tgBatDau'] ?? '';
-          _timeEndCtrl.text = params['tgKetThuc'] ?? '';
+          
+          final loadedStartTime = params['tgBatDau'];
+          if (loadedStartTime != null && loadedStartTime.toString().isNotEmpty) {
+            _timeStartCtrl.text = loadedStartTime.toString();
+          }
+          
+          final loadedEndTime = params['tgKetThuc'];
+          if (loadedEndTime != null && loadedEndTime.toString().isNotEmpty) {
+            _timeEndCtrl.text = loadedEndTime.toString();
+          }
           _tgCaiDatCtrl.text = params['tgCaiDat'] ?? '';
           _tocDoCaiDatCtrl.text = params['tocDoCaiDat'] ?? '';
           _tgThucTeCtrl.text = params['tgThucTe'] ?? '';
@@ -295,6 +311,30 @@ class _MixingStepScreenState extends State<MixingStepScreen>
                 }
               });
             }
+
+            if (wData['isCalculated'] == true) {
+              _isCalculated = true;
+              double qVal = (wData['dynamicYield'] as num?)?.toDouble() ?? 0.0;
+              double? aVal = double.tryParse(_actualMaterials['NLC-3']?.replaceAll(',', '.') ?? '');
+              
+              // If weighing step passed dynamicTargets directly, use it
+              if (wData.containsKey('dynamicTargets')) {
+                final dTargets = wData['dynamicTargets'] as Map<String, dynamic>;
+                dTargets.forEach((k, v) {
+                  _dynamicTargets[k] = (v as num).toDouble();
+                });
+              } else if (aVal != null && qVal > 0) {
+                // Otherwise calculate it like weighing_step_screen
+                _dynamicTargets['NLC-3'] = aVal;
+                _dynamicTargets['TD-1'] = (0.00162 * qVal) / 1000.0;
+                _dynamicTargets['TD-3'] = (0.02970 * qVal) / 1000.0;
+                _dynamicTargets['TD-4'] = (0.00405 * qVal) / 1000.0;
+                _dynamicTargets['TD-5'] = (0.00405 * qVal) / 1000.0;
+                double fixedTDsKg = (1.62 + 29.70 + 4.05 + 4.05) * qVal / 1000000.0;
+                double totalWeightKg = (540.0 * qVal) / 1000000.0;
+                _dynamicTargets['TD-8'] = totalWeightKg - aVal - fixedTDsKg;
+              }
+            }
           }
         }
       }
@@ -320,13 +360,14 @@ class _MixingStepScreenState extends State<MixingStepScreen>
   }
 
   void _autoCalcTimeEnd() {
-    if (_timeStartCtrl.text.isNotEmpty && _tgThucTeCtrl.text.isNotEmpty) {
+    final minutesStr = _tgCaiDatCtrl.text.isNotEmpty ? _tgCaiDatCtrl.text : _tgThucTeCtrl.text;
+    if (_timeStartCtrl.text.isNotEmpty && minutesStr.isNotEmpty) {
       try {
         final parts = _timeStartCtrl.text.split(':');
         if (parts.length == 2) {
           final h = int.parse(parts[0]);
           final m = int.parse(parts[1]);
-          final minutesToAdd = int.tryParse(_tgThucTeCtrl.text) ?? 0;
+          final minutesToAdd = int.tryParse(minutesStr) ?? 0;
           if (minutesToAdd >= 0) {
             final now = DateTime.now();
             final timeStart = DateTime(now.year, now.month, now.day, h, m);
@@ -336,7 +377,30 @@ class _MixingStepScreenState extends State<MixingStepScreen>
           }
         }
       } catch (_) {}
+    } else {
+      _timeEndCtrl.text = '';
     }
+  }
+
+  double _getPlannedQuantity() {
+    if (_batchInfo == null) return 0.0;
+    
+    // Default to 540mg if not available in API, matching the web UI
+    double productWeight = 540.0; 
+    if (_batchInfo!['order'] != null && _batchInfo!['order']['product'] != null) {
+      if (_batchInfo!['order']['product']['weight'] != null) {
+        productWeight = (_batchInfo!['order']['product']['weight'] as num).toDouble();
+      }
+    }
+
+    double qty = 0.0;
+    if (_batchInfo!['plannedQuantity'] != null) {
+      qty = (_batchInfo!['plannedQuantity'] as num).toDouble();
+    } else if (_batchInfo!['order'] != null && _batchInfo!['order']['plannedQuantity'] != null) {
+      qty = (_batchInfo!['order']['plannedQuantity'] as num).toDouble();
+    }
+    
+    return (qty * productWeight) / 1000000.0; // Returns weight in kg
   }
 
   double _getTotalInputWeight() {
@@ -376,10 +440,18 @@ class _MixingStepScreenState extends State<MixingStepScreen>
         matchName: 'Độ ẩm phòng');
     validateInput('apLuc', _pressCtrl.text, _standardParams,
         matchName: 'Áp lực phòng');
+    validateInput('tgCaiDat', _tgCaiDatCtrl.text, _standardParams,
+        matchName: 'Thời gian trộn');
+    validateInput('tocDoCaiDat', _tocDoCaiDatCtrl.text, _standardParams,
+        matchName: 'Tốc độ trộn');
     validateInput('tocDoThucTe', _tocDoThucTeCtrl.text, _standardParams,
         matchName: 'Tốc độ trộn');
     validateInput('tgThucTe', _tgThucTeCtrl.text, _standardParams,
         matchName: 'Thời gian trộn');
+    validateInput('tyTrong', _tyTrongCtrl.text, _standardParams,
+        matchName: 'Tỷ trọng gõ');
+    validateInput('silicagel', _silicagelCtrl.text, _standardParams,
+        matchName: 'Số lượng Silicagel');
   }
 
   Future<void> _approveByQC(String status) async {
@@ -417,8 +489,25 @@ class _MixingStepScreenState extends State<MixingStepScreen>
     String deviationMsg = '';
 
     for (var item in _bom) {
-      final name = item['material']?['materialName'] ?? 'N/A';
-      final requiredQty = (item['quantity'] as num?)?.toDouble() ?? 0.0;
+      final mat = item['material'] ?? {};
+      final name = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
+      final code = mat['materialCode'] ?? 'N/A';
+      
+      double requiredQty = (item['quantity'] as num?)?.toDouble() ?? 0.0;
+      
+      final uomName = (mat['uomName'] ?? mat['UomName'] ?? item['uomName'] ?? item['UomName'] ?? '').toString().toLowerCase();
+      if (uomName == 'g' || uomName == 'gam' || uomName == 'gram' || uomName == 'mg') {
+         if (uomName == 'mg') requiredQty = requiredQty / 1000000.0;
+         else requiredQty = requiredQty / 1000.0;
+      } else if (!_isCalculated) {
+         final uomId = mat['baseUomId'] ?? mat['uomId'] ?? item['uomId'] ?? 1;
+         if (uomId == 2 || (uomId != 4 && requiredQty > 5.0)) requiredQty = requiredQty / 1000.0;
+      }
+
+      if (_isCalculated && _dynamicTargets.containsKey(code)) {
+        requiredQty = _dynamicTargets[code]!;
+      }
+
       final actualStr = _actualMaterials[name] ?? '0';
       final actualQty = double.tryParse(actualStr.replaceAll(',', '.')) ?? 0.0;
 
@@ -483,8 +572,13 @@ class _MixingStepScreenState extends State<MixingStepScreen>
             "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
         _autoCalcTimeEnd();
       }
+      // Dừng auto-update giờ kiểm tra, bắt đầu auto-update giờ bắt đầu
+      stopTimeUpdateFor(_timeCtrl);
+      startTimeUpdates([_timeStartCtrl]);
       await _submit('Running', null, isInternal: true);
     } else if (_currentPhase == ExecutionPhase.input) {
+      // Dừng auto-update giờ bắt đầu khi đã bắt đầu trộn
+      stopTimeUpdateFor(_timeStartCtrl);
       await _verifyAndSubmit();
     } else if (_currentPhase == ExecutionPhase.execution) {
       // GMP Validation: Silicagel and Packaging must be validated BEFORE finishing
@@ -919,7 +1013,10 @@ class _MixingStepScreenState extends State<MixingStepScreen>
             Expanded(
                 child: StandardInputField(
                     label: 'Thời gian trộn cài đặt (phút)',
-                    controller: _tgThucTeCtrl,
+                    controller: _tgCaiDatCtrl,
+                    status: inputStatuses['tgCaiDat'] ?? 'none',
+                    standardText: getStandardText('Thời gian trộn', _standardParams),
+                    onChanged: (v) => validateInput('tgCaiDat', v, _standardParams, matchName: 'Thời gian trộn'),
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
                     ],
@@ -928,7 +1025,10 @@ class _MixingStepScreenState extends State<MixingStepScreen>
             Expanded(
                 child: StandardInputField(
                     label: 'Tốc độ cài đặt (vòng/phút)',
-                    controller: _tocDoThucTeCtrl,
+                    controller: _tocDoCaiDatCtrl,
+                    status: inputStatuses['tocDoCaiDat'] ?? 'none',
+                    standardText: getStandardText('Tốc độ trộn', _standardParams),
+                    onChanged: (v) => validateInput('tocDoCaiDat', v, _standardParams, matchName: 'Tốc độ trộn'),
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
                     ],
@@ -945,9 +1045,23 @@ class _MixingStepScreenState extends State<MixingStepScreen>
         else
           ..._bom.map((item) {
             final mat = item['material'] ?? {};
-            final materialName =
-                mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
-            final requiredQty = item['quantity']?.toString() ?? '0.00';
+            final code = mat['materialCode'] ?? 'N/A';
+            final materialName = mat['materialName'] ?? mat['materialCode'] ?? 'N/A';
+            double rQty = (item['quantity'] as num?)?.toDouble() ?? 0.0;
+            
+            final uomName = (mat['uomName'] ?? mat['UomName'] ?? item['uomName'] ?? item['UomName'] ?? '').toString().toLowerCase();
+            if (uomName == 'g' || uomName == 'gam' || uomName == 'gram' || uomName == 'mg') {
+               if (uomName == 'mg') rQty = rQty / 1000000.0;
+               else rQty = rQty / 1000.0;
+            } else if (!_isCalculated) {
+               final uomId = mat['baseUomId'] ?? mat['uomId'] ?? item['uomId'] ?? 1;
+               if (uomId == 2 || (uomId != 4 && rQty > 5.0)) rQty = rQty / 1000.0;
+            }
+
+            if (_isCalculated && _dynamicTargets.containsKey(code)) {
+              rQty = _dynamicTargets[code]!;
+            }
+            final requiredQty = rQty.toStringAsFixed(4);
             return _buildComparisonRow(materialName, materialName, requiredQty);
           }),
       ],
@@ -971,6 +1085,12 @@ class _MixingStepScreenState extends State<MixingStepScreen>
   }
 
   Widget _buildPhase4() {
+    if (_tgThucTeCtrl.text.isEmpty && _tgCaiDatCtrl.text.isNotEmpty) {
+      _tgThucTeCtrl.text = _tgCaiDatCtrl.text;
+    }
+    if (_tocDoThucTeCtrl.text.isEmpty && _tocDoCaiDatCtrl.text.isNotEmpty) {
+      _tocDoThucTeCtrl.text = _tocDoCaiDatCtrl.text;
+    }
     return Column(
       children: [
         if (!_isMixing && _secondsRemaining == 15)
@@ -1019,13 +1139,16 @@ class _MixingStepScreenState extends State<MixingStepScreen>
               child: StandardInputField(
                 label: 'Thời gian thực tế (phút)',
                 controller: _tgThucTeCtrl,
+                readOnly: true,
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
                 ],
                 keyboardType: TextInputType.number,
-                status: _tgThucTeCtrl.text != _tgCaiDatCtrl.text
-                    ? 'warning'
-                    : 'none',
+                standardText: getStandardText('Thời gian trộn', _standardParams),
+                onChanged: (v) => validateInput('tgThucTe', v, _standardParams, matchName: 'Thời gian trộn'),
+                status: inputStatuses['tgThucTe'] == 'error' 
+                    ? 'error' 
+                    : (_tgThucTeCtrl.text != _tgCaiDatCtrl.text ? 'warning' : 'none'),
               ),
             ),
             const SizedBox(width: 16),
@@ -1033,13 +1156,16 @@ class _MixingStepScreenState extends State<MixingStepScreen>
               child: StandardInputField(
                 label: 'Tốc độ thực tế (v/p)',
                 controller: _tocDoThucTeCtrl,
+                readOnly: true,
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
                 ],
                 keyboardType: TextInputType.number,
-                status: _tocDoThucTeCtrl.text != _tocDoCaiDatCtrl.text
-                    ? 'warning'
-                    : 'none',
+                standardText: getStandardText('Tốc độ trộn', _standardParams),
+                onChanged: (v) => validateInput('tocDoThucTe', v, _standardParams, matchName: 'Tốc độ trộn'),
+                status: inputStatuses['tocDoThucTe'] == 'error'
+                    ? 'error'
+                    : (_tocDoThucTeCtrl.text != _tocDoCaiDatCtrl.text ? 'warning' : 'none'),
               ),
             ),
           ],
@@ -1061,6 +1187,9 @@ class _MixingStepScreenState extends State<MixingStepScreen>
               child: StandardInputField(
                 label: 'Tỷ trọng gõ của hạt khô',
                 controller: _tyTrongCtrl,
+                status: inputStatuses['tyTrong'] ?? 'none',
+                standardText: getStandardText('Tỷ trọng gõ', _standardParams),
+                onChanged: (v) => validateInput('tyTrong', v, _standardParams, matchName: 'Tỷ trọng gõ'),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
                 ],
@@ -1093,6 +1222,9 @@ class _MixingStepScreenState extends State<MixingStepScreen>
           label: 'Số lượng Silicagel đã thêm (viên)',
           controller: _silicagelCtrl,
           hint: 'Chuẩn: 5 viên/thùng',
+          status: inputStatuses['silicagel'] ?? 'none',
+          standardText: getStandardText('Số lượng Silicagel', _standardParams),
+          onChanged: (v) => validateInput('silicagel', v, _standardParams, matchName: 'Số lượng Silicagel'),
           inputFormatters: [
             FilteringTextInputFormatter.allow(RegExp(r"[0-9.]"))
           ],
@@ -1128,10 +1260,10 @@ class _MixingStepScreenState extends State<MixingStepScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Khối lượng đóng gói (Output):',
+                  const Text('Khối lượng lệnh sản xuất (Planned):',
                       style: TextStyle(fontSize: 13)),
                   Text(
-                      '${double.tryParse(_slDongGoi.replaceAll(',', '.'))?.toStringAsFixed(4) ?? "0.0000"} kg',
+                      '${_getPlannedQuantity().toStringAsFixed(4)} kg',
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
@@ -1143,7 +1275,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
                       style: TextStyle(
                           fontWeight: FontWeight.bold, color: Colors.blue)),
                   Text(
-                    '${_getTotalInputWeight() > 0 ? (double.parse(_slDongGoi) / _getTotalInputWeight() * 100).toStringAsFixed(2) : "0.00"}%',
+                    '${_getPlannedQuantity() > 0 ? (_getTotalInputWeight() / _getPlannedQuantity() * 100).toStringAsFixed(2) : "0.00"}%',
                     style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
