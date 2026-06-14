@@ -401,6 +401,29 @@ export default function Materials() {
     return { expired, nearExpiry };
   }, [lots]);
 
+  const getLowStockThreshold = (uomName?: string) => {
+    if (!uomName) return 0;
+    const name = uomName.toLowerCase();
+    if (name === 'mg') return 500000;
+    if (name === 'g' || name === 'ml') return 500;
+    if (name === 'kg' || name === 'l') return 5;
+    if (name === 'viên' || name === 'cái') return 1000;
+    return 50;
+  };
+
+  const stockWarnings = useMemo(() => {
+    const outOfStock: any[] = [];
+    const lowStock: any[] = [];
+    materials.forEach((material) => {
+      const materialLots = lots.filter(l => l.materialId === material.materialId);
+      const total = materialLots.reduce((sum, lot) => sum + lot.quantityCurrent, 0);
+      const threshold = getLowStockThreshold(material.baseUomName);
+      if (total === 0) outOfStock.push(material);
+      else if (total <= threshold) lowStock.push(material);
+    });
+    return { outOfStock, lowStock };
+  }, [materials, lots]);
+
   if (isLoading) {
     return <div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" /></div>;
   }
@@ -454,6 +477,26 @@ export default function Materials() {
                 <div key={lot.lotId} className="rounded-lg bg-white border border-amber-100 px-3 py-2">
                   <span className="font-semibold">{lot.lotNumber}</span> - {material?.materialName ?? 'Nguyên liệu'}:
                   <span className={isExpired ? ' text-red-600' : ' text-amber-700'}> {isExpired ? 'quá hạn' : 'sắp hết hạn'} {formatDate(lot.expiryDate)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {(stockWarnings.outOfStock.length > 0 || stockWarnings.lowStock.length > 0) && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+          <h3 className="font-semibold text-red-900">Cảnh báo tồn kho</h3>
+          <p className="text-sm text-red-800 mt-1">
+            Hết hàng: {stockWarnings.outOfStock.length} nguyên liệu. Sắp hết hàng: {stockWarnings.lowStock.length} nguyên liệu (dưới mức tối thiểu).
+          </p>
+          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+            {[...stockWarnings.outOfStock, ...stockWarnings.lowStock].slice(0, 8).map((material) => {
+              const isOutOfStock = stockWarnings.outOfStock.some((m) => m.materialId === material.materialId);
+              return (
+                <div key={material.materialId} className="rounded-lg bg-white border border-red-100 px-3 py-2">
+                  <span className="font-semibold">{material.materialCode}</span> - {material.materialName}:
+                  <span className={isOutOfStock ? ' text-red-600 font-bold' : ' text-orange-600 font-bold'}> {isOutOfStock ? 'Hết hàng' : 'Sắp hết hàng'}</span>
                 </div>
               );
             })}
