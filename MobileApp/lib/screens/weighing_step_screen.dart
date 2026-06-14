@@ -776,7 +776,7 @@ class _WeighingStepScreenState extends State<WeighingStepScreen>
   }
 
   Widget? _buildContextualFAB() {
-    if (widget.isViewer && _currentPhase != ExecutionPhase.verification) {
+    if (widget.isViewer) {
       return null;
     }
     if (_currentPhase == ExecutionPhase.verification) {

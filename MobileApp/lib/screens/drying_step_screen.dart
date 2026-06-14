@@ -1026,7 +1026,7 @@ class _DryingStepScreenState extends State<DryingStepScreen>
   }
 
   Widget? _buildContextualFAB() {
-    if (widget.isViewer && _currentPhase != ExecutionPhase.verification) {
+    if (widget.isViewer) {
       return null;
     }
 

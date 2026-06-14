@@ -56,6 +56,8 @@ function getStatusLabel(status: string) {
   if (status === 'Hold') return 'Chờ';
   if (status === 'Scheduled') return 'Đã lên lịch';
   if (status === 'Completed') return 'Hoàn thành';
+  if (status === 'Pending QC' || status === 'PendingQC') return 'Chờ duyệt';
+  if (status === 'Pending Worker' || status === 'PendingWorker') return 'Chờ công nhân';
   return status;
 }
 

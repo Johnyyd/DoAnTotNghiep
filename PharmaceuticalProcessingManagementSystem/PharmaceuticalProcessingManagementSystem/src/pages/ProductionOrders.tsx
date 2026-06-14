@@ -38,6 +38,8 @@ function statusClass(status: string) {
   if (status === 'Hold') return 'bg-red-100 text-red-700 border-red-200';
   if (status === 'Scheduled') return 'bg-blue-100 text-blue-700 border-blue-200';
   if (status === 'Completed') return 'bg-green-100 text-green-700 border-green-200';
+  if (status === 'Pending QC' || status === 'PendingQC') return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+  if (status === 'Pending Worker' || status === 'PendingWorker') return 'bg-gray-100 text-gray-800 border-gray-200';
   return 'bg-white text-gray-700 border-gray-200';
 }
 
@@ -48,6 +50,8 @@ function getStatusLabel(status: string) {
   if (status === 'Hold') return 'Chờ';
   if (status === 'Scheduled') return 'Đã lên lịch';
   if (status === 'Completed') return 'Hoàn thành';
+  if (status === 'Pending QC' || status === 'PendingQC') return 'Chờ duyệt';
+  if (status === 'Pending Worker' || status === 'PendingWorker') return 'Chờ công nhân';
   return status;
 }
 
@@ -610,7 +614,7 @@ export default function ProductionOrders() {
                     {!isReadOnly && (
                       <td className="text-right">
                         <div className="flex justify-end gap-2">
-                          {(order.status === 'Approved' || order.status === 'In-Process' || order.status === 'InProcess') && (
+                          {(order.status === 'Approved' || order.status === 'In-Process' || order.status === 'InProcess' || order.status === 'Pending QC' || order.status === 'PendingQC' || order.status === 'Pending Worker' || order.status === 'PendingWorker') && (
                             <button onClick={() => holdOrderMutation.mutate(order.orderId)} className="btn-ghost text-sm text-orange-600">Tạm dừng</button>
                           )}
                           {order.status === 'Hold' && (

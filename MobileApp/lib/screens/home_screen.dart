@@ -766,10 +766,7 @@ class _HomeScreenState extends State<HomeScreen>
           ]
         ],
       ),
-      floatingActionButton: const FloatingActionButton(
-        onPressed: null,
-        child: Icon(Icons.add),
-      ),
+
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : role == 'WarehouseStaff'

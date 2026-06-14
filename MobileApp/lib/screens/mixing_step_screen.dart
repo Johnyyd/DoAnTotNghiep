@@ -827,7 +827,7 @@ class _MixingStepScreenState extends State<MixingStepScreen>
   }
 
   Widget? _buildContextualFAB() {
-    if (widget.isViewer && _currentPhase != ExecutionPhase.verification) {
+    if (widget.isViewer) {
       return null;
     }
 

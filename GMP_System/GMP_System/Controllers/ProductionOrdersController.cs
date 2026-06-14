@@ -788,7 +788,7 @@ namespace GMP_System.Controllers
             if (existing == null)
                 return NotFound(new { success = false, message = "Không tìm thấy lệnh sản xuất." });
 
-            if (existing.Status != "Approved" && existing.Status != "In-Process")
+            if (existing.Status != "Approved" && existing.Status != "In-Process" && existing.Status != "Pending QC" && existing.Status != "PendingQC" && existing.Status != "Pending Worker" && existing.Status != "PendingWorker")
                 return BadRequest(new { success = false, message = "Không thể tạm dừng lệnh sản xuất " + id + "." });
 
             existing.Status = "Hold";

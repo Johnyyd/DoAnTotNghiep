@@ -218,7 +218,7 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
     Widget nextScreen;
     // isViewer is true if the step is already finalized or batch is on hold
     final batchStatus = _batch?['status'] as String?;
-    final bool isViewer = status == 'Passed' || status == 'Failed' || batchStatus == 'OnHold';
+    final bool isViewer = status == 'Passed' || status == 'Failed' || batchStatus == 'On-Hold' || batchStatus == 'OnHold';
 
     if (stepType.contains('cân') || stepType.contains('weigh')) {
       nextScreen = WeighingStepScreen(
@@ -268,7 +268,7 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
       appBar: AppBar(
         title: Text(widget.batchNumber),
         actions: [
-          if (batchStatus != 'Completed' && batchStatus != 'Cancelled' && batchStatus != 'OnHold')
+          if (batchStatus != 'Completed' && batchStatus != 'Cancelled' && batchStatus != 'On-Hold' && batchStatus != 'OnHold')
             TextButton.icon(
               onPressed: _holdBatch,
               icon: const Icon(Icons.pause_circle_outline, color: Colors.orangeAccent),
@@ -372,7 +372,7 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                         final prevStatus = _logs[i - 1]['resultStatus'];
                         if (prevStatus != 'Passed') isClickable = false;
                       }
-                      if (batchStatus == 'OnHold' && status != 'Passed' && status != 'Failed') {
+                      if ((batchStatus == 'On-Hold' || batchStatus == 'OnHold') && status != 'Passed' && status != 'Failed') {
                         isClickable = false;
                       }
 
