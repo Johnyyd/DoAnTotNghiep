@@ -161,6 +161,9 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
   }
 
   Color _logStatusColor(String? status) {
+    final batchStatus = _batch?['status'] as String?;
+    final isOnHold = batchStatus == 'On-Hold' || batchStatus == 'OnHold';
+
     switch (status) {
       case 'Passed':
         return Colors.green.shade600;
@@ -170,13 +173,16 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
         return Colors.orange.shade600;
       case 'Approved':
       case 'Running':
-        return Colors.blue.shade600;
+        return isOnHold ? Colors.orange.shade600 : Colors.blue.shade600;
       default:
         return Colors.grey.shade400;
     }
   }
 
   String _logStatusLabel(String? status) {
+    final batchStatus = _batch?['status'] as String?;
+    final isOnHold = batchStatus == 'On-Hold' || batchStatus == 'OnHold';
+    
     switch (status) {
       case 'Passed':
         return 'Đạt';
@@ -187,7 +193,7 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
       case 'Approved':
         return 'Đang sản xuất';
       case 'Running':
-        return 'Đang thực hiện';
+        return isOnHold ? 'Tạm dừng' : 'Đang thực hiện';
       default:
         return 'Chưa thực hiện';
     }

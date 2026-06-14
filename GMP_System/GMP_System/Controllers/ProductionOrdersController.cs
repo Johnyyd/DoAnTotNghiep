@@ -792,6 +792,17 @@ namespace GMP_System.Controllers
                 return BadRequest(new { success = false, message = "Không thể tạm dừng lệnh sản xuất " + id + "." });
 
             existing.Status = "Hold";
+            
+            var batches = await _context.ProductionBatches.Where(b => b.OrderId == id).ToListAsync();
+            foreach (var b in batches)
+            {
+                if (b.Status == "Scheduled" || b.Status == "In-Process")
+                {
+                    b.Status = "OnHold";
+                    _context.ProductionBatches.Update(b);
+                }
+            }
+
             _unitOfWork.ProductionOrders.Update(existing);
             await _unitOfWork.CompleteAsync();
             return Ok(new { success = true, message = "Đã tạm dừng lệnh sản xuất." });
