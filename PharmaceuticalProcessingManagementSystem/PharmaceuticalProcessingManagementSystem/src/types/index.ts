@@ -4,7 +4,7 @@ export interface User {
   userId: number;
   username: string;
   fullName: string;
-  role: 'Admin' | 'QualityControl' | 'Operator' | 'ProductionManager' | 'WarehouseStaff';
+  role: 'Admin' | 'QualityControl' | 'QA_QC' | 'Operator' | 'ProductionManager' | 'WarehouseStaff';
   isActive: boolean;
   createdAt?: string;
 }
@@ -121,7 +121,7 @@ export interface ProductionOrder {
   plannedEndDate: string;
   actualStartDate?: string;
   actualEndDate?: string;
-  status: 'Draft' | 'Approved' | 'In-Process' | 'Pending Worker' | 'Hold' | 'Completed';
+  status: 'Draft' | 'Approved' | 'InProcess' | 'In-Process' | 'Scheduled' | 'Pending Worker' | 'Hold' | 'Completed';
   recipeId: number;
   recipeCode?: string;
   recipeName?: string;
@@ -203,8 +203,10 @@ export interface PaginatedResponse<T> {
 export const ProductionOrderStates = [
   'Draft',
   'Approved',
+  'InProcess',
   'Pending Worker',
   'In-Process',
+  'Scheduled',
   'Hold',
   'Completed'
 ] as const;

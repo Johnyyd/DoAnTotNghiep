@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GMP_System")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+78228489947c8f84e79bd446b853e1e882cf5609")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+28874e3e0b6d88454c3e2d584e7f42f1f3e9f510")]
 [assembly: System.Reflection.AssemblyProductAttribute("GMP_System")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GMP_System")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

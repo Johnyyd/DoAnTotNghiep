@@ -83,7 +83,9 @@ VALUES
 (7, 'wh01',    N'Nguyễn Kho Vận',           'WarehouseStaff',    1, '$2b$11$s5NvxgDNGDX/ag6E2gsIe.cVEeFE16YCCYZkBItX/lRZvrEQxdtzW', DATEADD(DAY,-10,GETDATE()), '123456');
 SET IDENTITY_INSERT AppUsers OFF;
 GO
-
+-- admin Admin@123
+-- qc01 Qc@123456
+-- op01 Op@123456
 -- =====================================================================
 -- 2. UnitOfMeasure
 -- =====================================================================
