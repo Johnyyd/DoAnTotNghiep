@@ -178,7 +178,11 @@
 		    (object ClassAttribute "Status"
 			quid       	"6A1010B701FF")
 		    (object ClassAttribute "RecipeName"
-			quid       	"6A101CA100E4")))
+			quid       	"6A101CA100E4")
+		    (object ClassAttribute "BatchSize"
+			quid       	"6A2F09570129")
+		    (object ClassAttribute "EffectiveDate"
+			quid       	"6A2F096D0045")))
 	    (object Class "RecipeBom"
 		quid       	"6A0F98FF026F"
 		operations 	(list Operations
@@ -5529,7 +5533,7 @@
 				supplier   	@173
 				vertices   	(list Points
 				    (3127, 1061)
-				    (2976, 986))
+				    (2876, 938))
 				line_style 	0)
 			    (object RoleView "$UNNAMED$144" @179
 				Parent_View 	@177
@@ -5541,7 +5545,7 @@
 				supplier   	@176
 				vertices   	(list Points
 				    (3127, 1061)
-				    (3381, 1184))
+				    (3379, 1184))
 				line_style 	0)))
 		    (object AssociationViewNew "$UNNAMED$145" @180
 			location   	(3008, 1348)
@@ -5698,7 +5702,7 @@
 				supplier   	@186
 				vertices   	(list Points
 				    (3048, 368)
-				    (2796, 332))
+				    (2796, 333))
 				line_style 	0)
 			    (object RoleView "$UNNAMED$153" @190
 				Parent_View 	@188
@@ -5710,7 +5714,7 @@
 				supplier   	@187
 				vertices   	(list Points
 				    (3048, 368)
-				    (3301, 403))
+				    (3300, 404))
 				line_style 	0)))
 		    (object UseCaseView "Use Case View::Phan quyen" @191
 			location   	(1248, 784)
@@ -5957,7 +5961,7 @@
 				supplier   	@191
 				vertices   	(list Points
 				    (829, 670)
-				    (1138, 753))
+				    (1138, 752))
 				line_style 	0)
 			    (object RoleView "$UNNAMED$156" @202
 				Parent_View 	@200
@@ -6008,7 +6012,7 @@
 				supplier   	@199
 				vertices   	(list Points
 				    (652, 828)
-				    (550, 693))
+				    (550, 692))
 				line_style 	0)))
 		    (object AssociationViewNew "$UNNAMED$160" @206
 			location   	(490, 943)
@@ -6035,7 +6039,7 @@
 				supplier   	@193
 				vertices   	(list Points
 				    (490, 943)
-				    (503, 1124))
+				    (505, 1126))
 				line_style 	0)
 			    (object RoleView "$UNNAMED$162" @208
 				Parent_View 	@206
@@ -6047,7 +6051,7 @@
 				supplier   	@199
 				vertices   	(list Points
 				    (490, 943)
-				    (475, 761))
+				    (476, 761))
 				line_style 	0)))
 		    (object AssociationViewNew "$UNNAMED$163" @209
 			location   	(652, 396)
@@ -6086,7 +6090,7 @@
 				supplier   	@199
 				vertices   	(list Points
 				    (652, 396)
-				    (521, 519))
+				    (521, 517))
 				line_style 	0)))
 		    (object AssociationViewNew "$UNNAMED$166" @212
 			location   	(606, 507)
@@ -6113,7 +6117,7 @@
 				supplier   	@195
 				vertices   	(list Points
 				    (606, 507)
-				    (976, 336))
+				    (692, 469))
 				line_style 	0)
 			    (object RoleView "$UNNAMED$168" @214
 				Parent_View 	@212
@@ -6164,7 +6168,7 @@
 				supplier   	@199
 				vertices   	(list Points
 				    (1005, 534)
-				    (521, 568))
+				    (521, 569))
 				line_style 	0)))
 		    (object AssociationViewNew "$UNNAMED$172" @218
 			location   	(1309, 666)
@@ -6191,7 +6195,7 @@
 				supplier   	@197
 				vertices   	(list Points
 				    (1309, 666)
-				    (2098, 752))
+				    (2097, 752))
 				line_style 	0)
 			    (object RoleView "$UNNAMED$174" @220
 				Parent_View 	@218
@@ -6230,7 +6234,7 @@
 				supplier   	@198
 				vertices   	(list Points
 				    (879, 844)
-				    (1240, 1078))
+				    (1237, 1077))
 				line_style 	0)
 			    (object RoleView "$UNNAMED$177" @223
 				Parent_View 	@221
@@ -6242,7 +6246,7 @@
 				supplier   	@199
 				vertices   	(list Points
 				    (879, 844)
-				    (521, 612))
+				    (521, 611))
 				line_style 	0)))
 		    (object DependencyView "" @224
 			font       	(object Font
@@ -6359,7 +6363,7 @@
 			supplier   	@173
 			vertices   	(list Points
 			    (899, 1974)
-			    (2404, 995))
+			    (2435, 973))
 			line_style 	0)
 		    (object DependencyView "" @230
 			font       	(object Font
@@ -6476,7 +6480,7 @@
 			supplier   	@173
 			vertices   	(list Points
 			    (892, 1583)
-			    (2335, 966))
+			    (2435, 924))
 			line_style 	0)
 		    (object DependencyView "" @236
 			font       	(object Font
@@ -6515,7 +6519,7 @@
 			supplier   	@196
 			vertices   	(list Points
 			    (2097, 716)
-			    (1920, 637))
+			    (1739, 556))
 			line_style 	0)
 		    (object DependencyView "" @238
 			font       	(object Font
@@ -7513,7 +7517,7 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@275
-			    location   	(2813, 352)
+			    location   	(2813, 302)
 			    fill_color 	13434879
 			    nlines     	1
 			    max_width  	422
@@ -7525,7 +7529,7 @@
 			quidu      	"6A0F98D60301"
 			compartment 	(object Compartment
 			    Parent_View 	@275
-			    location   	(2813, 413)
+			    location   	(2813, 363)
 			    font       	(object Font
 				size       	10
 				face       	"Arial"
@@ -7538,11 +7542,11 @@
 			    icon_style 	"Icon"
 			    fill_color 	16777215
 			    anchor     	2
-			    nlines     	9
+			    nlines     	11
 			    max_width  	419
 			    justify    	1)
 			width      	440
-			height     	536
+			height     	636
 			annotation 	8
 			autoResize 	TRUE)
 		    (object AssociationViewNew "$UNNAMED$112" @276
@@ -8098,14 +8102,14 @@
 			annotation 	8
 			autoResize 	TRUE)
 		    (object AssociationViewNew "$UNNAMED$49" @300
-			location   	(3024, 1077)
+			location   	(3024, 1102)
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"6A0F99490311"
 			roleview_list 	(list RoleViews
 			    (object RoleView "$UNNAMED$50" @301
 				Parent_View 	@300
-				location   	(1952, 661)
+				location   	(1952, 686)
 				font       	(object Font
 				    size       	10
 				    face       	"Arial"
@@ -8121,12 +8125,12 @@
 				client     	@300
 				supplier   	@299
 				vertices   	(list Points
-				    (3024, 1077)
+				    (3024, 1102)
 				    (3024, 1278))
 				line_style 	0
 				label      	(object SegLabel @302
 				    Parent_View 	@301
-				    location   	(2974, 1187)
+				    location   	(2974, 1198)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -8147,7 +8151,7 @@
 				    orientation 	1))
 			    (object RoleView "$UNNAMED$51" @303
 				Parent_View 	@300
-				location   	(1952, 661)
+				location   	(1952, 686)
 				font       	(object Font
 				    size       	10
 				    face       	"Arial"
@@ -8163,12 +8167,12 @@
 				client     	@300
 				supplier   	@275
 				vertices   	(list Points
-				    (3024, 1077)
-				    (3024, 876))
+				    (3024, 1102)
+				    (3024, 926))
 				line_style 	0
 				label      	(object SegLabel @304
 				    Parent_View 	@303
-				    location   	(2994, 954)
+				    location   	(2994, 993)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -10531,7 +10535,7 @@
 			    icon_style 	"Icon"
 			    fill_color 	16777215
 			    anchor     	2
-			    nlines     	9
+			    nlines     	11
 			    max_width  	548
 			    justify    	1)
 			width      	568
