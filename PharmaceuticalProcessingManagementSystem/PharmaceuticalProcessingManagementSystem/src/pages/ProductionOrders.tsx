@@ -5,7 +5,7 @@ import { Calculator, CheckCircle2, ClipboardList, FileCheck2, Layers, Pencil, Se
 import { formatNumber, formatDate, formatRecipeBatchSize, isRecipeLiquid } from '@/utils/format';
 import { useAuth } from '@/context/AuthContext';
 
-type OrderStatus = 'Draft' | 'Approved' | 'In-Process' | 'Pending Worker' | 'Hold' | 'Completed';
+type OrderStatus = 'Draft' | 'Approved' | 'InProcess' | 'In-Process' | 'Scheduled' | 'Pending Worker' | 'Hold' | 'Completed';
 
 interface UiProductionOrder {
   orderId: number;
